@@ -1,0 +1,10 @@
+model Procesos {
+    id Int @id @default(autoincrement())
+    idTipoDeProcesos Int
+    peso Float
+    fechaInicio DateTime
+    fechaFin DateTime
+
+    /* Relaciones con boleta */
+    boletaProceso Boleta[]
+}

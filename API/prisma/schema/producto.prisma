@@ -1,0 +1,9 @@
+model Producto{
+    id Int @id @default(autoincrement())
+    nombre String
+    descripcion String?
+
+
+    /* Relaciones con boleta */
+    boletaProducto Boleta[]
+}

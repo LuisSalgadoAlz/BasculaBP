@@ -1,0 +1,10 @@
+model Transporte {
+    id Int @id @default(autoincrement())
+    nombre String
+    placa String
+    descripcion String?
+    estado String
+
+    /* Relaciones con boleta */
+    boletaTransporte Boleta[]
+}

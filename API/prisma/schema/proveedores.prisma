@@ -1,0 +1,9 @@
+model Proveedores {
+    id Int @id @default(autoincrement())
+    nombre String
+    telefono String?
+    correo String?
+
+    /* Relacion con boleta */
+    boletaProveedores Boleta[]
+}

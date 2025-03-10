@@ -1,0 +1,30 @@
+model Boleta {
+    id String @id
+    Categoria String /* Propio o Contratado */
+    idProceso Int
+    idTransporte Int
+    idTipoDePeso Int
+    idCliente Int
+    idTipoDeProducto Int
+    idProveedores Int
+    idOrigen Int
+    idDestino Int
+    manifiesto Int? /* Opcional */
+    pesoTeorico Float? /* Opcional */
+    estado String /* Entrando, Saliendo, Terminado listo para imprimir */
+    impreso Boolean /* si / no */
+    idUsuario Int /* Es el despachador */
+    fechaDeEmision DateTime
+
+
+    /* Relaciones dentro de la boleta */
+    despachador Usuarios @relation(fields: [idUsuario], references: [id])
+    procesoBoleta Procesos @relation(fields: [idProceso], references: [id])
+    transporteBoleta Transporte @relation(fields: [idTransporte], references: [id])
+    tipoDePesoBoleta TiposDePeso @relation(fields: [idTipoDePeso], references: [id])
+    clienteBoleta Clientes @relation(fields: [idCliente], references: [id])
+    tipoDeProductoBoleta Producto @relation(fields: [idTipoDeProducto], references: [id])
+    proveedoresBoleta Proveedores @relation(fields: [idProveedores], references: [id])
+    origenBoletas Origen @relation(fields: [idOrigen], references: [id])
+    destinoBoletas Destino @relation(fields: [idDestino], references: [id])
+}

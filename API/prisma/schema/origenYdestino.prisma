@@ -1,0 +1,17 @@
+model Origen{
+    id Int @id @default(autoincrement())
+    nombre String
+    descripcion String? 
+
+    /* Relaciones con boleta */
+    origenBoleta Boleta[]
+}
+
+model Destino{
+    id Int @id @default(autoincrement())
+    nombre String
+    descripcion String? 
+
+    /* Relaciones con boleta */
+    destinoBoleta Boleta[]
+}

@@ -1,0 +1,13 @@
+model Usuarios {
+    id Int @id @default(autoincrement()) 
+    name String
+    usuarios String?
+    email String? 
+    tipo String
+    contrasena String
+
+    /* Relaciones con la boletas vendria siendo de una a muchas un usuario puede tener muchas boletas pero una
+    boleta solo puede tener un usuario */
+    
+    boletas Boleta[]
+}
