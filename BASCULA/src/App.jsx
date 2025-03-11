@@ -1,42 +1,19 @@
-import { useEffect, useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useEffect, useState } from "react";
+import reactLogo from "./assets/react.svg";
+import viteLogo from "/vite.svg";
+import { Route } from "react-router";
+import Login from "./views/login";
 
 function App() {
-  const [data, setData] = useState(0)
-
-  const consumoApi = async () => {
-    const data = JSON.stringify({
-      usuarios: "usuario creado desde react",
-      contrasena: "ver"
-    })
-
-    const res = await fetch('http://localhost:3000/usuarios/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: data
-    })
-    const json = await res.json()
-    console.log(json)
-
-    if (!res.ok) {
-      throw new Error(`Error: ${res.statusText}`);
-    }
-  
-  }
-
-  const handleClick = () => {
-    consumoApi();
-  }
+  const [data, setData] = useState(0);
 
   return (
     <>
-      <button onClick={handleClick}>Consumir</button>
+      <main className="min-h-screen">
+        <Login />
+      </main>
     </>
-  )
+  );
 }
 
-export default App
+export default App;

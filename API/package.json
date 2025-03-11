@@ -20,6 +20,7 @@
     "dotenv": "^16.4.7",
     "jsonwebtoken": "^9.0.2",
     "nodemo": "^1.0.0",
-    "nodemon": "^3.1.9"
+    "nodemon": "^3.1.9",
+    "react-router": "^7.3.0"
   }
 }
