@@ -1,7 +1,11 @@
-const {getUsuarios,postUsuarios,updateUsuarios} = require('../controllers/usuarios.controller');
+const {getUsuarios,postUsuarios,updateUsuarios,loginUsers} = require('../controllers/usuarios.controller');
 const router = require('express').Router();
-const verificarOrigen = require('../middlewares/cors');
 
-router.get('/', verificarOrigen, getUsuarios)
-router.post('/', verificarOrigen, postUsuarios)
+/* Probar con el login */
+const verificarToken = require('../middlewares/authJWT');
+
+router.get('/', getUsuarios)
+router.post('/', postUsuarios)
+router.put('/:id', updateUsuarios)  
+router.post('/login', loginUsers)  
 module.exports = router;

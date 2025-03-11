@@ -1,7 +1,7 @@
 model Usuarios {
     id Int @id @default(autoincrement()) 
     name String
-    usuarios String?
+    usuarios String @unique
     email String? 
     tipo String
     contrasena String

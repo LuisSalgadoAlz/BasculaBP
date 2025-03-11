@@ -6,7 +6,7 @@ CREATE TABLE "Boleta" (
     "idTransporte" INTEGER NOT NULL,
     "idTipoDePeso" INTEGER NOT NULL,
     "idCliente" INTEGER NOT NULL,
-    "idTipoDePrdocuto" INTEGER NOT NULL,
+    "idTipoDeProducto" INTEGER NOT NULL,
     "idProveedores" INTEGER NOT NULL,
     "idOrigen" INTEGER NOT NULL,
     "idDestino" INTEGER NOT NULL,
@@ -21,6 +21,35 @@ CREATE TABLE "Boleta" (
 );
 
 -- CreateTable
+CREATE TABLE "Clientes" (
+    "id" SERIAL NOT NULL,
+    "nombre" TEXT NOT NULL,
+    "direccion" TEXT,
+    "telefono" TEXT,
+    "correo" TEXT,
+
+    CONSTRAINT "Clientes_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Origen" (
+    "id" SERIAL NOT NULL,
+    "nombre" TEXT NOT NULL,
+    "descripcion" TEXT,
+
+    CONSTRAINT "Origen_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Destino" (
+    "id" SERIAL NOT NULL,
+    "nombre" TEXT NOT NULL,
+    "descripcion" TEXT,
+
+    CONSTRAINT "Destino_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Procesos" (
     "id" SERIAL NOT NULL,
     "idTipoDeProcesos" INTEGER NOT NULL,
@@ -29,6 +58,25 @@ CREATE TABLE "Procesos" (
     "fechaFin" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Procesos_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Producto" (
+    "id" SERIAL NOT NULL,
+    "nombre" TEXT NOT NULL,
+    "descripcion" TEXT,
+
+    CONSTRAINT "Producto_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Proveedores" (
+    "id" SERIAL NOT NULL,
+    "nombre" TEXT NOT NULL,
+    "telefono" TEXT,
+    "correo" TEXT,
+
+    CONSTRAINT "Proveedores_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -55,7 +103,8 @@ CREATE TABLE "Transporte" (
 CREATE TABLE "Usuarios" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
-    "email" TEXT NOT NULL,
+    "usuarios" TEXT NOT NULL,
+    "email" TEXT,
     "tipo" TEXT NOT NULL,
     "contrasena" TEXT NOT NULL,
 
@@ -63,7 +112,10 @@ CREATE TABLE "Usuarios" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Usuarios_email_key" ON "Usuarios"("email");
+CREATE UNIQUE INDEX "Clientes_correo_key" ON "Clientes"("correo");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Usuarios_usuarios_key" ON "Usuarios"("usuarios");
 
 -- AddForeignKey
 ALTER TABLE "Boleta" ADD CONSTRAINT "Boleta_idUsuario_fkey" FOREIGN KEY ("idUsuario") REFERENCES "Usuarios"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -76,3 +128,18 @@ ALTER TABLE "Boleta" ADD CONSTRAINT "Boleta_idTransporte_fkey" FOREIGN KEY ("idT
 
 -- AddForeignKey
 ALTER TABLE "Boleta" ADD CONSTRAINT "Boleta_idTipoDePeso_fkey" FOREIGN KEY ("idTipoDePeso") REFERENCES "TiposDePeso"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Boleta" ADD CONSTRAINT "Boleta_idCliente_fkey" FOREIGN KEY ("idCliente") REFERENCES "Clientes"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Boleta" ADD CONSTRAINT "Boleta_idTipoDeProducto_fkey" FOREIGN KEY ("idTipoDeProducto") REFERENCES "Producto"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Boleta" ADD CONSTRAINT "Boleta_idProveedores_fkey" FOREIGN KEY ("idProveedores") REFERENCES "Proveedores"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Boleta" ADD CONSTRAINT "Boleta_idOrigen_fkey" FOREIGN KEY ("idOrigen") REFERENCES "Origen"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Boleta" ADD CONSTRAINT "Boleta_idDestino_fkey" FOREIGN KEY ("idDestino") REFERENCES "Destino"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

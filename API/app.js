@@ -1,22 +1,14 @@
 const express = require("express");
 require("dotenv").config();
-const verificarOrigen = require("./middlewares/cors");
 const router = require("./routes/usuarios.routes");
-
 const app = express();
+const cors = require("cors");
 
 /* Esto hace que el req.body no sea undefined */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-app.get("/", verificarOrigen, (req, res) => {
-  res.send({
-    msg: "Origen Permitidoss",
-    header: req.headers.origin,
-  });
-});
-
-
+/* Cors necesarios */
+app.use(cors());
 app.use('/usuarios', router);
 
 
