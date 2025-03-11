@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
-import { Route } from "react-router";
+import { BrowserRouter, Routes, Route } from "react-router";
+
 import Login from "./views/login";
 
 function App() {
