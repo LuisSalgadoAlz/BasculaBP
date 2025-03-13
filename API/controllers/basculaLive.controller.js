@@ -8,14 +8,14 @@ function obtenerPeso() {
 
     client.connect(port, host, () => {
       console.log(`Conectado a ${host}:${port}`);
-      client.write("w\r\n"); // Enviar el comando
+      client.write("w\r\n"); 
     });
 
     client.on("data", (data) => {
       const respuesta = data.toString().trim();
       if (respuesta !== "w") { 
         resolve(respuesta);
-        client.destroy(); // Cerrar la conexión
+        client.destroy(); 
       }
     });
 
