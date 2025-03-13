@@ -1,34 +1,52 @@
 const express = require("express");
-const { ReadlineParser } = require('@serialport/parser-readline');
+const net = require("net");
 
 const app = express();
+const PORT = 3000;
 
-const {SerialPort} = require('serialport')
+// Dirección IP y puerto de la balanza
+const host = "192.9.100.186";
+const port = 10000;
 
-// Ver puertos seriales activos
-SerialPort.list()
-.then((data) => console.log(data))
-.catch(err => console.log(err));
+// Función para obtener el peso de la balanza
+function obtenerPeso() {
+  return new Promise((resolve, reject) => {
+    const client = new net.Socket();
 
-
-//lectura de puerto
-
-let currentData = 0;
-app.get('/peso', function (req, res) {
-    res.send({
-        peso: String(currentData),
+    client.connect(port, host, () => {
+      console.log(`Conectado a ${host}:${port}`);
+      client.write("w\r\n"); // Enviar el comando
     });
+
+    client.on("data", (data) => {
+      const respuesta = data.toString().trim();
+      if (respuesta !== "w") { 
+        resolve(respuesta);
+        client.destroy(); // Cerrar la conexión
+      }
+    });
+
+    client.on("error", (err) => {
+      reject(`Error: ${err.message}`);
+      client.destroy();
+    });
+
+    client.on("close", () => {
+      console.log("Conexión cerrada");
+    });
+  });
+}
+
+// Endpoint para obtener el peso
+app.get("/peso", async (req, res) => {
+  try {
+    const peso = await obtenerPeso();
+    res.json({ peso });
+  } catch (error) {
+    res.status(500).json({ error });
+  }
 });
 
-const port = new SerialPort({path: 'COM1', baudRate: 1200}, function (err) {
-    if (err) {
-        return console.log('Error: ', err.message);
-    }
-});
-
-const parser = port.pipe(new ReadlineParser({ delimiter: '\r' }))
-parser.on('data', data => currentData = data);
-
-app.listen(3000, () => {
-  console.log(`Server ejecutandose en el puerto 3000`);
+app.listen(PORT, () => {
+  console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });

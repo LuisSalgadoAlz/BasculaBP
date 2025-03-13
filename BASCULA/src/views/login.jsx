@@ -1,9 +1,12 @@
 import { use, useState} from "react";
 import { BiUser,BiLockAlt  } from "react-icons/bi";
 import ModalError from "../components/modals";
+import useLocalStorage from "../hooks/useLocalStorage";
 
 const Login = () => {
-    const [data, setData] = useState({
+  const [localStorageSave, setLocalStorageSave] = useLocalStorage('token', '')  
+
+  const [data, setData] = useState({
         'usuarios': '', 
         'contrasena': ''
     })
@@ -27,6 +30,10 @@ const Login = () => {
           });
 
         const res = await token.json()
+        
+        if(res.token) {
+          setLocalStorageSave(res.token)
+        }
 
         if(res.msg){
             setMsg(res.msg)
