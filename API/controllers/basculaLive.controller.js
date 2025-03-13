@@ -7,7 +7,7 @@ function obtenerPeso() {
     const client = new net.Socket();
 
     client.connect(port, host, () => {
-      console.log(`Conectado a ${host}:${port}`);
+      /* console.log(`Conectado a ${host}:${port}`); */
       client.write("w\r\n"); 
     });
 
@@ -25,7 +25,7 @@ function obtenerPeso() {
     });
 
     client.on("close", () => {
-      console.log("Conexión cerrada");
+      /* console.log("Conexión cerrada"); */
     });
   });
 }
