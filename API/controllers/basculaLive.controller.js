@@ -14,7 +14,9 @@ function obtenerPeso() {
     client.on("data", (data) => {
       const respuesta = data.toString().trim();
       if (respuesta !== "w") { 
-        resolve(respuesta);
+        const dataSplit = respuesta.split(' ')
+        const dataClean = dataSplit.filter(el=> el.includes('lb'))
+        resolve(dataClean);
         client.destroy(); 
       }
     });
