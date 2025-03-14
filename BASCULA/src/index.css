@@ -1,8 +1,16 @@
 @import "tailwindcss";
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/700.css';
 
 :root {
   --color-primary: #955e37;
   --color-secondary: #faf8eb;
+  --sidebar : 25 30% 15%;
+}
+
+body {
+  font-family: 'Inter', sans-serif !important;
 }
 
 body {
@@ -11,4 +19,8 @@ body {
 
 .titulo{
   color: var(--color-primary)!important;
+}
+
+.sidebar{
+  background: hsl(var(--sidebar))
 }
