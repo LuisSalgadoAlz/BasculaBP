@@ -99,3 +99,7 @@ body {
 .body-components::-webkit-scrollbar-thumb {
   background: #955e37;
 }
+
+a.active {
+  background: #5A3F27;
+}
