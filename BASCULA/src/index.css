@@ -21,6 +21,10 @@ body {
   color: var(--color-primary)!important;
 }
 
+.colorBackground {
+  background: var(--color-primary)!important;
+}
+
 .sidebar{
   background: hsl(var(--sidebar))
 }
@@ -102,4 +106,9 @@ body {
 
 a.active {
   background: #5A3F27;
+}
+
+
+.font-title {
+  color: #31251B;
 }

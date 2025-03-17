@@ -41,7 +41,7 @@ const Cuerpo = ({ children }) => {
         <div className="w-full min-h-screen flex flex-col overflow-hidden">
           <Header title="Sistema de Gestión de Báscula" fun={handleShow} />
           <div className="flex-1 overflow-x-hidden body-components">
-            <div className="m-7">{children}</div>
+            <div className="mx-9 my-7">{children}</div>
           </div>
         </div>
       </main>
