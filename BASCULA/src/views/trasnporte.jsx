@@ -2,7 +2,7 @@ import Cuerpo from "../components/cuerpo";
 
 const Transporte = () => {
     return ( <>
-        <h1>holas</h1>
+        <h1>Transporte</h1>
     </> );
 }
  
