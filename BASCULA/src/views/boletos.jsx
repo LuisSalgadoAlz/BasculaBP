@@ -1,11 +1,11 @@
 import Cuerpo from "../components/cuerpo";
 
 const Boletas = () => {
-    return ( <>
-        <Cuerpo>
-            <h1>Boletas</h1>
-        </Cuerpo>
-    </> );
-}
- 
+  return (
+    <>
+      <h1>Boletas</h1>
+    </>
+  );
+};
+
 export default Boletas;

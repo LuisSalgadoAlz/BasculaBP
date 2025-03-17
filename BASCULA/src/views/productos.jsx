@@ -1,11 +1,11 @@
 import Cuerpo from "../components/cuerpo";
 
 const Productos = () => {
-    return ( <>
-        <Cuerpo>
-            <h1>Productos</h1>
-        </Cuerpo>
-    </> );
-}
- 
+  return (
+    <>
+      <h1>Productos</h1>
+    </>
+  );
+};
+
 export default Productos;

@@ -1,11 +1,9 @@
-import Cuerpo from "../components/cuerpo"
+import Cuerpo from "../components/cuerpo";
 
 const Dashboard = () => {
   return (
     <>
-      <Cuerpo>
-        <div className="bg-red-50">Dashboard</div>
-      </Cuerpo>
+      <div className="bg-red-50">Dashboard</div>
     </>
   );
 };
