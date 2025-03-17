@@ -1,22 +1,11 @@
-import { useState } from "react";
-import SideBar from "../components/sideBar"
-import Header from "../components/header";
-import SideBarIcons from "../components/sideBarIcons";
+import Cuerpo from "../components/cuerpo"
 
 const Dashboard = () => {
-  const [sideBarShow, setSideBarShow] = useState(true)
-
-  const handleShow = () => {
-    setSideBarShow(!sideBarShow)
-  }
-
   return (
     <>
-      <main className="min-w-screen min-h-screen flex">
-        {sideBarShow ? <SideBar /> : <SideBarIcons />}
-        {/* header */}
-        <Header title={"Sistema de Gestión de Báscula"} fun={handleShow} />
-      </main>
+      <Cuerpo>
+        <div className="bg-red-50">Dashboard</div>
+      </Cuerpo>
     </>
   );
 };

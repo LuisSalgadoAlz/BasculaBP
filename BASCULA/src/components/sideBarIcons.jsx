@@ -10,18 +10,18 @@ import { PiSignOutFill } from "react-icons/pi";
 
 const RUTAS_PRINCIPALES = [
   {
-    path: "/Dashboard",
+    path: "/dashboard",
     name: "Dashboard",
     icon: <MdOutlineDashboard />,
   },
   {
-    path: "/Boletas",
+    path: "/boletas",
     name: "Boletas",
     icon: <BsClipboard2Pulse />,
   },
   {
-    path: "/trasporte",
-    name: "Trasporte",
+    path: "/transporte",
+    name: "Transporte",
     icon: <RiTruckLine />,
   },
   ,
@@ -47,7 +47,7 @@ const SideBarIcons = () => {
     }
     return (
     <>
-      <div className="w-[80px] sidebar p-1">
+      <div className="w-[80px] sidebar p-1 max-sm:hidden min-md:visible">
         <div data-sidebar="header" className="flex flex-col gap-2 p-2">
           <div className="flex items-center gap-2 px-4 py-2">
             <MdOutlineScale className="text-2xl justify-center items-center text-amber-300 mt-1" />
@@ -62,7 +62,7 @@ const SideBarIcons = () => {
               </NavLink>
             ))}
           </ul>
-          <hr class="h-px my-8 bg-gray-200 border-0 dark:bg-gray-700" />
+          <hr className="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700" />
         </div>
 
         {/* Parte de informes */}

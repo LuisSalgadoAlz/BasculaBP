@@ -6,6 +6,10 @@ import "./index.css";
 import VerificarLog from "./utils/verificarLog";
 import Dashboard from "./views/dashboard";
 import NotFoundPage from "./views/notFoundPage";
+import Boletas from "./views/boletos";
+import Transporte from "./views/trasnporte";
+import Clientes from "./views/clientes";
+import Productos from "./views/productos";
 
 const navRutas = createBrowserRouter([
   {
@@ -19,6 +23,22 @@ const navRutas = createBrowserRouter([
       {
         path: "/Dashboard",
         element: <Dashboard />,
+      },
+      {
+        path: "/Boletas",
+        element: <Boletas />,
+      },
+      {
+        path: "/Transporte",
+        element: <Transporte />,
+      },
+      {
+        path: "/Clientes",
+        element: <Clientes />,
+      },
+      {
+        path: "/Productos",
+        element: <Productos />,
       },
     ],
   },

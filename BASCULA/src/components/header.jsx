@@ -4,7 +4,7 @@ import logo from '../assets/logo.png'
 const Header = ({ title, fun }) => {
   return (
     <>
-      <div className="bg-amber-50 w-full max-h-16 shadow-sm flex items-center gap-6">
+      <div className="bg-amber-50 w-full h-16 shadow-sm flex items-center gap-6">
         <div>
           <button
             onClick={fun}

@@ -24,3 +24,78 @@ body {
 .sidebar{
   background: hsl(var(--sidebar))
 }
+
+
+
+@media (max-height: 700px) {
+  .body-components {
+    height: 100%;
+  }
+  .sideBar-hidden-h-700px {
+    visibility: hidden;
+  }
+}
+
+
+@media (min-height: 700px) {
+  .body-components {
+    max-height: 560px;
+  }
+}
+
+@media (min-height: 700px) {
+  .body-components {
+    max-height: 670px;
+  }
+}
+
+@media (min-height: 800px) {
+  .body-components {
+    max-height: 760px;
+  }
+}
+
+@media (min-height: 800px) and (max-width: 500px) {
+  .body-components {
+    max-height: 830px;
+  }
+}
+
+/* Si la altura es al menos 800px, cambia el fondo a verde */
+@media (min-height: 900px) {
+  .body-components {
+    max-height: 840px;
+  }
+}
+
+@media (min-height: 1000px) {
+  .body-components {
+    max-height: 940px;
+  }
+}
+
+@media (min-height: 1100px) {
+  .body-components {
+    max-height: 1100px;
+  }
+}
+
+@media (min-height: 1336px) {
+  .body-components {
+    max-height: 1300px;
+  }
+}
+
+
+.body-components::-webkit-scrollbar {
+  width: 5px;
+  background: #ffffff;
+}
+
+.body-components::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.body-components::-webkit-scrollbar-thumb {
+  background: #955e37;
+}

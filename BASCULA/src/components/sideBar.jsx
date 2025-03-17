@@ -10,18 +10,18 @@ import { PiSignOutFill } from "react-icons/pi";
 
 const RUTAS_PRINCIPALES = [
   {
-    path: "/Dashboard",
+    path: "/dashboard",
     name: "Dashboard",
     icon: <MdOutlineDashboard />,
   },
   {
-    path: "/Boletas",
+    path: "/boletas",
     name: "Boletas",
     icon: <BsClipboard2Pulse />,
   },
   {
-    path: "/trasporte",
-    name: "Trasporte",
+    path: "/transporte",
+    name: "Transporte",
     icon: <RiTruckLine />,
   },
   ,
@@ -47,7 +47,7 @@ const SideBar = () => {
     }
     return (
     <>
-      <div className="w-[290px] sidebar p-1">
+      <div className="w-[290px] sidebar p-1 max-h-screen max-sm:hidden min-md:visible">
         <div data-sidebar="header" className="flex flex-col gap-2 p-2">
           <div className="flex items-center gap-2 px-2 py-2">
             <MdOutlineScale className="text-2xl justify-center items-center text-amber-300 mt-1" />
@@ -61,7 +61,7 @@ const SideBar = () => {
           <div className="px-2 py-2">
             <input
               type="text"
-              class="block w-full p-2 text-white border border-[#725033] rounded-md bg-[#5A3F27] text-sm focus:text-white  focus:border-blue-500"
+              className="block w-full p-2 text-white border border-[#725033] rounded-md bg-[#5A3F27] text-sm focus:text-white  focus:border-blue-500"
               placeholder="Buscar..."
             />
           </div>
@@ -72,11 +72,11 @@ const SideBar = () => {
             {RUTAS_PRINCIPALES.map((data, key) => (
               <NavLink className="flex items-center gap-x-3 rounded-md px-3 py-2 text-sm font-medium text-white" key={key} to={data.path}>
                 <span className="text-lg font-normal ">{data.icon}</span>
-                <span class="flex-1">{data.name}</span>
+                <span className="flex-1">{data.name}</span>
               </NavLink>
             ))}
           </ul>
-          <hr class="h-px my-8 bg-gray-200 border-0 dark:bg-gray-700" />
+          <hr className="h-px my-8 bg-gray-200 border-0 dark:bg-gray-700" />
         </div>
 
         {/* Parte de informes */}
@@ -85,17 +85,17 @@ const SideBar = () => {
                 <h1 className="px-3 text-sm text-gray-300">Reportes</h1>
                 <NavLink to='/informes' className="flex items-center gap-x-3 rounded-md px-3 py-2 text-sm font-medium text-white">
                     <span className="text-lg font-normal "><BsFileBarGraph /></span>
-                    <span class="flex-1">Informes</span>
+                    <span className="flex-1">Informes</span>
                 </NavLink>
                 <ul className="pl-5 border-l border-gray-500 ml-5">
                     <NavLink to='/informes' className="flex items-center gap-x-1 rounded-md py-2 text-sm font-medium text-white">
-                        <span class="flex-1">Informes Diarios</span>
+                        <span className="flex-1">Informes Diarios</span>
                     </NavLink>
                     <NavLink to='/informes' className="flex items-center gap-x-1 rounded-md py-2 text-sm font-medium text-white">
-                        <span class="flex-1">Informes Semanal</span>
+                        <span className="flex-1">Informes Semanal</span>
                     </NavLink>
                     <NavLink to='/informes' className="flex items-center gap-x-1 rounded-md py-2 text-sm font-medium text-white">
-                        <span class="flex-1">Informes Mensual</span>
+                        <span className="flex-1">Informes Mensual</span>
                     </NavLink>
                 </ul>
             </ul>
