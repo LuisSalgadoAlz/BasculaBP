@@ -3,21 +3,32 @@ import { useEffect, useState } from "react";
 import InputsFormBoletas from "./inputs";
 import SelectFormBoletas from "./select";
 import getClientes from "../../hooks/fetchClientesParaBoletas";
-
-import { hoy, claseFormInputs, classTextArea, tipoTransporte, cargando } from '../../constants/boletas'
 import getTransporte from "../../hooks/fetchTransporteParaBoletas";
+import { hoy, claseFormInputs, classTextArea, tipoTransporte, cargando } from '../../constants/boletas'
 
 const FormBoletas = ({ opc }) => {
   /* Tengo que convertir esto en un hook */
   const [clientes, setClientes] = useState()
   const [transporte, setTransporte] = useState()
+  const [formData, setFormData] = useState()
+
+  
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
+
 
   useEffect(() => {
     getClientes(setClientes)
     getTransporte(setTransporte)
-  }, []);
+    console.log(formData)
+  }, [formData]);
 
-  console.log(clientes)
+  
 
   return (
     <>
@@ -35,23 +46,23 @@ const FormBoletas = ({ opc }) => {
           <div className="mt-2 p-2">
             <div className="flex flex-wrap gap-2">
               <div className="grow">
-                <InputsFormBoletas data={claseFormInputs} name={"Placa"} />
+                <InputsFormBoletas data={claseFormInputs} name={"Placa"} fun={handleChange} />
               </div>
               <div className="grow">
-                <InputsFormBoletas data={claseFormInputs} name={"Remolque"} />
+                <InputsFormBoletas data={claseFormInputs} name={"Remolque"} fun={handleChange}/>
               </div>
             </div>
             <div className="flex flex-wrap gap-3 mt-5">
               <div className="grow-0">
-                <SelectFormBoletas classCss={claseFormInputs} name= "Tipo de transporte" data={tipoTransporte}/>
+                <SelectFormBoletas classCss={claseFormInputs} name= "Tipo de transporte" data={tipoTransporte} fun={handleChange}/>
               </div>
               <div className="grow-7">
-                <SelectFormBoletas classCss={claseFormInputs} data={transporte ? transporte : cargando} name={'Transportes'}/>
+                <SelectFormBoletas classCss={claseFormInputs} data={transporte ? transporte : cargando} name={'Transportes'} fun={handleChange}/>
               </div>
             </div>
             <div className="flex flex-wrap gap-3 mt-5">
               <div className="grow">
-                <SelectFormBoletas classCss={claseFormInputs} data={clientes ? clientes : cargando} name={'Clientes'}/>
+                <SelectFormBoletas classCss={claseFormInputs} data={clientes ? clientes : cargando} name={'Clientes'} fun={handleChange}/>
               </div>
             </div>
             <div className="flex flex-wrap gap-3 mt-5">
