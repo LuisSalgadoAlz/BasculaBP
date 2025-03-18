@@ -2,48 +2,19 @@ import { useEffect, useState } from "react";
 
 import InputsFormBoletas from "./inputs";
 import SelectFormBoletas from "./select";
+import getClientes from "../../hooks/fetchClientes";
 
-const tiempoTranscurrido = Date.now();
-const hoy = new Date(tiempoTranscurrido);
-
-const claseFormInputs = "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#955e37] focus:border-[#955e37] block w-full p-2"
-const classTextArea = "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#955e37] focus:border-[#955e37] block w-full p-2"
-
-const tipoTransporte = [
-  {
-    id : 1, 
-    nombre : "propio"
-  },
-  {
-    id : 2, 
-    nombre : "contratado"
-  },
-]
-
-const cargando = [
-  {
-    id : 1, 
-    nombre : "Cargando datos"
-  },
-]
-
+import { hoy, claseFormInputs, classTextArea, tipoTransporte, cargando } from '../../constants/boletas'
+import getTransporte from "../../hooks/fetchTransporte";
 
 const FormBoletas = ({ opc }) => {
   /* Tengo que convertir esto en un hook */
   const [clientes, setClientes] = useState()
-  const getClientes = async () => {
-    const data = await fetch("http://localhost:3000/clientes", {
-      method : 'GET',
-      headers : {
-        "Authorization" : window.localStorage.getItem('token')
-      }
-    })
-    const res = await data.json()
-    setClientes(res)
-  }
+  const [transporte, setTransporte] = useState()
 
   useEffect(() => {
-    getClientes()
+    getClientes(setClientes)
+    getTransporte(setTransporte)
   }, []);
 
   console.log(clientes)
@@ -75,7 +46,7 @@ const FormBoletas = ({ opc }) => {
                 <SelectFormBoletas classCss={claseFormInputs} name= "Tipo de transporte" data={tipoTransporte}/>
               </div>
               <div className="grow-7">
-                <InputsFormBoletas data={claseFormInputs} name={"Transporte"} />
+                <SelectFormBoletas classCss={claseFormInputs} data={transporte ? transporte : cargando} name={'Transportes'}/>
               </div>
             </div>
             <div className="flex flex-wrap gap-3 mt-5">
