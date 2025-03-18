@@ -6,6 +6,7 @@ import SideBarIcons from "../components/sideBarIcons";
 const Cuerpo = ({ children }) => {
   const [sideBarShow, setSideBarShow] = useState(true);
   const [altura, setAltura] = useState(window.innerHeight.toString());
+  const [anchura, setAnchura] = useState(window.innerWidth.toString());
 
   const handleShow = () => {
     setSideBarShow(!sideBarShow);
@@ -14,6 +15,7 @@ const Cuerpo = ({ children }) => {
   useEffect(() => {
     const modificar = () => {
       setAltura(window.innerHeight);
+      setAnchura(window.innerWidth);
     };
 
     window.addEventListener("resize", modificar);
@@ -27,7 +29,9 @@ const Cuerpo = ({ children }) => {
     <>
       <main className="min-w-screen min-h-screen flex">
         {/* Manejo de los sideBar con la altura de la ventana */}
-        {altura > 750 ? (
+        {anchura < 950 ? (
+          <SideBarIcons />
+        ) : altura > 750 ? (
           sideBarShow ? (
             <SideBar />
           ) : (
