@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 
 import InputsFormBoletas from "./inputs";
 import SelectFormBoletas from "./select";
-import getClientes from "../../hooks/fetchClientes";
+import getClientes from "../../hooks/fetchClientesParaBoletas";
 
 import { hoy, claseFormInputs, classTextArea, tipoTransporte, cargando } from '../../constants/boletas'
-import getTransporte from "../../hooks/fetchTransporte";
+import getTransporte from "../../hooks/fetchTransporteParaBoletas";
 
 const FormBoletas = ({ opc }) => {
   /* Tengo que convertir esto en un hook */
@@ -85,10 +85,7 @@ const FormBoletas = ({ opc }) => {
           <div className="mt-2 p-2">
             <div className="flex flex-wrap gap-3">
               <div className="grow">
-                <label className="block mb-2 text-sm font-medium text-gray-900 ">Documento</label>
-                <select name="" id="" className={claseFormInputs}>
-                  <option value="">Llenar</option>
-                </select>
+                <InputsFormBoletas data={claseFormInputs} name={"Documento"} />
               </div>
             </div>
             <div className="flex flex-wrap gap-2 mt-5">

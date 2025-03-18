@@ -1,6 +1,6 @@
 const getTransporte = async ( fun ) => {
     try {
-      const response = await fetch("http://localhost:3000/transportes", {
+      const response = await fetch("http://localhost:3000/transportes/boletas", {
         method: 'GET',
         headers: {
           "Authorization": window.localStorage.getItem('token'),

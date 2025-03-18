@@ -23,8 +23,7 @@ const Boletas = () => {
         </div>
       </div>
       <div className="mt-6 bg-white shadow rounded-xl px-6 py-7">
-        <FormBoletas />
-        {/* {openModelForm ? <FormBoletas/> : <ViewBoletas opc = {1} />}   */}
+        {openModelForm ? <FormBoletas/> : <ViewBoletas opc = {1} />}
       </div>
     </>
   );

@@ -1,6 +1,6 @@
 const getClientes = async ( fun ) => {
   try {
-    const response = await fetch("http://localhost:3000/clientes", {
+    const response = await fetch("http://localhost:3000/clientes/boletas", {
       method: 'GET',
       headers: {
         "Authorization": window.localStorage.getItem('token'),
