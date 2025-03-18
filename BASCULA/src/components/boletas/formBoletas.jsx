@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 import InputsFormBoletas from "./inputs";
 import SelectFormBoletas from "./select";
 
@@ -18,7 +20,34 @@ const tipoTransporte = [
   },
 ]
 
+const cargando = [
+  {
+    id : 1, 
+    nombre : "Cargando datos"
+  },
+]
+
+
 const FormBoletas = ({ opc }) => {
+  /* Tengo que convertir esto en un hook */
+  const [clientes, setClientes] = useState()
+  const getClientes = async () => {
+    const data = await fetch("http://localhost:3000/clientes", {
+      method : 'GET',
+      headers : {
+        "Authorization" : window.localStorage.getItem('token')
+      }
+    })
+    const res = await data.json()
+    setClientes(res)
+  }
+
+  useEffect(() => {
+    getClientes()
+  }, []);
+
+  console.log(clientes)
+
   return (
     <>
       <div className="bg-[#98591B] p-4 rounded-sm text-white border-0 flex items-center justify-between">
@@ -51,10 +80,7 @@ const FormBoletas = ({ opc }) => {
             </div>
             <div className="flex flex-wrap gap-3 mt-5">
               <div className="grow">
-                <label className="block mb-2 text-sm font-medium text-gray-900 ">Cliente</label>
-                <select name="" id="" className={claseFormInputs}>
-                  <option value="">Llenar</option>
-                </select>
+                <SelectFormBoletas classCss={claseFormInputs} data={clientes ? clientes : cargando} name={'Clientes'}/>
               </div>
             </div>
             <div className="flex flex-wrap gap-3 mt-5">
