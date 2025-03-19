@@ -8,13 +8,14 @@ import { hoy, claseFormInputs, classFormSelct, classTextArea, tipoTransporte, ca
 
 const FormBoletas = ({ opc }) => {
   /* Tengo que convertir esto en un hook */
+
   const [clientes, setClientes] = useState()
+  const [procesos, setProcesos] = useState()
   const [transporte, setTransporte] = useState()
   const [motoristas, setMotoristas] = useState()
   const [formData, setFormData] = useState()
   const [placa, setPlaca] = useState('')
   const [placas, setPlacas] = useState()
-  const [procesos, setProcesos] = useState()
 
   const handleChange = (e) => {
     const { name, value } = e.target;
