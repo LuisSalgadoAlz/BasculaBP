@@ -4,16 +4,22 @@ const db = new PrismaClient()
 
 /* Listar usuarios */
 const getTransporteParaBoletas = async (req, res) => {   
+    const {idPlaca} = req.params
     const data = await db.transporte.findMany({
-        select: {
-            id: true,
-            nombre: true, 
-            idPlaca: true
+        where : {
+            idPlaca: parseInt(idPlaca)
         }
     })
+
     res.json(data)
 }
 
+const getTransporte = async (req, res) => {   
+    const data = await db.transporte.findMany()
+    res.json(data)
+}
+
+
 module.exports = {
-    getTransporteParaBoletas
+    getTransporteParaBoletas, getTransporte
 }
