@@ -1,15 +1,17 @@
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 
 import InputsFormBoletas from "./inputs";
 import SelectFormBoletas from "./select";
 import getClientes from "../../hooks/fetchClientesParaBoletas";
 import getTransporte from "../../hooks/fetchTransporteParaBoletas";
+import getMotoristas from "../../hooks/fetchMotoristasParaBoletas"
 import { hoy, claseFormInputs, classFormSelct, classTextArea, tipoTransporte, cargando } from '../../constants/boletas'
 
 const FormBoletas = ({ opc }) => {
   /* Tengo que convertir esto en un hook */
   const [clientes, setClientes] = useState()
   const [transporte, setTransporte] = useState()
+  const [motoristas, setMotoristas] = useState()
   const [formData, setFormData] = useState()
 
   
@@ -25,6 +27,7 @@ const FormBoletas = ({ opc }) => {
   useEffect(() => {
     getClientes(setClientes)
     getTransporte(setTransporte)
+    getMotoristas(setMotoristas)
     console.log(formData)
   }, [formData]);
 
@@ -67,7 +70,7 @@ const FormBoletas = ({ opc }) => {
             </div>
             <div className="flex flex-wrap gap-3 mt-5">
               <div className="grow">
-                <InputsFormBoletas data={claseFormInputs} name={"Motorista"} />
+              <SelectFormBoletas classCss={classFormSelct} data={motoristas ? motoristas : cargando} name={'Motoristas'} fun={handleChange}/> 
               </div>
             </div>
             <div className="flex flex-wrap gap-2 mt-5">
