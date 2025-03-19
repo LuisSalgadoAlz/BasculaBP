@@ -15,7 +15,7 @@ model Boleta {
     impreso Boolean /* si / no */
     idUsuario Int /* Es el despachador */
     fechaDeEmision DateTime
-
+    idMotorista Int
 
     /* Relaciones dentro de la boleta */
     despachador Usuarios @relation(fields: [idUsuario], references: [id])
@@ -27,4 +27,5 @@ model Boleta {
     proveedoresBoleta Proveedores @relation(fields: [idProveedores], references: [id])
     origenBoletas Origen @relation(fields: [idOrigen], references: [id])
     destinoBoletas Destino @relation(fields: [idDestino], references: [id])
+    motoristaBoleta Motoristas @relation(fields: [idMotorista], references: [id])
 }

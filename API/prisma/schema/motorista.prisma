@@ -1,0 +1,10 @@
+model Motoristas{
+    id Int @id @default(autoincrement())
+    nombre String
+    direccion String?
+    telefono String?
+    correo String? @unique
+
+    /* Relacion con boleta */
+    boletaMotoristas Boleta[]
+}
