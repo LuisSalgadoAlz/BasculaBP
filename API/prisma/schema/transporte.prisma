@@ -4,7 +4,8 @@ model Transporte {
     placa String
     descripcion String?
     estado String
-
+    idPlaca Int
     /* Relaciones con boleta */
     boletaTransporte Boleta[]
+    motoristaBoleta Placas @relation(fields: [idPlaca], references: [id])
 }
