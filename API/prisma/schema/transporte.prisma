@@ -1,11 +1,11 @@
 model Transporte {
     id Int @id @default(autoincrement())
     nombre String
-    placa String
     descripcion String?
     estado String
     idPlaca Int
+    
     /* Relaciones con boleta */
     boletaTransporte Boleta[]
-    motoristaBoleta Placas @relation(fields: [idPlaca], references: [id])
+    motoristaBoleta Placas []
 }
