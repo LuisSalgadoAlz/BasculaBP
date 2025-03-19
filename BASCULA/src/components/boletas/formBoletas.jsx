@@ -1,10 +1,13 @@
 import { use, useEffect, useState } from "react";
 
-import InputsFormBoletas from "./inputs";
+import { InputsFormBoletas, InputsFormBoletasPeso } from "./inputs";
 import SelectFormBoletas from "./select";
 
-import { getClientes, getMotoristas, getPlacas, getTransporte, getProcesos, getDestino, getOrigen, getProductos } from '../../hooks/formsBoletas'
+import { getClientes, getMotoristas, getPlacas, getTransporte, getProcesos, getDestino, getOrigen, getProductos, getTipoDePeso, getPeso } from '../../hooks/formsBoletas'
 import { hoy, claseFormInputs, classFormSelct, classTextArea, tipoTransporte, cargando } from '../../constants/boletas'
+
+import { FaWeight } from "react-icons/fa";
+
 
 const FormBoletas = ({ opc }) => {
   /* Tengo que convertir esto en un hook */
@@ -16,7 +19,9 @@ const FormBoletas = ({ opc }) => {
   const [origen, setOrigen] = useState()
   const [destino, setDestino] = useState()
   const [producto, setProducto] = useState()
-
+  const [pesoEntrada, setPesoEntrada] = useState()
+  const [pesoSalida, setPesoSalida] = useState()
+  const [tipoDePeso, setTipoDePeso] = useState()
   const [formData, setFormData] = useState()
   const [placa, setPlaca] = useState('')
   const [placas, setPlacas] = useState()
@@ -45,10 +50,20 @@ const FormBoletas = ({ opc }) => {
     getDestino(setDestino)
     getOrigen(setOrigen)
     getProductos(setProducto)
+    getTipoDePeso(setTipoDePeso)
     console.log(formData)
   }, [formData, placa]);
 
-  
+  const handleClickPesoEntrada = (e) => {
+    e.preventDefault()
+    getPeso(setPesoEntrada)
+  }
+
+  const handleClickSalida = (e) => {
+    e.preventDefault()
+    getPeso(setPesoSalida)
+  }
+
 
   return (
     <>
@@ -95,7 +110,7 @@ const FormBoletas = ({ opc }) => {
                 <SelectFormBoletas classCss={classFormSelct} data={producto ? producto : cargando} name={'Tipo de producto'} fun={handleChange}/>
               </div>
               <div className="grow">
-                <SelectFormBoletas classCss={classFormSelct} data={producto ? producto : cargando} name={'Tipo de peso'} fun={handleChange}/>
+                <SelectFormBoletas classCss={classFormSelct} data={tipoDePeso ? tipoDePeso : cargando} name={'Tipo de peso'} fun={handleChange}/>
               </div>
             </div>
             <div className="flex flex-wrap gap-2 mt-5">
@@ -114,11 +129,23 @@ const FormBoletas = ({ opc }) => {
               </div>
             </div>
             <div className="flex flex-wrap gap-2 mt-5">
-              <div className="grow">
-                <InputsFormBoletas data={claseFormInputs} name={"Peso de entrada"} />
+              <div className="grow flex items-center gap-2">
+                <div className="separador grow">
+                  <InputsFormBoletasPeso data={claseFormInputs} name={"Peso de entrada"} value={pesoEntrada ? pesoEntrada.peso : '0.00lb'}/>
+                </div>
+                <div className="flex-none">
+                  <button onClick={handleClickPesoEntrada} className="rounded-2xl mt-7 px-2"><FaWeight className="text-gray-600 text-3xl"/></button>
+                </div>
               </div>
-              <div className="grow">
-                <InputsFormBoletas data={claseFormInputs} name={"Peso de salida"} />
+            </div>
+            <div className="flex flex-wrap gap-2 mt-5">
+              <div className="grow flex items-center gap-2">
+                <div className="separador grow">
+                  <InputsFormBoletasPeso data={claseFormInputs} name={"Peso de salida"} />
+                </div>
+                <div className="flex-none">
+                  <button onClick={handleClickSalida} className="rounded-2xl mt-7 px-2"><FaWeight className="text-gray-600 text-3xl" values={pesoSalida ? pesoSalida.peso : '0.00lb'} /></button>
+                </div>
               </div>
             </div>
             <div className="flex flex-wrap gap-2 mt-5">
@@ -136,8 +163,7 @@ const FormBoletas = ({ opc }) => {
             </div>
             <div className="flex flex-wrap gap-3 mt-5">
               <div className="grow">
-                <label className="block mb-2 text-sm font-medium text-gray-900 ">Observaciones</label>
-                <textarea name="" id="" className={classTextArea} placeholder="Ingrese sus observaciones aqui"/>
+                <InputsFormBoletas data={claseFormInputs} name={"Observaciones"} />
               </div>
             </div>
             <div className="flex flex-wrap gap-3 mt-5">
