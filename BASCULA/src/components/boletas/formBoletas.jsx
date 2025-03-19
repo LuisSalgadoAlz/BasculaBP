@@ -2,10 +2,8 @@ import { use, useEffect, useState } from "react";
 
 import InputsFormBoletas from "./inputs";
 import SelectFormBoletas from "./select";
-import getClientes from "../../hooks/fetchClientesParaBoletas";
-import getTransporte from "../../hooks/fetchTransporteParaBoletas";
-import getMotoristas from "../../hooks/fetchMotoristasParaBoletas"
-import getPlacas from "../../hooks/fetchPlacasParaBoletas"
+
+import { getClientes, getMotoristas, getPlacas, getTransporte } from '../../hooks/formsBoletas'
 import { hoy, claseFormInputs, classFormSelct, classTextArea, tipoTransporte, cargando } from '../../constants/boletas'
 
 const FormBoletas = ({ opc }) => {
