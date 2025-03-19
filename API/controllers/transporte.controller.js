@@ -4,10 +4,9 @@ const db = new PrismaClient()
 
 /* Listar usuarios */
 const getTransporteParaBoletas = async (req, res) => {   
-    const {idPlaca} = req.params
     const data = await db.transporte.findMany({
         where : {
-            idPlaca: parseInt(idPlaca)
+            idPlaca: parseInt(req.params.idPlaca)
         }
     })
 
