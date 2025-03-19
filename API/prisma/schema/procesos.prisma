@@ -1,6 +1,6 @@
 model Procesos {
     id Int @id @default(autoincrement())
-    idTipoDeProcesos Int
+    nombre String
     peso Float
     fechaInicio DateTime
     fechaFin DateTime

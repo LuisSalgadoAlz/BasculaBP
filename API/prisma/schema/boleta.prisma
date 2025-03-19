@@ -18,8 +18,8 @@ model Boleta {
     idMotorista Int
 
     /* Relaciones dentro de la boleta */
+    procesoBoleta Procesos[]
     despachador Usuarios @relation(fields: [idUsuario], references: [id])
-    procesoBoleta Procesos @relation(fields: [idProceso], references: [id])
     transporteBoleta Transporte @relation(fields: [idTransporte], references: [id])
     tipoDePesoBoleta TiposDePeso @relation(fields: [idTipoDePeso], references: [id])
     clienteBoleta Clientes @relation(fields: [idCliente], references: [id])
