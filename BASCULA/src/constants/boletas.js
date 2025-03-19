@@ -2,20 +2,20 @@ const tiempoTranscurrido = Date.now();
 export const hoy = new Date(tiempoTranscurrido);
 
 export const claseFormInputs =
-  "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#955e37] focus:border-[#955e37] block w-full p-2";
+  "bg-gray-50 border border-gray-600 text-gray-900 text-sm rounded-lg focus:ring-[#955e37] focus:border-[#955e37] block w-full p-2";
 
 export const classFormSelct = {
   control: (provided, state) => ({
     ...provided,
-    backgroundColor: "#f9fafb", // bg-gray-50
-    borderColor: "#D1D5DB",
+    backgroundColor: "#f9fafb", // bg-gray-50 / D1D5DB
+    borderColor: "#4A5565",
     color: "#111827",
     fontSize: "0.875rem",
     borderRadius: "0.5rem",
     padding: "0",
-    boxShadow: state.isFocused ? "#D1D5DB" : "none",
+    boxShadow: state.isFocused ? "#4A5565" : "none",
     "&:hover": {
-      borderColor: "#D1D5DB",
+      borderColor: "#4A5565",
     },
   }),
   menu: (provided) => ({
@@ -41,7 +41,7 @@ export const classFormSelct = {
 };
 
 export const classTextArea =
-  "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#955e37] focus:border-[#955e37] block w-full p-2";
+  "bg-gray-50 border border-gray-600 text-gray-900 text-sm rounded-lg focus:ring-[#955e37] block w-full p-2";
 
 export const tipoTransporte = [
   {
