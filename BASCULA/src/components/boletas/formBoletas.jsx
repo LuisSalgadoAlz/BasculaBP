@@ -3,7 +3,7 @@ import { use, useEffect, useState } from "react";
 import InputsFormBoletas from "./inputs";
 import SelectFormBoletas from "./select";
 
-import { getClientes, getMotoristas, getPlacas, getTransporte, getProcesos } from '../../hooks/formsBoletas'
+import { getClientes, getMotoristas, getPlacas, getTransporte, getProcesos, getDestino, getOrigen } from '../../hooks/formsBoletas'
 import { hoy, claseFormInputs, classFormSelct, classTextArea, tipoTransporte, cargando } from '../../constants/boletas'
 
 const FormBoletas = ({ opc }) => {
@@ -13,6 +13,8 @@ const FormBoletas = ({ opc }) => {
   const [procesos, setProcesos] = useState()
   const [transporte, setTransporte] = useState()
   const [motoristas, setMotoristas] = useState()
+  const [origen, setOrigen] = useState()
+  const [destino, setDestino] = useState()
   const [formData, setFormData] = useState()
   const [placa, setPlaca] = useState('')
   const [placas, setPlacas] = useState()
@@ -38,6 +40,8 @@ const FormBoletas = ({ opc }) => {
     getPlacas(setPlacas)
     getTransporte(setTransporte, placa)
     getProcesos(setProcesos)
+    getDestino(setDestino)
+    getOrigen(setOrigen)
     console.log(formData)
   }, [formData, placa]);
 
@@ -80,21 +84,15 @@ const FormBoletas = ({ opc }) => {
             </div>
             <div className="flex flex-wrap gap-3 mt-5">
               <div className="grow">
-              <SelectFormBoletas classCss={classFormSelct} data={motoristas ? motoristas : cargando} name={'Motoristas'} fun={handleChange}/> 
+                <SelectFormBoletas classCss={classFormSelct} data={motoristas ? motoristas : cargando} name={'Motoristas'} fun={handleChange}/> 
               </div>
             </div>
             <div className="flex flex-wrap gap-2 mt-5">
               <div className="grow">
-                <label className="block mb-2 text-sm font-medium text-gray-900 ">Origen</label>
-                <select name="" id="" className={claseFormInputs}>
-                  <option value="0">Llenar</option>
-                </select>
+                <SelectFormBoletas classCss={classFormSelct} data={origen ? origen : cargando} name={'Origen'} fun={handleChange}/>
               </div>
               <div className="grow">
-                <label className="block mb-2 text-sm font-medium text-gray-900 ">Destino</label>
-                <select name="" id="" className={claseFormInputs}>
-                  <option value="0">Llenar</option>
-                </select>
+                <SelectFormBoletas classCss={classFormSelct} data={destino ? destino : cargando} name={'Destino'} fun={handleChange}/>
               </div>
             </div>
             <div className="flex flex-wrap gap-3 mt-5">

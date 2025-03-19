@@ -3,8 +3,8 @@ const dotenv = require('dotenv')
 const db = new PrismaClient()
 
 /* Listar usuarios */
-const getDestinoParaBoletas = async (req, res) => {   
-    const data = await db.destino.findMany({
+const getProductosParaBoletas = async (req, res) => {   
+    const data = await db.producto.findMany({
         select: {
             id: true,
             nombre: true
@@ -14,5 +14,5 @@ const getDestinoParaBoletas = async (req, res) => {
 }
 
 module.exports = {
-    getDestinoParaBoletas
+    getProductosParaBoletas
 }
