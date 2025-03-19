@@ -4,7 +4,7 @@ import InputsFormBoletas from "./inputs";
 import SelectFormBoletas from "./select";
 import getClientes from "../../hooks/fetchClientesParaBoletas";
 import getTransporte from "../../hooks/fetchTransporteParaBoletas";
-import { hoy, claseFormInputs, classTextArea, tipoTransporte, cargando } from '../../constants/boletas'
+import { hoy, claseFormInputs, classFormSelct, classTextArea, tipoTransporte, cargando } from '../../constants/boletas'
 
 const FormBoletas = ({ opc }) => {
   /* Tengo que convertir esto en un hook */
@@ -54,15 +54,15 @@ const FormBoletas = ({ opc }) => {
             </div>
             <div className="flex flex-wrap gap-3 mt-5">
               <div className="grow-0">
-                <SelectFormBoletas classCss={claseFormInputs} name= "Tipo de transporte" data={tipoTransporte} fun={handleChange}/>
+                <SelectFormBoletas classCss={classFormSelct} name= "Tipo de transporte" data={tipoTransporte} fun={handleChange}/>
               </div>
               <div className="grow-7">
-                <SelectFormBoletas classCss={claseFormInputs} data={transporte ? transporte : cargando} name={'Transportes'} fun={handleChange}/>
+                <SelectFormBoletas classCss={classFormSelct} data={transporte ? transporte : cargando} name={'Transportes'} fun={handleChange}/>
               </div>
             </div>
             <div className="flex flex-wrap gap-3 mt-5">
               <div className="grow">
-                <SelectFormBoletas classCss={claseFormInputs} data={clientes ? clientes : cargando} name={'Clientes'} fun={handleChange}/>
+                <SelectFormBoletas classCss={classFormSelct} data={clientes ? clientes : cargando} name={'Clientes'} fun={handleChange}/>
               </div>
             </div>
             <div className="flex flex-wrap gap-3 mt-5">
