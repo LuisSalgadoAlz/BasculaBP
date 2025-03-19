@@ -10,12 +10,16 @@ model Boleta {
     idOrigen Int
     idDestino Int
     manifiesto Int? /* Opcional */
-    pesoTeorico Float? /* Opcional */
     estado String /* Entrando, Saliendo, Terminado listo para imprimir */
     impreso Boolean /* si / no */
     idUsuario Int /* Es el despachador */
     fechaDeEmision DateTime
     idMotorista Int
+    pesoTeorico Float? /* Opcional */
+    pesoInicial Float
+    pesoFinal Float
+    fechaInicio DateTime
+    fechaFin DateTime
 
     /* Relaciones dentro de la boleta */
     procesoBoleta Procesos[]

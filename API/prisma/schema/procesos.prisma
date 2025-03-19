@@ -1,10 +1,7 @@
 model Procesos {
     id Int @id @default(autoincrement())
     nombre String
-    peso Float
-    fechaInicio DateTime
-    fechaFin DateTime
-
+    
     /* Relaciones con boleta */
     boletaProceso Boleta[]
 }

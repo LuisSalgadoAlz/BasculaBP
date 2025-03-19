@@ -3,7 +3,7 @@ import { use, useEffect, useState } from "react";
 import InputsFormBoletas from "./inputs";
 import SelectFormBoletas from "./select";
 
-import { getClientes, getMotoristas, getPlacas, getTransporte } from '../../hooks/formsBoletas'
+import { getClientes, getMotoristas, getPlacas, getTransporte, getProcesos } from '../../hooks/formsBoletas'
 import { hoy, claseFormInputs, classFormSelct, classTextArea, tipoTransporte, cargando } from '../../constants/boletas'
 
 const FormBoletas = ({ opc }) => {
@@ -14,10 +14,11 @@ const FormBoletas = ({ opc }) => {
   const [formData, setFormData] = useState()
   const [placa, setPlaca] = useState('')
   const [placas, setPlacas] = useState()
+  const [procesos, setProcesos] = useState()
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if(name=='placa') {
+    if(name=='Placa') {
       placaXtransporte(value)
     }
     setFormData((prevData) => ({
@@ -35,6 +36,8 @@ const FormBoletas = ({ opc }) => {
     getMotoristas(setMotoristas)
     getPlacas(setPlacas)
     getTransporte(setTransporte, placa)
+    getProcesos(setProcesos)
+    console.log(formData)
   }, [formData, placa]);
 
   
@@ -55,10 +58,10 @@ const FormBoletas = ({ opc }) => {
           <div className="mt-2 p-2">
             <div className="flex flex-wrap gap-2">
               <div className="grow">
-                <SelectFormBoletas classCss={classFormSelct} name= "placa" data={placas ? placas : cargando} fun={handleChange}/>
+                <SelectFormBoletas classCss={classFormSelct} name= "Proceso" data={procesos ? procesos : cargando} fun={handleChange}/>
               </div>
               <div className="grow">
-                <InputsFormBoletas data={claseFormInputs} name={"Remolque"} fun={handleChange}/>
+                <SelectFormBoletas classCss={classFormSelct} name= "Placa" data={placas ? placas : cargando} fun={handleChange}/>
               </div>
             </div>
             <div className="flex flex-wrap gap-3 mt-5">
