@@ -13,10 +13,13 @@ const FormBoletas = ({ opc }) => {
   const [transporte, setTransporte] = useState()
   const [motoristas, setMotoristas] = useState()
   const [formData, setFormData] = useState()
-
+  const [placa, setPlaca] = useState()
   
   const handleChange = (e) => {
     const { name, value } = e.target;
+    if(name == "Placa") {
+      setPlaca(value)
+    }
     setFormData((prevData) => ({
       ...prevData,
       [name]: value,
@@ -26,7 +29,7 @@ const FormBoletas = ({ opc }) => {
 
   useEffect(() => {
     getClientes(setClientes)
-    getTransporte(setTransporte)
+    getTransporte(setTransporte, placa)
     getMotoristas(setMotoristas)
     console.log(formData)
   }, [formData]);

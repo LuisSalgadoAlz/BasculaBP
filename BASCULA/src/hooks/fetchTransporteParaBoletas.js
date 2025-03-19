@@ -1,4 +1,4 @@
-const getTransporte = async ( fun ) => {
+const getTransporte = async ( fun, id='' ) => {
     try {
       const response = await fetch("http://localhost:3000/transportes/boletas", {
         method: 'GET',
@@ -12,7 +12,12 @@ const getTransporte = async ( fun ) => {
       }
   
       const data = await response.json();
-      fun(data);
+      if (id) {
+        const dataFilter = data.filter(el => el.idPlaca == id)
+        console.log(dataFilter)
+        return fun(dataFilter)
+      }
+      return fun(data)
     } catch (error) {
       console.error("Error al obtener los clientes:", error);
     }

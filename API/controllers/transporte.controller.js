@@ -7,7 +7,8 @@ const getTransporteParaBoletas = async (req, res) => {
     const data = await db.transporte.findMany({
         select: {
             id: true,
-            nombre: true
+            nombre: true, 
+            idPlaca: true
         }
     })
     res.json(data)
