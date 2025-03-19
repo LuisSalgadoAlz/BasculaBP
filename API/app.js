@@ -7,6 +7,7 @@ const logUser = require("./routes/login.routes");
 const basculaLive = require("./routes/basculaLive.routes");
 const clientes = require("./routes/clientes.routes");
 const transporte = require("./routes/transporte.routes")
+const motoristas = require("./routes/motorista.routes")
 
 /* Esto hace que el req.body no sea undefined */
 app.use(express.json());
@@ -19,6 +20,7 @@ app.use('/usuarios', router);
 app.use('/peso', basculaLive)
 app.use('/clientes', clientes)
 app.use('/transportes', transporte)
+app.use('/motoristas', motoristas)
 
 app.listen(process.env.PORT, () => {
   console.log(`Ejecutando API en http://localhost:${process.env.PORT}/`);
