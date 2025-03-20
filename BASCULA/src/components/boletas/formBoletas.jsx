@@ -110,10 +110,10 @@ const FormBoletas = ({ opc }) => {
               </div>
             </div>
             <div className="flex flex-wrap gap-3 mt-1.5">
-              <div className="flex-1 min-sm:flex-auto">
+              <div className="flex-1 max-md:flex-auto">
                 <SelectFormBoletas classCss={classFormSelct} data={producto ? producto : cargando} name={'Tipo de producto'} fun={handleChange}/>
               </div>
-              <div className="flex-1 min-sm:flex-auto">
+              <div className="flex-1 max-md:flex-auto">
                 <SelectFormBoletas classCss={classFormSelct} data={tipoDePeso ? tipoDePeso : cargando} name={'Tipo de peso'} fun={handleChange}/>
               </div>
             </div>
@@ -154,7 +154,7 @@ const FormBoletas = ({ opc }) => {
                 <InputsFormBoletas data={claseFormInputs} name={"Observaciones"} />
               </div>
             </div>
-            <div className="flex flex-wrap gap-3 mt-1.5">
+            <div className="flex flex-wrap gap-3 mt-5">
               <div className="grow">
                 <button type="submit" className={claseFormInputs}>Cancelar</button>
               </div>
