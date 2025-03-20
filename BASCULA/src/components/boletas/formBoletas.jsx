@@ -91,7 +91,7 @@ const FormBoletas = ({ opc }) => {
                 <SelectFormBoletas classCss={classFormSelct} name= "Placa" data={placas ? placas : cargando} fun={handleChange}/>
               </div>
             </div>
-            <div className="flex flex-wrap gap-3 mt-5">
+            <div className="flex flex-wrap gap-3 mt-1.5">
               <div className="flex-1 max-sm:flex-auto">
                 <SelectFormBoletas classCss={classFormSelct} name= "Tipo transporte" data={tipoTransporte} fun={handleChange}/>
               </div>
@@ -99,17 +99,17 @@ const FormBoletas = ({ opc }) => {
                 <SelectFormBoletas classCss={classFormSelct} data={transporte ? transporte : cargando} name={'Transportes'} fun={handleChange}/>
               </div>
             </div>
-            <div className="flex flex-wrap gap-3 mt-5">
+            <div className="flex flex-wrap gap-3 mt-1.5">
               <div className="grow">
                 <SelectFormBoletas classCss={classFormSelct} data={clientes ? clientes : cargando} name={'Clientes'} fun={handleChange}/>
               </div>
             </div>
-            <div className="flex flex-wrap gap-3 mt-5">
+            <div className="flex flex-wrap gap-3 mt-1.5">
               <div className="grow">
                 <SelectFormBoletas classCss={classFormSelct} data={motoristas ? motoristas : cargando} name={'Motoristas'} fun={handleChange}/> 
               </div>
             </div>
-            <div className="flex flex-wrap gap-3 mt-5">
+            <div className="flex flex-wrap gap-3 mt-1.5">
               <div className="flex-1 min-sm:flex-auto">
                 <SelectFormBoletas classCss={classFormSelct} data={producto ? producto : cargando} name={'Tipo de producto'} fun={handleChange}/>
               </div>
@@ -117,7 +117,7 @@ const FormBoletas = ({ opc }) => {
                 <SelectFormBoletas classCss={classFormSelct} data={tipoDePeso ? tipoDePeso : cargando} name={'Tipo de peso'} fun={handleChange}/>
               </div>
             </div>
-            <div className="flex flex-wrap gap-3 mt-5">
+            <div className="flex flex-wrap gap-3 mt-1.5">
               <div className="flex-1">
                 <SelectFormBoletas classCss={classFormSelct} data={origen ? origen : cargando} name={'Origen'} fun={handleChange}/>
               </div>
@@ -132,11 +132,11 @@ const FormBoletas = ({ opc }) => {
                 <InputsFormBoletas data={claseFormInputs} fun={handleChange} name={"Documento"} />
               </div>
             </div>
-            <div className="flex flex-wrap gap-3 mt-5">
+            <div className="flex flex-wrap gap-3 mt-1.5">
               {op==1 && <PartInputsPesos css={claseFormInputs} fun1={handleChange} id={"Peso entrada"} data={pesoEntrada} fun2={handleClickPesoEntrada} />}
               {op==2 && <PartInputsPesos2 css={claseFormInputs} fun1={handleChange} id={"Peso salida"} data={pesoSalida} fun2={handleClickSalida} />}
             </div>
-            <div className="flex flex-wrap gap-3 mt-5">
+            <div className="flex flex-wrap gap-3 mt-1.5">
               <div className="grow">
                 <InputsFormBoletas data={claseFormInputs} name={"Peso teorico"} />
               </div>
@@ -144,17 +144,17 @@ const FormBoletas = ({ opc }) => {
                 <InputsFormBoletas data={claseFormInputs} name={"Peso neto"} />
               </div>
             </div>
-            <div className="flex flex-wrap gap-3 mt-5">
+            <div className="flex flex-wrap gap-3 mt-1.5">
               <div className="grow">
                 <InputsFormBoletas data={claseFormInputs} name={"Desviacion"} />
               </div>
             </div>
-            <div className="flex flex-wrap gap-3 mt-5">
+            <div className="flex flex-wrap gap-3 mt-1.5">
               <div className="grow">
                 <InputsFormBoletas data={claseFormInputs} name={"Observaciones"} />
               </div>
             </div>
-            <div className="flex flex-wrap gap-3 mt-5">
+            <div className="flex flex-wrap gap-3 mt-1.5">
               <div className="grow">
                 <button type="submit" className={claseFormInputs}>Cancelar</button>
               </div>

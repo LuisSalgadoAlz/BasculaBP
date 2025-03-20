@@ -73,7 +73,7 @@ export const PartInputsPesos = ({ css, fun1, id, data, fun2 }) => {
 export const PartInputsPesos2 = ({ css, fun1, id, data, fun2 }) => {
   return (
     <>
-      <div className="flex flex-1 items-center gap-2">
+      <div className="flex flex-1 max-sm:flex-auto max items-center gap-2">
         <div className="grow sm:flex-auto">
           <InputsFormBoletas
             data={css}
@@ -82,7 +82,7 @@ export const PartInputsPesos2 = ({ css, fun1, id, data, fun2 }) => {
           />
         </div>
       </div>
-      <div className="flex flex-1 items-center gap-2">
+      <div className="flex flex-1 max-md:flex-auto items-center gap-2">
         <div className="grow sm:flex-auto">
           <InputsFormBoletasPeso
             data={css}
