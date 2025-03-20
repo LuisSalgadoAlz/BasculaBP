@@ -15,26 +15,24 @@ const RUTAS_PRINCIPALES = [
     icon: <MdOutlineDashboard />,
   },
   {
-    path: "/boletas",
-    name: "Boletas",
-    icon: <BsClipboard2Pulse />,
-  },
-  {
     path: "/transporte",
     name: "Transporte",
     icon: <RiTruckLine />,
   },
-  ,
   {
     path: "/clientes",
     name: "clientes",
     icon: <FiUsers  />,
   },
-  ,
   {
     path: "/productos",
     name: "Productos",
     icon: <AiOutlineProduct />,
+  },
+  {
+    path: "/boletas",
+    name: "Boletas",
+    icon: <BsClipboard2Pulse />,
   },
 ]
 
