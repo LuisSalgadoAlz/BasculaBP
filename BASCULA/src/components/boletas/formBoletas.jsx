@@ -52,14 +52,14 @@ const FormBoletas = ({ opc }) => {
     getOrigen(setOrigen);
     getProductos(setProducto);
     getTipoDePeso(setTipoDePeso);
+    console.log(formData)
   }, [placa, formData]); 
 
   useEffect(() => { 
-    console.log(formData)
     fetchData()
   }, [fetchData]);
 
-  const handleClickPesoEntrada = (e) => {
+  const handleClickPesoEntrada = async (e) => {
     e.preventDefault()
     getPeso(setPesoEntrada)
   }
@@ -68,6 +68,20 @@ const FormBoletas = ({ opc }) => {
     e.preventDefault()
     getPeso(setPesoSalida)
   }
+
+  const handleDataEnter = (e) => {
+    e.preventDefault();
+    const data = formData;
+    const alldata = {
+      ...data,
+      [op == 1 ? "Peso entrada" : "Peso salida"]:
+        op == 1
+          ? pesoEntrada.peso[0].replaceAll("lb", "")
+          : pesoSalida.peso[0].replaceAll("lb", ""),
+    };
+
+    console.log(alldata);
+  };
 
   return (
     <>
@@ -156,10 +170,10 @@ const FormBoletas = ({ opc }) => {
             </div>
             <div className="flex flex-wrap gap-3 mt-5">
               <div className="grow">
-                <button type="submit" className={claseFormInputs}>Cancelar</button>
+                <button className={claseFormInputs}>Cancelar</button>
               </div>
               <div className="grow">
-                <button type="submit" className={claseFormInputs}>Guardar</button>
+                <button onClick={handleDataEnter} className={claseFormInputs}>Guardar</button>
               </div>
             </div>
           </div>
