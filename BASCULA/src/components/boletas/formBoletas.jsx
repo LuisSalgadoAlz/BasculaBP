@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { InputsFormBoletas, PartInputsPesos, PartInputsPesos2 } from "./inputs";
 import SelectFormBoletas from "./select";
+import { getDataFormBoletas } from "../../hooks/formDataBoletas"
 
 import { getClientes, getMotoristas, getPlacas, getTransporte, getProcesos, getDestino, getOrigen, getProductos, getTipoDePeso, getPeso } from '../../hooks/formsBoletas'
 import { hoy, claseFormInputs, classFormSelct, tipoTransporte, cargando } from '../../constants/boletas'
@@ -71,16 +72,8 @@ const FormBoletas = ({ opc }) => {
 
   const handleDataEnter = (e) => {
     e.preventDefault();
-    const data = formData;
-    const alldata = {
-      ...data,
-      [op == 1 ? "Peso entrada" : "Peso salida"]:
-        op == 1
-          ? pesoEntrada.peso[0].replaceAll("lb", "")
-          : pesoSalida.peso[0].replaceAll("lb", ""),
-    };
-
-    console.log(alldata);
+    const data = getDataFormBoletas(formData, op, pesoEntrada, pesoSalida);
+    console.log(data)
   };
 
   return (
