@@ -1,12 +1,10 @@
-import { use, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
-import { InputsFormBoletas, InputsFormBoletasPeso } from "./inputs";
+import { InputsFormBoletas, PartInputsPesos, PartInputsPesos2 } from "./inputs";
 import SelectFormBoletas from "./select";
 
 import { getClientes, getMotoristas, getPlacas, getTransporte, getProcesos, getDestino, getOrigen, getProductos, getTipoDePeso, getPeso } from '../../hooks/formsBoletas'
-import { hoy, claseFormInputs, classFormSelct, classTextArea, tipoTransporte, cargando } from '../../constants/boletas'
-
-import { FaWeight } from "react-icons/fa";
+import { hoy, claseFormInputs, classFormSelct, tipoTransporte, cargando } from '../../constants/boletas'
 
 
 const FormBoletas = ({ opc }) => {
@@ -25,12 +23,14 @@ const FormBoletas = ({ opc }) => {
   const [formData, setFormData] = useState()
   const [placa, setPlaca] = useState('')
   const [placas, setPlacas] = useState()
+  const [op, setOp] = useState(1)
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if(name=='Placa') {
-      placaXtransporte(value)
-    }
+    if (name=='Placa') placaXtransporte(value)
+
+    if (name=='Proceso') setOp(value)
+    
     setFormData((prevData) => ({
       ...prevData,
       [name]: value,
@@ -41,18 +41,23 @@ const FormBoletas = ({ opc }) => {
     setPlaca(value)
   }
 
-  useEffect(() => {
-    getClientes(setClientes)
-    getMotoristas(setMotoristas)
-    getPlacas(setPlacas)
-    getTransporte(setTransporte, placa)
-    getProcesos(setProcesos)
-    getDestino(setDestino)
-    getOrigen(setOrigen)
-    getProductos(setProducto)
-    getTipoDePeso(setTipoDePeso)
+  /* Parte de rendimiendo de obtencion de datos */
+  const fetchData = useCallback(() => {
+    getClientes(setClientes);
+    getMotoristas(setMotoristas);
+    getPlacas(setPlacas);
+    getTransporte(setTransporte, placa);
+    getProcesos(setProcesos);
+    getDestino(setDestino);
+    getOrigen(setOrigen);
+    getProductos(setProducto);
+    getTipoDePeso(setTipoDePeso);
+  }, [placa, formData]); 
+
+  useEffect(() => { 
     console.log(formData)
-  }, [formData, placa]);
+    fetchData()
+  }, [fetchData]);
 
   const handleClickPesoEntrada = (e) => {
     e.preventDefault()
@@ -63,7 +68,6 @@ const FormBoletas = ({ opc }) => {
     e.preventDefault()
     getPeso(setPesoSalida)
   }
-
 
   return (
     <>
@@ -79,19 +83,19 @@ const FormBoletas = ({ opc }) => {
       <div className="mt-4">
         <form className="grid grid-flow-col grid-cols-2 grid-rows-1">
           <div className="mt-2 p-2">
-            <div className="flex flex-wrap gap-2">
-              <div className="grow">
+            <div className="flex flex-wrap gap-3">
+              <div className="flex-1">
                 <SelectFormBoletas classCss={classFormSelct} name= "Proceso" data={procesos ? procesos : cargando} fun={handleChange}/>
               </div>
-              <div className="grow">
+              <div className="flex-1">
                 <SelectFormBoletas classCss={classFormSelct} name= "Placa" data={placas ? placas : cargando} fun={handleChange}/>
               </div>
             </div>
             <div className="flex flex-wrap gap-3 mt-5">
-              <div className="grow-0">
-                <SelectFormBoletas classCss={classFormSelct} name= "Tipo de transporte" data={tipoTransporte} fun={handleChange}/>
+              <div className="flex-1 max-sm:flex-auto">
+                <SelectFormBoletas classCss={classFormSelct} name= "Tipo transporte" data={tipoTransporte} fun={handleChange}/>
               </div>
-              <div className="grow-7">
+              <div className="flex-1 max-sm:flex-auto">
                 <SelectFormBoletas classCss={classFormSelct} data={transporte ? transporte : cargando} name={'Transportes'} fun={handleChange}/>
               </div>
             </div>
@@ -106,18 +110,18 @@ const FormBoletas = ({ opc }) => {
               </div>
             </div>
             <div className="flex flex-wrap gap-3 mt-5">
-              <div className="grow">
+              <div className="flex-1 min-sm:flex-auto">
                 <SelectFormBoletas classCss={classFormSelct} data={producto ? producto : cargando} name={'Tipo de producto'} fun={handleChange}/>
               </div>
-              <div className="grow">
+              <div className="flex-1 min-sm:flex-auto">
                 <SelectFormBoletas classCss={classFormSelct} data={tipoDePeso ? tipoDePeso : cargando} name={'Tipo de peso'} fun={handleChange}/>
               </div>
             </div>
-            <div className="flex flex-wrap gap-2 mt-5">
-              <div className="grow">
+            <div className="flex flex-wrap gap-3 mt-5">
+              <div className="flex-1">
                 <SelectFormBoletas classCss={classFormSelct} data={origen ? origen : cargando} name={'Origen'} fun={handleChange}/>
               </div>
-              <div className="grow">
+              <div className="flex-1">
                 <SelectFormBoletas classCss={classFormSelct} data={destino ? destino : cargando} name={'Destino'} fun={handleChange}/>
               </div>
             </div>
@@ -125,30 +129,14 @@ const FormBoletas = ({ opc }) => {
           <div className="mt-2 p-2">
             <div className="flex flex-wrap gap-3">
               <div className="grow">
-                <InputsFormBoletas data={claseFormInputs} name={"Documento"} />
+                <InputsFormBoletas data={claseFormInputs} fun={handleChange} name={"Documento"} />
               </div>
             </div>
-            <div className="flex flex-wrap gap-2 mt-5">
-              <div className="grow flex items-center gap-2">
-                <div className="separador grow">
-                  <InputsFormBoletasPeso data={claseFormInputs} name={"Peso de entrada"} value={pesoEntrada ? pesoEntrada.peso : '0.00lb'}/>
-                </div>
-                <div className="flex-none">
-                  <button onClick={handleClickPesoEntrada} className="rounded-2xl mt-7 px-2"><FaWeight className="text-gray-600 text-3xl"/></button>
-                </div>
-              </div>
+            <div className="flex flex-wrap gap-3 mt-5">
+              {op==1 && <PartInputsPesos css={claseFormInputs} fun1={handleChange} id={"Peso entrada"} data={pesoEntrada} fun2={handleClickPesoEntrada} />}
+              {op==2 && <PartInputsPesos2 css={claseFormInputs} fun1={handleChange} id={"Peso salida"} data={pesoSalida} fun2={handleClickSalida} />}
             </div>
-            <div className="flex flex-wrap gap-2 mt-5">
-              <div className="grow flex items-center gap-2">
-                <div className="separador grow">
-                  <InputsFormBoletasPeso data={claseFormInputs} name={"Peso de salida"} />
-                </div>
-                <div className="flex-none">
-                  <button onClick={handleClickSalida} className="rounded-2xl mt-7 px-2"><FaWeight className="text-gray-600 text-3xl" values={pesoSalida ? pesoSalida.peso : '0.00lb'} /></button>
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-2 mt-5">
+            <div className="flex flex-wrap gap-3 mt-5">
               <div className="grow">
                 <InputsFormBoletas data={claseFormInputs} name={"Peso teorico"} />
               </div>
