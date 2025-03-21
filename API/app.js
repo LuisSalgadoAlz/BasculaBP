@@ -7,9 +7,6 @@ const logUser = require("./routes/login.routes");
 const basculaLive = require("./routes/basculaLive.routes");
 const clientes = require("./routes/clientes.routes");
 const motoristas = require("./routes/motorista.routes")
-const placas = require("./routes/placas.routes")
-const origen = require("./routes/origen.routes")
-const destino = require("./routes/destino.routes")
 const producto = require("./routes/productos.routes")
 const tipodepeso = require("./routes/tipoDePeso.routes")
 
@@ -24,9 +21,6 @@ app.use('/usuarios', router);
 app.use('/peso', basculaLive)
 app.use('/clientes', clientes)
 app.use('/motoristas', motoristas)
-app.use('/placas', placas)
-app.use('/origen', origen)
-app.use('/destino', destino)
 app.use('/producto', producto)
 app.use('/tipoDePeso', tipodepeso)
 
