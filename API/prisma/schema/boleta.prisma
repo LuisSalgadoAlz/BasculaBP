@@ -29,7 +29,5 @@ model Boleta {
     clienteBoleta Clientes @relation(fields: [idCliente], references: [id])
     tipoDeProductoBoleta Producto @relation(fields: [idTipoDeProducto], references: [id])
     proveedoresBoleta Proveedores @relation(fields: [idProveedores], references: [id])
-    origenBoletas Origen @relation(fields: [idOrigen], references: [id])
-    destinoBoletas Destino @relation(fields: [idDestino], references: [id])
     motoristaBoleta Motoristas @relation(fields: [idMotorista], references: [id])
 }

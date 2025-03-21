@@ -1,0 +1,10 @@
+model Logs {
+    id Int @id @default(autoincrement())
+    usuario String
+    tabla String?
+    Evento String
+    Fecha DateTime
+    Ip String?
+    navegador String?
+    Clave Int?
+}

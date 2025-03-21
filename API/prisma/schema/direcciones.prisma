@@ -5,5 +5,6 @@ model Direcciones {
     idCliente Int
     descripcion String?
 
+    /* Relacion con clientes */
     drClientes Clientes @relation(fields: [idCliente], references: [id])
 }
