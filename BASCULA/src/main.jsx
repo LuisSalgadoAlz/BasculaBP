@@ -7,7 +7,7 @@ import VerificarLog from "./utils/verificarLog";
 import Dashboard from "./views/dashboard";
 import NotFoundPage from "./views/notFoundPage";
 import Boletas from "./views/boletos";
-import Transporte from "./views/trasnporte";
+import Transporte from "./views/transporte";
 import Clientes from "./views/clientes";
 import Productos from "./views/productos";
 
