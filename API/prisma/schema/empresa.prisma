@@ -1,11 +1,14 @@
-model Transporte {
+model Empresa {
     id Int @id @default(autoincrement())
     nombre String
+    email String ?
+    telefono String?
     descripcion String?
     estado String
-    idPlaca Int
     
     /* Relaciones con boleta */
     boletaTransporte Boleta[]
-    motoristaBoleta Placas []
+
+    /* Relacion con placas */
+    trPlacas VehiculoXtransporte[]
 }

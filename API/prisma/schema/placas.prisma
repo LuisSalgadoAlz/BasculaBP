@@ -1,7 +1,36 @@
-model Placas {
+model Vehiculo {
     id Int @id @default(autoincrement())
-    nombre String
+    placa String
+    estado Boolean
 
     /* Relaciones con boleta */
-    placasBoletas Transporte[]
+    rlPlacasBoletas Boleta[]
+
+    /* Tablas de detalles */
+    trdetalles VehiculoXtransporte[]
+    mtDetalles VehiculoXmotorista[]
+}
+
+model VehiculoXtransporte {
+    id Int @id @default(autoincrement())
+    idVehiculo Int
+    idEmpresa Int
+
+    trDetalles Vehiculo @relation(fields: [idVehiculo], references: [id])
+    tr Empresa @relation(fields: [idEmpresa], references: [id])
+
+    /* Tiene que 1 de los dos ser diferente y no haya duplicados */
+    @@unique([idVehiculo, idEmpresa])
+}
+
+model VehiculoXmotorista {
+    id Int @id @default(autoincrement())
+    idVehiculo Int
+    idMotorista Int
+
+
+    mtDetalles Vehiculo @relation(fields: [idVehiculo], references: [id])
+    mt Motoristas @relation(fields: [idMotorista], references: [id])
+
+    @@unique([idVehiculo, idMotorista])
 }

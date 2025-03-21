@@ -1,8 +1,8 @@
 model Boleta {
     id String @id
+    idPlaca Int
     Categoria String /* Propio o Contratado */
-    idProceso Int
-    idTransporte Int
+    idEmpresa Int
     idTipoDePeso Int
     idCliente Int
     idTipoDeProducto Int
@@ -22,9 +22,9 @@ model Boleta {
     fechaFin DateTime
 
     /* Relaciones dentro de la boleta */
-    procesoBoleta Procesos[]
+    placasBoletas Vehiculo @relation(fields: [idPlaca], references: [id])
     despachador Usuarios @relation(fields: [idUsuario], references: [id])
-    transporteBoleta Transporte @relation(fields: [idTransporte], references: [id])
+    empresaBoleta Empresa @relation(fields: [idEmpresa], references: [id])
     tipoDePesoBoleta TiposDePeso @relation(fields: [idTipoDePeso], references: [id])
     clienteBoleta Clientes @relation(fields: [idCliente], references: [id])
     tipoDeProductoBoleta Producto @relation(fields: [idTipoDeProducto], references: [id])

@@ -1,6 +1,6 @@
 model Clientes{
     id Int @id @default(autoincrement())
-    nombre String
+    nombre String @unique
     direccion String?
     telefono String?
     correo String? @unique

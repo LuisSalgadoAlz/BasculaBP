@@ -7,4 +7,7 @@ model Motoristas{
 
     /* Relacion con boleta */
     boletaMotoristas Boleta[]
+
+    /* Relacion con vehiculo */
+    mtPlacas VehiculoXmotorista[] 
 }

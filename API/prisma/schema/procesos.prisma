@@ -1,7 +1,0 @@
-model Procesos {
-    id Int @id @default(autoincrement())
-    nombre String
-    
-    /* Relaciones con boleta */
-    boletaProceso Boleta[]
-}
