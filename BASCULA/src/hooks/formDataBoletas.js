@@ -7,6 +7,14 @@
  * @returns 
  * Esto se convertira en el procesamiento de datos mas limpios y tambien el hook que verifica los 
  * campos esten llenos y correctamente ingresados
+ * 
+ *  separar codigo 
+ * 
+ * verificar
+ * 
+ * limpiar
+ * 
+ * elegir
  */
 
 export const getDataFormBoletas = (arr, type, pesoIn, pesoOut) => {
