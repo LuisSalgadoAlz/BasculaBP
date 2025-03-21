@@ -15,8 +15,8 @@ const RUTAS_PRINCIPALES = [
     icon: <MdOutlineDashboard />,
   },
   {
-    path: "/transporte",
-    name: "Transporte",
+    path: "/empresas",
+    name: "Empresas",
     icon: <RiTruckLine />,
   },
   {

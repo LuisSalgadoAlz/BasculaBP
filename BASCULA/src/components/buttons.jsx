@@ -1,6 +1,6 @@
 import { IoAddOutline } from "react-icons/io5";
 
-const ButtonAdd = ({ name, fun }) => {
+export const ButtonAdd = ({ name, fun }) => {
   return (
     <>
       <button
@@ -14,4 +14,4 @@ const ButtonAdd = ({ name, fun }) => {
   );
 };
 
-export default ButtonAdd;
+

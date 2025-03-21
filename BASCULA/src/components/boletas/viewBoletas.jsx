@@ -1,4 +1,4 @@
-import ButtonAdd from "../buttons";
+import {ButtonAdd} from "../buttons";
 import TableComponent from "../table";
 
 const ViewBoletas = () => {

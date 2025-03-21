@@ -7,7 +7,7 @@ import VerificarLog from "./utils/verificarLog";
 import Dashboard from "./views/dashboard";
 import NotFoundPage from "./views/notFoundPage";
 import Boletas from "./views/boletos";
-import Transporte from "./views/transporte";
+import Transporte from "./views/empresas";
 import Clientes from "./views/clientes";
 import Productos from "./views/productos";
 
@@ -29,7 +29,7 @@ const navRutas = createBrowserRouter([
         element: <Boletas />,
       },
       {
-        path: "/Transporte",
+        path: "/Empresas",
         element: <Transporte />,
       },
       {

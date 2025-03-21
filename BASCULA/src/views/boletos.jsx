@@ -1,5 +1,5 @@
 import { useState } from "react";
-import ButtonAdd from "../components/buttons";
+import {ButtonAdd} from "../components/buttons";
 import ViewBoletas from "../components/boletas/viewBoletas";
 import FormBoletas from "../components/boletas/formBoletas";
 

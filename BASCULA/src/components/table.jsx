@@ -13,32 +13,12 @@ const TableComponent = () => {
       motorista: "ORLANDO LOPEZ",
       pesoNeto: 15620.0,
     },
-    {
-      boleta: "#058291",
-      tipo: "Entrada",
-      fechaHora: "06/03/2025 11:30",
-      transporte: "TRANSP. INTERIANO",
-      placas: "TCI0175",
-      origen: "BAPROSA IMSA",
-      motorista: "JUAN PEREZ",
-      pesoNeto: 14600.0,
-    },
-    {
-      boleta: "#058293",
-      tipo: "Entrada",
-      fechaHora: "07/03/2025 08:20",
-      transporte: "TRANSP. INTERIANO",
-      placas: "TCI0177",
-      origen: "BAPROSA IMSA",
-      motorista: "ORLANDO LOPEZ",
-      pesoNeto: 15600.0,
-    },
   ]);
 
   return (
     <>
       <div className="relative overflow-x-auto">
-        <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+        <table className="w-full text-sm text-left rtl:text-right text-gray-700 dark:text-gray-400">
           <thead className="text-xs text-gray-700 uppercase bg-[#FFFDF5]">
             <tr>
               {Object.keys(datos[0]).map((el, keys) => (
@@ -55,12 +35,12 @@ const TableComponent = () => {
             {datos.map((fila, index) => (
               <tr key={index} className="bg-white border-b  border-gray-200 hover:bg-[#FDF5D4]">
                 {Object.values(fila).map((el, key) => (
-                  <td key={key} className="px-6 py-3">
+                  <td key={key} className="px-6 py-3 text-gray-700">
                     {el}
                   </td>
                 ))}
                 <td className="py-3 text-center">
-                  <button className="font-medium text-gray-600 hover:underline text-center">
+                  <button className="font-medium text-gray-800 hover:underline text-center">
                     <span>
                       <IoIosSend className="text-xl" />
                     </span>
