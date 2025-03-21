@@ -113,3 +113,7 @@ a.active {
 .font-title {
   color: #31251B;
 }
+
+.bg-opa-50{
+  background: rgba(0, 0, 0, 0.5);
+}
