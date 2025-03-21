@@ -1,6 +1,10 @@
 model Vehiculo {
     id Int @id @default(autoincrement())
-    placa String
+    placa String @unique
+    modelo String?
+    marca String?
+    tipo String
+    pesoMaximo Float?
     estado Boolean
 
     /* Relaciones con boleta */
