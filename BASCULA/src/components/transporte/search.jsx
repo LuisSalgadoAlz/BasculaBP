@@ -1,26 +1,38 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ButtonAdd } from "../buttons";
 import TableComponent from "../table";
 import FormEmpresa from "./formEmpresa";
+import { getEmpresas, postEmpresas } from "../../hooks/formDataEmpresas";
 
 const Search = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState();
+  const [datos, setDatos] = useState();
 
   const toggleModal = () => setIsOpen(!isOpen);
 
   const handleData = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
-        ...prev,
-        [name] : value
-    }))
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleSubmit = () => {
-    console.log(formData)
-    setIsOpen(false)
-  }
+    postEmpresas(formData)
+    setIsOpen(false);
+    fetchData()
+  };
+
+  const fetchData = useCallback(() => {
+    getEmpresas(setDatos)
+  }, []);
+
+  useEffect(() => {
+    fetchData()
+  }, [fetchData]);
+
   return (
     <>
       <div className="filtros grid grid-rows-1 grid-cols-12 grid-flow-col gap-1.5">
@@ -34,9 +46,7 @@ const Search = () => {
         </select>
         <ButtonAdd name="Agregar" fun={toggleModal} />
       </div>
-      <div className="mt-7">
-        <TableComponent />
-      </div>
+      <div className="mt-7">{datos && <TableComponent datos={datos} />}</div>
 
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-opa-50">
@@ -54,7 +64,10 @@ const Search = () => {
               >
                 Cancelar
               </button>
-              <button onClick={handleSubmit} className="px-6 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700 transition duration-300 ease-in-out transform hover:scale-105">
+              <button
+                onClick={handleSubmit}
+                className="px-6 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700 transition duration-300 ease-in-out transform hover:scale-105"
+              >
                 Agregar
               </button>
             </div>

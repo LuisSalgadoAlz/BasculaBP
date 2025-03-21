@@ -15,7 +15,7 @@ const Transporte = () => {
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2 mt-5">
         <CardHeader data={12} name={"Total de empresas"} title={"Empresa"} />
-        <CardHeader data={12} name={"Total de activas"} title={"Empresa"} />
+        <CardHeader data={12} name={"Total de activas"} title={"Activas"} />
       </div>
       <div className="mt-6 bg-white shadow rounded-lg px-6 py-7 border border-gray-300">
         <Search />

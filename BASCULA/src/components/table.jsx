@@ -1,20 +1,7 @@
 import { useState } from "react";
 import { IoIosSend } from "react-icons/io";
 
-const TableComponent = () => {
-  const [datos, setDatos] = useState([
-    {
-      boleta: "#058289",
-      tipo: "Entrada",
-      fechaHora: "06/03/2025 07:17",
-      transporte: "TRANSP. INTERIANO",
-      placas: "TCI0173",
-      origen: "BAPROSA IMSA",
-      motorista: "ORLANDO LOPEZ",
-      pesoNeto: 15620.0,
-    },
-  ]);
-
+const TableComponent = ({datos=[{}]}) => {
   return (
     <>
       <div className="relative overflow-x-auto">
