@@ -4,7 +4,7 @@ import { InputsFormBoletas, PartInputsPesos, PartInputsPesos2 } from "./inputs";
 import SelectFormBoletas from "./select";
 import { getDataFormBoletas } from "../../hooks/formDataBoletas"
 
-import { getClientes, getMotoristas, getPlacas, getTransporte, getProcesos, getDestino, getOrigen, getProductos, getTipoDePeso, getPeso } from '../../hooks/formsBoletas'
+import { getPeso } from '../../hooks/formsBoletas'
 import { hoy, claseFormInputs, classFormSelct, tipoTransporte, cargando } from '../../constants/boletas'
 
 
@@ -44,16 +44,9 @@ const FormBoletas = ({ opc }) => {
 
   /* Parte de rendimiendo de obtencion de datos */
   const fetchData = useCallback(() => {
-    getClientes(setClientes);
-    getMotoristas(setMotoristas);
-    getPlacas(setPlacas);
-    getTransporte(setTransporte, placa);
-    getProcesos(setProcesos);
-    getDestino(setDestino);
-    getOrigen(setOrigen);
-    getProductos(setProducto);
-    getTipoDePeso(setTipoDePeso);
-    console.log(formData)
+    /**
+     * ? Aqui iran los fectcorrectos
+     */
   }, [placa, formData]); 
 
   useEffect(() => { 
