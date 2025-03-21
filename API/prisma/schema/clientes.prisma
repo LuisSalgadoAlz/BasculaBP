@@ -7,4 +7,7 @@ model Clientes{
 
     /* Relacion con boleta */
     boletaClientes Boleta[]
+
+    /* Relacion con direciones */
+    drClientes Direcciones[]
 }

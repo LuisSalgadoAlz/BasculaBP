@@ -1,0 +1,9 @@
+model Direcciones {
+    id Int @id @default(autoincrement())
+    nombre String
+    tipo Int /* 0: origen, 1: destino*/
+    idCliente Int
+    descripcion String?
+
+    drClientes Clientes @relation(fields: [idCliente], references: [id])
+}
