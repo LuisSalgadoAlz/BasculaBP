@@ -1,15 +1,15 @@
-import { StrictMode } from "react";
+import { StrictMode, lazy, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import { createBrowserRouter, Route, RouterProvider } from "react-router";
-import Login from "./views/login";
 import "./index.css";
-import VerificarLog from "./utils/verificarLog";
-import Dashboard from "./views/dashboard";
-import NotFoundPage from "./views/notFoundPage";
-import Boletas from "./views/boletos";
-import Transporte from "./views/empresas";
-import Clientes from "./views/clientes";
-import Productos from "./views/productos";
+const Login = lazy(()=>import('./views/login'));
+const VerificarLog = lazy(()=>import('./utils/verificarLog'))
+const Dashboard = lazy(()=>import('./views/dashboard'))
+const NotFoundPage = lazy(()=>import('./views/notFoundPage'))
+const Boletas = lazy(()=>import('./views/boletos')) 
+const Empresa = lazy(()=>import('./views/empresas'))
+const Clientes = lazy(()=>import('./views/clientes'))
+const Productos = lazy(()=>import('./views/productos'))
 
 const navRutas = createBrowserRouter([
   {
@@ -30,7 +30,7 @@ const navRutas = createBrowserRouter([
       },
       {
         path: "/Empresas",
-        element: <Transporte />,
+        element: <Empresa />,
       },
       {
         path: "/Clientes",
@@ -46,6 +46,8 @@ const navRutas = createBrowserRouter([
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <RouterProvider router={navRutas} />
+    <Suspense fallback={<div className="fixed inset-0 z-50 flex items-center justify-center">Cargando...</div>}>
+      <RouterProvider router={navRutas} />
+    </Suspense>
   </StrictMode>
 );

@@ -19,18 +19,18 @@ const Search = () => {
     }));
   };
 
-  const handleSubmit = () => {
-    postEmpresas(formData)
+  const handleSubmit = async () => {
+    await postEmpresas(formData);
     setIsOpen(false);
-    fetchData()
+    fetchData();
   };
 
   const fetchData = useCallback(() => {
-    getEmpresas(setDatos)
+    getEmpresas(setDatos);
   }, []);
 
   useEffect(() => {
-    fetchData()
+    fetchData();
   }, [fetchData]);
 
   return (
@@ -46,7 +46,9 @@ const Search = () => {
         </select>
         <ButtonAdd name="Agregar" fun={toggleModal} />
       </div>
-      <div className="mt-7">{datos && <TableComponent datos={datos} />}</div>
+      <div className="mt-7">
+        {(!datos || datos.length ==0) ? <h1 className="ml-2">No hay datos</h1> : <TableComponent datos={datos} />}
+      </div>
 
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-opa-50">
