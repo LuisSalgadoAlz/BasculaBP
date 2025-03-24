@@ -15,14 +15,14 @@ const RUTAS_PRINCIPALES = [
     icon: <MdOutlineDashboard />,
   },
   {
-    path: "/empresas",
-    name: "Empresas",
-    icon: <RiTruckLine />,
-  },
-  {
     path: "/clientes",
     name: "clientes",
     icon: <FiUsers  />,
+  },
+  {
+    path: "/empresas",
+    name: "Empresas",
+    icon: <RiTruckLine />,
   },
   {
     path: "/productos",

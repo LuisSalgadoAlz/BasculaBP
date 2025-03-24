@@ -5,10 +5,17 @@ model Empresa {
     telefono String?
     descripcion String?
     estado Boolean
-    
+    idSocios Int
+
     /* Relaciones con boleta */
     boletaTransporte Boleta[]
 
-    /* Relacion con placas */
-    trPlacas VehiculoXtransporte[]
+    /* Relacion con Motorista */
+    rMotoristaEmpresa Motoristas[]
+
+    /* Relacion Vehiculo */
+    rVehiculoEmpresa Vehiculo[]
+    
+    /* Relacion clientes */
+    rClientes Socios @relation(fields: [idSocios], references: [id])
 }

@@ -4,10 +4,11 @@ model Motoristas{
     direccion String?
     telefono String?
     correo String? @unique
+    idEmpresa Int
 
     /* Relacion con boleta */
     boletaMotoristas Boleta[]
 
     /* Relacion con vehiculo */
-    mtPlacas VehiculoXmotorista[] 
+    rEmpresaM Empresa @relation(fields: [idEmpresa], references: [id])
 }

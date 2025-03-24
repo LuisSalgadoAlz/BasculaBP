@@ -22,12 +22,12 @@ model Boleta {
     fechaFin DateTime
 
     /* Relaciones dentro de la boleta */
-    placasBoletas Vehiculo @relation(fields: [idPlaca], references: [id])
+    placasBoletas Vehiculo @relation(fields: [idPlaca], references: [id], onDelete: NoAction, onUpdate: NoAction)
     despachador Usuarios @relation(fields: [idUsuario], references: [id])
-    empresaBoleta Empresa @relation(fields: [idEmpresa], references: [id])
+    empresaBoleta Empresa @relation(fields: [idEmpresa], references: [id], onDelete: NoAction, onUpdate: NoAction)
     tipoDePesoBoleta TiposDePeso @relation(fields: [idTipoDePeso], references: [id])
-    clienteBoleta Clientes @relation(fields: [idCliente], references: [id])
+    clienteBoleta Socios @relation(fields: [idCliente], references: [id])
     tipoDeProductoBoleta Producto @relation(fields: [idTipoDeProducto], references: [id])
     proveedoresBoleta Proveedores @relation(fields: [idProveedores], references: [id])
-    motoristaBoleta Motoristas @relation(fields: [idMotorista], references: [id])
+    motoristaBoleta Motoristas @relation(fields: [idMotorista], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }

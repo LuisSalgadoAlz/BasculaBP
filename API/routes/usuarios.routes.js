@@ -3,7 +3,7 @@ const verificarToken = require('../middlewares/authJWT')
 const router = require('express').Router();
 
 router.get('/', verificarToken, getUsuarios)
-router.post('/', verificarToken, postUsuarios)
+router.post('/', postUsuarios)
 router.put('/:id', verificarToken, updateUsuarios)  
 
 module.exports = router;

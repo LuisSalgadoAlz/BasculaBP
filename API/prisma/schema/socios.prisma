@@ -1,13 +1,17 @@
-model Clientes{
+model Socios{
     id Int @id @default(autoincrement())
-    nombre String @unique
+    nombre String 
+    tipo Int
     direccion String?
     telefono String?
     correo String? @unique
 
     /* Relacion con boleta */
-    boletaClientes Boleta[]
+    boletaSocios Boleta[]
 
     /* Relacion con direciones */
-    drClientes Direcciones[]
+    drSocios Direcciones[]
+
+    /* Relacion de Empresa */
+    rEmpresa Empresa[]
 }

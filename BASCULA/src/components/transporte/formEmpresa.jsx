@@ -1,12 +1,12 @@
 import { claseFormInputs } from "../../constants/boletas";
-const FormEmpresa = ({ fun }) => {
+const FormEmpresa = ({ fun, data }) => {
   return (
     <>
       <div className="mt-5">
         <label className="block mb-2 text-sm font-medium text-gray-900 ">
           Nombre
         </label>
-        <input type="text" name={"nombre"} className={claseFormInputs} placeholder={`Ingrese Nombre`} required onChange={fun} />
+        <input type="text" name={"nombre"} className={claseFormInputs} placeholder={`Ingrese Nombre`} required onChange={fun}   />
       </div>
       <div className="mt-5">
         <label className="block mb-2 text-sm font-medium text-gray-900 ">
