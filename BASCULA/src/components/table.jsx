@@ -27,7 +27,7 @@ const TableComponent = ({ datos = [{}] }) => {
                   <td key={key} className="px-6 py-3 text-gray-700">
                     {typeof el === "boolean" ? (
                       el == 1 ? (
-                        <h1 className="text-green-600 border rounded-2xl text-center">Activo</h1>
+                        <h1 className="text-green-600 border rounded-2xl text-center ">Activo</h1>
                       ) : (
                         <h1 className="text-red-600 border rounded-2xl text-center">Inactivo</h1>
                       )
