@@ -2,9 +2,9 @@ model Socios{
     id Int @id @default(autoincrement())
     nombre String 
     tipo Int
-    direccion String?
     telefono String?
     correo String? @unique
+    estado Boolean
 
     /* Relacion con boleta */
     boletaSocios Boleta[]

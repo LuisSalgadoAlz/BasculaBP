@@ -5,7 +5,7 @@ const app = express();
 const cors = require("cors");
 const logUser = require("./routes/login.routes");
 const basculaLive = require("./routes/basculaLive.routes");
-const clientes = require("./routes/clientes.routes");
+const socios = require("./routes/socios.routes");
 const motoristas = require("./routes/motorista.routes")
 const producto = require("./routes/productos.routes")
 const tipodepeso = require("./routes/tipoDePeso.routes")
@@ -20,7 +20,7 @@ app.use(cors());
 app.use('/login/', logUser);
 app.use('/usuarios', router);
 app.use('/peso', basculaLive)
-app.use('/clientes', clientes)
+app.use('/socios', socios)
 app.use('/motoristas', motoristas)
 app.use('/producto', producto)
 app.use('/tipoDePeso', tipodepeso)
