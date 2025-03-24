@@ -1,10 +1,13 @@
 import { CiEdit } from "react-icons/ci";
-import { TfiDirectionAlt } from "react-icons/tfi";
+import { useNavigate } from "react-router";
 
-const TableComponent = ({ datos = [{}] }) => {
+const TableComponent = ({ datos = [{}], fun }) => {
+  const navigate = useNavigate();
+
   const handleGetInfo = (data) => {
-    console.log(data);
+    navigate(`./${data.id}`)
   };
+
   return (
     <>
       <div className="relative overflow-x-auto">
@@ -52,16 +55,14 @@ const TableComponent = ({ datos = [{}] }) => {
                     )
                 )}
                 <td className="py-3 text-center">
-                  <button className="font-medium text-gray-800 hover:underline text-center mr-5" onClick={() => handleGetInfo(fila)}>
+                  <button
+                    className="font-medium text-gray-800 hover:underline text-center"
+                    onClick={() => handleGetInfo(fila)}
+                  >
                     <span className="text-center">
                       <CiEdit className="text-xl" />
                     </span>
                   </button>
-                  <button className="font-medium text-gray-800 hover:underline text-center" onClick={() => handleGetInfo('')}>
-                    <span className="text-center">
-                      <TfiDirectionAlt className="text-xl" />
-                    </span>
-                  </button>  
                 </td>
               </tr>
             ))}

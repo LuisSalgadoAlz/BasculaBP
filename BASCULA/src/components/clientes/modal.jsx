@@ -1,6 +1,6 @@
 import FormClientes from "./formClientes";
 
-const ModalClientes = ({hdlData, hdlSubmit, tglModal, frDta}) => {
+const ModalClientes = ({ hdlData, hdlSubmit, tglModal }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-opa-50">
       <div className="bg-white p-8 rounded-2xl shadow-xl max-w-sm border border-gray-300">

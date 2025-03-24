@@ -1,6 +1,6 @@
 import { claseFormInputs } from "../../constants/boletas";
 
-const FormClientes = ({ fun, data }) => {
+const FormClientes = ({ fun }) => {
   return (
     <>
       <div className="mt-5">

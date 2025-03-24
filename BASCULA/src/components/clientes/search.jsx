@@ -8,7 +8,7 @@ const Search = ({ sts }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState();
   const [datos, setDatos] = useState();
-
+  const [editMode, setEditMode] = useState();
   const toggleModal = () => setIsOpen(!isOpen);
 
   const handleData = (e) => {
@@ -52,7 +52,7 @@ const Search = ({ sts }) => {
         {(!datos || datos.length ==0) ? <h1 className="ml-2">No hay datos</h1> : <TableComponent datos={datos} />}
       </div>
 
-      {isOpen && <ModalClientes hdlData={handleData} hdlSubmit={handleSubmit} tglModal={toggleModal} frDta={formData}/>}
+      {isOpen && <ModalClientes hdlData={handleData} hdlSubmit={handleSubmit} tglModal={toggleModal} />}
     </>
   );
 };
