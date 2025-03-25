@@ -15,8 +15,8 @@ const RUTAS_PRINCIPALES = [
     icon: <MdOutlineDashboard />,
   },
   {
-    path: "/clientes",
-    name: "clientes",
+    path: "/socios",
+    name: "Socios",
     icon: <FiUsers  />,
   },
   {
