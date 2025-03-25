@@ -4,6 +4,7 @@ model Direcciones {
     tipo Int /* 0: origen, 1: destino*/
     idCliente Int
     descripcion String?
+    estado Boolean
 
     /* Relacion con clientes */
     drClientes Socios @relation(fields: [idCliente], references: [id])

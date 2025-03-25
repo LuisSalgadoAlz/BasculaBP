@@ -102,10 +102,115 @@ const updateSocios = async (req, res) => {
   }
 };
 
+const getDireccionesPorSocios = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const direcciones = await db.direcciones.findMany({
+      select: {
+        id: true,
+        nombre: true,
+        tipo : true,
+        descripcion : true,
+        estado : true
+      },
+      where: {
+        idCliente: parseInt(id),
+      },
+    });
+
+    if (!direcciones) {
+      return res.status(404).json({ message: "Socio no encontrado" });
+    }
+
+    const dataClean = direcciones.map((el)=>({
+      ...el, 
+      'estado' : el.estado ? 'Activa' : 'Inactiva'
+    }))
+    
+    return res.status(200).json(dataClean);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Error en el servidor" });
+  }
+};
+
+const postDirecciones = async (req, res) => {
+  try {
+    const { nombre, tipo, id, descripcion } = req.body;
+
+    const nuevaDireccion = await db.direcciones.create({
+      data: {
+        nombre,
+        tipo: parseInt(tipo),
+        idCliente: parseInt(id),
+        descripcion,
+        estado: true,
+      },
+    });
+
+    res
+      .status(201)
+      .json({ msg: "Direccion creado exitosamente", direcciones: nuevaDireccion });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: `Error al crear direccion: ${error.message}` });
+  }
+};
+
+const getDireccionesPorID = async (req, res) => {
+  try {
+    const direccion = await db.direcciones.findUnique({
+      where: {
+        id: parseInt(req.params.id),
+      },
+    });
+
+    if (!direccion) {
+      return res.status(404).json({ message: "Socio no encontrado" });
+    }
+
+    return res.status(200).json(direccion);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Error en el servidor" });
+  }
+};
+
+const putDireccionesPorID = async (req, res) => {
+  const { nombre, tipo, estado, idCliente, id, descripcion } = req.body;
+  try {
+    const upDirecciones = await db.direcciones.update({
+      where: {
+        id: parseInt(id),
+      },
+      data: {
+        nombre,
+        tipo: parseInt(tipo),
+        idCliente: parseInt(idCliente),
+        descripcion,
+        estado:
+          estado == "true"
+            ? true
+            : estado === true || estado === true
+            ? estado
+            : false,
+      },
+    });
+    res.status(200).send("proceso exitoso");
+  } catch (error) {
+    res.status(401).send(`error ${error}`);
+  }
+};
+
 module.exports = {
   getSocios,
   postSocios,
   getStats,
   getSocioPorID,
   updateSocios,
+  getDireccionesPorSocios,
+  postDirecciones,
+  getDireccionesPorID, 
+  putDireccionesPorID
 };
