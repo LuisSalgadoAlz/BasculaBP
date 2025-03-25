@@ -1,16 +1,15 @@
-import { use, useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { ButtonSave, ButtonVolver } from "../buttons";
 import { claseFormInputs } from "../../constants/boletas";
-import { getClientesPorID, updateSocios } from "../../hooks/formClientes";
+import { getClientesPorID,  verificarData, updateSocios} from "../../hooks/formClientes";
 import { ModalSuccess, ModalErr } from "../alerts";
-import { regexNombre } from "../../constants/regex";
 
 const EditClientes = () => {
-  const [success, setSuccess] = useState(false)
-  const [errorModal, setErrorModal] = useState(false)
-  const [msg, setMsg] = useState()
-  
+  const [success, setSuccess] = useState(false);
+  const [errorModal, setErrorModal] = useState(false);
+  const [msg, setMsg] = useState();
+
   const [sc, setSc] = useState({
     nombre: "Cargando...",
     tipo: -1,
@@ -24,7 +23,7 @@ const EditClientes = () => {
 
   const handleChange = (event) => {
     const { name, value } = event.target;
-    
+
     setSc((prev) => ({
       ...prev,
       [name]: value,
@@ -36,22 +35,19 @@ const EditClientes = () => {
   };
 
   const handleClose = () => {
-    setErrorModal(false)
-    setSuccess(false)
-  }
+    setErrorModal(false);
+    setSuccess(false);
+  };
 
-  const handleSave = async() => {
-    
-    if(!regexNombre.test(sc.nombre) || sc.nombre == '') {
-      setErrorModal(true)
-      return
-    }
-
-    const response = await updateSocios(sc, id)
+  const handleSave = async () => {
+    const response = verificarData(setSuccess, setErrorModal, sc, setMsg);
     if (response) {
-      setSuccess(true)
+      const callApi = await updateSocios(sc, id);
+      if (callApi) {
+        setSuccess(true)
+      }
     }
-  }
+  };
 
   const fetchData = useCallback(() => {
     getClientesPorID(setSc, id);
@@ -138,7 +134,7 @@ const EditClientes = () => {
           </div>
           <div className="mt-5">
             <label className="block mb-2 text-sm font-medium text-gray-900 ">
-              Tipo
+              Estado
             </label>
             <select
               name={"estado"}
@@ -155,7 +151,7 @@ const EditClientes = () => {
           </div>
         </div>
         <div className="mt-7 place-self-end">
-          <ButtonSave name={"Guardar Cambios"} fun={handleSave}/>
+          <ButtonSave name={"Guardar Cambios"} fun={handleSave} />
         </div>
         <hr className="text-gray-400 mt-7" />
         <div className="flex justify-between w-full gap-5 mt-5">
@@ -170,8 +166,12 @@ const EditClientes = () => {
       </div>
 
       {/* Area de los modals */}
-      {success && <ModalSuccess name={'modificar el socio'} hdClose={handleClose} />}
-      {errorModal && <ModalErr name={'modificar el socio'} hdClose={handleClose} />}
+      {success && (
+        <ModalSuccess name={"modificar el socio"} hdClose={handleClose} />
+      )}
+      {errorModal && (
+        <ModalErr name={msg} hdClose={handleClose} />
+      )}
     </>
   );
 };
