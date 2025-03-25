@@ -40,6 +40,26 @@ export const getClientesPorID = async (fun, id) => {
   }
 };
 
+export const getDireccionesPorSocios = async (fun, id) => {
+  try {
+    const response = await fetch(`http://localhost:3000/socios/direcciones/${id}`, {
+      method: "GET",
+      headers: {
+        Authorization: window.localStorage.getItem("token"),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API");
+    }
+
+    const data = await response.json();
+    fun(data);
+  } catch (error) {
+    console.error("Error al obtener los clientes:", error);
+  }
+};
+
 export const postEmpresas = async (socio) => {
   try {
     const response = await fetch("http://localhost:3000/socios/", {
@@ -88,6 +108,71 @@ export const updateSocios = async (socio, id) => {
     const response = await fetch(`http://localhost:3000/socios/${id}`, {
       method: "PUT",
       body: JSON.stringify(socio),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: window.localStorage.getItem("token"),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API");
+    }
+
+    if (response.ok) {
+      return true;
+    }
+  } catch (error) {
+    console.error("Error al obtener los datos:", error);
+  }
+};
+
+export const postDirecciones = async (direccion) => {
+  try {
+    const response = await fetch("http://localhost:3000/socios/direcciones", {
+      method: "POST",
+      body: JSON.stringify(direccion),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: window.localStorage.getItem("token"),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API");
+    }
+
+    const data = await response.json();
+    console.log(data);
+  } catch (error) {
+    console.error("Error al obtener los datos:", error);
+  }
+};
+
+export const getDireccionesPorID = async (fun, id) => {
+  try {
+    const response = await fetch(`http://localhost:3000/socios/direcciones/f/${id}`, {
+      method: "GET",
+      headers: {
+        Authorization: window.localStorage.getItem("token"),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API");
+    }
+
+    const data = await response.json();
+    fun(data);
+  } catch (error) {
+    console.error("Error al obtener los clientes:", error);
+  }
+};
+
+export const updateDireccionesPorID = async (direccion) => {
+  try {
+    const response = await fetch(`http://localhost:3000/socios/direcciones/pt/`, {
+      method: "PUT",
+      body: JSON.stringify(direccion),
       headers: {
         "Content-Type": "application/json",
         Authorization: window.localStorage.getItem("token"),

@@ -1,14 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { ButtonAdd } from "../buttons";
-import TableComponent from "./tableClientes";
+import {TableComponent} from "./tableClientes";
 import { getClientes, postEmpresas, getStatsSocios } from "../../hooks/formClientes";
-import ModalClientes from "./modal";
+import { ModalClientes } from "./modal";
 
 const Search = ({ sts }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState();
   const [datos, setDatos] = useState();
-  const [editMode, setEditMode] = useState();
   const toggleModal = () => setIsOpen(!isOpen);
 
   const handleData = (e) => {
