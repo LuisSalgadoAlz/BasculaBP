@@ -52,6 +52,7 @@ export const FormDirecciones = ({ fun, data }) => {
             <option value={-1} className="text-gray-400">Seleccione un tipo</option>
             <option value={0}>Origen</option>
             <option value={1}>Destino</option>
+            <option value={2}>Origen / Destino</option>
         </select>
       </div>
       <div className="mt-5">
@@ -82,6 +83,7 @@ export const FormDireccionesEdit = ({ fun, data }) => {
             <option value={-1} className="text-gray-400">Seleccione un tipo</option>
             <option value={0}>Origen</option>
             <option value={1}>Destino</option>
+            <option value={2}>Origen / Destino</option>
         </select>
       </div>
       <div className="mt-5">

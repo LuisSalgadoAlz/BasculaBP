@@ -80,6 +80,7 @@ const EditClientes = () => {
     if (response) {
       const callApi = await updateSocios(sc, id);
       if (callApi) {
+        setMsg('guardar los datos')
         setSuccess(true);
       }
     }
@@ -106,6 +107,8 @@ const EditClientes = () => {
       await postDirecciones(arr);
       getDireccionesPorSocios(setDirecciones, id);
       setModalDirecciones(false);
+      setMsg('agregar direccion')
+      setSuccess(true)
       hanldeCleanState();
     }
   };
@@ -118,6 +121,7 @@ const EditClientes = () => {
       await updateDireccionesPorID(dataDireccion);
       getDireccionesPorSocios(setDirecciones, id);
       setModalDireccionesEdit(false);
+      setMsg('modificar direccion')
       setSuccess(true)
     }
   };
@@ -265,7 +269,7 @@ const EditClientes = () => {
 
       {/* Area de los modals */}
       {success && (
-        <ModalSuccess name={"modificar el socio"} hdClose={handleClose} />
+        <ModalSuccess name={msg} hdClose={handleClose} />
       )}
       {errorModal && <ModalErr name={msg} hdClose={handleCloseAlertsModals} />}
 

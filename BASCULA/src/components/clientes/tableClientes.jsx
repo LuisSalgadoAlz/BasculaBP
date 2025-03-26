@@ -108,7 +108,9 @@ export const TableDirecciones = ({ datos = [{}], fun }) => {
                           ? el
                           : el == 0
                           ? "Origen"
-                          : "Destino"}
+                          : el == 1
+                          ? "Destino"
+                          : "Origen / Destino"}
                       </td>
                     )
                 )}
