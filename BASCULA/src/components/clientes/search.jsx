@@ -7,7 +7,7 @@ import {ModalSuccess, ModalErr} from '../alerts'
 
 const Search = ({ sts }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [formData, setFormData] = useState();
+  const [formData, setFormData] = useState({nombre:'', tipo: -1, correo: '', telefono: '', estado: 1});
   const [datos, setDatos] = useState();
   const [success, setSuccess] = useState()
   const [msg, setMsg] = useState()
@@ -25,14 +25,16 @@ const Search = ({ sts }) => {
 
   const handleSubmit =  async() => {
     /* Probandooo */
-    /* const isValid = verificarData( setErr, await formData, setMsg ) */
-    await postEmpresas(formData)
-    setIsOpen(false)
-    fetchData()
-    getStatsSocios(sts);
-    setSuccess(true)
+    const isValid = verificarData(setSuccess, setErr, formData, setMsg, '')
+    if (isValid) {
+      await postEmpresas(formData)
+      setIsOpen(false)
+      fetchData()
+      getStatsSocios(sts);
+      setSuccess(true)
+    }
   };
-  const handleClose = () => {
+  const handleClose = () => { 
     setSuccess(false);
     setErr(false);
   };
