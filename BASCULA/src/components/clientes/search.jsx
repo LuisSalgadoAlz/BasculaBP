@@ -1,19 +1,38 @@
 import { useState, useEffect, useCallback, use } from "react";
 import { ButtonAdd } from "../buttons";
-import {TableComponent} from "./tableClientes";
-import { getClientes, postEmpresas, getStatsSocios, verificarData} from "../../hooks/formClientes";
+import { TableComponent } from "./tableClientes";
+import {
+  getClientes,
+  postEmpresas,
+  getStatsSocios,
+  verificarData,
+} from "../../hooks/formClientes";
 import { ModalClientes } from "./modal";
-import {ModalSuccess, ModalErr} from '../alerts'
+import { ModalSuccess, ModalErr } from "../alerts";
 
 const Search = ({ sts }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [formData, setFormData] = useState({nombre:'', tipo: -1, correo: '', telefono: '', estado: 1});
-  const [datos, setDatos] = useState();
-  const [success, setSuccess] = useState()
-  const [msg, setMsg] = useState()
-  const [err, setErr] = useState()
+  const [formData, setFormData] = useState({
+    nombre: "",
+    tipo: -1,
+    correo: "",
+    telefono: "",
+    estado: 1,
+  });
 
-  const toggleModal = () => setIsOpen(!isOpen);
+  const [datos, setDatos] = useState();
+  const [success, setSuccess] = useState();
+  const [msg, setMsg] = useState();
+  const [err, setErr] = useState();
+
+  /* limpieza de estados */
+  const handleCleanState = () => {
+    setFormData({ nombre: "", tipo: -1, correo: "", telefono: "", estado: 1 });
+  };
+  const toggleModal = () => {
+    setIsOpen(!isOpen);
+    handleCleanState();
+  };
 
   const handleData = (e) => {
     const { name, value } = e.target;
@@ -23,20 +42,25 @@ const Search = ({ sts }) => {
     }));
   };
 
-  const handleSubmit =  async() => {
+  const handleSubmit = async () => {
     /* Probandooo */
-    const isValid = verificarData(setSuccess, setErr, formData, setMsg, '')
+    const isValid = verificarData(setSuccess, setErr, formData, setMsg, "");
     if (isValid) {
-      await postEmpresas(formData)
-      setIsOpen(false)
-      fetchData()
+      await postEmpresas(formData);
+      setIsOpen(false);
+      fetchData();
       getStatsSocios(sts);
-      setSuccess(true)
+      setSuccess(true);
     }
   };
-  const handleClose = () => { 
-    setSuccess(false);
+
+  const handleClose = () => {
     setErr(false);
+  };
+
+  const handleCloseSuccess = () => {
+    handleCleanState();
+    setSuccess(false);
   };
 
   const fetchData = useCallback(() => {
@@ -62,16 +86,24 @@ const Search = ({ sts }) => {
         <ButtonAdd name="Agregar" fun={toggleModal} />
       </div>
       <div className="mt-7">
-        {(!datos || datos.length ==0) ? <h1 className="ml-2">No hay datos</h1> : <TableComponent datos={datos} />}
+        {!datos || datos.length == 0 ? (
+          <h1 className="ml-2">No hay datos</h1>
+        ) : (
+          <TableComponent datos={datos} />
+        )}
       </div>
 
-      {isOpen && <ModalClientes hdlData={handleData} hdlSubmit={handleSubmit} tglModal={toggleModal} />}
+      {isOpen && (
+        <ModalClientes
+          hdlData={handleData}
+          hdlSubmit={handleSubmit}
+          tglModal={toggleModal}
+        />
+      )}
       {success && (
-        <ModalSuccess name={"agregar el socio"} hdClose={handleClose} />
+        <ModalSuccess name={"agregar el socio"} hdClose={handleCloseSuccess} />
       )}
-      {err && (
-        <ModalErr name={msg} hdClose={handleClose} />
-      )}
+      {err && <ModalErr name={msg} hdClose={handleClose} />}
     </>
   );
 };

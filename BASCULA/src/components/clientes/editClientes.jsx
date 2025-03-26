@@ -2,25 +2,36 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { ButtonAdd, ButtonSave, ButtonVolver } from "../buttons";
 import { claseFormInputs } from "../../constants/boletas";
-import { getClientesPorID,  verificarData, updateSocios, getDireccionesPorSocios, postDirecciones, getDireccionesPorID, updateDireccionesPorID} from "../../hooks/formClientes";
+import {
+  getClientesPorID,
+  verificarData,
+  verificarDirecciones,
+  updateSocios,
+  getDireccionesPorSocios,
+  postDirecciones,
+  getDireccionesPorID,
+  updateDireccionesPorID,
+} from "../../hooks/formClientes";
 import { TableDirecciones } from "./tableClientes";
 import { ModalSuccess, ModalErr } from "../alerts";
 import { ModalDirecciones, ModalDireccionesEdit } from "./modal";
 
 const EditClientes = () => {
-  
   /* Estados / Datos del aplicativo */
-  
+
   const [success, setSuccess] = useState(false);
   const [errorModal, setErrorModal] = useState(false);
   const [msg, setMsg] = useState();
-  const [direcciones, setDirecciones] = useState()
-  const [modalDirecciones, setModalDirecciones] = useState()
-  const [modalDireccionesEdit, setModalDireccionesEdit] = useState()
-  const [dataDireccion, setDataDireccion] = useState({
-
-  })
-  const [formData, setFormData] = useState();
+  const [direcciones, setDirecciones] = useState();
+  const [modalDirecciones, setModalDirecciones] = useState();
+  const [modalDireccionesEdit, setModalDireccionesEdit] = useState();
+  const [dataDireccion, setDataDireccion] = useState({});
+  const [formData, setFormData] = useState({
+    nombre: "",
+    tipo: -1,
+    descripcion: "",
+    estado: 1,
+  });
   const [sc, setSc] = useState({
     nombre: "Cargando...",
     tipo: -1,
@@ -31,6 +42,18 @@ const EditClientes = () => {
 
   /* ID global */
   const { id } = useParams();
+
+  /* Limpieza de componentes */
+  const hanldeCleanState = () => {
+    setFormData({ nombre: "", tipo: -1, descripcion: "", estado: 1 });
+    setSc({
+      nombre: "Cargando...",
+      tipo: -1,
+      correo: "Cargando...",
+      estado: "",
+      telefono: "",
+    });
+  };
 
   const navigate = useNavigate();
 
@@ -43,28 +66,28 @@ const EditClientes = () => {
     }));
   };
 
-
   const handleClik = () => {
     navigate(-1);
   };
 
   const handleModalDirecciones = () => {
-    setModalDirecciones(true)
-  }
+    setModalDirecciones(true);
+  };
 
   const handleClose = () => {
     setErrorModal(false);
     setSuccess(false);
-    setModalDirecciones(false)
-    setModalDireccionesEdit(false)
+    setModalDirecciones(false);
+    setModalDireccionesEdit(false);
+    hanldeCleanState();
   };
 
   const handleSave = async () => {
     const response = verificarData(setSuccess, setErrorModal, sc, setMsg);
     if (response) {
       const callApi = await updateSocios(sc, id);
-      if (callApi) {  
-        setSuccess(true)
+      if (callApi) {
+        setSuccess(true);
       }
     }
   };
@@ -82,33 +105,43 @@ const EditClientes = () => {
     }));
   };
 
-
   /* Metodos put y post de direcciones */
   const handleSaveDirecciones = async () => {
-    /* Falta validar */
-    const arr = {...formData, id}
-    await postDirecciones(arr)
-    getDireccionesPorSocios(setDirecciones, id)
-    setModalDirecciones(false)
+    const arr = { ...formData, id };
+    const isValid = verificarDirecciones(setErrorModal, arr, setMsg);
+    if (isValid) {
+      await postDirecciones(arr);
+      getDireccionesPorSocios(setDirecciones, id);
+      setModalDirecciones(false);
+      hanldeCleanState();
+    }
   };
 
   const handleUpdateDireccionFinish = async () => {
     /* Falta validar */
-    console.log(dataDireccion)
-    await updateDireccionesPorID(dataDireccion)
-    getDireccionesPorSocios(setDirecciones, id)
-    setModalDireccionesEdit(false)
+    const isValid = verificarDirecciones(setErrorModal, dataDireccion, setMsg);
+    console.log(isValid);
+    if (isValid) {
+      await updateDireccionesPorID(dataDireccion);
+      getDireccionesPorSocios(setDirecciones, id);
+      setModalDireccionesEdit(false);
+      setSuccess(true)
+    }
   };
 
   /* Obtener data de las direcciones  */
 
-  const handleUpdateDireccion = async(data) => {
-    await getDireccionesPorID(setDataDireccion, data.id)
-    setModalDireccionesEdit(true)
-  }
+  const handleUpdateDireccion = async (data) => {
+    await getDireccionesPorID(setDataDireccion, data.id);
+    setModalDireccionesEdit(true);
+  };
+
+  const handleCloseAlertsModals = () => {
+    setErrorModal(false);
+  };
 
   const fetchData = useCallback(() => {
-    getDireccionesPorSocios(setDirecciones, id)
+    getDireccionesPorSocios(setDirecciones, id);
     getClientesPorID(setSc, id);
   }, []);
 
@@ -216,14 +249,24 @@ const EditClientes = () => {
         <div className="flex justify-between w-full gap-5 mt-7">
           <div className="parte-izq">
             <h1 className="text-3xl font-bold titulo">Agregar Direcciones</h1>
-            <h1 className="text-gray-600">{" "}Origenes y destinos posibles de los socios.</h1>
+            <h1 className="text-gray-600">
+              {" "}
+              Origenes y destinos posibles de los socios.
+            </h1>
           </div>
           <div className="parte-izq">
-            <ButtonAdd name={'Agregar Dirección'} fun={handleModalDirecciones}/>
+            <ButtonAdd
+              name={"Agregar Dirección"}
+              fun={handleModalDirecciones}
+            />
           </div>
         </div>
         <div className="gap-5 mt-7">
-          {!direcciones || direcciones.length ==0 ? 'No hay datos' : <TableDirecciones datos={direcciones} fun={handleUpdateDireccion}/>}
+          {!direcciones || direcciones.length == 0 ? (
+            "No hay datos"
+          ) : (
+            <TableDirecciones datos={direcciones} fun={handleUpdateDireccion} />
+          )}
         </div>
       </div>
 
@@ -231,13 +274,24 @@ const EditClientes = () => {
       {success && (
         <ModalSuccess name={"modificar el socio"} hdClose={handleClose} />
       )}
-      {errorModal && (
-        <ModalErr name={msg} hdClose={handleClose} />
-      )}
+      {errorModal && <ModalErr name={msg} hdClose={handleCloseAlertsModals} />}
 
       {/* Modal de direcciones */}
-      {modalDirecciones && <ModalDirecciones tglModal={handleClose} hdlData={handleDataDirecciones} hdlSubmit={handleSaveDirecciones} />}
-      {modalDireccionesEdit && <ModalDireccionesEdit tglModal={handleClose} hdlData={handleDataDirecciones} hdlSubmit={handleUpdateDireccionFinish} dtDir={dataDireccion} />}
+      {modalDirecciones && (
+        <ModalDirecciones
+          tglModal={handleClose}
+          hdlData={handleDataDirecciones}
+          hdlSubmit={handleSaveDirecciones}
+        />
+      )}
+      {modalDireccionesEdit && (
+        <ModalDireccionesEdit
+          tglModal={handleClose}
+          hdlData={handleDataDirecciones}
+          hdlSubmit={handleUpdateDireccionFinish}
+          dtDir={dataDireccion}
+        />
+      )}
     </>
   );
 };

@@ -199,7 +199,7 @@ export const verificarData = (funSuccess,funError, data, setMsg, id) => {
 
   if (!regexNombre.test(nombre) || nombre == "" || nombre.length < 2) {
     funError(true)
-    setMsg('nombre invalido o vacio o demasiado corto.')
+    setMsg('nombre invalido, vacio o demasiado corto.')
     return false
   }
 
@@ -217,16 +217,39 @@ export const verificarData = (funSuccess,funError, data, setMsg, id) => {
 
   if (!regexEmail.test(correo) || correo == "" ) {
     funError(true)
-    setMsg('correo permite letras, números, puntos, guiones, y caracteres especiales. Además de ir acompañado de @dominio.es / @dominio.com')
+    setMsg('correo permite letras, números, puntos, guiones. Además de ir acompañado de un @dominio.es / @dominio.com')
     return false
   }
 
   if (!regexTelefono.test(telefono) || telefono==""){
     funError(true)
-    setMsg('numero ingresado invalido (debe iniciar con 2 / 3 / 8 y 9). Ej: 22222222')
+    setMsg('numero ingresado invalido (debe iniciar con 2 / 3 / 8 y 9) y tener 8 digitos. Ej: 22222222')
     return false
   }
 
   return true
 
 };
+
+export const verificarDirecciones = (funErr, data, setMsg) => {
+  const { nombre, tipo, estado } = data
+  if (!regexNombre.test(nombre) || nombre == "" || nombre.length < 2) {
+    funErr(true)
+    setMsg('nombre invalido o vacio o demasiado corto.')
+    return false
+  }
+
+  if(tipo==-1) {
+    funErr(true)
+    setMsg('seleccione un tipo de direccion.')
+    return false
+  }
+  
+  if (estado == -1){
+    funErr(true)
+    setMsg('seleccione un estado de direccion.')
+    return false
+  }
+
+  return true
+}
