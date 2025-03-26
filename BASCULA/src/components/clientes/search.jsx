@@ -1,13 +1,18 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, use } from "react";
 import { ButtonAdd } from "../buttons";
 import {TableComponent} from "./tableClientes";
-import { getClientes, postEmpresas, getStatsSocios } from "../../hooks/formClientes";
+import { getClientes, postEmpresas, getStatsSocios, verificarData} from "../../hooks/formClientes";
 import { ModalClientes } from "./modal";
+import {ModalSuccess, ModalErr} from '../alerts'
 
 const Search = ({ sts }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState();
   const [datos, setDatos] = useState();
+  const [success, setSuccess] = useState()
+  const [msg, setMsg] = useState()
+  const [err, setErr] = useState()
+
   const toggleModal = () => setIsOpen(!isOpen);
 
   const handleData = (e) => {
@@ -19,10 +24,17 @@ const Search = ({ sts }) => {
   };
 
   const handleSubmit =  async() => {
+    /* Probandooo */
+    /* const isValid = verificarData( setErr, await formData, setMsg ) */
     await postEmpresas(formData)
     setIsOpen(false)
     fetchData()
     getStatsSocios(sts);
+    setSuccess(true)
+  };
+  const handleClose = () => {
+    setSuccess(false);
+    setErr(false);
   };
 
   const fetchData = useCallback(() => {
@@ -52,6 +64,12 @@ const Search = ({ sts }) => {
       </div>
 
       {isOpen && <ModalClientes hdlData={handleData} hdlSubmit={handleSubmit} tglModal={toggleModal} />}
+      {success && (
+        <ModalSuccess name={"agregar el socio"} hdClose={handleClose} />
+      )}
+      {err && (
+        <ModalErr name={msg} hdClose={handleClose} />
+      )}
     </>
   );
 };
