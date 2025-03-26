@@ -2,6 +2,16 @@ const { PrismaClient } = require("@prisma/client");
 const dotenv = require("dotenv");
 const db = new PrismaClient();
 
+const getSociosParaSelect = async (req, res) => {
+  try {
+    const data = await db.socios.findMany();
+    res.json(data);
+  } catch (err) {
+    console.log(err)
+  }
+};
+
+
 /* Listar usuarios */
 const getEmpresas = async (req, res) => {
   const data = await db.empresa.findMany();
@@ -52,5 +62,6 @@ const postEmpresas = async (req, res) => {
 module.exports = {
   getEmpresas,
   postEmpresas,
-  getStats
+  getStats, 
+  getSociosParaSelect
 };

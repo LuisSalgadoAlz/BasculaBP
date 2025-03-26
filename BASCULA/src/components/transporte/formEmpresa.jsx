@@ -1,5 +1,21 @@
-import { claseFormInputs } from "../../constants/boletas";
+import { useEffect, useState } from "react";
+import { cargando, claseFormInputs, classFormSelct } from "../../constants/boletas";
+import SelectFormBoletas from "../boletas/select";
+import { getClientes } from "../../hooks/formClientes"
+
 const FormEmpresa = ({ fun, data }) => {
+  const [socios, setSocios] = useState()
+
+  const handleChange = (e) => {
+    console.log(value)
+    getClientes(setSocios,1, value, '')
+  }
+
+  useEffect(() => {
+    getClientes(setSocios,1, '', '')
+  }, [])
+  
+
   return (
     <>
       <div className="mt-5">
@@ -25,6 +41,12 @@ const FormEmpresa = ({ fun, data }) => {
           Descripción
         </label>
         <input type="text" name={"descripcion"} className={claseFormInputs} placeholder={`Ingrese Descripción`} required onChange={fun} />
+      </div>
+      <div className="mt-5">
+        <label className="block mb-2 text-sm font-medium text-gray-900 ">
+          Asignar a socio
+        </label>
+        <SelectFormBoletas classCss={classFormSelct} name= "socios" data={socios ? socios.data : cargando} fun={handleChange}/>
       </div>
     </>
   );
