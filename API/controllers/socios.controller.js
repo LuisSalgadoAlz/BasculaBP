@@ -3,7 +3,32 @@ const dotenv = require("dotenv");
 const db = new PrismaClient();
 
 const getSocios = async (req, res) => {
-  const data = await db.socios.findMany();
+  const page = parseInt(req.query.page) || 1 ;  
+  const limit = parseInt(req.query.limit) || 10;  
+  const skip = (page - 1) * limit;  
+ 
+  const search = req.query.search || ''; 
+
+  const data = await db.socios.findMany({
+    where: {
+      nombre: {
+        contains: search,  // Búsqueda parcial
+      }
+    },
+    skip: skip,
+    take: limit,
+  });
+  
+  const totalSocios = await db.socios.count({
+    where: {
+      nombre: {
+        contains: search,  
+      }
+    }
+  });
+
+  const totalPages = Math.ceil(totalSocios / limit);
+
   const clenData = data.map((el) => ({
     id: el.id,
     Nombre: el.nombre,
@@ -12,7 +37,16 @@ const getSocios = async (req, res) => {
     Correo: el.correo,
     Estado: el.estado,
   }));
-  res.json(clenData);
+  
+  res.json({
+    data: clenData,
+    pagination: {
+      totalSocios,
+      totalPages,
+      currentPage: page,
+      limit,
+    },
+  });
 };
 
 const getSocioPorID = async (req, res) => {
