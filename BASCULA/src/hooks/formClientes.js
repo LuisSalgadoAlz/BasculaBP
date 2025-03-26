@@ -1,8 +1,8 @@
 import { regexNombre, regexEmail, regexTelefono } from "../constants/regex";
 
-export const getClientes = async (fun) => {
+export const getClientes = async (fun, page, search) => {
   try {
-    const response = await fetch("http://localhost:3000/socios/", {
+    const response = await fetch(`http://localhost:3000/socios?page=${page}&search=${search}`, {
       method: "GET",
       headers: {
         Authorization: window.localStorage.getItem("token"),

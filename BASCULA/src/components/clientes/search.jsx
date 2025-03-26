@@ -11,6 +11,8 @@ import { ModalClientes } from "./modal";
 import { ModalSuccess, ModalErr } from "../alerts";
 
 const Search = ({ sts }) => {
+  const [pagination, setPagination] = useState(1)
+  const [search, setSearch] = useState('')
   const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState({
     nombre: "",
@@ -63,10 +65,28 @@ const Search = ({ sts }) => {
     setSuccess(false);
   };
 
+  const handlePagination = (item) => {
+    if (pagination>0) {
+      const newRender = pagination+item
+      if(newRender==0) return
+      if(newRender>datos.pagination.totalPages) return
+      setPagination(newRender) 
+    }
+  } 
+
+  const handleResetPagination = () => {
+    setPagination(1)
+  }
+
+  const handleSearch = (e) => {
+    const {value} = e.target
+    setSearch(value)
+  }
+
   const fetchData = useCallback(() => {
-    getClientes(setDatos);
+    getClientes(setDatos, pagination, search);
     getStatsSocios(sts);
-  }, []);
+  }, [pagination, search]);
 
   useEffect(() => {
     fetchData();
@@ -78,7 +98,9 @@ const Search = ({ sts }) => {
         <input
           className="p-2.5 text-sm font-medium text-gray-600  rounded-lg border border-gray-200 col-span-full"
           type="text"
-          placeholder="Buscar boletas por ID, placas o motorista..."
+          placeholder="Buscar boletas nombre de socios"
+          onChange={handleSearch}
+          onKeyDown={handleResetPagination}
         />
         <select className="py-2.5 px-4 text-sm font-medium text-gray-600  rounded-lg border border-gray-200">
           <option value="0">Tipo</option>
@@ -86,11 +108,14 @@ const Search = ({ sts }) => {
         <ButtonAdd name="Agregar" fun={toggleModal} />
       </div>
       <div className="mt-7">
-        {!datos || datos.length == 0 ? (
+        {!datos || datos.data.length == 0 ? (
           <h1 className="ml-2">No hay datos</h1>
         ) : (
-          <TableComponent datos={datos} />
+          <TableComponent datos={datos.data} />
         )}
+        <button className="mt-5 text-gray-600" onClick={()=>handlePagination(-1)}>Anterior</button>
+        <span className="px-4 text-gray-600">{pagination} {' / '} {datos && datos.pagination.totalPages}</span>
+        <button className="mt-5 text-gray-600" onClick={()=>handlePagination(1)}>Siguiente</button>
       </div>
 
       {isOpen && (

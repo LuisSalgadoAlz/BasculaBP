@@ -46,13 +46,6 @@ const EditClientes = () => {
   /* Limpieza de componentes */
   const hanldeCleanState = () => {
     setFormData({ nombre: "", tipo: -1, descripcion: "", estado: 1 });
-    setSc({
-      nombre: "Cargando...",
-      tipo: -1,
-      correo: "Cargando...",
-      estado: "",
-      telefono: "",
-    });
   };
 
   const navigate = useNavigate();
@@ -79,7 +72,7 @@ const EditClientes = () => {
     setSuccess(false);
     setModalDirecciones(false);
     setModalDireccionesEdit(false);
-    hanldeCleanState();
+    hanldeCleanState()
   };
 
   const handleSave = async () => {
