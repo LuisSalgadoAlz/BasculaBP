@@ -5,17 +5,17 @@ const db = new PrismaClient();
 const getSocios = async (req, res) => {
   const page = parseInt(req.query.page) || 1 ;  
   const limit = parseInt(req.query.limit) || 10;  
-  const tipo = parseInt(req.query.tipo) || '';
+  const tipo = parseInt(req.query.tipo);
   const skip = (page - 1) * limit;  
- 
-  const search = req.query.search || ''; 
 
+  const search = req.query.search || ''; 
+  console.log(tipo)
   const data = await db.socios.findMany({
     where: {
       nombre: {
         contains: search,  // Búsqueda parcial
       },
-      ...(tipo ? { tipo: tipo } : {})
+      ...((tipo==0 || tipo ==1) ? { tipo: tipo } : {})
     },
     skip: skip,
     take: limit,
@@ -26,7 +26,7 @@ const getSocios = async (req, res) => {
       nombre: {
         contains: search,  
       }, 
-      ...(tipo ? { tipo: tipo } : {})
+      ...((tipo==0 || tipo ==1) ? { tipo: tipo } : {})
     }
   });
 
