@@ -1,4 +1,4 @@
-import CardHeader from "../components/transporte/card-header";
+import CardHeader from "../components/card-header";
 import Search from "../components/transporte/search";
 
 const Transporte = () => {

@@ -4,12 +4,12 @@ const db = new PrismaClient();
 
 const getSocios = async (req, res) => {
   const page = parseInt(req.query.page) || 1 ;  
-  const limit = parseInt(req.query.limit) || 10;  
+  const limit = parseInt(req.query.limit) || 7;  
   const tipo = parseInt(req.query.tipo);
   const skip = (page - 1) * limit;  
 
   const search = req.query.search || ''; 
-  console.log(tipo)
+
   const data = await db.socios.findMany({
     where: {
       nombre: {
