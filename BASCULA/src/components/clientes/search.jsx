@@ -12,6 +12,7 @@ import { ModalSuccess, ModalErr } from "../alerts";
 
 const Search = ({ sts }) => {
   const [pagination, setPagination] = useState(1)
+  const [tipo, setTipo] = useState()
   const [search, setSearch] = useState('')
   const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -83,10 +84,20 @@ const Search = ({ sts }) => {
     setSearch(value)
   }
 
+  const handleFilterType = (e) => {
+    const { value } = e.target
+    setPagination(1)
+    if (value==-1) {
+      setTipo('')
+      return
+    } 
+    setTipo(value)
+  }
+
   const fetchData = useCallback(() => {
-    getClientes(setDatos, pagination, search);
+    getClientes(setDatos, pagination, search, tipo);
     getStatsSocios(sts);
-  }, [pagination, search]);
+  }, [pagination, search, tipo]);
 
   useEffect(() => {
     fetchData();
@@ -102,10 +113,10 @@ const Search = ({ sts }) => {
           onChange={handleSearch}
           onKeyDown={handleResetPagination}
         />
-        <select className="py-2.5 px-4 text-sm font-medium text-gray-600  rounded-lg border border-gray-200">
-          <option value="">Tipo de socio</option>
-          <option value="0">Proveedor</option>
-          <option value="1">Cliente</option>
+        <select className="py-2.5 px-4 text-sm font-medium text-gray-600  rounded-lg border border-gray-200" onChange={handleFilterType}>
+          <option value={-1}>Tipo de socio</option>
+          <option value={0}>Proveedor</option>
+          <option value={1}>Cliente</option>
         </select>
         <ButtonAdd name="Agregar" fun={toggleModal} />
       </div>
