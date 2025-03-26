@@ -1,7 +1,14 @@
+import { useEffect, useState } from "react";
 import CardHeader from "../components/card-header";
 import Search from "../components/transporte/search";
+import { getStatsEmpresas } from "../hooks/formDataEmpresas"
 
 const Transporte = () => {
+  const [stats, setStats] = useState()
+  useEffect(() => {
+    getStatsEmpresas(setStats)
+  }, [])
+  
   return (
     <>
       <div className="flex justify-between w-full gap-5">
@@ -14,8 +21,8 @@ const Transporte = () => {
         </div>
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2 mt-5">
-        <CardHeader data={12} name={"Total de empresas"} title={"Empresa"} />
-        <CardHeader data={12} name={"Total de activas"} title={"Activas"} />
+        <CardHeader data={stats && stats.totalEmpresas} name={"Total de empresas"} title={"Empresa"} />
+        <CardHeader data={stats && stats.totalActivas} name={"Total de activas"} title={"Activas"} />
       </div>
       <div className="mt-6 bg-white shadow rounded-lg px-6 py-7 border border-gray-300">
         <Search />
