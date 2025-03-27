@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { ButtonAdd } from "../buttons";
-import TableComponent from "../table";
+import { TableEmpresas } from "./tables";
 import { getEmpresas, postEmpresas, getStatsEmpresas } from "../../hooks/formDataEmpresas";
 import ModalEmpresas from "./modal";
 
@@ -87,7 +87,7 @@ const Search = ({ sts }) => {
         <ButtonAdd name="Agregar" fun={toggleModal} />
       </div>
       <div className="mt-7">
-        {(!datos || datos.data.length ==0) ? <h1 className="ml-2">No hay datos</h1> : <TableComponent datos={datos.data} />}
+        {(!datos || datos.data.length ==0) ? <h1 className="ml-2">No hay datos</h1> : <TableEmpresas datos={datos.data} />}
         <button className="mt-5 text-gray-600" onClick={()=>handlePagination(-1)}>Anterior</button>
         <span className="px-4 text-gray-600">{pagination} {' / '} {datos && datos.pagination.totalPages}</span>
         <button className="mt-5 text-gray-600" onClick={()=>handlePagination(1)}>Siguiente</button>

@@ -82,3 +82,23 @@ export const getStatsEmpresas= async (fun) => {
     console.error("Error al obtener los clientes:", error);
   }
 };
+
+export const getEmpresasPorId = async (fun, id) => {
+  try {
+    const response = await fetch(`${URLHOST}empresas/${id}`, {
+      method: "GET",
+      headers: {
+        Authorization: window.localStorage.getItem("token"),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API");
+    }
+
+    const data = await response.json();
+    fun(data);
+  } catch (error) {
+    console.error("Error al obtener los clientes:", error);
+  }
+};
