@@ -20,6 +20,7 @@ const getSociosParaSelect = async (req, res) => {
 const getEmpresas = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 7;
+  const estado = req.query.estado;
   const skip = (page-1) * limit;
 
   const search = req.query.search
@@ -37,8 +38,10 @@ const getEmpresas = async (req, res) => {
       where : {
         nombre : {
           contains : search
-        }
+        }, 
+        ...(estado =='activa' ? {estado : true} : estado =='inactiva' ? {estado : false} : {})
       }, 
+
       skip : skip, 
       take : limit,
     });
@@ -47,7 +50,8 @@ const getEmpresas = async (req, res) => {
       where : {
         nombre : {
           contains : search
-        }
+        },
+        ...(estado =='activa' ? {estado : true} : estado =='inactiva' ? {estado : false} : {})
       }, 
     })
 
