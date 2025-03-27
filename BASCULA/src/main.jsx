@@ -39,10 +39,6 @@ const navRutas = createBrowserRouter([
         element: <Clientes />,
       },
       {
-        path: "/Productos",
-        element: <Productos />,
-      },
-      {
         path: "/socios/:id",
         element: <EditClientes />,
       },

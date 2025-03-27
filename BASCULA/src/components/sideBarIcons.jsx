@@ -25,11 +25,6 @@ const RUTAS_PRINCIPALES = [
     icon: <RiTruckLine />,
   },
   {
-    path: "/productos",
-    name: "Productos",
-    icon: <AiOutlineProduct />,
-  },
-  {
     path: "/boletas",
     name: "Boletas",
     icon: <BsClipboard2Pulse />,
