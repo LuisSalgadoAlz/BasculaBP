@@ -5,9 +5,6 @@ import { getStatsEmpresas } from "../hooks/formDataEmpresas"
 
 const Transporte = () => {
   const [stats, setStats] = useState()
-  useEffect(() => {
-    getStatsEmpresas(setStats)
-  }, [])
   
   return (
     <>
@@ -25,7 +22,7 @@ const Transporte = () => {
         <CardHeader data={stats && stats.totalActivas} name={"Total de activas"} title={"Activas"} />
       </div>
       <div className="mt-6 bg-white shadow rounded-lg px-6 py-7 border border-gray-300">
-        <Search />
+        <Search sts={setStats} />
       </div>
     </>
   );

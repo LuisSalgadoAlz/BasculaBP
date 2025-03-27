@@ -113,7 +113,7 @@ const Search = ({ sts }) => {
           onChange={handleSearch}
           onKeyDown={handleResetPagination}
         />
-        <select className="py-2.5 px-4 text-sm font-medium text-gray-600  rounded-lg border border-gray-200" onChange={handleFilterType}>
+        <select className="py-2.5 px-4 text-sm font-medium text-gray-600  rounded-lg border border-gray-200" onKeyDown={handleResetPagination} onChange={handleFilterType}>
           <option value={-1}>Tipo de socio</option>
           <option value={0}>Proveedor</option>
           <option value={1}>Cliente</option>
