@@ -1,6 +1,8 @@
+import { URLHOST } from "../constants/global";
+
 export const getEmpresas = async (fun, page, search, estado) => {
   try {
-    const response = await fetch(`http://localhost:3000/empresas?page=${page}&search=${search}&estado=${estado}`, {
+    const response = await fetch(`${URLHOST}empresas?page=${page}&search=${search}&estado=${estado}`, {
       method: "GET",
       headers: {
         Authorization: window.localStorage.getItem("token"),
@@ -20,7 +22,7 @@ export const getEmpresas = async (fun, page, search, estado) => {
 
 export const getSociosParaSelect = async (fun) => {
   try {
-    const response = await fetch("http://localhost:3000/empresas/socios", {
+    const response = await fetch(`${URLHOST}empresas/socios`, {
       method: "GET",
       headers: {
         Authorization: window.localStorage.getItem("token"),
@@ -41,7 +43,7 @@ export const getSociosParaSelect = async (fun) => {
 
 export const postEmpresas = async (empresa) => {
   try {
-    const response = await fetch("http://localhost:3000/empresas/", {
+    const response = await fetch(`${URLHOST}empresas/`, {
       method: "POST",
       body: JSON.stringify(empresa),
       headers: {
@@ -63,7 +65,7 @@ export const postEmpresas = async (empresa) => {
 
 export const getStatsEmpresas= async (fun) => {
   try {
-    const response = await fetch("http://localhost:3000/empresas/stats", {
+    const response = await fetch(`${URLHOST}empresas/stats`, {
       method: "GET",
       headers: {
         Authorization: window.localStorage.getItem("token"),

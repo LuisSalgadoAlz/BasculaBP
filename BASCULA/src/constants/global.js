@@ -1,0 +1,1 @@
+export const URLHOST = 'http://192.9.100.56:3000/'

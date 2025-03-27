@@ -1,6 +1,6 @@
 import CardHeader from "../components/card-header";
 import Search from "../components/clientes/search";
-import { useState, useCallback, useEffect } from "react";
+import { useState } from "react";
 
 const Clientes = () => {
   const [stats, setSats] = useState()

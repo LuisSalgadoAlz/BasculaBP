@@ -1,8 +1,17 @@
 import { regexNombre, regexEmail, regexTelefono } from "../constants/regex";
+import {URLHOST} from '../constants/global'
 
+/**
+ * 
+ * @param {*} fun 
+ * @param {*} page 
+ * @param {*} search 
+ * @param {*} tipo 
+ * 
+ */
 export const getClientes = async (fun, page, search, tipo) => {
   try {
-    const response = await fetch(`http://localhost:3000/socios?page=${page}&search=${search}&tipo=${tipo}`, {
+    const response = await fetch(`${URLHOST}socios?page=${page}&search=${search}&tipo=${tipo}`, {
       method: "GET",
       headers: {
         Authorization: window.localStorage.getItem("token"),
@@ -19,10 +28,17 @@ export const getClientes = async (fun, page, search, tipo) => {
     console.error("Error al obtener los clientes:", error);
   }
 };
+
+/**
+ * 
+ * @param {*} fun funcion que retorna un valor al estado del componente padre
+ * @param {*} id 
+ * 
+ */
 
 export const getClientesPorID = async (fun, id) => {
   try {
-    const response = await fetch(`http://localhost:3000/socios/${id}`, {
+    const response = await fetch(`${URLHOST}socios/${id}`, {
       method: "GET",
       headers: {
         Authorization: window.localStorage.getItem("token"),
@@ -39,10 +55,16 @@ export const getClientesPorID = async (fun, id) => {
     console.error("Error al obtener los clientes:", error);
   }
 };
+
+/**
+ * 
+ * @param {*} fun funcion que retorna un valor al estado del componente padre
+ * @param {*} id 
+ */
 
 export const getDireccionesPorSocios = async (fun, id) => {
   try {
-    const response = await fetch(`http://localhost:3000/socios/direcciones/${id}`, {
+    const response = await fetch(`${URLHOST}socios/direcciones/${id}`, {
       method: "GET",
       headers: {
         Authorization: window.localStorage.getItem("token"),
@@ -60,9 +82,14 @@ export const getDireccionesPorSocios = async (fun, id) => {
   }
 };
 
+/**
+ * 
+ * @param {*} socio obj que contiene los datos
+ */
+
 export const postEmpresas = async (socio) => {
   try {
-    const response = await fetch("http://localhost:3000/socios/", {
+    const response = await fetch(`${URLHOST}socios/`, {
       method: "POST",
       body: JSON.stringify(socio),
       headers: {
@@ -82,9 +109,14 @@ export const postEmpresas = async (socio) => {
   }
 };
 
+/**
+ * 
+ * @param {*} fun funcion que retorna un valor al estado del componente padre
+ */
+
 export const getStatsSocios = async (fun) => {
   try {
-    const response = await fetch("http://localhost:3000/socios/stats", {
+    const response = await fetch(`${URLHOST}socios/stats`, {
       method: "GET",
       headers: {
         Authorization: window.localStorage.getItem("token"),
@@ -102,10 +134,19 @@ export const getStatsSocios = async (fun) => {
   }
 };
 
+/**
+ * 
+ * @param {*} socio 
+ * @param {*} id 
+ * @returns 
+ * 
+ * funcion que actualiza por id un socio
+ */
+
 export const updateSocios = async (socio, id) => {
   console.log(socio);
   try {
-    const response = await fetch(`http://localhost:3000/socios/${id}`, {
+    const response = await fetch(`${URLHOST}socios/${id}`, {
       method: "PUT",
       body: JSON.stringify(socio),
       headers: {
@@ -126,9 +167,16 @@ export const updateSocios = async (socio, id) => {
   }
 };
 
+/**
+ * 
+ * @param {*} direccion 
+ * 
+ * funcion para guardar direcciones
+ */
+
 export const postDirecciones = async (direccion) => {
   try {
-    const response = await fetch("http://localhost:3000/socios/direcciones", {
+    const response = await fetch(`${URLHOST}socios/direcciones`, {
       method: "POST",
       body: JSON.stringify(direccion),
       headers: {
@@ -148,9 +196,17 @@ export const postDirecciones = async (direccion) => {
   }
 };
 
+/**
+ * 
+ * @param {*} fun 
+ * @param {*} id
+ * 
+ * funcion para obtener por id las direciones  
+ */
+
 export const getDireccionesPorID = async (fun, id) => {
   try {
-    const response = await fetch(`http://localhost:3000/socios/direcciones/f/${id}`, {
+    const response = await fetch(`${URLHOST}socios/direcciones/f/${id}`, {
       method: "GET",
       headers: {
         Authorization: window.localStorage.getItem("token"),
@@ -168,9 +224,17 @@ export const getDireccionesPorID = async (fun, id) => {
   }
 };
 
+/**
+ * 
+ * @param {*} direccion 
+ * @returns 
+ * 
+ * funcion para actualizar direccoines
+ */
+
 export const updateDireccionesPorID = async (direccion) => {
   try {
-    const response = await fetch(`http://localhost:3000/socios/direcciones/pt/`, {
+    const response = await fetch(`${URLHOST}socios/direcciones/pt/`, {
       method: "PUT",
       body: JSON.stringify(direccion),
       headers: {

@@ -3,6 +3,7 @@ import { BiUser, BiLockAlt } from "react-icons/bi";
 import ModalError from "../components/modals";
 import useLocalStorage from "../hooks/useLocalStorage";
 import { useNavigate } from "react-router";
+import { URLHOST } from '../constants/global'
 
 const Login = () => {
   const [localStorageSave, setLocalStorageSave] = useLocalStorage("token", "");
@@ -23,7 +24,7 @@ const Login = () => {
   };
 
   const verificarLog = async () => {
-    const token = await fetch("http://localhost:3000/login", {
+    const token = await fetch(`${URLHOST}login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

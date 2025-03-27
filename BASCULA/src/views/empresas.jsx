@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import CardHeader from "../components/card-header";
 import Search from "../components/transporte/search";
-import { getStatsEmpresas } from "../hooks/formDataEmpresas"
 
 const Transporte = () => {
   const [stats, setStats] = useState()

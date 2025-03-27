@@ -1,7 +1,9 @@
+import { URLHOST } from "../constants/global";
+
 /* Fetching de los datos de clientes */
 export const getClientes = async (fun) => {
   try {
-    const response = await fetch("http://localhost:3000/clientes/boletas", {
+    const response = await fetch(`${URLHOST}clientes/boletas`, {
       method: "GET",
       headers: {
         Authorization: window.localStorage.getItem("token"),
@@ -23,7 +25,7 @@ export const getClientes = async (fun) => {
 export const getTransporte = async (fun, id = "") => {
   try {
     const response = await fetch(
-      `http://localhost:3000/transportes/boletas/${id}`,
+      `${URLHOST}transportes/boletas/${id}`,
       {
         method: "GET",
         headers: {
@@ -47,7 +49,7 @@ export const getTransporte = async (fun, id = "") => {
 
 export const getMotoristas = async (fun) => {
   try {
-    const response = await fetch("http://localhost:3000/motoristas/boletas", {
+    const response = await fetch(`${URLHOST}motoristas/boletas`, {
       method: "GET",
       headers: {
         Authorization: window.localStorage.getItem("token"),
@@ -69,7 +71,7 @@ export const getMotoristas = async (fun) => {
 
 export const getPlacas = async (fun) => {
   try {
-    const response = await fetch("http://localhost:3000/placas/boletas", {
+    const response = await fetch(`${URLHOST}placas/boletas`, {
       method: "GET",
       headers: {
         Authorization: window.localStorage.getItem("token"),
@@ -89,7 +91,7 @@ export const getPlacas = async (fun) => {
 
 export const getProcesos = async (fun) => {
   try {
-    const response = await fetch("http://localhost:3000/procesos/boletas", {
+    const response = await fetch(`${URLHOST}procesos/boletas`, {
       method: "GET",
       headers: {
         Authorization: window.localStorage.getItem("token"),
@@ -109,7 +111,7 @@ export const getProcesos = async (fun) => {
 
 export const getOrigen = async (fun, url) => {
   try {
-    const response = await fetch(`http://localhost:3000/origen/boletas`, {
+    const response = await fetch(`${URLHOST}origen/boletas`, {
       method: "GET",
       headers: {
         Authorization: window.localStorage.getItem("token"),
@@ -129,7 +131,7 @@ export const getOrigen = async (fun, url) => {
 
 export const getDestino = async (fun, url) => {
   try {
-    const response = await fetch(`http://localhost:3000/destino/boletas`, {
+    const response = await fetch(`${URLHOST}destino/boletas`, {
       method: "GET",
       headers: {
         Authorization: window.localStorage.getItem("token"),
@@ -149,7 +151,7 @@ export const getDestino = async (fun, url) => {
 
 export const getProductos = async (fun, url) => {
   try {
-    const response = await fetch(`http://localhost:3000/producto/boletas`, {
+    const response = await fetch(`${URLHOST}producto/boletas`, {
       method: "GET",
       headers: {
         Authorization: window.localStorage.getItem("token"),
@@ -169,7 +171,7 @@ export const getProductos = async (fun, url) => {
 
 export const getTipoDePeso = async (fun, url) => {
   try {
-    const response = await fetch(`http://localhost:3000/tipodepeso/boletas`, {
+    const response = await fetch(`${URLHOST}tipodepeso/boletas`, {
       method: "GET",
       headers: {
         Authorization: window.localStorage.getItem("token"),
@@ -189,7 +191,7 @@ export const getTipoDePeso = async (fun, url) => {
 
 export const getPeso = async (fun, url) => {
   try {
-    const response = await fetch(`http://localhost:3000/peso`, {
+    const response = await fetch(`${URLHOST}peso`, {
       method: "GET",
       headers: {
         Authorization: window.localStorage.getItem("token"),

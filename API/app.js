@@ -26,6 +26,6 @@ app.use('/producto', producto)
 app.use('/tipoDePeso', tipodepeso)
 app.use('/empresas', empresas)
 
-app.listen(process.env.PORT, () => {
+app.listen(process.env.PORT, '192.9.100.56', () => {
   console.log(`Ejecutando API en http://localhost:${process.env.PORT}/`);
 });
