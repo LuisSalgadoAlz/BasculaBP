@@ -117,9 +117,23 @@ const postEmpresas = async (req, res) => {
   }
 };
 
+const getEmpresaPorId = async (req, res) => {
+  try{
+    const esData = await db.empresa.findUnique({
+      where: {
+        id: parseInt(req.params.id),
+      },
+    });
+    res.json(esData)
+  }catch(err){
+    console.log(err)
+  }
+}
+
 module.exports = {
   getEmpresas,
   postEmpresas,
   getStats, 
-  getSociosParaSelect
+  getSociosParaSelect, 
+  getEmpresaPorId
 };
