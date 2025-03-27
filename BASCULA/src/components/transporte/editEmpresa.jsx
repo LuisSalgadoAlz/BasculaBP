@@ -6,7 +6,7 @@ import {
   classFormSelct,
 } from "../../constants/boletas";
 import { useNavigate } from "react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   getEmpresasPorId,
   getSociosParaSelect,
@@ -21,6 +21,10 @@ const EditTransporte = () => {
   };
   const [socios, setSocios] = useState();
 
+
+  /**
+   * Estado inicial del form de empresa
+   */
   const [empresa, setEmpresa] = useState({
     nombre: "",
     email: "",
@@ -30,18 +34,42 @@ const EditTransporte = () => {
     idSocios: "",
   });
 
+  /**
+   * 
+   * @param {*} e obtener valores del form de manera dinamica
+   */
   const handleChange = (e) => {
     const { name, value } = e.target;
     setEmpresa((prev) => ({
       ...prev,
       [name]: value,
     }));
+
+    console.log(empresa)
   };
 
-  useEffect(() => {
+
+  /**
+   * Calback que almacena los valores de las tablas para maximizar el rendimiento 
+   */
+
+  const fetchData = useCallback(() => {
     getEmpresasPorId(setEmpresa, id);
     getSociosParaSelect(setSocios);
-  }, []);
+  },[])
+  
+
+  /**
+   * Cargar valores del callback
+   */
+
+  useEffect(() => {
+    fetchData()
+  }, [fetchData]);
+
+  /**
+   * JSX inicial
+   */
 
   return (
     <>

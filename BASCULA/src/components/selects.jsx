@@ -56,7 +56,7 @@ export const SelectSociosSave = ({ classCss, data = {}, name, fun }) => {
   );
 };
 
-export const SelectSociosEdit = ({ classCss, data = {}, name, fun, val }) => {
+export const SelectSociosEdit = ({ classCss, data = {}, name, fun, val, isActive }) => {
   const opt = data.map((el) => {
     return {
       value: el.id,
@@ -97,11 +97,10 @@ export const SelectSociosEdit = ({ classCss, data = {}, name, fun, val }) => {
 
   const selectedValue = opt.find((option) => option.value === val) || null;
 
-
   return (
     <>
       <label className="block mb-1.5 text-sm font-medium text-gray-900 ">
-        Asignar socio:
+        Editar socio:
       </label>
       <Select
         name={name}
@@ -109,6 +108,7 @@ export const SelectSociosEdit = ({ classCss, data = {}, name, fun, val }) => {
         onChange={handleChange}
         options={opt}
         value={selectedValue}
+        placeholder={selectedValue == null ? 'Socio desactivado: elija nueva opcion si desea modificar el anterior' : 'Ingrese nuevo socio'}
       />
     </>
   );
