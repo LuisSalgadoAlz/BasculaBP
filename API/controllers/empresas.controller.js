@@ -4,7 +4,11 @@ const db = new PrismaClient();
 
 const getSociosParaSelect = async (req, res) => {
   try {
-    const data = await db.socios.findMany();
+    const data = await db.socios.findMany({
+      where: {
+        estado: true
+      }
+    });
     res.json(data);
   } catch (err) {
     console.log(err)
@@ -14,8 +18,57 @@ const getSociosParaSelect = async (req, res) => {
 
 /* Listar usuarios */
 const getEmpresas = async (req, res) => {
-  const data = await db.empresa.findMany();
-  res.json(data);
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 7;
+  const skip = (page-1) * limit;
+
+  const search = req.query.search
+
+  try{
+    const data = await db.empresa.findMany({
+      omit: {idSocios: true},
+      include: {
+        rClientes : { 
+          select : {
+            nombre: true
+          }
+        },
+      },
+      where : {
+        nombre : {
+          contains : search
+        }
+      }, 
+      skip : skip, 
+      take : limit,
+    });
+
+    const totalEmpresas = await db.empresa.count({
+      where : {
+        nombre : {
+          contains : search
+        }
+      }, 
+    })
+
+    const totalPages = Math.ceil(totalEmpresas / limit)
+
+    const resultado = data.map(({ rClientes: { nombre: nombreSocio }, ...resto }) => ({
+      ...resto,
+      "Socio" : nombreSocio
+    }));
+    
+    res.json({
+      data : resultado, 
+      pagination: {
+        totalEmpresas, 
+        totalPages, 
+        limit
+      }
+    })
+  }catch(err) {
+    console.log(err)
+  }
 };
 
 const getStats = async (req, res) => {
@@ -36,7 +89,7 @@ const getStats = async (req, res) => {
 
 const postEmpresas = async (req, res) => {
   try {
-    const { nombre, email, telefono, descripcion } = req.body;
+    const { nombre, email, telefono, descripcion, idSocios } = req.body;
 
     // Crear el nuevo usuario
     const nuevaEmpresa = await db.empresa.create({
@@ -46,6 +99,7 @@ const postEmpresas = async (req, res) => {
         telefono,
         descripcion,
         estado: true,
+        idSocios
       },
     });
 
