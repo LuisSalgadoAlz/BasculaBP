@@ -1,37 +1,47 @@
 import { useParams } from "react-router";
 import { ButtonAdd, ButtonSave, ButtonVolver } from "../buttons";
-import { claseFormInputs } from "../../constants/boletas";
+import {
+  cargando,
+  claseFormInputs,
+  classFormSelct,
+} from "../../constants/boletas";
 import { useNavigate } from "react-router";
 import { useEffect, useState } from "react";
-import { getEmpresasPorId } from "../../hooks/formDataEmpresas";
+import {
+  getEmpresasPorId,
+  getSociosParaSelect,
+} from "../../hooks/formDataEmpresas";
+import { SelectSociosEdit } from "../selects";
 
 const EditTransporte = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const handleClik = () => {navigate(-1)};
-  const [empresa, setEmpresa] = useState({
-    nombre : '', 
-    email: '', 
-    telefono: '', 
-    descripcion : '', 
-    estado : '', 
-    idSocio : ''
-  })
+  const handleClik = () => {
+    navigate(-1);
+  };
+  const [socios, setSocios] = useState();
 
-  const handleChange = (e) =>{
-    const {name, value} = e.target
-    setEmpresa((prev)=>({
-        ...prev, 
-        [name] : value
-    }))
-    console.log(empresa)
-  }
+  const [empresa, setEmpresa] = useState({
+    nombre: "",
+    email: "",
+    telefono: "",
+    descripcion: "",
+    estado: "",
+    idSocios: "",
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setEmpresa((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
   useEffect(() => {
-    getEmpresasPorId(setEmpresa, id)
-  }, [])
-  
-
+    getEmpresasPorId(setEmpresa, id);
+    getSociosParaSelect(setSocios);
+  }, []);
 
   return (
     <>
@@ -51,33 +61,70 @@ const EditTransporte = () => {
         <div className="container grid grid-cols-2 gap-2 max-md:grid-cols-1">
           <div className="mt-5">
             <label className="block mb-2 text-sm font-medium text-gray-900 ">
-              Nombre
+              Nombre:
             </label>
-            <input type="text" name={"nombre"} className={claseFormInputs} placeholder={`Ingrese Nombre`} onChange={handleChange} value={empresa.nombre} required />
+            <input
+              type="text"
+              name={"nombre"}
+              className={claseFormInputs}
+              placeholder={`Ingrese Nombre`}
+              onChange={handleChange}
+              value={empresa.nombre}
+              required
+            />
           </div>
           <div className="mt-5">
             <label className="block mb-2 text-sm font-medium text-gray-900 ">
-              Email
+              Email:
             </label>
-            <input type="text" name={"email"} className={claseFormInputs} placeholder={`Ingrese email`}  onChange={handleChange} value={empresa.email} required />
+            <input
+              type="text"
+              name={"email"}
+              className={claseFormInputs}
+              placeholder={`Ingrese email`}
+              onChange={handleChange}
+              value={empresa.email}
+              required
+            />
           </div>
           <div className="mt-5">
             <label className="block mb-2 text-sm font-medium text-gray-900 ">
-              Telefono
+              Telefono:
             </label>
-            <input type="text" name={"telefono"} className={claseFormInputs} placeholder={`Ingrese teelefono`}  onChange={handleChange} value={empresa.telefono} required />
+            <input
+              type="text"
+              name={"telefono"}
+              className={claseFormInputs}
+              placeholder={`Ingrese teelefono`}
+              onChange={handleChange}
+              value={empresa.telefono}
+              required
+            />
           </div>
           <div className="mt-5">
             <label className="block mb-2 text-sm font-medium text-gray-900 ">
-              Descripcion
+              Descripcion:
             </label>
-            <input type="text" name={"descripcion"} className={claseFormInputs} placeholder={`Ingrese descripcion`}  onChange={handleChange} value={empresa.descripcion} required />
+            <input
+              type="text"
+              name={"descripcion"}
+              className={claseFormInputs}
+              placeholder={`Ingrese descripcion`}
+              onChange={handleChange}
+              value={empresa.descripcion}
+              required
+            />
           </div>
           <div className="mt-5">
             <label className="block mb-2 text-sm font-medium text-gray-900 ">
-              Estado
+              Estado:
             </label>
-            <select name={"estado"} className={claseFormInputs}  onChange={handleChange} value={empresa.estado}>
+            <select
+              name={"estado"}
+              className={claseFormInputs}
+              onChange={handleChange}
+              value={empresa.estado}
+            >
               <option value={-1} className="text-gray-400">
                 Seleccione un estado
               </option>
@@ -86,28 +133,18 @@ const EditTransporte = () => {
             </select>
           </div>
           <div className="mt-5">
-            <label className="block mb-2 text-sm font-medium text-gray-900 ">
-              Socio
-            </label>
-            <select name={"estado"} className={claseFormInputs}>
-              <option value={-1} className="text-gray-400">
-                Seleccione un estado
-              </option>
-              <option value={0}>socio</option>
-            </select>
+            <SelectSociosEdit
+              classCss={classFormSelct}
+              name="idSocios"
+              data={socios ? socios : cargando}
+              fun={handleChange}
+              val={empresa.idSocios}
+            />
           </div>
         </div>
         <div className="mt-7 place-self-end">
           <ButtonSave name={"Guardar Cambios"} />
         </div>
-
-
-
-
-
-
-
-
 
         {/* Esta parte despues */}
         <hr className="text-gray-400 mt-7" />

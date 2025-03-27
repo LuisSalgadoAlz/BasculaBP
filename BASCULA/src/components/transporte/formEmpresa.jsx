@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { cargando, claseFormInputs, classFormSelct } from "../../constants/boletas";
-import SelectFormBoletas from "../boletas/select";
+import { SelectSociosSave } from "../selects";
 import { getSociosParaSelect } from "../../hooks/formDataEmpresas"
 
 const FormEmpresa = ({ fun }) => {
@@ -38,7 +38,7 @@ const FormEmpresa = ({ fun }) => {
         <input type="text" name={"descripcion"} className={claseFormInputs} placeholder={`Ingrese Descripción`} required onChange={fun} />
       </div>
       <div className="mt-5">
-        <SelectFormBoletas classCss={classFormSelct} name= "Asignar a socio" data={socios ? socios : cargando} fun={fun}/>
+        <SelectSociosSave classCss={classFormSelct} name= "Asignar a socio" data={socios ? socios : cargando} fun={fun}/>
       </div>
     </>
   );
