@@ -1,37 +1,76 @@
 import { useState, useEffect, useCallback } from "react";
 import { ButtonAdd } from "../buttons";
 import { TableEmpresas } from "./tables";
-import { getEmpresas, postEmpresas, getStatsEmpresas } from "../../hooks/formDataEmpresas";
+import { getEmpresas, postEmpresas, getStatsEmpresas, verificarData } from "../../hooks/formDataEmpresas";
 import ModalEmpresas from "./modal";
+import { ModalErr, ModalSuccess } from '../alerts'
 
 const Search = ({ sts }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [formData, setFormData] = useState();
+  const [msg, setMsg] = useState('')
+  const [err, setErr] = useState(false)
+  const [success, setSuccess] = useState(false)
+  const [formData, setFormData] = useState({
+    nombre: '', email: '', telefono: '', descripcion : '', idSocios: '', 
+  });
   const [datos, setDatos] = useState();
   const [pagination, setPagination] = useState(1)
   const [search, setSearch] = useState('')
   const [estado, setEstado] = useState();
 
-  const toggleModal = () => setIsOpen(!isOpen);
+  /**
+   * Se limpia el formdata cuando le de cancelar
+   */
+  const toggleModal = () => {
+    handleClean()
+    setIsOpen(!isOpen)
+  };
 
+  /**
+   * 
+   * @param {*} e obtiene el valor del elemento de los forms de forma dinamica
+   * 
+   */
   const handleData = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
+    console.log(formData)
   };
+
+  /**
+   * Limpiar estaodos para no usar despues
+   */
+
+  const handleClean = () => {
+    setFormData({nombre: '', email: '', telefono: '', descripcion : '', idSocios: '',})
+  }
+
+  /**
+   * Funcion para agregar a una nueva empresa 
+   * Falta validaciones
+   */
 
   const handleSubmit = async () => {
-    const cleanData = {
-      ...formData, 
-      idSocios : formData['Asignar a socio']
+    const isValid = verificarData(setErr, formData, setMsg)
+    if(isValid){
+      await postEmpresas(formData);
+      setIsOpen(false);
+      setMsg('agregar nueva empresa')
+      setSuccess(true)
+      fetchData(); 
+      handleClean()
     }
-    await postEmpresas(cleanData);
-    setIsOpen(false);
-    fetchData(); 
   };
 
+  /**
+   * 
+   * @param {*} e 
+   * guarda el valor actual del textbox de busqueda para que en cuanto se actualice el GET con los 
+   * parametros busque
+   */
   const hanldeSearch = (e) => {
     const {value} = e.target
     setSearch(value)
@@ -58,6 +97,11 @@ const Search = ({ sts }) => {
 
   const handleResetPagination = () => {
     setPagination(1)
+  }
+
+  const handleClose = () => {
+    setErr(false)
+    setSuccess(false)
   }
 
   const fetchData = useCallback(() => {
@@ -94,6 +138,8 @@ const Search = ({ sts }) => {
       </div>
 
       {isOpen && <ModalEmpresas hdlData={handleData} hdlSubmit={handleSubmit} tglModal={toggleModal} frDta={formData}/>}
+      {err && <ModalErr name={msg} hdClose={handleClose} />}
+      {success && <ModalSuccess name={msg} hdClose={handleClose} />}
     </>
   );
 };

@@ -38,7 +38,7 @@ const FormEmpresa = ({ fun }) => {
         <input type="text" name={"descripcion"} className={claseFormInputs} placeholder={`Ingrese Descripción`} required onChange={fun} />
       </div>
       <div className="mt-5">
-        <SelectSociosSave classCss={classFormSelct} name= "Asignar a socio" data={socios ? socios : cargando} fun={fun}/>
+        <SelectSociosSave classCss={classFormSelct} name= "idSocios" data={socios ? socios : cargando} fun={fun}/>
       </div>
     </>
   );

@@ -44,7 +44,7 @@ export const SelectSociosSave = ({ classCss, data = {}, name, fun }) => {
   return (
     <>
       <label className="block mb-1.5 text-sm font-medium text-gray-900 ">
-        {name}
+        Seleccione un socio
       </label>
       <Select
         name={name}
