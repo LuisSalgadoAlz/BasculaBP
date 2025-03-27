@@ -9,7 +9,6 @@ const NotFoundPage = lazy(()=>import('./views/notFoundPage'))
 const Boletas = lazy(()=>import('./views/boletos')) 
 const Empresa = lazy(()=>import('./views/empresas'))
 const Clientes = lazy(()=>import('./views/clientes'))
-const Productos = lazy(()=>import('./views/productos'))
 const EditClientes = lazy(()=>import('./components/clientes/editClientes'))
 const EditTransporte = lazy(()=>import('./components/transporte/editEmpresa'))
 

@@ -130,10 +130,38 @@ const getEmpresaPorId = async (req, res) => {
   }
 }
 
+const updateEmpresasPorId = async (req, res) => {
+  const { nombre, email, telefono, descripcion, estado,idSocios } = req.body;
+  try {
+    const updateEmpresas = await db.empresa.update({
+      where: {
+        id: parseInt(req.params.id),
+      },
+      data: {
+        nombre, 
+        email,
+        telefono,
+        descripcion,
+        estado:
+          estado == "true"
+            ? true
+            : estado === true || estado === true
+            ? estado
+            : false,
+        idSocios: parseInt(idSocios),
+      },
+    });
+    res.status(200).send("proceso exitoso");
+  } catch (error) {
+    res.status(401).send(`error ${error}`);
+  }
+}
+
 module.exports = {
   getEmpresas,
   postEmpresas,
   getStats, 
   getSociosParaSelect, 
-  getEmpresaPorId
+  getEmpresaPorId, 
+  updateEmpresasPorId
 };

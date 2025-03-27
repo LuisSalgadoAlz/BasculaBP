@@ -105,6 +105,30 @@ export const getEmpresasPorId = async (fun, id) => {
 };
 
 
+export const updateEmpresas = async (empresa, id) => {
+  try {
+    const response = await fetch(`${URLHOST}empresas/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(empresa),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: window.localStorage.getItem("token"),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API");
+    }
+
+    if (response.ok) {
+      return true;
+    }
+  } catch (error) {
+    console.error("Error al obtener los datos:", error);
+  }
+};
+
+
 /**
  * Validaciones de los forms
  * 

@@ -10,8 +10,12 @@ import { useCallback, useEffect, useState } from "react";
 import {
   getEmpresasPorId,
   getSociosParaSelect,
+  updateEmpresas
 } from "../../hooks/formDataEmpresas";
 import { SelectSociosEdit } from "../selects";
+import { ModalErr, ModalSuccess } from "../alerts"
+
+/* Comienzo de la funcion  */
 
 const EditTransporte = () => {
   const { id } = useParams();
@@ -20,7 +24,9 @@ const EditTransporte = () => {
     navigate(-1);
   };
   const [socios, setSocios] = useState();
-
+  const [err, setErr] = useState()
+  const [success, setSuccess] = useState()
+  const [msg, setMsg] = useState()
 
   /**
    * Estado inicial del form de empresa
@@ -48,6 +54,13 @@ const EditTransporte = () => {
     console.log(empresa)
   };
 
+  /**
+   * Funcion para actualizar la empresa actual
+   */
+
+  const handleUpdate = () => {
+    updateEmpresas(empresa, id)
+  }
 
   /**
    * Calback que almacena los valores de las tablas para maximizar el rendimiento 
@@ -171,7 +184,7 @@ const EditTransporte = () => {
           </div>
         </div>
         <div className="mt-7 place-self-end">
-          <ButtonSave name={"Guardar Cambios"} />
+          <ButtonSave name={"Guardar Cambios"} fun={handleUpdate}/>
         </div>
 
         {/* Esta parte despues */}
@@ -205,6 +218,10 @@ const EditTransporte = () => {
         </div>
         <div className="gap-5 mt-7">{/* Aqui van las tablas */}</div>
       </div>
+
+      {/* Modals del alertas */}
+      {err && <ModalErr name={msg} />}
+      {success && <ModalSuccess name={msg} />}
     </>
   );
 };
