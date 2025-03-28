@@ -201,7 +201,7 @@ const EditTransporte = () => {
             />
           </div>
         </div>
-        <div className="mt-7 place-self-end">
+        <div className="mt-7 place-self-end max-sm:place-self-center">
           <ButtonSave name={"Guardar Cambios"} fun={handleUpdate}/>
         </div>
 
@@ -237,7 +237,7 @@ const EditTransporte = () => {
               Gestion de placas con las que cuenta la empresa.
             </h1>
           </div>
-          <div className="parte-izq">
+          <div className="parte-izq max-sm:place-self-center">
             <ButtonAdd name={"Agregar Dirección"} />
           </div>
         </div>
@@ -252,7 +252,7 @@ const EditTransporte = () => {
               Gestion de placas con las que cuenta la empresa.
             </h1>
           </div>
-          <div className="parte-izq">
+          <div className="parte-izq max-sm:place-self-center">
             <ButtonAdd name={"Agregar Dirección"} />
           </div>
         </div>

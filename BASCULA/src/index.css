@@ -109,6 +109,10 @@ a.active {
   background: #5A3F27;
 }
 
+.elements-active.active{
+  background: #5A3F27;
+  color: white;
+}
 
 .font-title {
   color: #31251B;

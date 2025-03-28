@@ -3,7 +3,6 @@ import { MdOutlineScale, MdOutlineDashboard } from "react-icons/md";
 import { BsClipboard2Pulse, BsFileBarGraph  } from "react-icons/bs";
 import { RiTruckLine } from "react-icons/ri";
 import { FiUsers } from "react-icons/fi";
-import { AiOutlineProduct } from "react-icons/ai";
 import { PiSignOutFill } from "react-icons/pi";
 
 
