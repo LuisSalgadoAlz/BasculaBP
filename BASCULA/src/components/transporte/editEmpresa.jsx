@@ -87,7 +87,7 @@ const EditTransporte = () => {
   return (
     <>
       <div className="mt-6 bg-white shadow rounded-xl px-6 py-7">
-        <div className="flex justify-between w-full gap-5">
+        <div className="flex justify-between w-full gap-5 max-sm:flex-col">
           <div className="parte-izq">
             <h1 className="text-3xl font-bold titulo">Editar Empresas</h1>
             <h1 className="text-gray-600">
@@ -189,7 +189,7 @@ const EditTransporte = () => {
 
         {/* Esta parte despues */}
         <hr className="text-gray-400 mt-7" />
-        <div className="flex justify-between w-full gap-5 mt-7">
+        <div className="flex justify-between w-full gap-5 mt-7 max-sm:flex-col">
           <div className="parte-izq">
             <h1 className="text-3xl font-bold titulo">Agregar Vehiculos</h1>
             <h1 className="text-gray-600">
@@ -204,7 +204,7 @@ const EditTransporte = () => {
         <div className="gap-5 mt-7">{/* Aqui van las tablas */}</div>
         {/* Parte de motoristas */}
         <hr className="text-gray-400 mt-7" />
-        <div className="flex justify-between w-full gap-5 mt-7">
+        <div className="flex justify-between w-full gap-5 mt-7 max-sm:flex-col">
           <div className="parte-izq">
             <h1 className="text-3xl font-bold titulo">Agregar Motorista</h1>
             <h1 className="text-gray-600">

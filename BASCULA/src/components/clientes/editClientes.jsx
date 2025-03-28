@@ -149,7 +149,7 @@ const EditClientes = () => {
   return (
     <>
       <div className="mt-6 bg-white shadow rounded-xl px-6 py-7">
-        <div className="flex justify-between w-full gap-5">
+        <div className="flex justify-between w-full gap-5 max-sm:flex-col">
           <div className="parte-izq">
             <h1 className="text-3xl font-bold titulo">Editar Socio</h1>
             <h1 className="text-gray-600">
@@ -239,11 +239,11 @@ const EditClientes = () => {
             </select>
           </div>
         </div>
-        <div className="mt-7 place-self-end">
+        <div className="mt-7 place-self-end max-sm:place-self-center">
           <ButtonSave name={"Guardar Cambios"} fun={handleSave} />
         </div>
         <hr className="text-gray-400 mt-7" />
-        <div className="flex justify-between w-full gap-5 mt-7">
+        <div className="flex justify-between gap-5 mt-7 max-sm:flex-col">
           <div className="parte-izq">
             <h1 className="text-3xl font-bold titulo">Agregar Direcciones</h1>
             <h1 className="text-gray-600">
@@ -251,7 +251,7 @@ const EditClientes = () => {
               Origenes y destinos posibles de los socios.
             </h1>
           </div>
-          <div className="parte-izq">
+          <div className="parte-izq self-center">
             <ButtonAdd
               name={"Agregar Dirección"}
               fun={handleModalDirecciones}

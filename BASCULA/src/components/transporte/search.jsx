@@ -123,7 +123,7 @@ const Search = ({ sts }) => {
           onChange={hanldeSearch}
           onKeyDown={handleResetPagination}
         />
-        <select className="py-2.5 px-4 text-sm font-medium text-gray-600  rounded-lg border border-gray-200" onKeyDown={handleResetPagination} onChange={handleFilterState}>
+        <select className="py-2.5 px-4 text-sm font-medium text-gray-600  rounded-lg border border-gray-200 max-sm:hidden" onKeyDown={handleResetPagination} onChange={handleFilterState}>
           <option value={-1}>Seleccione un estado</option>
           <option value='inactiva'>Inactiva</option>
           <option value='activa'>Activa</option>
