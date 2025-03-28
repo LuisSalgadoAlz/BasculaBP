@@ -3,9 +3,8 @@ import { MdOutlineScale, MdOutlineDashboard } from "react-icons/md";
 import { BsClipboard2Pulse, BsFileBarGraph  } from "react-icons/bs";
 import { RiTruckLine } from "react-icons/ri";
 import { FiUsers } from "react-icons/fi";
-import { AiOutlineProduct } from "react-icons/ai";
 import { PiSignOutFill } from "react-icons/pi";
-
+import Cookies from 'js-cookie'
 
 
 const RUTAS_PRINCIPALES = [
@@ -35,7 +34,7 @@ const SideBarIcons = ({ altura }) => {
     const navigate = useNavigate()
 
     const handleClose = () =>{
-        window.localStorage.removeItem('token')
+        Cookies.remove('token')
         navigate('/')
     }
     return (
