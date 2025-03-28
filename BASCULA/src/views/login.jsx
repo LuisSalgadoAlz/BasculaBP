@@ -4,6 +4,7 @@ import ModalError from "../components/modals";
 import useLocalStorage from "../hooks/useLocalStorage";
 import { useNavigate } from "react-router";
 import { URLHOST } from '../constants/global'
+import Cookies from 'js-cookie';
 
 const Login = () => {
   const [localStorageSave, setLocalStorageSave] = useLocalStorage("token", "");
@@ -35,6 +36,9 @@ const Login = () => {
     const res = await token.json();
 
     if (res.token) {
+      const expirationDate = new Date();
+      expirationDate.setMinutes(expirationDate.getMinutes() + 1); // Expira en 10 minutos
+      Cookies.set('token', res.token, { expires: expirationDate });
       setLocalStorageSave(res.token);
       navigate('/dashboard')  
     }
