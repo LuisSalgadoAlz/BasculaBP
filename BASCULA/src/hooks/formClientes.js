@@ -1,5 +1,6 @@
 import { regexNombre, regexEmail, regexTelefono } from "../constants/regex";
 import {URLHOST} from '../constants/global'
+import Cookies from 'js-cookie'
 
 /**
  * 
@@ -14,7 +15,7 @@ export const getClientes = async (fun, page, search, tipo) => {
     const response = await fetch(`${URLHOST}socios?page=${page}&search=${search}&tipo=${tipo}`, {
       method: "GET",
       headers: {
-        Authorization: window.localStorage.getItem("token"),
+        Authorization: Cookies.get('token'),
       },
     });
 
@@ -41,7 +42,7 @@ export const getClientesPorID = async (fun, id) => {
     const response = await fetch(`${URLHOST}socios/${id}`, {
       method: "GET",
       headers: {
-        Authorization: window.localStorage.getItem("token"),
+        Authorization: Cookies.get('token'),
       },
     });
 
@@ -67,7 +68,7 @@ export const getDireccionesPorSocios = async (fun, id) => {
     const response = await fetch(`${URLHOST}socios/direcciones/${id}`, {
       method: "GET",
       headers: {
-        Authorization: window.localStorage.getItem("token"),
+        Authorization: Cookies.get('token'),
       },
     });
 
@@ -94,7 +95,7 @@ export const postEmpresas = async (socio) => {
       body: JSON.stringify(socio),
       headers: {
         "Content-Type": "application/json",
-        Authorization: window.localStorage.getItem("token"),
+        Authorization: Cookies.get('token'),
       },
     });
 
@@ -119,7 +120,7 @@ export const getStatsSocios = async (fun) => {
     const response = await fetch(`${URLHOST}socios/stats`, {
       method: "GET",
       headers: {
-        Authorization: window.localStorage.getItem("token"),
+        Authorization: Cookies.get('token'),
       },
     });
 
@@ -151,7 +152,7 @@ export const updateSocios = async (socio, id) => {
       body: JSON.stringify(socio),
       headers: {
         "Content-Type": "application/json",
-        Authorization: window.localStorage.getItem("token"),
+        Authorization: Cookies.get('token'),
       },
     });
 
@@ -181,7 +182,7 @@ export const postDirecciones = async (direccion) => {
       body: JSON.stringify(direccion),
       headers: {
         "Content-Type": "application/json",
-        Authorization: window.localStorage.getItem("token"),
+        Authorization: Cookies.get('token'),
       },
     });
 
@@ -209,7 +210,7 @@ export const getDireccionesPorID = async (fun, id) => {
     const response = await fetch(`${URLHOST}socios/direcciones/f/${id}`, {
       method: "GET",
       headers: {
-        Authorization: window.localStorage.getItem("token"),
+        Authorization: Cookies.get('token'),
       },
     });
 
@@ -239,7 +240,7 @@ export const updateDireccionesPorID = async (direccion) => {
       body: JSON.stringify(direccion),
       headers: {
         "Content-Type": "application/json",
-        Authorization: window.localStorage.getItem("token"),
+        Authorization: Cookies.get('token'),
       },
     });
 

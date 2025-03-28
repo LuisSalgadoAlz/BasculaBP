@@ -1,13 +1,11 @@
 import { useState } from "react";
 import { BiUser, BiLockAlt } from "react-icons/bi";
 import ModalError from "../components/modals";
-import useLocalStorage from "../hooks/useLocalStorage";
 import { useNavigate } from "react-router";
 import { URLHOST } from '../constants/global'
 import Cookies from 'js-cookie';
 
 const Login = () => {
-  const [localStorageSave, setLocalStorageSave] = useLocalStorage("token", "");
   const navigate = useNavigate()
 
   const [data, setData] = useState({
@@ -39,13 +37,12 @@ const Login = () => {
       const expirationDate = new Date();
       expirationDate.setMinutes(expirationDate.getMinutes() + 1); // Expira en 10 minutos
       Cookies.set('token', res.token, { expires: expirationDate });
-      setLocalStorageSave(res.token);
       navigate('/dashboard')  
     }
 
     if (res.msg) {
       setMsg(res.msg);
-      window.localStorage.removeItem("token");
+      Cookies.remove('token')
       console.log(res.msg);
     }
   };

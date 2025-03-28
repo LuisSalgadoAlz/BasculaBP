@@ -1,12 +1,13 @@
 import { URLHOST } from "../constants/global";
 import { regexEmail, regexNombre, regexTelefono } from "../constants/regex";
+import Cookies from 'js-cookie'
 
 export const getEmpresas = async (fun, page, search, estado) => {
   try {
     const response = await fetch(`${URLHOST}empresas?page=${page}&search=${search}&estado=${estado}`, {
       method: "GET",
       headers: {
-        Authorization: window.localStorage.getItem("token"),
+        Authorization: Cookies.get('token'),
       },
     });
 
@@ -26,7 +27,7 @@ export const getSociosParaSelect = async (fun) => {
     const response = await fetch(`${URLHOST}empresas/socios`, {
       method: "GET",
       headers: {
-        Authorization: window.localStorage.getItem("token"),
+        Authorization: Cookies.get('token'),
       },
     });
 
@@ -49,7 +50,7 @@ export const postEmpresas = async (empresa) => {
       body: JSON.stringify(empresa),
       headers: {
         "Content-Type": "application/json",
-        Authorization: window.localStorage.getItem("token"),
+        Authorization: Cookies.get('token'),
       },
     });
 
@@ -69,7 +70,7 @@ export const getStatsEmpresas= async (fun) => {
     const response = await fetch(`${URLHOST}empresas/stats`, {
       method: "GET",
       headers: {
-        Authorization: window.localStorage.getItem("token"),
+        Authorization: Cookies.get('token'),
       },
     });
 
@@ -89,7 +90,7 @@ export const getEmpresasPorId = async (fun, id) => {
     const response = await fetch(`${URLHOST}empresas/${id}`, {
       method: "GET",
       headers: {
-        Authorization: window.localStorage.getItem("token"),
+        Authorization: Cookies.get('token'),
       },
     });
 
@@ -112,7 +113,7 @@ export const updateEmpresas = async (empresa, id) => {
       body: JSON.stringify(empresa),
       headers: {
         "Content-Type": "application/json",
-        Authorization: window.localStorage.getItem("token"),
+        Authorization: Cookies.get('token'),
       },
     });
 
