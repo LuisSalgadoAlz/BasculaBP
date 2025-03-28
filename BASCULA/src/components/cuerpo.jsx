@@ -30,15 +30,15 @@ const Cuerpo = ({ children }) => {
       <main className="min-w-screen min-h-screen flex">
         {/* Manejo de los sideBar con la altura de la ventana */}
         {anchura < 950 ? (
-          <SideBarIcons />
+          <SideBarIcons altura={altura}  />
         ) : altura > 750 ? (
           sideBarShow ? (
             <SideBar />
           ) : (
-            <SideBarIcons />
+            <SideBarIcons altura={altura}/>
           )
         ) : (
-          <SideBarIcons />
+          <SideBarIcons altura={altura}/>
         )}
 
         {/* header */}
