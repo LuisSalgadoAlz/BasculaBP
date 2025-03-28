@@ -10,7 +10,8 @@ import { useCallback, useEffect, useState } from "react";
 import {
   getEmpresasPorId,
   getSociosParaSelect,
-  updateEmpresas
+  updateEmpresas,
+  verificarData
 } from "../../hooks/formDataEmpresas";
 import { SelectSociosEdit } from "../selects";
 import { ModalErr, ModalSuccess } from "../alerts"
@@ -59,7 +60,24 @@ const EditTransporte = () => {
    */
 
   const handleUpdate = () => {
-    updateEmpresas(empresa, id)
+    /**
+     * Verifica la info valida
+     */
+    const isValid = verificarData(setErr, empresa, setMsg)
+    if (isValid) {
+      updateEmpresas(empresa, id)
+      setSuccess(true)
+      setMsg("modificar empresa.")
+    }
+  }
+
+  /* Cierre de modals y limpieza de data */
+  const handleCloseErr = () => {
+    setErr(false)
+  }
+
+  const handleCloseSuccess = ()=> {
+    setSuccess(false)
   }
 
   /**
@@ -187,6 +205,28 @@ const EditTransporte = () => {
           <ButtonSave name={"Guardar Cambios"} fun={handleUpdate}/>
         </div>
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         {/* Esta parte despues */}
         <hr className="text-gray-400 mt-7" />
         <div className="flex justify-between w-full gap-5 mt-7 max-sm:flex-col">
@@ -220,8 +260,8 @@ const EditTransporte = () => {
       </div>
 
       {/* Modals del alertas */}
-      {err && <ModalErr name={msg} />}
-      {success && <ModalSuccess name={msg} />}
+      {err && <ModalErr name={msg} hdClose={handleCloseErr} />}
+      {success && <ModalSuccess name={msg} hdClose={handleCloseSuccess}/>}
     </>
   );
 };

@@ -66,7 +66,7 @@ const SideBarIcons = () => {
                 </NavLink>
             </ul>
         </div>
-        <div className="absolute bottom-0 p-4">
+        <div className="absolute bottom-0  max-sm:p-0">
             <div className="px-2 w-full">
                 <button className="flex items-center text-white gap-3 hover:text-red-500" onClick={handleClose}>
                     <span><PiSignOutFill className="text-xl" /></span>
