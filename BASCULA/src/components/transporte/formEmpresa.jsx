@@ -52,25 +52,25 @@ export const FormVehiculos = ({ fun }) => {
         <label className="block mb-2 text-sm font-medium text-gray-900 ">
           Placa
         </label>
-        <input type="text" name={"placa"} className={claseFormInputs} placeholder={`Ingrese Nombre`} required onChange={fun}   />
+        <input type="text" name={"placa"} className={claseFormInputs} placeholder={`Ingrese Placa`} required onChange={fun}   />
       </div>
       <div className="mt-5">
         <label className="block mb-2 text-sm font-medium text-gray-900 ">
           Marca
         </label>
-        <input type="email" name={"marca"} className={claseFormInputs} placeholder={`Ingrese Email`} required onChange={fun} />
+        <input type="email" name={"marca"} className={claseFormInputs} placeholder={`Ingrese Marca`} required onChange={fun} />
       </div>
       <div className="mt-5">
         <label className="block mb-2 text-sm font-medium text-gray-900 ">
           Modelo
         </label>
-        <input type="email" name={"modelo"} className={claseFormInputs} placeholder={`Ingrese Email`} required onChange={fun} />
+        <input type="email" name={"modelo"} className={claseFormInputs} placeholder={`Ingrese Modelo`} required onChange={fun} />
       </div>
       <div className="mt-5">
         <label className="block mb-2 text-sm font-medium text-gray-900 ">
           Peso Maximo
         </label>
-        <input type="number" name={"pesoMaximo"} className={claseFormInputs} placeholder={`Ingrese Número`} required onChange={fun} />
+        <input type="number" name={"pesoMaximo"} className={claseFormInputs} placeholder={`Ingrese Peso Maximo`} required onChange={fun} />
       </div>
       <div className="mt-5">
         <label className="block mb-2 text-sm font-medium text-gray-900 ">
