@@ -46,7 +46,6 @@ const Search = ({ sts }) => {
   };
 
   const handleSubmit = async () => {
-    /* Probandooo */
     const isValid = verificarData(setSuccess, setErr, formData, setMsg, "");
     if (isValid) {
       const response = await postEmpresas(formData);
