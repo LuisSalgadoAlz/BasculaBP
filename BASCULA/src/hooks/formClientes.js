@@ -322,3 +322,30 @@ export const verificarDirecciones = (funErr, data, setMsg) => {
 
   return true
 }
+
+export const verificarDataVehiculos = (funErr, data, setMsg) => {
+  const { nombre, tipo, estado } = data
+
+  /* Placas */
+  if (!regexNombre.test(nombre) || nombre == "" || nombre.length < 2) {
+    funErr(true)
+    setMsg('nombre invalido o vacio o demasiado corto.')
+    return false
+  }
+
+  if(tipo==-1) {
+    funErr(true)
+    setMsg('seleccione un tipo de direccion.')
+    return false
+  }
+  
+  if (estado == -1){
+    funErr(true)
+    setMsg('seleccione un estado de direccion.')
+    return false
+  }
+
+  /* Parte de las validaciones de las placas */
+
+  return true
+}
