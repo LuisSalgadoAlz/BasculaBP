@@ -13,6 +13,7 @@ import { ModalSuccess, ModalErr } from "../alerts";
 const Search = ({ sts }) => {
   const [pagination, setPagination] = useState(1)
   const [tipo, setTipo] = useState()
+  const [estado, setEstado] = useState()
   const [search, setSearch] = useState('')
   const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -98,10 +99,20 @@ const Search = ({ sts }) => {
     setTipo(value)
   }
 
+  const handleFilterState = (e) => {
+    const {value} = e.target
+    setPagination(1)
+    if (value==-1) {
+      setEstado('')
+      return
+    } 
+    setEstado(value)
+  }
+
   const fetchData = useCallback(() => {
-    getClientes(setDatos, pagination, search, tipo);
+    getClientes(setDatos, pagination, search, tipo, estado);
     getStatsSocios(sts);
-  }, [pagination, search, tipo]);
+  }, [pagination, search, tipo, estado]);
 
   useEffect(() => {
     fetchData();
@@ -117,14 +128,21 @@ const Search = ({ sts }) => {
           onChange={handleSearch}
           onKeyDown={handleResetPagination}
         />
+        <select className="py-2.5 px-4 text-sm font-medium text-gray-600  rounded-lg border border-gray-200 max-sm:hidden" onKeyDown={handleResetPagination} onChange={handleFilterState}>
+          <option value={-1}>Estado de socio</option>
+          <option value={'inactiva'}>Inactivo</option>
+          <option value={'activa'}>Activo</option>
+        </select>
         <select className="py-2.5 px-4 text-sm font-medium text-gray-600  rounded-lg border border-gray-200 max-sm:hidden" onKeyDown={handleResetPagination} onChange={handleFilterType}>
           <option value={-1}>Tipo de socio</option>
           <option value={0}>Proveedor</option>
           <option value={1}>Cliente</option>
         </select>
+        {/* Proximamente */}
+        <ButtonAdd name="Exportar"/>
         <ButtonAdd name="Agregar" fun={toggleModal} />
       </div>
-      <div className="mt-7">
+      <div className="mt-7 text-center">
         {!datos || datos.data.length == 0 ? (
           <h1 className="ml-2">No hay datos</h1>
         ) : (

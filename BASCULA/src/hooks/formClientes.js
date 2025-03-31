@@ -10,9 +10,9 @@ import Cookies from 'js-cookie'
  * @param {*} tipo 
  * 
  */
-export const getClientes = async (fun, page, search, tipo) => {
+export const getClientes = async (fun, page, search, tipo, estado) => {
   try {
-    const response = await fetch(`${URLHOST}socios?page=${page}&search=${search}&tipo=${tipo}`, {
+    const response = await fetch(`${URLHOST}socios?page=${page}&search=${search}&tipo=${tipo}&estado=${estado}`, {
       method: "GET",
       headers: {
         Authorization: Cookies.get('token'),

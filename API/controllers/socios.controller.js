@@ -6,6 +6,7 @@ const getSocios = async (req, res) => {
   const page = parseInt(req.query.page) || 1 ;  
   const limit = parseInt(req.query.limit) || 7;  
   const tipo = parseInt(req.query.tipo);
+  const estado = req.query.estado;
   const skip = (page - 1) * limit;  
 
   const search = req.query.search || ''; 
@@ -15,7 +16,8 @@ const getSocios = async (req, res) => {
       nombre: {
         contains: search,  // Búsqueda parcial
       },
-      ...((tipo==0 || tipo ==1) ? { tipo: tipo } : {})
+      ...((tipo==0 || tipo ==1) ? { tipo: tipo } : {}), 
+      ...(estado =='activa' ? {estado : true} : estado =='inactiva' ? {estado : false} : {})
     },
     skip: skip,
     take: limit,
@@ -26,7 +28,8 @@ const getSocios = async (req, res) => {
       nombre: {
         contains: search,  
       }, 
-      ...((tipo==0 || tipo ==1) ? { tipo: tipo } : {})
+      ...((tipo==0 || tipo ==1) ? { tipo: tipo } : {}), 
+      ...(estado =='activa' ? {estado : true} : estado =='inactiva' ? {estado : false} : {})
     }
   });
 
