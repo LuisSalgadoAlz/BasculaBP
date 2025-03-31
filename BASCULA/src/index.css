@@ -91,6 +91,17 @@ body {
   }
 }
 
+/*
+* Se arreglo incopatibilidad de flex de mozila firefox
+*/
+
+@supports (-moz-appearance: none) {
+  .mozila-firefox {
+    display: grid;
+    place-items: center;
+  }
+}
+
 
 .body-components::-webkit-scrollbar {
   width: 5px;

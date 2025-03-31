@@ -11,11 +11,12 @@ import {
   getEmpresasPorId,
   getSociosParaSelect,
   updateEmpresas,
-  verificarData
+  verificarData, 
+  getVehiculosPorEmpresas
 } from "../../hooks/formDataEmpresas";
 import { SelectSociosEdit } from "../selects";
 import { ModalErr, ModalSuccess } from "../alerts"
-
+import { TableVehiculos } from './tables'
 /* Comienzo de la funcion  */
 
 const EditTransporte = () => {
@@ -28,6 +29,7 @@ const EditTransporte = () => {
   const [err, setErr] = useState()
   const [success, setSuccess] = useState()
   const [msg, setMsg] = useState()
+  const [vehiculos, setVehiculos] = useState()
 
   /**
    * Estado inicial del form de empresa
@@ -51,8 +53,6 @@ const EditTransporte = () => {
       ...prev,
       [name]: value,
     }));
-
-    console.log(empresa)
   };
 
   /**
@@ -85,6 +85,7 @@ const EditTransporte = () => {
    */
 
   const fetchData = useCallback(() => {
+    getVehiculosPorEmpresas(setVehiculos, id)
     getEmpresasPorId(setEmpresa, id);
     getSociosParaSelect(setSocios);
   },[])
@@ -241,7 +242,18 @@ const EditTransporte = () => {
             <ButtonAdd name={"Agregar Dirección"} />
           </div>
         </div>
-        <div className="gap-5 mt-7">{/* Aqui van las tablas */}</div>
+        <div className="gap-5 mt-7">
+          {!vehiculos || vehiculos.length == [] ? 'No hay datos' : <TableVehiculos datos={vehiculos}/>}
+        </div>
+
+
+
+
+
+
+
+
+
         {/* Parte de motoristas */}
         <hr className="text-gray-400 mt-7" />
         <div className="flex justify-between w-full gap-5 mt-7 max-sm:flex-col">

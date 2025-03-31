@@ -55,17 +55,12 @@ const Search = ({ sts }) => {
   const handleSubmit = async () => {
     const isValid = verificarData(setErr, formData, setMsg)
     if(isValid){
-      const response = await postEmpresas(formData);
-      if(!response.msgErr) {
-        setIsOpen(false);
-        setMsg('agregar nueva empresa')
-        setSuccess(true)
-        fetchData(); 
-        handleClean()
-        return
-      }
-      setMsg(response.msgErr)
-      setErr(true)
+      await postEmpresas(formData);
+      setIsOpen(false);
+      setMsg('agregar nueva empresa')
+      setSuccess(true)
+      fetchData(); 
+      handleClean()
     }
   };
 
