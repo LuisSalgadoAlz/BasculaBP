@@ -47,6 +47,16 @@ const Login = () => {
     }
   };
 
+  /**
+   * 
+   * @param {*} e.key espera a que presione el enter en ambos text box
+   */
+  const handleSubmitLogin = (e) => {
+    if(e.key=='Enter') {
+      verificarLog()
+    }
+  }
+
   return (
     <>
       <div className="title justify-items-center items-center content-center min-h-screen mozila-firefox">
@@ -74,6 +84,7 @@ const Login = () => {
               <BiUser className="absolute mt-3.5 ml-3.5" />
               <input
                 onChange={changeUser}
+                onKeyDown={handleSubmitLogin}
                 type="usuario"
                 id="email"
                 className="bg-gray-50 border pl-10 border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#955e37] focus:border-[#955e37] block w-full p-2.5 "
@@ -88,6 +99,7 @@ const Login = () => {
               <BiLockAlt className="absolute mt-3.5 ml-3.5" />
               <input
                 onChange={changeContra}
+                onKeyDown={handleSubmitLogin}
                 type="password"
                 id="contra"
                 className="bg-gray-50 border pl-10 border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#955e37] focus:border-[#955e37] block w-full p-2.5 "
