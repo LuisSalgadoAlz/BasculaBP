@@ -49,11 +49,16 @@ const Search = ({ sts }) => {
     /* Probandooo */
     const isValid = verificarData(setSuccess, setErr, formData, setMsg, "");
     if (isValid) {
-      await postEmpresas(formData);
-      setIsOpen(false);
-      fetchData();
-      getStatsSocios(sts);
-      setSuccess(true);
+      const response = await postEmpresas(formData);
+      if(!response.msgErr) {
+        setIsOpen(false);
+        fetchData();
+        getStatsSocios(sts);
+        setSuccess(true);
+        return
+      }
+      setMsg(response.msgErr)
+      setErr(true)
     }
   };
 
@@ -109,7 +114,7 @@ const Search = ({ sts }) => {
         <input
           className="p-2.5 text-sm font-medium text-gray-600  rounded-lg border border-gray-200 col-span-full"
           type="text"
-          placeholder="Buscar boletas nombre de socios"
+          placeholder="Buscar socios por nombre...."
           onChange={handleSearch}
           onKeyDown={handleResetPagination}
         />

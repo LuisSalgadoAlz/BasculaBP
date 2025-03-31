@@ -104,7 +104,7 @@ export const postEmpresas = async (socio) => {
     }
 
     const data = await response.json();
-    console.log(data);
+    return data
   } catch (error) {
     console.error("Error al obtener los datos:", error);
   }
@@ -145,7 +145,6 @@ export const getStatsSocios = async (fun) => {
  */
 
 export const updateSocios = async (socio, id) => {
-  console.log(socio);
   try {
     const response = await fetch(`${URLHOST}socios/${id}`, {
       method: "PUT",
@@ -160,8 +159,10 @@ export const updateSocios = async (socio, id) => {
       throw new Error("Error en la respuesta de la API");
     }
 
+    const msg = await response.json()
+
     if (response.ok) {
-      return true;
+      return msg;
     }
   } catch (error) {
     console.error("Error al obtener los datos:", error);

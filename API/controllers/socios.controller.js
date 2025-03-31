@@ -94,19 +94,26 @@ const postSocios = async (req, res) => {
   try {
     const { nombre, tipo, telefono, correo } = req.body;
 
-    const nuevoSocio = await db.socios.create({
-      data: {
-        nombre,
-        tipo: parseInt(tipo),
-        telefono,
-        correo,
-        estado: true,
-      },
-    });
-
-    res
-      .status(201)
-      .json({ msg: "Socio creado exitosamente", socio: nuevoSocio });
+    const exist = await db.socios.findUnique({
+      where: {
+        correo : correo
+      }
+    })
+    
+    if (!exist) {
+      const nuevoSocio = await db.socios.create({
+        data: {
+          nombre,
+          tipo: parseInt(tipo),
+          telefono,
+          correo,
+          estado: true,
+        },
+      });
+  
+      return res.status(201).json({ msg: "Socio creado exitosamente", socio: nuevoSocio });
+    }
+    return res.status(201).json({msgErr:'Correo ya existe en otro socio'})
   } catch (error) {
     console.error(error);
     res.status(500).json({ msg: `Error al crear usuario: ${error.message}` });
@@ -116,24 +123,36 @@ const postSocios = async (req, res) => {
 const updateSocios = async (req, res) => {
   const { nombre, tipo, telefono, correo, estado } = req.body;
   try {
-    const upSocios = await db.socios.update({
+    const count = await db.socios.count({
       where: {
-        id: parseInt(req.params.id),
-      },
-      data: {
-        nombre,
-        tipo: parseInt(tipo),
-        telefono,
-        correo,
-        estado:
-          estado == "true"
-            ? true
-            : estado === true || estado === true
-            ? estado
-            : false,
-      },
-    });
-    res.status(200).send("proceso exitoso");
+        correo: correo,
+        id: {
+          not: parseInt(req.params.id)
+        }
+      }
+    })
+
+    if (count==0) {
+      const upSocios = await db.socios.update({
+        where: {
+          id: parseInt(req.params.id),
+        },
+        data: {
+          nombre,
+          tipo: parseInt(tipo),
+          telefono,
+          correo,
+          estado:
+            estado == "true"
+              ? true
+              : estado === true || estado === true
+              ? estado
+              : false,
+        },
+      });
+      return res.status(200).send({msg:'Proceso Exitoso'});
+    } 
+    return res.status(200).send({msgErr: 'correo ya existe en otro socio'});
   } catch (error) {
     res.status(401).send(`error ${error}`);
   }

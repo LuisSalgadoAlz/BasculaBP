@@ -79,10 +79,13 @@ const EditClientes = () => {
     const response = verificarData(setSuccess, setErrorModal, sc, setMsg);
     if (response) {
       const callApi = await updateSocios(sc, id);
-      if (callApi) {
+      if (!callApi.msgErr) {
         setMsg('guardar los datos')
         setSuccess(true);
+        return
       }
+      setMsg(callApi.msgErr)
+      setErrorModal(true)
     }
   };
 
