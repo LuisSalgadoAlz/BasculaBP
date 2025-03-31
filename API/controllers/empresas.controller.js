@@ -157,11 +157,40 @@ const updateEmpresasPorId = async (req, res) => {
   }
 }
 
+const getVehiculosPorEmpresa = async (req, res) => {
+  const { id } = req.params
+  try{
+    const vehiculos = await db.vehiculo.findMany({
+      omit : {
+        idEmpresa : true
+      }, 
+      where : {
+        idEmpresa: parseInt(id)
+      }
+    })
+  
+    if (!vehiculos) {
+      return res.status(404).json({ message: "Socio no encontrado" });
+    }
+  
+    const dataClean = vehiculos.map((el)=>({
+      ...el, 
+      'estado' : el.estado ? 'Activa' : 'Inactiva'
+    }))
+    return res.status(200).json(dataClean); 
+  }catch(err){
+    console.error(error);
+    return res.status(500).json({ message: "Error en el servidor" });
+  }
+}
+
+
 module.exports = {
   getEmpresas,
   postEmpresas,
   getStats, 
   getSociosParaSelect, 
   getEmpresaPorId, 
-  updateEmpresasPorId
+  updateEmpresasPorId,
+  getVehiculosPorEmpresa
 };
