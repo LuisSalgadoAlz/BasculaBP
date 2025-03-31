@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { ButtonAdd } from "../buttons";
 import { TableEmpresas } from "./tables";
 import { getEmpresas, postEmpresas, getStatsEmpresas, verificarData } from "../../hooks/formDataEmpresas";
-import ModalEmpresas from "./modal";
+import {ModalEmpresas} from "./modal";
 import { ModalErr, ModalSuccess } from '../alerts'
 
 const Search = ({ sts }) => {

@@ -17,6 +17,7 @@ import {
 import { SelectSociosEdit } from "../selects";
 import { ModalErr, ModalSuccess } from "../alerts"
 import { TableVehiculos } from './tables'
+import { ModalVehiculos } from "./modal";
 /* Comienzo de la funcion  */
 
 const EditTransporte = () => {
@@ -30,7 +31,10 @@ const EditTransporte = () => {
   const [success, setSuccess] = useState()
   const [msg, setMsg] = useState()
   const [vehiculos, setVehiculos] = useState()
-
+  const [mdlVehiculos, setMdlVehiculos] = useState()
+  const [formVehiculos, setFormVehiculos] = useState({
+    placa: '', modelo: '', marca: '', tipo: '', pesoMaximo: '', estado: true, 
+  })
   /**
    * Estado inicial del form de empresa
    */
@@ -78,6 +82,32 @@ const EditTransporte = () => {
 
   const handleCloseSuccess = ()=> {
     setSuccess(false)
+  }
+
+  /**
+   * Parte de vehiculos
+   * -------------------------------
+   */
+
+  const handleShowModalVehiculos = () => {
+    setMdlVehiculos(true)
+  }
+
+  const handleCancelModalVehiculos = () => {
+    setFormVehiculos({placa: '', modelo: '', marca: '', tipo: '', pesoMaximo: '', estado: true, })
+    setMdlVehiculos(false)
+  }
+
+  const handleChangeFormVehiculos = (e) => {
+    const {name, value} = e.target
+    setFormVehiculos((prev)=>({
+      ...prev, 
+      [name] : value
+    }))
+  }
+
+  const handleSaveVehiculos = () => {
+    console.log(formVehiculos)
   }
 
   /**
@@ -239,7 +269,7 @@ const EditTransporte = () => {
             </h1>
           </div>
           <div className="parte-izq max-sm:place-self-center">
-            <ButtonAdd name={"Agregar Dirección"} />
+            <ButtonAdd name={"Agregar Vehiculos"} fun={handleShowModalVehiculos}/>
           </div>
         </div>
         <div className="gap-5 mt-7">
@@ -274,6 +304,9 @@ const EditTransporte = () => {
       {/* Modals del alertas */}
       {err && <ModalErr name={msg} hdClose={handleCloseErr} />}
       {success && <ModalSuccess name={msg} hdClose={handleCloseSuccess}/>}
+
+      {/* Modals de agregar */}
+      {mdlVehiculos && <ModalVehiculos tglModal={handleCancelModalVehiculos} hdlData={handleChangeFormVehiculos} hdlSubmit={handleSaveVehiculos}/>}
     </>
   );
 };

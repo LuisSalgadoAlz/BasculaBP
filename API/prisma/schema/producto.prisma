@@ -1,7 +1,8 @@
 model Producto{
     id Int @id @default(autoincrement())
+    code String
     nombre String
-    descripcion String?
+    estado Boolean
 
 
     /* Relaciones con boleta */
