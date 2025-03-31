@@ -280,6 +280,9 @@ export const verificarData = (funSuccess,funError, data, setMsg, id) => {
     return false
   }
 
+  /**
+   * ? Como el campo es unico tiene que validarse que no exista en la base de datos!
+   */
   if (!regexEmail.test(correo) || correo == "" ) {
     funError(true)
     setMsg('correo permite letras, números, puntos, guiones. Además de ir acompañado de un @dominio.es / @dominio.com')
