@@ -75,13 +75,16 @@ const getSocioPorID = async (req, res) => {
 
 const getStats = async (req, res) => {
   try {
-    const [totalSocios, totalProveedores, totalClientes] = await Promise.all([
+    const [totalSocios, totalProveedores, totalClientes, ActivosProveedores, ActivosClientes, totales] = await Promise.all([
       db.socios.count(), // Cuenta el total de socios
       db.socios.count({ where: { tipo: 0 } }), // Cuenta los proveedores
       db.socios.count({ where: { tipo: 1 } }), // Cuenta los clientes
+      db.socios.count({where: {tipo: 0, estado: true}}),
+      db.socios.count({where: {tipo: 1, estado: true}}),
+      db.socios.count({where: { estado: true}}),
     ]);
 
-    res.json({ totalSocios, totalProveedores, totalClientes });
+    res.json({ totalSocios, totalProveedores, totalClientes, ActivosProveedores, ActivosClientes, totales });
   } catch (error) {
     console.error(error);
     res

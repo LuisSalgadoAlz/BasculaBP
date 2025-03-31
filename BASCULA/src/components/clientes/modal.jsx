@@ -5,7 +5,7 @@ export const ModalClientes = ({ hdlData, hdlSubmit, tglModal }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-opa-50">
       <div className="bg-white p-8 rounded-2xl shadow-xl max-w-sm border border-gray-300">
         <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-          Añadir nueva empresa
+          Añadir nuevo socio
         </h2>
         <div>
           <FormClientes fun={hdlData} />
@@ -34,7 +34,7 @@ export const ModalDirecciones = ({ hdlData, hdlSubmit, tglModal }) => {
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-opa-50">
       <div className="bg-white p-8 rounded-2xl shadow-xl max-w-sm border border-gray-300">
         <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-          Añadir nueva empresa
+          Añadir nueva dirección
         </h2>
         <div>
           <FormDirecciones fun={hdlData} />
@@ -63,7 +63,7 @@ export const ModalDireccionesEdit = ({ hdlData, hdlSubmit, tglModal, dtDir }) =>
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-opa-50">
       <div className="bg-white p-8 rounded-2xl shadow-xl max-w-sm border border-gray-300">
         <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-          Editar empresa
+          Editar dirección
         </h2>
         <div>
           <FormDireccionesEdit fun={hdlData} data={dtDir}/>

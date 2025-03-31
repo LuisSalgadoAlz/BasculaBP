@@ -3,8 +3,8 @@ import Search from "../components/clientes/search";
 import { useState } from "react";
 
 const Clientes = () => {
-  const [stats, setSats] = useState()
-
+  const [stats, setSats] = useState();
+  console.log(stats);
   return (
     <>
       <div className="flex justify-between w-full gap-5">
@@ -17,16 +17,32 @@ const Clientes = () => {
         </div>
       </div>
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-3 mt-5">
-        <CardHeader data={stats ? stats['totalSocios'] : ''} name={"Total de socios"} title={"Socios"} />
         <CardHeader
-          data={stats ? stats['totalProveedores'] : ''}
-          name={"Total de proveedores"}
+          data={stats ? stats["totales"] + " / " + stats["totalSocios"] : ""}
+          name={"Total de socios (activos / totales)"}
+          title={"Socios"}
+        />
+        <CardHeader
+          data={
+            stats
+              ? stats["ActivosProveedores"] + " / " + stats["totalProveedores"]
+              : ""
+          }
+          name={"Total de proveedores (activos / totales)"}
           title={"Proveedores"}
         />
-        <CardHeader data={stats ? stats['totalClientes'] : ''} name={"Total de clientes"} title={"Clientes"} />
+        <CardHeader
+          data={
+            stats
+              ? stats["ActivosClientes"] + " / " + stats["totalClientes"]
+              : ""
+          }
+          name={"Total de clientes (activos / totales)"}
+          title={"Clientes"}
+        />
       </div>
       <div className="mt-6 bg-white shadow rounded-lg px-6 py-7 border border-gray-300">
-        <Search sts = {setSats} />
+        <Search sts={setSats} />
       </div>
     </>
   );

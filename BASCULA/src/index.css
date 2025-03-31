@@ -93,7 +93,7 @@ body {
 
 /*
 * Se arreglo incopatibilidad de flex de mozila firefox
-
+*
 */
 
 @supports (-moz-appearance: none) {
