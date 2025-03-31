@@ -4,7 +4,7 @@ import { useState } from "react";
 
 const Clientes = () => {
   const [stats, setSats] = useState();
-  console.log(stats);
+
   return (
     <>
       <div className="flex justify-between w-full gap-5">

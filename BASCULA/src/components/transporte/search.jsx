@@ -114,26 +114,25 @@ const Search = ({ sts }) => {
 
   return (
     <>
-      <div className="filtros grid grid-rows-1 grid-cols-12 grid-flow-col gap-1.5">
-        <input
-          className="p-2.5 text-sm font-medium text-gray-600  rounded-lg border border-gray-200 col-span-full"
-          type="text"
-          placeholder="Buscar empresa por nombre..."
-          onChange={hanldeSearch}
-          onKeyDown={handleResetPagination}
-        />
+      <div className="filtros grid grid-rows-1 grid-cols-12 grid-flow-col gap-1.5 max-sm:grid-rows-2 max-sm:grid-cols-2">
+        <input className="p-2.5 text-sm font-medium text-gray-600  rounded-lg border border-gray-200 col-span-full" type="text"placeholder="Buscar empresa por nombre..." onChange={hanldeSearch} onKeyDown={handleResetPagination} />
         <select className="py-2.5 px-4 text-sm font-medium text-gray-600  rounded-lg border border-gray-200 max-sm:hidden" onKeyDown={handleResetPagination} onChange={handleFilterState}>
           <option value={-1}>Seleccione un estado</option>
           <option value='inactiva'>Inactiva</option>
           <option value='activa'>Activa</option>
         </select>
+        {/* Proximamente */}
+        <ButtonAdd name="Exportar" />
         <ButtonAdd name="Agregar" fun={toggleModal} />
       </div>
-      <div className="mt-7">
+      <div className="mt-7 text-center">
         {(!datos || datos.data.length ==0) ? <h1 className="ml-2">No hay datos</h1> : <TableEmpresas datos={datos.data} />}
-        <button className="mt-5 text-gray-600" onClick={()=>handlePagination(-1)}>Anterior</button>
+        <hr className="text-gray-200 mt-7" />
+        <button className="px-2 mt-5 text-gray-600  border py-1 rounded border-gray-400" onClick={()=>setPagination(1)}>{'<<'}</button>
+        <button className="px-2 mt-5 text-gray-600 border py-1 ml-1 rounded border-gray-400" onClick={()=>handlePagination(-1)}>{'<'}</button>
         <span className="px-4 text-gray-600">{pagination} {' / '} {datos && datos.pagination.totalPages}</span>
-        <button className="mt-5 text-gray-600" onClick={()=>handlePagination(1)}>Siguiente</button>
+        <button className="px-2 mt-5 text-gray-600 border py-1 ml-1 rounded border-gray-400" onClick={()=>handlePagination(1)}>{'>'}</button>
+        <button className="px-2 mt-5 text-gray-600 border py-1 ml-1 rounded border-gray-400" onClick={()=>setPagination(datos && datos.pagination.totalPages)}>{'>>'}</button>
       </div>
 
       {isOpen && <ModalEmpresas hdlData={handleData} hdlSubmit={handleSubmit} tglModal={toggleModal} frDta={formData}/>}

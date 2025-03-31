@@ -103,6 +103,18 @@ body {
   }
 }
 
+/* 
+* Responsive para todas las tablas
+*/
+
+@media (max-width: 640px) {
+  /* Oculta todas las columnas excepto la primera y la última en pantallas pequeñas */
+  td:not(:first-child):not(:last-child), 
+  th:not(:first-child):not(:last-child) {
+    display: none;
+  }
+}
+
 
 .body-components::-webkit-scrollbar {
   width: 5px;

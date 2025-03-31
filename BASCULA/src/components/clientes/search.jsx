@@ -120,7 +120,7 @@ const Search = ({ sts }) => {
 
   return (
     <>
-      <div className="filtros grid grid-rows-1 grid-cols-12 grid-flow-col gap-1.5">
+      <div className="filtros grid grid-rows-1 grid-cols-12 grid-flow-col gap-1.5 max-sm:grid-rows-2 max-sm:grid-cols-2">
         <input
           className="p-2.5 text-sm font-medium text-gray-600  rounded-lg border border-gray-200 col-span-full"
           type="text"
@@ -148,9 +148,12 @@ const Search = ({ sts }) => {
         ) : (
           <TableComponent datos={datos.data} />
         )}
-        <button className="mt-5 text-gray-600" onClick={()=>handlePagination(-1)}>Anterior</button>
-        <span className="px-4 text-gray-600">{pagination} {' / '} {datos && datos.pagination.totalPages}</span>
-        <button className="mt-5 text-gray-600" onClick={()=>handlePagination(1)}>Siguiente</button>
+        <hr className="text-gray-200 mt-7" />
+        <button className="px-2 mt-5 text-gray-600  border py-1 rounded border-gray-400" onClick={()=>setPagination(1)}>{'<<'}</button>
+        <button className="px-2 mt-5 text-gray-600 border py-1 ml-1 rounded border-gray-400" onClick={()=>handlePagination(-1)}>{'<'}</button>
+        <span className="px-2 text-gray-600 ml-1">{pagination} {' / '} {datos && datos.pagination.totalPages}</span>
+        <button className="px-2 mt-5 text-gray-600 border py-1 ml-1 rounded border-gray-400" onClick={()=>handlePagination(1)}>{'>'}</button>
+        <button className="px-2 mt-5 text-gray-600 border py-1 ml-1 rounded border-gray-400" onClick={()=>setPagination(datos && datos.pagination.totalPages)}>{'>>'}</button>
       </div>
 
       {isOpen && (
