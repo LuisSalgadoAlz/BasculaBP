@@ -74,11 +74,14 @@ export const TableEmpresas = ({ datos = [{}] }) => {
 };
 
 
-export const TableVehiculos = ({ datos = [{}] }) => {
-  const navigate = useNavigate()
-    
+export const TableVehiculos = ({ datos = [{}], fun }) => {    
   const handleGetInfo = (data) => {
-    /* Proceso de editar */
+    const {estado, ...resto} = data 
+    const st = estado == 'Activa' ? 1 : 0
+    const dataClean = {
+      ...resto, estado : st
+    }
+    fun(dataClean)
   };
 
   return (

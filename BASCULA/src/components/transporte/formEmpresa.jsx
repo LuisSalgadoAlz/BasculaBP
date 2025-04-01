@@ -48,41 +48,98 @@ export const FormEmpresa = ({ fun }) => {
 export const FormVehiculos = ({ fun }) => {
   return (
     <>
-      <div className="mt-5">
-        <label className="block mb-2 text-sm font-medium text-gray-900 ">
-          Placa
-        </label>
-        <input type="text" name={"placa"} className={claseFormInputs} placeholder={`Ingrese Placa`} required onChange={fun}   />
-      </div>
-      <div className="mt-5">
-        <label className="block mb-2 text-sm font-medium text-gray-900 ">
-          Marca
-        </label>
-        <input type="email" name={"marca"} className={claseFormInputs} placeholder={`Ingrese Marca`} required onChange={fun} />
-      </div>
-      <div className="mt-5">
-        <label className="block mb-2 text-sm font-medium text-gray-900 ">
-          Modelo
-        </label>
-        <input type="email" name={"modelo"} className={claseFormInputs} placeholder={`Ingrese Modelo`} required onChange={fun} />
-      </div>
-      <div className="mt-5">
-        <label className="block mb-2 text-sm font-medium text-gray-900 ">
-          Peso Maximo
-        </label>
-        <input type="number" name={"pesoMaximo"} className={claseFormInputs} placeholder={`Ingrese Peso Maximo`} required onChange={fun} />
-      </div>
-      <div className="mt-5">
-        <label className="block mb-2 text-sm font-medium text-gray-900 ">
-          Tipo
-        </label>
-        <select name={"tipo"} className={claseFormInputs} onChange={fun}> 
-            <option value={-1} className="text-gray-400">Seleccione un tipo</option>
-            <option value={0}>Liviano</option>
-            <option value={1}>Mayoreo</option>
-            <option value={1}>Detalle</option>
-            <option value={1}>Importaciones</option>
-        </select>
+      <div className="grid grid-cols-2 max-sm:grid-cols-1 gap-x-3">
+        <div className="mt-2">
+          <label className="block mb-2 text-sm font-medium text-gray-900 ">
+            Placa
+          </label>
+          <input type="text" name={"placa"} className={claseFormInputs} placeholder={`Ingrese Placa`} required onChange={fun}   />
+        </div>
+        <div className="mt-2">
+          <label className="block mb-2 text-sm font-medium text-gray-900 ">
+            Marca
+          </label>
+          <input type="email" name={"marca"} className={claseFormInputs} placeholder={`Ingrese Marca`} required onChange={fun} />
+        </div>
+        <div className="mt-2">
+          <label className="block mb-2 text-sm font-medium text-gray-900 ">
+            Modelo
+          </label>
+          <input type="email" name={"modelo"} className={claseFormInputs} placeholder={`Ingrese Modelo`} required onChange={fun} />
+        </div>
+        <div className="mt-2">
+          <label className="block mb-2 text-sm font-medium text-gray-900 ">
+            Peso Maximo
+          </label>
+          <input type="number" name={"pesoMaximo"} className={claseFormInputs} placeholder={`Ingrese Peso Maximo`} required onChange={fun} />
+        </div>
+        <div className="mt-2">
+          <label className="block mb-2 text-sm font-medium text-gray-900 ">
+            Tipo
+          </label>
+          <select name={"tipo"} className={claseFormInputs} onChange={fun}> 
+              <option value={-1} className="text-gray-400">Seleccione un tipo</option>
+              <option value={0}>Liviano</option>
+              <option value={1}>Mayoreo</option>
+              <option value={1}>Detalle</option>
+              <option value={1}>Importaciones</option>
+          </select>
+        </div>
+      </div>   
+    </>
+  );
+};
+
+export const FormVehiculosEdit = ({ fun, data }) => {
+  return (
+    <>
+    <div className="grid grid-cols-2 max-sm:grid-cols-1 gap-x-3">
+      <div className="mt-2">
+          <label className="block mb-2 text-sm font-medium text-gray-900 ">
+            Placa
+          </label>
+          <input type="text" name={"placa"} className={claseFormInputs} placeholder={`Ingrese Placa`} required onChange={fun} value={data && data.placa}  />
+        </div>
+        <div className="mt-2">
+          <label className="block mb-2 text-sm font-medium text-gray-900 ">
+            Marca
+          </label>
+          <input type="email" name={"marca"} className={claseFormInputs} placeholder={`Ingrese Marca`} required onChange={fun} value={data && data.marca} />
+        </div>
+        <div className="mt-2">
+          <label className="block mb-2 text-sm font-medium text-gray-900 ">
+            Modelo
+          </label>
+          <input type="email" name={"modelo"} className={claseFormInputs} placeholder={`Ingrese Modelo`} required onChange={fun} value={data && data.modelo} />
+        </div>
+        <div className="mt-2">
+          <label className="block mb-2 text-sm font-medium text-gray-900 ">
+            Peso Maximo
+          </label>
+          <input type="number" name={"pesoMaximo"} className={claseFormInputs} placeholder={`Ingrese Peso Maximo`} required onChange={fun} value={data && data.pesoMaximo}  />
+        </div>
+        <div className="mt-2">
+          <label className="block mb-2 text-sm font-medium text-gray-900 ">
+            Tipo
+          </label>
+          <select name={"tipo"} className={claseFormInputs} onChange={fun} value={data && data.tipo}> 
+              <option value={-1} className="text-gray-400">Seleccione un tipo</option>
+              <option value={0}>Liviano</option>
+              <option value={1}>Mayoreo</option>
+              <option value={2}>Detalle</option>
+              <option value={3}>Importaciones</option>
+          </select>
+        </div>
+        <div className="mt-2">
+          <label className="block mb-2 text-sm font-medium text-gray-900 ">
+            Estado
+          </label>
+          <select name={"estado"} className={claseFormInputs} onChange={fun} value={data && data.estado}> 
+              <option value={-1} className="text-gray-400">Seleccione un estado</option>
+              <option value={0}>Inactiva</option>
+              <option value={1}>Activa</option>
+          </select>
+        </div>
       </div>
     </>
   );

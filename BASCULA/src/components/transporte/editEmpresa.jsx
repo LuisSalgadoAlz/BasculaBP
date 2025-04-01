@@ -6,7 +6,7 @@ import {
   classFormSelct,
 } from "../../constants/boletas";
 import { useNavigate } from "react-router";
-import { useCallback, useEffect, useState } from "react";
+import { use, useCallback, useEffect, useState } from "react";
 import {
   getEmpresasPorId,
   getSociosParaSelect,
@@ -14,13 +14,15 @@ import {
   verificarData,
   getVehiculosPorEmpresas,
   postVehiculosPorEmpresas,
+  updateVehiculosPorEmpresas,
   verificarDataVehiculos,
   verificarListadoDeVehiculos,
+
 } from "../../hooks/formDataEmpresas";
 import { SelectSociosEdit } from "../selects";
-import { ModalErr, ModalSuccess, ModalVehiculoDuplicado } from "../alerts";
+import { ModalErr, ModalSuccess, ModalVehiculoDuplicado, ModalVehiculoDuplicadoEdit } from "../alerts";
 import { TableVehiculos } from "./tables";
-import { ModalVehiculos } from "./modal";
+import { ModalVehiculos, ModalVehiculosEdit } from "./modal";
 /* Comienzo de la funcion  */
 
 const EditTransporte = () => {
@@ -35,7 +37,10 @@ const EditTransporte = () => {
   const [msg, setMsg] = useState();
   const [vehiculos, setVehiculos] = useState();
   const [mdlVehiculos, setMdlVehiculos] = useState();
+  const [modalVehiculosEdit, setModalVehiculosEdit] = useState();
   const [mdlVehiculoDuplicado, setMdlVehiculoDuplicado] = useState()
+  const [mdlVehiculoDuplicadoEdit, setMdlVehiculoDuplicadoEdit] = useState()
+  const [placaAnterior, setPlacaAnterior] = useState()
   const [formVehiculos, setFormVehiculos] = useState({
     placa: "",
     modelo: "",
@@ -103,16 +108,19 @@ const EditTransporte = () => {
     setMdlVehiculos(true);
   };
 
-  const handleCancelModalVehiculos = () => {
+  const handleCleanForms = () => {
     setFormVehiculos({
       placa: "",
       modelo: "",
       marca: "",
-      tipo: "",
+      tipo: -1,
       pesoMaximo: "",
       estado: true,
       id: id,
     });
+  }
+  const handleCancelModalVehiculos = () => {
+    handleCleanForms()
     setMdlVehiculos(false);
   };
 
@@ -153,11 +161,56 @@ const EditTransporte = () => {
       setMdlVehiculos(false)
       fetchData();
       setMdlVehiculoDuplicado(false)
+      handleCleanForms()
+  }
+
+  const editVehiculoEmpresa = async() => {
+    await updateVehiculosPorEmpresas(formVehiculos, id)
+    fetchData()
+    setMsg('modificar vehiculo')
+    setMdlVehiculoDuplicadoEdit(false)
+    setModalVehiculosEdit(false)
+    handleCleanForms()
+    setSuccess(true)
   }
 
   const handleCancelAdvertencia = () => {
     setMdlVehiculoDuplicado(false)
+    setMdlVehiculoDuplicadoEdit(false)
   }
+
+  const handleGetVehiculo = (data) => {
+    setFormVehiculos(data)
+    setPlacaAnterior(data.placa)
+    setModalVehiculosEdit(true)
+  }
+
+  const handleCloseModalVehiculosEdit = () => {
+    setModalVehiculosEdit(false)
+    handleCleanForms()
+  }
+
+  const handleSubmitEditFinish = async () => {
+    const isValid = verificarDataVehiculos(setErr, formVehiculos, setMsg);
+    if (isValid) {
+      const {msgList, existHere} = await verificarListadoDeVehiculos(formVehiculos.placa, id);
+      if (existHere && formVehiculos.placa != placaAnterior) {
+        setMsg('placa ya existe en esta empresa.')
+        setErr(true)
+        return
+      }
+      
+      if (msgList && formVehiculos.placa != placaAnterior){
+        setMsg(msgList)
+        setMdlVehiculoDuplicadoEdit(true)
+        return
+      }
+
+      editVehiculoEmpresa()
+      return
+    }
+  }
+
 
   /**
    * Calback que almacena los valores de las tablas para maximizar el rendimiento
@@ -305,7 +358,7 @@ const EditTransporte = () => {
           {!vehiculos || vehiculos.length == [] ? (
             "No hay datos"
           ) : (
-            <TableVehiculos datos={vehiculos} />
+            <TableVehiculos datos={vehiculos} fun={handleGetVehiculo} />
           )}
         </div>
 
@@ -338,7 +391,11 @@ const EditTransporte = () => {
           hdlSubmit={handleSaveVehiculos}
         />
       )}
+            
+      {mdlVehiculoDuplicadoEdit && <ModalVehiculoDuplicadoEdit name={msg} hdClose={handleCancelAdvertencia} hdlSubmit={editVehiculoEmpresa}/>}
       {mdlVehiculoDuplicado && <ModalVehiculoDuplicado name={msg} hdClose={handleCancelAdvertencia} hdlSubmit={addVehiculoPorEmpresa}/>}
+      {modalVehiculosEdit && <ModalVehiculosEdit hdlSubmit={handleSubmitEditFinish} hdlData={handleChangeFormVehiculos} frDta={formVehiculos} tglModal={handleCloseModalVehiculosEdit} />}
+      
     </>
   );
 };

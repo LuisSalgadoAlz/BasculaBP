@@ -190,6 +190,28 @@ export const verificarListadoDeVehiculos = async (placa,idEmpresa) => {
   }
 }
 
+export const updateVehiculosPorEmpresas = async (vehiculo, idEmpresa) => {
+  try {
+    const response = await fetch(`${URLHOST}empresas/vehiculos/u/${idEmpresa}`, {
+      method: "PUT",
+      body: JSON.stringify(vehiculo),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: Cookies.get('token'),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API");
+    }
+
+    if (response.ok) {
+      return true;
+    }
+  } catch (error) {
+    console.error("Error al obtener los datos:", error);
+  }
+};
 
 /**
  * Validaciones de los forms
