@@ -116,12 +116,12 @@ const Search = ({ sts }) => {
     <>
       <div className="filtros grid grid-rows-1 grid-cols-12 grid-flow-col gap-1.5 max-sm:grid-rows-2 max-sm:grid-cols-2">
         <input className="p-2.5 text-sm font-medium text-gray-600  rounded-lg border border-gray-200 col-span-full" type="text"placeholder="Buscar empresa por nombre..." onChange={hanldeSearch} onKeyDown={handleResetPagination} />
-        <select className="py-2.5 px-4 text-sm font-medium text-gray-600  rounded-lg border border-gray-200 max-sm:hidden" onKeyDown={handleResetPagination} onChange={handleFilterState}>
+        <select className="py-2.5 px-4 text-sm font-medium text-gray-600  rounded-lg border border-gray-200 max-sm:hidden max-md:hidden max-lg:hidden" onKeyDown={handleResetPagination} onChange={handleFilterState}>
           <option value={-1}>Todos los socios</option>
           <option value='inactiva'>Inactivos</option>
           <option value='activa'>Activos</option>
         </select>
-        <select className="py-2.5 px-4 text-sm font-medium text-gray-600  rounded-lg border border-gray-200 max-sm:hidden" onKeyDown={handleResetPagination} onChange={handleFilterState}>
+        <select className="py-2.5 px-4 text-sm font-medium text-gray-600  rounded-lg border border-gray-200 max-sm:hidden max-md:hidden" onKeyDown={handleResetPagination} onChange={handleFilterState}>
           <option value={-1}>Seleccione un estado</option>
           <option value='inactiva'>Inactiva</option>
           <option value='activa'>Activa</option>
