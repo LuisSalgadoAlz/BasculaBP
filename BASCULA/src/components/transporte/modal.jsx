@@ -31,10 +31,10 @@ export const ModalEmpresas = ({hdlData, hdlSubmit, tglModal, frDta}) => {
 
 export const ModalVehiculos = ({hdlData, hdlSubmit, tglModal, frDta}) => {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-opa-50">
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-opa-50">
       <div className="bg-white p-8 rounded-2xl shadow-xl max-w-sm border border-gray-300">
         <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-          Añadir nueva empresa
+          Añadir nuevo vehiculo
         </h2>
         <div>
           <FormVehiculos fun={hdlData} />

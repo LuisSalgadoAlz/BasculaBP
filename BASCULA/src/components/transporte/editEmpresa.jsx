@@ -12,7 +12,8 @@ import {
   getSociosParaSelect,
   updateEmpresas,
   verificarData, 
-  getVehiculosPorEmpresas
+  getVehiculosPorEmpresas, 
+  verificarDataVehiculos
 } from "../../hooks/formDataEmpresas";
 import { SelectSociosEdit } from "../selects";
 import { ModalErr, ModalSuccess } from "../alerts"
@@ -33,7 +34,7 @@ const EditTransporte = () => {
   const [vehiculos, setVehiculos] = useState()
   const [mdlVehiculos, setMdlVehiculos] = useState()
   const [formVehiculos, setFormVehiculos] = useState({
-    placa: '', modelo: '', marca: '', tipo: '', pesoMaximo: '', estado: true, 
+    placa: '', modelo: '', marca: '', tipo: -1, pesoMaximo: '', estado: true, 
   })
   /**
    * Estado inicial del form de empresa
@@ -107,7 +108,10 @@ const EditTransporte = () => {
   }
 
   const handleSaveVehiculos = () => {
-    console.log(formVehiculos)
+    const isValid = verificarDataVehiculos(setErr, formVehiculos, setMsg)
+    if (isValid) { 
+      console.log('Paso')
+    }
   }
 
   /**

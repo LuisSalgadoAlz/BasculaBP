@@ -1,5 +1,5 @@
 import { URLHOST } from "../constants/global";
-import { regexEmail, regexNombre, regexTelefono } from "../constants/regex";
+import { regexEmail, regexNombre, regexTelefono, regexPlca } from "../constants/regex";
 import Cookies from 'js-cookie'
 
 export const getEmpresas = async (fun, page, search, estado) => {
@@ -191,3 +191,44 @@ export const verificarData = (funError, data, setMsg) => {
   return true
 
 };
+
+
+/**
+ * 
+ * @param {*} funErr 
+ * @param {*} data 
+ * @param {*} setMsg 
+ * @returns Bolean
+ */
+export const verificarDataVehiculos = (funErr, data, setMsg) => {
+  const { placa, marca, modelo, pesoMaximo, tipo, estado } = data
+
+  /* Placas */
+  if (!regexPlca.test(placa) || placa == "") {
+    funErr(true)
+    setMsg('placa invalida. Formatos validos (particulares: 3 letras y 4 números | comerciales: 1 letra C, O o D + 6 números).')
+    return false
+  }
+  
+  if(pesoMaximo <0) {
+    funErr(true)
+    setMsg('peso no puede ser negativo')
+    return false
+  }
+
+  if(tipo==-1) {
+    funErr(true)
+    setMsg('seleccione un tipo de vehiculo.')
+    return false
+  }
+  
+  if (estado == -1){
+    funErr(true)
+    setMsg('seleccione un estado de direccion.')
+    return false
+  }
+
+  /* Parte de las validaciones de las placas */
+
+  return true
+}
