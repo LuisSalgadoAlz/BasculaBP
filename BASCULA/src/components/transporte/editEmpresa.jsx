@@ -17,11 +17,11 @@ import {
   updateVehiculosPorEmpresas,
   verificarDataVehiculos,
   verificarListadoDeVehiculos,
-
+  getMotoristasPorEmpresas
 } from "../../hooks/formDataEmpresas";
 import { SelectSociosEdit } from "../selects";
 import { ModalErr, ModalSuccess, ModalVehiculoDuplicado, ModalVehiculoDuplicadoEdit } from "../alerts";
-import { TableVehiculos } from "./tables";
+import { TableMotoristas, TableVehiculos } from "./tables";
 import { ModalVehiculos, ModalVehiculosEdit } from "./modal";
 /* Comienzo de la funcion  */
 
@@ -40,6 +40,7 @@ const EditTransporte = () => {
   const [modalVehiculosEdit, setModalVehiculosEdit] = useState();
   const [mdlVehiculoDuplicado, setMdlVehiculoDuplicado] = useState()
   const [mdlVehiculoDuplicadoEdit, setMdlVehiculoDuplicadoEdit] = useState()
+  const [motoristas, setMotoristas] = useState()
   const [placaAnterior, setPlacaAnterior] = useState()
   const [formVehiculos, setFormVehiculos] = useState({
     placa: "",
@@ -218,6 +219,7 @@ const EditTransporte = () => {
 
   const fetchData = useCallback(() => {
     getVehiculosPorEmpresas(setVehiculos, id);
+    getMotoristasPorEmpresas(setMotoristas, id)
     getEmpresasPorId(setEmpresa, id);
     getSociosParaSelect(setSocios);
   }, []);
@@ -376,7 +378,7 @@ const EditTransporte = () => {
             <ButtonAdd name={"Agregar Dirección"} />
           </div>
         </div>
-        <div className="gap-5 mt-7">{/* Aqui van las tablas */}</div>
+        <div className="gap-5 mt-7">{!motoristas || motoristas.length == [] ? 'No hay datos' : <TableMotoristas datos={motoristas} />}</div>
       </div>
 
       {/* Modals del alertas */}
