@@ -375,7 +375,7 @@ const EditTransporte = () => {
             </h1>
           </div>
           <div className="parte-izq max-sm:place-self-center">
-            <ButtonAdd name={"Agregar Dirección"} />
+            <ButtonAdd name={"Agregar Motoristas"} />
           </div>
         </div>
         <div className="gap-5 mt-7">{!motoristas || motoristas.length == [] ? 'No hay datos' : <TableMotoristas datos={motoristas} />}</div>
