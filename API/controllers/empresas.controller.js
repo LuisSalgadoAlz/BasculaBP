@@ -193,7 +193,7 @@ const postVehiculosDeEmpresa = async (req, res) => {
         modelo, 
         marca, 
         tipo, 
-        pesoMaximo: parseInt(pesoMaximo), 
+        pesoMaximo: pesoMaximo ? parseInt(pesoMaximo) : 0, 
         estado : true,
         idEmpresa: parseInt(id)
       },
@@ -241,6 +241,29 @@ const getVehiculosPorID = async (req, res) => {
   }
 }
 
+const updateVehiculosPorID = async (req, res) => {
+  const { placa, modelo, marca, tipo, pesoMaximo, id, estado } = req.body;   
+  try {
+    const updateVehiculos = await db.vehiculo.update({
+      where: {
+        id: parseInt(id),
+      },
+      data: {
+        placa, 
+        modelo, 
+        marca, 
+        tipo, 
+        pesoMaximo: pesoMaximo ? parseInt(pesoMaximo) : 0, 
+        estado: estado ==1 ? true : false,
+        idEmpresa: parseInt(req.params.idEmpresa)
+      },
+    });
+    res.status(200).send("proceso exitoso");
+  } catch (error) {
+    console.log(error)
+    res.status(401).send(`error ${error}`);
+  }
+}
 module.exports = {
   getEmpresas,
   postEmpresas,
@@ -250,5 +273,6 @@ module.exports = {
   updateEmpresasPorId,
   getVehiculosPorEmpresa, 
   postVehiculosDeEmpresa, 
-  getVehiculosPorID
+  getVehiculosPorID, 
+  updateVehiculosPorID
 };

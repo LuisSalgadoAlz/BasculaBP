@@ -8,7 +8,8 @@ const {
   updateEmpresasPorId,
   getVehiculosPorEmpresa,
   postVehiculosDeEmpresa,
-  getVehiculosPorID
+  getVehiculosPorID, 
+  updateVehiculosPorID
 } = require("../controllers/empresas.controller.js");
 const verificarToken = require("../middlewares/authJWT.js");
 
@@ -21,4 +22,5 @@ empresas.get("/vehiculos/v/data", getVehiculosPorID);
 empresas.post("/", verificarToken, postEmpresas);
 empresas.post("/vehiculos", verificarToken, postVehiculosDeEmpresa);
 empresas.put("/:id", verificarToken, updateEmpresasPorId);
+empresas.put("/vehiculos/u/:idEmpresa", verificarToken, updateVehiculosPorID);
 module.exports = empresas;
