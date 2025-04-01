@@ -1,12 +1,24 @@
-const empresas = require('express').Router();
-const { getEmpresas, postEmpresas, getStats, getSociosParaSelect, getEmpresaPorId, updateEmpresasPorId, getVehiculosPorEmpresa } = require('../controllers/empresas.controller.js')
-const verificarToken = require('../middlewares/authJWT.js')
+const empresas = require("express").Router();
+const {
+  getEmpresas,
+  postEmpresas,
+  getStats,
+  getSociosParaSelect,
+  getEmpresaPorId,
+  updateEmpresasPorId,
+  getVehiculosPorEmpresa,
+  postVehiculosDeEmpresa,
+  getVehiculosPorID
+} = require("../controllers/empresas.controller.js");
+const verificarToken = require("../middlewares/authJWT.js");
 
 empresas.get("/", verificarToken, getEmpresas);
 empresas.get("/socios", verificarToken, getSociosParaSelect);
-empresas.get("/stats", verificarToken,getStats);
+empresas.get("/stats", verificarToken, getStats);
 empresas.get("/:id", verificarToken, getEmpresaPorId);
-empresas.get("/vehiculos/:id", getVehiculosPorEmpresa);
+empresas.get("/vehiculos/:id", verificarToken,getVehiculosPorEmpresa);
+empresas.get("/vehiculos/v/data", getVehiculosPorID);
 empresas.post("/", verificarToken, postEmpresas);
+empresas.post("/vehiculos", verificarToken, postVehiculosDeEmpresa);
 empresas.put("/:id", verificarToken, updateEmpresasPorId);
-module.exports = empresas;  
+module.exports = empresas;

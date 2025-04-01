@@ -148,6 +148,48 @@ export const getVehiculosPorEmpresas = async (fun, id)=>{
     }
 }
 
+export const postVehiculosPorEmpresas = async (vehiculos) => {
+  try {
+    const response = await fetch(`${URLHOST}empresas/vehiculos`, {
+      method: "POST",
+      body: JSON.stringify(vehiculos),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: Cookies.get('token'),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API");
+    }
+
+    const data = await response.json();
+    return data
+  } catch (error) {
+    console.error("Error al obtener los datos:", error);
+  }
+};
+
+export const verificarListadoDeVehiculos = async (placa,idEmpresa) => {
+  try {
+    const response = await fetch(`${URLHOST}empresas/vehiculos/v/data?placa=${placa}&id=${idEmpresa}`, {
+      method: "GET",
+      headers: {
+        Authorization: Cookies.get('token'),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API");
+    }
+
+    const data = await response.json();
+    return data
+  } catch (error) {
+    console.error("Error al obtener los clientes:", error);
+  }
+}
+
 
 /**
  * Validaciones de los forms

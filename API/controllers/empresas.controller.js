@@ -179,11 +179,67 @@ const getVehiculosPorEmpresa = async (req, res) => {
     }))
     return res.status(200).json(dataClean); 
   }catch(err){
-    console.error(error);
+    console.error(err);
     return res.status(500).json({ message: "Error en el servidor" });
   }
 }
 
+const postVehiculosDeEmpresa = async (req, res) => {
+  try {
+    const { placa, modelo, marca, tipo, pesoMaximo, id } = req.body;    // Crear el nuevo usuario
+    const nuevoVehiculo = await db.vehiculo.create({
+      data: {
+        placa, 
+        modelo, 
+        marca, 
+        tipo, 
+        pesoMaximo: parseInt(pesoMaximo), 
+        estado : true,
+        idEmpresa: parseInt(id)
+      },
+    });
+
+    return res.status(201).json({ msg: "Vehiculo creado exitosamente", vehiculo: nuevoVehiculo });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: `Error al crear vehiculo: ${error.message}` });
+  }
+}
+
+const getVehiculosPorID = async (req, res) => {
+  const placa = req.query.placa
+  const idEmpresa = parseInt(req.query.id)
+  
+  try{
+    const empresa = await db.empresa.findMany({
+      select: {
+        id: true, 
+        nombre : true
+      },
+      where :{ 
+        rVehiculoEmpresa: {
+          some: {
+            placa : placa
+          }
+        },
+      }
+    })
+  
+    if (!empresa || empresa.length==0) {
+      return res.status(201).json({ msgCheck: "Placa no encontrada, puede registrar" });
+    }
+    
+    const existe = empresa.filter((el)=> el.id ==idEmpresa)
+    const extState = existe.length == 0 ? false : true;
+    const otros = empresa.filter((el)=> el.id !=idEmpresa)
+    const listadoDeNombres = otros.map(e => e.nombre).join(", ");
+
+    return res.status(201).json({ msgList: listadoDeNombres, existHere: extState });
+  }catch(err){
+    console.error(err);
+    return res.status(500).json({ message: "Error en el servidor" });
+  }
+}
 
 module.exports = {
   getEmpresas,
@@ -192,5 +248,7 @@ module.exports = {
   getSociosParaSelect, 
   getEmpresaPorId, 
   updateEmpresasPorId,
-  getVehiculosPorEmpresa
+  getVehiculosPorEmpresa, 
+  postVehiculosDeEmpresa, 
+  getVehiculosPorID
 };

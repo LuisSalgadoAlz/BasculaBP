@@ -11,13 +11,15 @@ import {
   getEmpresasPorId,
   getSociosParaSelect,
   updateEmpresas,
-  verificarData, 
-  getVehiculosPorEmpresas, 
-  verificarDataVehiculos
+  verificarData,
+  getVehiculosPorEmpresas,
+  postVehiculosPorEmpresas,
+  verificarDataVehiculos,
+  verificarListadoDeVehiculos,
 } from "../../hooks/formDataEmpresas";
 import { SelectSociosEdit } from "../selects";
-import { ModalErr, ModalSuccess } from "../alerts"
-import { TableVehiculos } from './tables'
+import { ModalErr, ModalSuccess, ModalVehiculoDuplicado } from "../alerts";
+import { TableVehiculos } from "./tables";
 import { ModalVehiculos } from "./modal";
 /* Comienzo de la funcion  */
 
@@ -28,14 +30,21 @@ const EditTransporte = () => {
     navigate(-1);
   };
   const [socios, setSocios] = useState();
-  const [err, setErr] = useState()
-  const [success, setSuccess] = useState()
-  const [msg, setMsg] = useState()
-  const [vehiculos, setVehiculos] = useState()
-  const [mdlVehiculos, setMdlVehiculos] = useState()
+  const [err, setErr] = useState();
+  const [success, setSuccess] = useState();
+  const [msg, setMsg] = useState();
+  const [vehiculos, setVehiculos] = useState();
+  const [mdlVehiculos, setMdlVehiculos] = useState();
+  const [mdlVehiculoDuplicado, setMdlVehiculoDuplicado] = useState()
   const [formVehiculos, setFormVehiculos] = useState({
-    placa: '', modelo: '', marca: '', tipo: -1, pesoMaximo: '', estado: true, 
-  })
+    placa: "",
+    modelo: "",
+    marca: "",
+    tipo: -1,
+    pesoMaximo: "",
+    estado: true,
+    id: id,
+  });
   /**
    * Estado inicial del form de empresa
    */
@@ -49,7 +58,7 @@ const EditTransporte = () => {
   });
 
   /**
-   * 
+   *
    * @param {*} e obtener valores del form de manera dinamica
    */
   const handleChange = (e) => {
@@ -68,22 +77,22 @@ const EditTransporte = () => {
     /**
      * Verifica la info valida
      */
-    const isValid = verificarData(setErr, empresa, setMsg)
+    const isValid = verificarData(setErr, empresa, setMsg);
     if (isValid) {
-      updateEmpresas(empresa, id)
-      setSuccess(true)
-      setMsg("modificar empresa.")
+      updateEmpresas(empresa, id);
+      setSuccess(true);
+      setMsg("modificar empresa.");
     }
-  }
+  };
 
   /* Cierre de modals y limpieza de data */
   const handleCloseErr = () => {
-    setErr(false)
-  }
+    setErr(false);
+  };
 
-  const handleCloseSuccess = ()=> {
-    setSuccess(false)
-  }
+  const handleCloseSuccess = () => {
+    setSuccess(false);
+  };
 
   /**
    * Parte de vehiculos
@@ -91,46 +100,81 @@ const EditTransporte = () => {
    */
 
   const handleShowModalVehiculos = () => {
-    setMdlVehiculos(true)
-  }
+    setMdlVehiculos(true);
+  };
 
   const handleCancelModalVehiculos = () => {
-    setFormVehiculos({placa: '', modelo: '', marca: '', tipo: '', pesoMaximo: '', estado: true, })
-    setMdlVehiculos(false)
-  }
+    setFormVehiculos({
+      placa: "",
+      modelo: "",
+      marca: "",
+      tipo: "",
+      pesoMaximo: "",
+      estado: true,
+      id: id,
+    });
+    setMdlVehiculos(false);
+  };
 
   const handleChangeFormVehiculos = (e) => {
-    const {name, value} = e.target
-    setFormVehiculos((prev)=>({
-      ...prev, 
-      [name] : value
-    }))
+    const { name, value } = e.target;
+    setFormVehiculos((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSaveVehiculos = async () => {
+    /**
+     * Validacion de datos
+     */
+    const isValid = verificarDataVehiculos(setErr, formVehiculos, setMsg);
+    if (isValid) {
+      const {msgList, existHere} = await verificarListadoDeVehiculos(formVehiculos.placa, id);
+      if (existHere) {
+        setMsg('placa ya existe en esta empresa.')
+        setErr(true)
+        return
+      }
+      
+      if (!msgList){
+        addVehiculoPorEmpresa()
+        return
+      }
+      setMsg(msgList)
+      setMdlVehiculoDuplicado(true)
+    }
+  };
+
+  const addVehiculoPorEmpresa = async() => {
+      await postVehiculosPorEmpresas(formVehiculos);
+      setMsg("agregar vehiculos");
+      setSuccess(true);
+      setMdlVehiculos(false)
+      fetchData();
+      setMdlVehiculoDuplicado(false)
   }
 
-  const handleSaveVehiculos = () => {
-    const isValid = verificarDataVehiculos(setErr, formVehiculos, setMsg)
-    if (isValid) { 
-      console.log('Paso')
-    }
+  const handleCancelAdvertencia = () => {
+    setMdlVehiculoDuplicado(false)
   }
 
   /**
-   * Calback que almacena los valores de las tablas para maximizar el rendimiento 
+   * Calback que almacena los valores de las tablas para maximizar el rendimiento
    */
 
   const fetchData = useCallback(() => {
-    getVehiculosPorEmpresas(setVehiculos, id)
+    getVehiculosPorEmpresas(setVehiculos, id);
     getEmpresasPorId(setEmpresa, id);
     getSociosParaSelect(setSocios);
-  },[])
-  
+  }, []);
 
   /**
    * Cargar valores del callback
    */
 
   useEffect(() => {
-    fetchData()
+    fetchData();
   }, [fetchData]);
 
   /**
@@ -237,30 +281,8 @@ const EditTransporte = () => {
           </div>
         </div>
         <div className="mt-7 place-self-end max-sm:place-self-center">
-          <ButtonSave name={"Guardar Cambios"} fun={handleUpdate}/>
+          <ButtonSave name={"Guardar Cambios"} fun={handleUpdate} />
         </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         {/* Esta parte despues */}
         <hr className="text-gray-400 mt-7" />
@@ -273,20 +295,19 @@ const EditTransporte = () => {
             </h1>
           </div>
           <div className="parte-izq max-sm:place-self-center">
-            <ButtonAdd name={"Agregar Vehiculos"} fun={handleShowModalVehiculos}/>
+            <ButtonAdd
+              name={"Agregar Vehiculos"}
+              fun={handleShowModalVehiculos}
+            />
           </div>
         </div>
         <div className="gap-5 mt-7">
-          {!vehiculos || vehiculos.length == [] ? 'No hay datos' : <TableVehiculos datos={vehiculos}/>}
+          {!vehiculos || vehiculos.length == [] ? (
+            "No hay datos"
+          ) : (
+            <TableVehiculos datos={vehiculos} />
+          )}
         </div>
-
-
-
-
-
-
-
-
 
         {/* Parte de motoristas */}
         <hr className="text-gray-400 mt-7" />
@@ -307,10 +328,17 @@ const EditTransporte = () => {
 
       {/* Modals del alertas */}
       {err && <ModalErr name={msg} hdClose={handleCloseErr} />}
-      {success && <ModalSuccess name={msg} hdClose={handleCloseSuccess}/>}
+      {success && <ModalSuccess name={msg} hdClose={handleCloseSuccess} />}
 
       {/* Modals de agregar */}
-      {mdlVehiculos && <ModalVehiculos tglModal={handleCancelModalVehiculos} hdlData={handleChangeFormVehiculos} hdlSubmit={handleSaveVehiculos}/>}
+      {mdlVehiculos && (
+        <ModalVehiculos
+          tglModal={handleCancelModalVehiculos}
+          hdlData={handleChangeFormVehiculos}
+          hdlSubmit={handleSaveVehiculos}
+        />
+      )}
+      {mdlVehiculoDuplicado && <ModalVehiculoDuplicado name={msg} hdClose={handleCancelAdvertencia} hdlSubmit={addVehiculoPorEmpresa}/>}
     </>
   );
 };

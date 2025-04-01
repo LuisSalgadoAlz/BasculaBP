@@ -1,6 +1,6 @@
 model Vehiculo {
     id Int @id @default(autoincrement())
-    placa String @unique
+    placa String
     modelo String?
     marca String?
     tipo String
