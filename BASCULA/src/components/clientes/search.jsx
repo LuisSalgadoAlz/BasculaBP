@@ -129,12 +129,12 @@ const Search = ({ sts }) => {
           onKeyDown={handleResetPagination}
         />
         <select className="py-2.5 px-4 text-sm font-medium text-gray-600  rounded-lg border border-gray-200 max-sm:hidden max-md:hidden max-lg:hidden" onKeyDown={handleResetPagination} onChange={handleFilterState}>
-          <option value={-1}>Estado de socio</option>
+          <option value={-1}>Estado de socio (todos)</option>
           <option value={'inactiva'}>Inactivo</option>
           <option value={'activa'}>Activo</option>
         </select>
         <select className="py-2.5 px-4 text-sm font-medium text-gray-600  rounded-lg border border-gray-200 max-sm:hidden max-md:hidden " onKeyDown={handleResetPagination} onChange={handleFilterType}>
-          <option value={-1}>Tipo de socio</option>
+          <option value={-1}>Tipos de socio (todos)</option>
           <option value={0}>Proveedor</option>
           <option value={1}>Cliente</option>
         </select>
