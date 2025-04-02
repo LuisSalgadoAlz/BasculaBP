@@ -33,8 +33,13 @@ const Search = ({ sts }) => {
   const handleCleanState = () => {
     setFormData({ nombre: "", tipo: -1, correo: "", telefono: "", estado: 1 });
   };
-  const toggleModal = () => {
-    setIsOpen(!isOpen);
+
+  const toggleOpen = () => {
+    setIsOpen(true);
+    handleCleanState();
+  }
+  const toggleClose = () => {
+    setIsOpen(false);
     handleCleanState();
   };
 
@@ -140,7 +145,7 @@ const Search = ({ sts }) => {
         </select>
         {/* Proximamente */}
         <ButtonAdd name="Exportar"/>
-        <ButtonAdd name="Agregar" fun={toggleModal} />
+        <ButtonAdd name="Agregar" fun={toggleOpen} />
       </div>
       <div className="mt-7 text-center">
         {!datos || datos.data.length == 0 ? (
@@ -160,7 +165,7 @@ const Search = ({ sts }) => {
         <ModalClientes
           hdlData={handleData}
           hdlSubmit={handleSubmit}
-          tglModal={toggleModal}
+          tglModal={toggleClose}
         />
       )}
       {success && (

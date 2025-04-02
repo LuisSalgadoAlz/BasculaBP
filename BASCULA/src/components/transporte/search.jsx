@@ -21,9 +21,14 @@ const Search = ({ sts }) => {
   /**
    * Se limpia el formdata cuando le de cancelar
    */
-  const toggleModal = () => {
+  const toggleModalClose = () => {
     handleClean()
-    setIsOpen(!isOpen)
+    setIsOpen(false)
+  };
+
+  const toggleModalOpen = () => {
+    handleClean()
+    setIsOpen(true)
   };
 
   /**
@@ -123,7 +128,7 @@ const Search = ({ sts }) => {
         </select>
         {/* Proximamente */}
         <ButtonAdd name="Exportar" />
-        <ButtonAdd name="Agregar" fun={toggleModal} />
+        <ButtonAdd name="Agregar" fun={toggleModalOpen} />
       </div>
       <div className="mt-7 text-center">
         {(!datos || datos.data.length ==0) ? <h1 className="ml-2">No hay datos</h1> : <TableEmpresas datos={datos.data} />}
@@ -135,7 +140,7 @@ const Search = ({ sts }) => {
         <button className="px-2 mt-5 text-gray-600 border py-1 ml-1 rounded border-gray-400" onClick={()=>setPagination(datos && datos.pagination.totalPages)}>{'>>'}</button>
       </div>
 
-      {isOpen && <ModalEmpresas hdlData={handleData} hdlSubmit={handleSubmit} tglModal={toggleModal} frDta={formData}/>}
+      {isOpen && <ModalEmpresas hdlData={handleData} hdlSubmit={handleSubmit} tglModal={toggleModalClose} frDta={formData}/>}
       {err && <ModalErr name={msg} hdClose={handleClose} />}
       {success && <ModalSuccess name={msg} hdClose={handleClose} />}
     </>
