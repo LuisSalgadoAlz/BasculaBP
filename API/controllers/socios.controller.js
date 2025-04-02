@@ -65,10 +65,6 @@ const getSocioPorID = async (req, res) => {
       },
     });
 
-    if (!socio) {
-      return res.status(404).json({ message: "Socio no encontrado" });
-    }
-
     return res.status(200).json(socio);
   } catch (error) {
     console.error(error);

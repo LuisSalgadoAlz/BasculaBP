@@ -2,6 +2,7 @@ import { StrictMode, lazy, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import { createBrowserRouter, Route, RouterProvider } from "react-router";
 import "./index.css";
+import NoFoundData from "./views/notFoundData";
 const Login = lazy(()=>import('./views/login'));
 const VerificarLog = lazy(()=>import('./utils/verificarLog'))
 const Dashboard = lazy(()=>import('./views/dashboard'))
@@ -40,10 +41,12 @@ const navRutas = createBrowserRouter([
       {
         path: "/socios/:id",
         element: <EditClientes />,
+        errorElement: <NoFoundData />
       },
       {
         path: "/empresas/:id",
         element: <EditTransporte />,
+        errorElement: <NoFoundData />
       },
     ],
   },

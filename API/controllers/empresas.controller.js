@@ -133,7 +133,8 @@ const getEmpresaPorId = async (req, res) => {
         id: parseInt(req.params.id),
       },
     });
-    res.json(esData);
+    
+    return res.json(esData);
   } catch (err) {
     console.log(err);
   }
