@@ -107,7 +107,7 @@ export const ModalMotoristas = ({hdlData, hdlSubmit, tglModal}) => {
           Añadir nuevo motorista
         </h2>
         <div>
-          <FormMotoristas fun={hdlData} hdlSave={funSave} />
+          <FormMotoristas fun={hdlData} />
         </div>
         <div className="mt-6 flex justify-end space-x-4">
           <button
