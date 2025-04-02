@@ -314,6 +314,37 @@ const getMotoristaPorEmpresa = async (req, res) => {
   }
 };
 
+const postMotoristasDeLaEmpresa = async (req, res) => {
+  try {
+    const { nombre, telefono, correo, id } = req.body; // Crear el nuevo usuario
+    const exist = await db.motoristas.count({
+      where:{ 
+        correo : correo
+      }
+    })
+
+    if (exist == 0) {
+      const nuevoMotorista = await db.motoristas.create({
+        data: {
+          nombre, 
+          telefono, 
+          correo, 
+          estado :  true,
+          idEmpresa: parseInt(id),
+        },
+      });
+  
+      return res.status(201).json({ msg: "Motorista creado exitosamente", motorista: nuevoMotorista });
+    }
+
+    return res.status(201).send({msgErr: 'Correo duplicado'})
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: `Error al crear motoristas: ${error.message}` });
+  }
+};
+
+
 module.exports = {
   getEmpresas,
   postEmpresas,
@@ -326,4 +357,5 @@ module.exports = {
   getVehiculosPorID,
   updateVehiculosPorID,
   getMotoristaPorEmpresa,
+  postMotoristasDeLaEmpresa
 };
