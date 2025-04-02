@@ -260,6 +260,31 @@ export const postMotoristasDeLaEmpresa = async (motoristas) => {
   }
 };
 
+
+export const updateMotoristasPorEmpresa = async (motoristas, idEmpresa) => {
+  try {
+    const response = await fetch(`${URLHOST}empresas/motoristas/${idEmpresa}`, {
+      method: "PUT",
+      body: JSON.stringify(motoristas),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: Cookies.get('token'),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API");
+    }
+
+    if (response.ok) {
+      const data = await response.json()
+      return data;
+    }
+  } catch (error) {
+    console.error("Error al obtener los datos:", error);
+  }
+};
+
 /**
  * Validaciones de los forms
  * 

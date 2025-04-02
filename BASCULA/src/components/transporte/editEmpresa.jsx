@@ -19,7 +19,8 @@ import {
   verificarListadoDeVehiculos,
   getMotoristasPorEmpresas, 
   postMotoristasDeLaEmpresa,
-  verificarDataDeMotoristas
+  verificarDataDeMotoristas, 
+  updateMotoristasPorEmpresa
 } from "../../hooks/formDataEmpresas";
 import { SelectSociosEdit } from "../selects";
 import { ModalErr, ModalSuccess, ModalVehiculoDuplicado, ModalVehiculoDuplicadoEdit } from "../alerts";
@@ -272,10 +273,20 @@ const EditTransporte = () => {
     setModalMotoristasEdit(true)
   }
 
-  const handleUpdateMotoristas = () => {
+  const handleUpdateMotoristas = async () => {
     const isValid = verificarDataDeMotoristas(setErr, formMotoristas, setMsg)
     if (isValid){
-      console.log('Pasooo listo para modificar')
+      const { msgErr } = await updateMotoristasPorEmpresa(formMotoristas, id)
+      if(!msgErr){
+        setMsg('modificar usuario')
+        setSuccess(true)
+        handleCleanFormsMotoristas()
+        setModalMotoristasEdit(false)
+        fetchData()
+        return
+      }
+      setMsg(msgErr)
+      setErr(true)
     }
   }
 
@@ -298,8 +309,6 @@ const EditTransporte = () => {
   /**
    * TODO JSX inicial
    */
-
-
 
   return (
     <>
@@ -452,13 +461,7 @@ const EditTransporte = () => {
       {success && <ModalSuccess name={msg} hdClose={handleCloseSuccess} />}
 
       {/* Modals de agregar */}
-      {mdlVehiculos && (
-        <ModalVehiculos
-          tglModal={handleCancelModalVehiculos}
-          hdlData={handleChangeFormVehiculos}
-          hdlSubmit={handleSaveVehiculos}
-        />
-      )}
+      {mdlVehiculos && ( <ModalVehiculos tglModal={handleCancelModalVehiculos} hdlData={handleChangeFormVehiculos} hdlSubmit={handleSaveVehiculos} />)}
       
       {/* Modals del apartado de vehiculos */}
       {mdlVehiculoDuplicadoEdit && <ModalVehiculoDuplicadoEdit name={msg} hdClose={handleCancelAdvertencia} hdlSubmit={editVehiculoEmpresa}/>}
