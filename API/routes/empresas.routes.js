@@ -11,7 +11,8 @@ const {
   getVehiculosPorID, 
   updateVehiculosPorID, 
   getMotoristaPorEmpresa, 
-  postMotoristasDeLaEmpresa
+  postMotoristasDeLaEmpresa, 
+  updateMotoristasPorID
 } = require("../controllers/empresas.controller.js");
 const verificarToken = require("../middlewares/authJWT.js");
 
@@ -25,6 +26,7 @@ empresas.get("/motoristas/:id", verificarToken,getMotoristaPorEmpresa);
 empresas.post("/", verificarToken, postEmpresas);
 empresas.post("/vehiculos", verificarToken, postVehiculosDeEmpresa);
 empresas.post("/motoristas", verificarToken, postMotoristasDeLaEmpresa);
+empresas.put("/motoristas/:idEmpresa", verificarToken, updateMotoristasPorID);
 empresas.put("/:id", verificarToken, updateEmpresasPorId);
 empresas.put("/vehiculos/u/:idEmpresa", verificarToken, updateVehiculosPorID);
 module.exports = empresas;

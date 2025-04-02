@@ -316,7 +316,7 @@ const getMotoristaPorEmpresa = async (req, res) => {
 
 const postMotoristasDeLaEmpresa = async (req, res) => {
   try {
-    const { nombre, telefono, correo, id } = req.body; // Crear el nuevo usuario
+    const { nombre, telefono, correo, id } = req.body;
     const exist = await db.motoristas.count({
       where:{ 
         correo : correo
@@ -344,6 +344,37 @@ const postMotoristasDeLaEmpresa = async (req, res) => {
   }
 };
 
+const updateMotoristasPorID = async (req, res) => {
+  const { nombre, telefono, correo, id, estado } = req.body; // Crear el nuevo usuario
+  try {
+    const exist = await db.motoristas.count({
+      where: {
+        correo : correo, 
+        id : {not: parseInt(id)}
+      }
+    })
+
+    if (exist==0) {
+      const updateMotorista = await db.motoristas.update({
+        where: {
+          id: parseInt(id),
+        },
+        data: {
+          nombre, 
+          telefono, 
+          correo,
+          idEmpresa: parseInt(req.params.idEmpresa),
+          estado: estado == 1 ? true : false,
+        },
+      });
+      return res.status(201).send({msg: "Proceso exitoso"});
+    }
+    return res.status(201).send({msgErr: "Correo ya existe en otro motorista, ingrese otro"})
+  } catch (error) {
+    console.log(error);
+    res.status(401).send(`error ${error}`);
+  }
+};
 
 module.exports = {
   getEmpresas,
@@ -357,5 +388,6 @@ module.exports = {
   getVehiculosPorID,
   updateVehiculosPorID,
   getMotoristaPorEmpresa,
-  postMotoristasDeLaEmpresa
+  postMotoristasDeLaEmpresa,
+  updateMotoristasPorID
 };
