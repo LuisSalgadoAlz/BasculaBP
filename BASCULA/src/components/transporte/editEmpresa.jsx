@@ -17,12 +17,14 @@ import {
   updateVehiculosPorEmpresas,
   verificarDataVehiculos,
   verificarListadoDeVehiculos,
-  getMotoristasPorEmpresas
+  getMotoristasPorEmpresas, 
+  postMotoristasDeLaEmpresa,
+  verificarDataDeMotoristas
 } from "../../hooks/formDataEmpresas";
 import { SelectSociosEdit } from "../selects";
 import { ModalErr, ModalSuccess, ModalVehiculoDuplicado, ModalVehiculoDuplicadoEdit } from "../alerts";
 import { TableMotoristas, TableVehiculos } from "./tables";
-import { ModalVehiculos, ModalVehiculosEdit } from "./modal";
+import { ModalMotoristas, ModalVehiculos, ModalVehiculosEdit } from "./modal";
 /* Comienzo de la funcion  */
 
 const EditTransporte = () => {
@@ -41,6 +43,10 @@ const EditTransporte = () => {
   const [mdlVehiculoDuplicado, setMdlVehiculoDuplicado] = useState()
   const [mdlVehiculoDuplicadoEdit, setMdlVehiculoDuplicadoEdit] = useState()
   const [motoristas, setMotoristas] = useState()
+  const [modalMotoristas, setModalMotoristas] = useState()
+  const [formMotoristas,  setFormMotoristas] = useState({
+    nombre : '', telefono: '', correo: '', id: id
+  })
   const [placaAnterior, setPlacaAnterior] = useState()
   const [formVehiculos, setFormVehiculos] = useState({
     placa: "",
@@ -51,9 +57,11 @@ const EditTransporte = () => {
     estado: true,
     id: id,
   });
+
   /**
-   * Estado inicial del form de empresa
+   *  ? Estado inicial del form de empresa
    */
+
   const [empresa, setEmpresa] = useState({
     nombre: "",
     email: "",
@@ -64,8 +72,8 @@ const EditTransporte = () => {
   });
 
   /**
-   *
-   * @param {*} e obtener valores del form de manera dinamica
+   * Aqui se obtienen constantemente cuando el usuario cambia de valor algun
+   * valor de los elementos del form
    */
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -101,8 +109,9 @@ const EditTransporte = () => {
   };
 
   /**
-   * Parte de vehiculos
+   * TODO Parte de vehiculos
    * -------------------------------
+   * 
    */
 
   const handleShowModalVehiculos = () => {
@@ -120,6 +129,7 @@ const EditTransporte = () => {
       id: id,
     });
   }
+
   const handleCancelModalVehiculos = () => {
     handleCleanForms()
     setMdlVehiculos(false);
@@ -212,9 +222,53 @@ const EditTransporte = () => {
     }
   }
 
+   /**
+   * TODO: Parte de motoristas
+   * -------------------------------
+   */
+
+  const handleShowModalMotoristas = () => {
+    setModalMotoristas(true)
+  }
+  
+  const handleCleanFormsMotoristas = () => {
+    setFormMotoristas({nombre : '', telefono: '', correo: '', id: id})
+  }
+  
+  const handleChangeFormMotoristas = (e) => {
+    const { name, value } = e.target
+    setFormMotoristas((prev)=> ({
+      ...prev,
+      [name] : value
+    }))
+  }
+
+  const handleToggleModalMotoristas = () => {
+    setModalMotoristas(false)
+    handleCleanFormsMotoristas()
+  }
+
+  const handleSaveMotoristas = async () => {
+    const isValid = verificarDataDeMotoristas(setErr, formMotoristas, setMsg)
+    if (isValid) {
+      const { msgErr } = await postMotoristasDeLaEmpresa(formMotoristas)
+      if (!msgErr) {
+        fetchData()
+        setModalMotoristas(false)
+        handleCleanFormsMotoristas()
+        setMsg('agregar motorista')
+        setSuccess(true) 
+        return
+      }
+      setMsg(msgErr)
+      setErr(true)      
+    }
+  }
+
 
   /**
-   * Calback que almacena los valores de las tablas para maximizar el rendimiento
+   *  ? Calback que almacena los valores de las tablas para maximizar el rendimiento
+   *  ? datos que se almacenan en el cache
    */
 
   const fetchData = useCallback(() => {
@@ -224,17 +278,15 @@ const EditTransporte = () => {
     getSociosParaSelect(setSocios);
   }, []);
 
-  /**
-   * Cargar valores del callback
-   */
-
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
   /**
-   * JSX inicial
+   * TODO JSX inicial
    */
+
+
 
   return (
     <>
@@ -371,17 +423,17 @@ const EditTransporte = () => {
             <h1 className="text-3xl font-bold titulo">Agregar Motorista</h1>
             <h1 className="text-gray-600">
               {" "}
-              Gestion de placas con las que cuenta la empresa.
+              Gestion de motoristas de la empresa.
             </h1>
           </div>
           <div className="parte-izq max-sm:place-self-center">
-            <ButtonAdd name={"Agregar Motoristas"} />
+            <ButtonAdd name={"Agregar Motoristas"} fun={handleShowModalMotoristas}/>
           </div>
         </div>
         <div className="gap-5 mt-7">{!motoristas || motoristas.length == [] ? 'No hay datos' : <TableMotoristas datos={motoristas} />}</div>
       </div>
 
-      {/* Modals del alertas */}
+      {/* !Modals del alertas */}
       {err && <ModalErr name={msg} hdClose={handleCloseErr} />}
       {success && <ModalSuccess name={msg} hdClose={handleCloseSuccess} />}
 
@@ -393,11 +445,20 @@ const EditTransporte = () => {
           hdlSubmit={handleSaveVehiculos}
         />
       )}
-            
+      
+      {/* Modals del apartado de vehiculos */}
       {mdlVehiculoDuplicadoEdit && <ModalVehiculoDuplicadoEdit name={msg} hdClose={handleCancelAdvertencia} hdlSubmit={editVehiculoEmpresa}/>}
       {mdlVehiculoDuplicado && <ModalVehiculoDuplicado name={msg} hdClose={handleCancelAdvertencia} hdlSubmit={addVehiculoPorEmpresa}/>}
       {modalVehiculosEdit && <ModalVehiculosEdit hdlSubmit={handleSubmitEditFinish} hdlData={handleChangeFormVehiculos} frDta={formVehiculos} tglModal={handleCloseModalVehiculosEdit} />}
       
+      {/* Modals del apartado de motoristas */}
+      {modalMotoristas && 
+        <ModalMotoristas 
+          hdlData={handleChangeFormMotoristas} 
+          tglModal={handleToggleModalMotoristas} 
+          hdlSubmit={handleSaveMotoristas} 
+        />
+      }
     </>
   );
 };

@@ -3,6 +3,9 @@ import { cargando, claseFormInputs, classFormSelct } from "../../constants/bolet
 import { SelectSociosSave } from "../selects";
 import { getSociosParaSelect } from "../../hooks/formDataEmpresas"
 
+/**
+ * TODO:  Form para agregar empresas
+ */
 export const FormEmpresa = ({ fun }) => {
   const [socios, setSocios] = useState()
 
@@ -44,7 +47,11 @@ export const FormEmpresa = ({ fun }) => {
   );
 };
 
-
+/**
+ * TODO: Form para agregar vehiculos
+ * @param {*} param0 
+ * @returns 
+ */
 export const FormVehiculos = ({ fun }) => {
   return (
     <>
@@ -90,6 +97,11 @@ export const FormVehiculos = ({ fun }) => {
   );
 };
 
+/**
+ * TODO: Form Para editar Vehiculos
+ * @param {*} param0 
+ * @returns 
+ */
 export const FormVehiculosEdit = ({ fun, data }) => {
   return (
     <>
@@ -139,6 +151,38 @@ export const FormVehiculosEdit = ({ fun, data }) => {
               <option value={0}>Inactiva</option>
               <option value={1}>Activa</option>
           </select>
+        </div>
+      </div>
+    </>
+  );
+};
+
+/**
+ * TODO: Form para agregar motoristas
+ * @param {*} param0 
+ * @returns 
+ */
+export const FormMotoristas = ({ fun }) => {
+  return (
+    <>
+    <div className="grid grid-cols-1 max-sm:grid-cols-1 gap-y-3">
+      <div className="mt-2">
+          <label className="block mb-2 text-sm font-medium text-gray-900 ">
+            Nombre
+          </label>
+          <input type="text" name={"nombre"} className={claseFormInputs} placeholder={`Ingrese Nombre`} required onChange={fun}/>
+        </div>
+        <div className="mt-2">
+          <label className="block mb-2 text-sm font-medium text-gray-900 ">
+            Telefono
+          </label>
+          <input type="number" name={"telefono"} className={claseFormInputs} placeholder={`Ingrese Telefono`} required onChange={fun}/>
+        </div>
+        <div className="mt-2">
+          <label className="block mb-2 text-sm font-medium text-gray-900 ">
+            Correo
+          </label>
+          <input type="text" name={"correo"} className={claseFormInputs} placeholder={`Ingrese Correo`} required onChange={fun}/>
         </div>
       </div>
     </>

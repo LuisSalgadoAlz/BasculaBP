@@ -234,6 +234,33 @@ export const getMotoristasPorEmpresas = async (fun, id)=>{
 }
 
 /**
+ * 
+ * TODO: Parte de motoristas
+ */
+
+export const postMotoristasDeLaEmpresa = async (motoristas) => {
+  try {
+    const response = await fetch(`${URLHOST}empresas/motoristas`, {
+      method: "POST",
+      body: JSON.stringify(motoristas),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: Cookies.get('token'),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API");
+    }
+
+    const data = await response.json();
+    return data
+  } catch (error) {
+    console.error("Error al obtener los datos:", error);
+  }
+};
+
+/**
  * Validaciones de los forms
  * 
  */
@@ -274,6 +301,38 @@ export const verificarData = (funError, data, setMsg) => {
 
   return true
 
+};
+
+
+export const verificarDataDeMotoristas = (funError, data, setMsg) => {
+  
+  const { nombre, correo, telefono, estado } = data 
+
+  if (!regexNombre.test(nombre) || nombre == "" || nombre.length < 2) {
+    funError(true)
+    setMsg('nombre invalido, vacio o demasiado corto.')
+    return false
+  }
+
+  if(estado && estado==-1) {
+    funError(true)
+    setMsg('seleccione un estado.')
+    return false
+  }
+
+  if (!regexTelefono.test(telefono) || telefono==""){
+    funError(true)
+    setMsg('numero ingresado invalido o no ingresado (debe iniciar con 2 / 3 / 8 y 9) y tener 8 digitos. Ej: 22222222')
+    return false
+  }
+
+  if (!regexEmail.test(correo) || correo == "" ) {
+    funError(true)
+    setMsg('correo permite letras, números, puntos, guiones. Además de ir acompañado de un @dominio.es / @dominio.com')
+    return false
+  }
+
+  return true
 };
 
 
