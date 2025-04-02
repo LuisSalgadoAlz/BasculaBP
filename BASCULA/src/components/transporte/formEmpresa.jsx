@@ -188,3 +188,40 @@ export const FormMotoristas = ({ fun }) => {
     </>
   );
 };
+
+export const FormMotoristasEdit = ({ fun, data }) => {
+  return (
+    <>
+    <div className="grid grid-cols-1 max-sm:grid-cols-1 gap-y-3">
+      <div className="mt-2">
+          <label className="block mb-2 text-sm font-medium text-gray-900 ">
+            Nombre
+          </label>
+          <input type="text" name={"nombre"} className={claseFormInputs} placeholder={`Ingrese Nombre`} required onChange={fun} value={data && data.nombre}/>
+        </div>
+        <div className="mt-2">
+          <label className="block mb-2 text-sm font-medium text-gray-900 ">
+            Telefono
+          </label>
+          <input type="number" name={"telefono"} className={claseFormInputs} placeholder={`Ingrese Telefono`} required onChange={fun} value={data && data.telefono}/>
+        </div>
+        <div className="mt-2">
+          <label className="block mb-2 text-sm font-medium text-gray-900 ">
+            Correo
+          </label>
+          <input type="text" name={"correo"} className={claseFormInputs} placeholder={`Ingrese Correo`} required onChange={fun} value={data && data.correo}/>
+        </div>
+        <div className="mt-2">
+          <label className="block mb-2 text-sm font-medium text-gray-900 ">
+            Estado
+          </label>
+          <select name={"estado"} className={claseFormInputs} onChange={fun} value={data && data.estado}> 
+              <option value={-1} className="text-gray-400">Seleccione un estado</option>
+              <option value={0}>Inactiva</option>
+              <option value={1}>Activa</option>
+          </select>
+        </div>
+      </div>
+    </>
+  );
+};

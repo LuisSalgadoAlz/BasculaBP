@@ -24,7 +24,7 @@ import {
 import { SelectSociosEdit } from "../selects";
 import { ModalErr, ModalSuccess, ModalVehiculoDuplicado, ModalVehiculoDuplicadoEdit } from "../alerts";
 import { TableMotoristas, TableVehiculos } from "./tables";
-import { ModalMotoristas, ModalVehiculos, ModalVehiculosEdit } from "./modal";
+import { ModalMotoristas, ModalMotoristasEdit, ModalVehiculos, ModalVehiculosEdit } from "./modal";
 /* Comienzo de la funcion  */
 
 const EditTransporte = () => {
@@ -44,6 +44,7 @@ const EditTransporte = () => {
   const [mdlVehiculoDuplicadoEdit, setMdlVehiculoDuplicadoEdit] = useState()
   const [motoristas, setMotoristas] = useState()
   const [modalMotoristas, setModalMotoristas] = useState()
+  const [modalMotoristasEdit, setModalMotoristasEdit] = useState()
   const [formMotoristas,  setFormMotoristas] = useState({
     nombre : '', telefono: '', correo: '', id: id
   })
@@ -245,6 +246,7 @@ const EditTransporte = () => {
 
   const handleToggleModalMotoristas = () => {
     setModalMotoristas(false)
+    setModalMotoristasEdit(false)
     handleCleanFormsMotoristas()
   }
 
@@ -265,6 +267,17 @@ const EditTransporte = () => {
     }
   }
 
+  const handleGetMotoristasEdit = (data) => {
+    setFormMotoristas(data)
+    setModalMotoristasEdit(true)
+  }
+
+  const handleUpdateMotoristas = () => {
+    const isValid = verificarDataDeMotoristas(setErr, formMotoristas, setMsg)
+    if (isValid){
+      console.log('Pasooo listo para modificar')
+    }
+  }
 
   /**
    *  ? Calback que almacena los valores de las tablas para maximizar el rendimiento
@@ -430,7 +443,8 @@ const EditTransporte = () => {
             <ButtonAdd name={"Agregar Motoristas"} fun={handleShowModalMotoristas}/>
           </div>
         </div>
-        <div className="gap-5 mt-7">{!motoristas || motoristas.length == [] ? 'No hay datos' : <TableMotoristas datos={motoristas} />}</div>
+        <div className="gap-5 mt-7">{!motoristas || motoristas.length == [] ? 'No hay datos' : <TableMotoristas datos={motoristas} fun={handleGetMotoristasEdit} />}</div>
+        <hr className="text-gray-400 mt-7" />
       </div>
 
       {/* !Modals del alertas */}
@@ -452,13 +466,8 @@ const EditTransporte = () => {
       {modalVehiculosEdit && <ModalVehiculosEdit hdlSubmit={handleSubmitEditFinish} hdlData={handleChangeFormVehiculos} frDta={formVehiculos} tglModal={handleCloseModalVehiculosEdit} />}
       
       {/* Modals del apartado de motoristas */}
-      {modalMotoristas && 
-        <ModalMotoristas 
-          hdlData={handleChangeFormMotoristas} 
-          tglModal={handleToggleModalMotoristas} 
-          hdlSubmit={handleSaveMotoristas} 
-        />
-      }
+      {modalMotoristas && <ModalMotoristas hdlData={handleChangeFormMotoristas} tglModal={handleToggleModalMotoristas} hdlSubmit={handleSaveMotoristas}/>}
+      {modalMotoristasEdit && <ModalMotoristasEdit hdlData={handleChangeFormMotoristas} tglModal={handleToggleModalMotoristas} hdlSubmit={handleUpdateMotoristas} frDta={formMotoristas} />}
     </>
   );
 };

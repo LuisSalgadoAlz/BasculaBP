@@ -77,7 +77,7 @@ export const ModalDireccionesEdit = ({ hdlData, hdlSubmit, tglModal, dtDir }) =>
           </button>
           <button
             onClick={hdlSubmit}
-            className="px-6 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700 transition duration-300 ease-in-out transform hover:scale-105"
+            className="px-6 py-2 text-white bg-yellow-600 rounded-lg hover:bg-yellow-600 transition duration-300 ease-in-out transform hover:scale-105"
           >
             Modificar
           </button>

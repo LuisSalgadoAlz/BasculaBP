@@ -2,10 +2,10 @@ import { CiEdit } from "react-icons/ci";
 import { useNavigate } from "react-router";
 
 export const TableEmpresas = ({ datos = [{}] }) => {
-  const navigate = useNavigate()
-    
+  const navigate = useNavigate();
+
   const handleGetInfo = (data) => {
-    navigate(`./${data.id}`)
+    navigate(`./${data.id}`);
   };
 
   return (
@@ -73,15 +73,15 @@ export const TableEmpresas = ({ datos = [{}] }) => {
   );
 };
 
-
-export const TableVehiculos = ({ datos = [{}], fun }) => {    
+export const TableVehiculos = ({ datos = [{}], fun }) => {
   const handleGetInfo = (data) => {
-    const {estado, ...resto} = data 
-    const st = estado == 'Activa' ? 1 : 0
+    const { estado, ...resto } = data;
+    const st = estado == "Activa" ? 1 : 0;
     const dataClean = {
-      ...resto, estado : st
-    }
-    fun(dataClean)
+      ...resto,
+      estado: st,
+    };
+    fun(dataClean);
   };
 
   return (
@@ -149,14 +149,15 @@ export const TableVehiculos = ({ datos = [{}], fun }) => {
   );
 };
 
-export const TableMotoristas = ({ datos = [{}], fun }) => {    
+export const TableMotoristas = ({ datos = [{}], fun }) => {
   const handleGetInfo = (data) => {
-    const {estado, ...resto} = data 
-    const st = estado == 'Activa' ? 1 : 0
+    const { estado, ...resto } = data;
+    const st = estado == "Activa" ? 1 : 0;
     const dataClean = {
-      ...resto, estado : st
-    }
-    fun(dataClean)
+      ...resto,
+      estado: st,
+    };
+    fun(dataClean);
   };
 
   return (
@@ -184,27 +185,13 @@ export const TableMotoristas = ({ datos = [{}], fun }) => {
                 className="bg-white border-b  border-gray-200 hover:bg-[#FDF5D4]"
               >
                 {Object.values(fila).map(
-                  (el, key) =>
-                    key != 0 && (
+                  (el, key) => key != 0 && (
                       <td key={key} className="px-6 py-3 text-gray-700">
-                        {key == 0 ? (
-                          ""
-                        ) : typeof el === "boolean" ? (
-                          el == 1 ? (
-                            <h1 className="text-green-600 border rounded-2xl text-center ">
-                              Activos
-                            </h1>
-                          ) : (
-                            <h1 className="text-red-600 border rounded-2xl text-center">
-                              Inactivo
-                            </h1>
-                          )
-                        ) : (
-                          el
-                        )}
+                        {key == 0 ? "" : el}
                       </td>
                     )
-                )}
+                  )
+                }
                 <td className="py-3 text-center">
                   <button
                     className="font-medium text-gray-800 hover:underline text-center"
