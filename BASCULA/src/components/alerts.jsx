@@ -4,6 +4,7 @@ import { ESTADOS_BOLETAS, Proceso, URLHOST } from "../constants/global";
 import SelectFormBoletas from "./boletas/select";
 import { InputsFormBoletas } from "./boletas/inputs";
 import { PiGaugeThin } from "react-icons/pi";
+import Cookies from 'js-cookie'
 
 
 export const ModalSuccess = ({ name, hdClose }) => {
@@ -123,10 +124,34 @@ export const NoData = () => {
 };
 
 export const ModalBoletas = ({hdlClose, hdlChange}) => {
+  
   const fillData = {
     Proceso, "Placa" : cargando, "Clientes" : cargando, "Transportes": cargando, "Motoristas": cargando, "Producto" : cargando, "Origen": cargando, "Destino": cargando, "Flete": cargando
   }
+
+  const [peso, setPeso] = useState('0lb');
+
+  const api = async () => {
+    const response = await fetch(`${URLHOST}peso`, {
+      method: "GET",
+      headers: {
+        Authorization: Cookies.get('token'),
+      },
+    });
+    const adata = await response.json();
+    setPeso(adata.peso);
+  };
   
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      api();
+    }, 1000); // Actualiza cada 5 segundos (ajusta el tiempo según tus necesidades)
+  
+    // Limpia el intervalo cuando el componente se desmonte
+    return () => clearInterval(intervalId);
+  }, []);
+  
+
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4 sm:p-6 min-h-screen bg-opa-50">
     <div className="bg-white w-full max-w-5xl rounded-2xl p-6 shadow-lg sm:w-[90%] md:w-[80%] lg:w-[60%] max-h-[90vh] overflow-y-auto boletas border-8 border-white">
@@ -139,7 +164,7 @@ export const ModalBoletas = ({hdlClose, hdlChange}) => {
         <h3 className="text-lg font-semibold text-gray-700">Lectura de Peso</h3>
         <div className="flex justify-between items-center mt-2">
           <span className="text-xl font-bold text-gray-900">Peso Actual:</span>
-          <span className="text-xl font-bold text-gray-900">0 Lb</span>
+          <span className="text-xl font-bold text-gray-900">{peso}</span>
         </div>
         <p className="text-sm text-gray-500">Peso en tiempo real de la báscula</p>
       </div>
@@ -172,7 +197,7 @@ export const ModalBoletas = ({hdlClose, hdlChange}) => {
         </div>
       </div>
 
-      <div className="mt-3">
+      <div className="mt-3 px-3">
         <select name="estado" className={claseFormInputs} onChange={hdlChange}>
           {ESTADOS_BOLETAS.map((el)=>(
             <option key={el.id} value={el.id}>{el.nombre}</option>
