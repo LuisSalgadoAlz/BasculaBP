@@ -6,10 +6,25 @@ export const ESTADOS_BOLETAS = [
     },
     {
         id : 1, 
-        nombre : '🟢 Completado'
+        nombre : '🔴 Completo (pero peso fuera de tolerancia)'
     }, 
     {
         id : 2, 
-        nombre : '🔴 Peso fuera de tolerancia'
+        nombre : '🔵 Convenio Casulla'
     }, 
+    {
+        id : 3, 
+        nombre : '🟢 Completado'
+    }, 
+]
+
+export const Proceso = [
+    {
+        id : 0, 
+        nombre : 'Entrada de material'
+    },
+    {
+        id : 0, 
+        nombre : 'Salida de material'
+    },
 ]

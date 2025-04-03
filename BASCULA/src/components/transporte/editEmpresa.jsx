@@ -384,8 +384,8 @@ const EditTransporte = () => {
               <option value={-1} className="text-gray-400">
                 Seleccione un estado
               </option>
-              <option value={false}>Desactivado</option>
-              <option value={true}>Activado</option>
+              <option value={false}>🔴 Desactivada</option>
+              <option value={true}>🟢 Activada</option>
             </select>
           </div>
           <div className="mt-5">

@@ -237,8 +237,8 @@ const EditClientes = () => {
               <option value={-1} className="text-gray-400">
                 Seleccione un estado
               </option>
-              <option value={false}>Desactivado</option>
-              <option value={true}>Activado</option>
+              <option value={false}>🔴 Desactivado</option>
+              <option value={true}>🟢 Activado</option>
             </select>
           </div>
         </div>

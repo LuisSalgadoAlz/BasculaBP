@@ -132,7 +132,7 @@ body {
 /* Modal de boletas  */
 .boletas::-webkit-scrollbar {
   width: 5px;
-  background: transparent;
+  background: #ffffff;
 }
 
 .boletas::-webkit-scrollbar-track {
@@ -140,7 +140,8 @@ body {
 }
 
 .boletas::-webkit-scrollbar-thumb {
-  background: transparent;
+  background: #955e37;
+  border-radius: 50px;
 }
 
 a.active {

@@ -148,8 +148,8 @@ export const FormVehiculosEdit = ({ fun, data }) => {
           </label>
           <select name={"estado"} className={claseFormInputs} onChange={fun} value={data && data.estado}> 
               <option value={-1} className="text-gray-400">Seleccione un estado</option>
-              <option value={0}>Inactiva</option>
-              <option value={1}>Activa</option>
+              <option value={0}>🔴 Inactiva</option>
+              <option value={1}>🟢 Activa</option>
           </select>
         </div>
       </div>
@@ -217,8 +217,8 @@ export const FormMotoristasEdit = ({ fun, data }) => {
           </label>
           <select name={"estado"} className={claseFormInputs} onChange={fun} value={data && data.estado}> 
               <option value={-1} className="text-gray-400">Seleccione un estado</option>
-              <option value={0}>Inactiva</option>
-              <option value={1}>Activa</option>
+              <option value={0}>🔴 Inactiva</option>
+              <option value={1}>🟢 Activa</option>
           </select>
         </div>
       </div>

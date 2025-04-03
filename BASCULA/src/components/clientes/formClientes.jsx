@@ -98,8 +98,8 @@ export const FormDireccionesEdit = ({ fun, data }) => {
         </label>
         <select name={"estado"} className={claseFormInputs} onChange={fun} value={data && data.estado}> 
             <option value={-1} className="text-gray-400">Seleccione un tipo</option>
-            <option value={false}>Inactivo</option>
-            <option value={true}>Activo</option>
+            <option value={false}>🔴 Inactivo</option>
+            <option value={true}>🟢 Activo</option>
         </select>
       </div>
     </>

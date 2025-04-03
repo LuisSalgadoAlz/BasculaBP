@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
-import { cargando, claseFormInputs, classFormSelct, hoy } from "../constants/boletas";
-import { ESTADOS_BOLETAS, URLHOST } from "../constants/global";
-import Cookies from 'js-cookie'
+import { cargando, claseFormInputs, classFormSelct, classTextArea, hoy } from "../constants/boletas";
+import { ESTADOS_BOLETAS, Proceso, URLHOST } from "../constants/global";
 import SelectFormBoletas from "./boletas/select";
 import { InputsFormBoletas } from "./boletas/inputs";
 
@@ -122,12 +121,16 @@ export const NoData = () => {
 };
 
 export const ModalBoletas = ({hdlClose, handleChange}) => {
+  const fillData = {
+    Proceso, "Placa" : cargando, "Clientes" : cargando, "Transportes": cargando, "Motoristas": cargando, "Producto" : cargando, "Origen": cargando, "Destino": cargando, "Flete": cargando
+  }
+  
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4 sm:p-6 min-h-screen bg-opa-50">
-    <div className="bg-white w-full max-w-4xl rounded-2xl p-6 shadow-lg sm:w-[90%] md:w-[80%] lg:w-[60%] max-h-[90vh] overflow-y-auto boletas">
-      <div className="mb-6">
+    <div className="bg-white w-full max-w-4xl rounded-2xl p-6 shadow-lg sm:w-[90%] md:w-[80%] lg:w-[60%] max-h-[90vh] overflow-y-auto boletas border-8 border-white">
+      <div className="mb-2">
         <h2 className="text-2xl font-bold text-gray-800">Boletas</h2>
-        <p className="text-sm text-gray-500">Gestión de entrada y salida de material del {new Date().toLocaleDateString()}</p>
+        <p className="text-sm text-gray-500">Creación de entrada y salida de material del {new Date().toLocaleDateString()}</p>
       </div>
 
       <div className="mt-6 p-4 bg-gray-100 rounded-lg border border-gray-300">
@@ -139,10 +142,10 @@ export const ModalBoletas = ({hdlClose, handleChange}) => {
         <p className="text-sm text-gray-500">Peso en tiempo real de la báscula</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 p-2 mt-4 place-content-center">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 p-2 mt-2 place-content-center">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {["Proceso", "Placa", "Clientes", "Transportes", "Motoristas", "Producto", "Origen", "Destino", "Flete"].map((item) => (
-            <SelectFormBoletas key={item} classCss={classFormSelct} name={item} data={cargando} fun={handleChange} />
+            <SelectFormBoletas key={item} classCss={classFormSelct} name={item} data={fillData[item]} fun={handleChange} />
           ))}
         </div>
 
@@ -158,10 +161,14 @@ export const ModalBoletas = ({hdlClose, handleChange}) => {
       </div>
 
       <div className="mt-4">
-        <SelectFormBoletas classCss={classFormSelct} name={'Estado'} data={ESTADOS_BOLETAS} fun={handleChange} />
+        <select name="estado" className={classTextArea}>
+          {ESTADOS_BOLETAS.map((el)=>(
+            <option value={el.id}>{el.nombre}</option>
+          ))}
+        </select>
       </div>
 
-      <hr className="text-gray-300 mt-7" />
+      <hr className="text-gray-300 mt-2" />
       <div className="flex flex-col sm:flex-row justify-end mt-6 space-y-2 sm:space-y-0 sm:space-x-4">
         <button
           onClick={hdlClose}
