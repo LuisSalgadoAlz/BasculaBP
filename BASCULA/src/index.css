@@ -129,6 +129,20 @@ body {
   background: #955e37;
 }
 
+/* Modal de boletas  */
+.boletas::-webkit-scrollbar {
+  width: 5px;
+  background: transparent;
+}
+
+.boletas::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.boletas::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
 a.active {
   background: #5A3F27;
 }
