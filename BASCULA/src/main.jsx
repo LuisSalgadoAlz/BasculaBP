@@ -7,7 +7,7 @@ const Login = lazy(()=>import('./views/login'));
 const VerificarLog = lazy(()=>import('./utils/verificarLog'))
 const Dashboard = lazy(()=>import('./views/dashboard'))
 const NotFoundPage = lazy(()=>import('./views/notFoundPage'))
-const Boletas = lazy(()=>import('./views/boletos')) 
+const Boletas = lazy(()=>import('./views/boletas')) 
 const Empresa = lazy(()=>import('./views/empresas'))
 const Clientes = lazy(()=>import('./views/clientes'))
 const EditClientes = lazy(()=>import('./components/clientes/editClientes'))

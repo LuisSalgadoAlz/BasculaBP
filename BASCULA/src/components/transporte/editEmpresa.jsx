@@ -7,7 +7,7 @@ import { getEmpresasPorId, getSociosParaSelect, updateEmpresas, verificarData, g
   verificarDataVehiculos, verificarListadoDeVehiculos, getMotoristasPorEmpresas, postMotoristasDeLaEmpresa, verificarDataDeMotoristas, updateMotoristasPorEmpresa
 } from "../../hooks/formDataEmpresas";
 import { SelectSociosEdit } from "../selects";
-import { ModalErr, ModalSuccess, ModalVehiculoDuplicado, ModalVehiculoDuplicadoEdit } from "../alerts";
+import { ModalErr, ModalSuccess, ModalVehiculoDuplicado, ModalVehiculoDuplicadoEdit, NoData } from "../alerts";
 import { TableMotoristas, TableVehiculos } from "./tables";
 import { ModalMotoristas, ModalMotoristasEdit, ModalVehiculos, ModalVehiculosEdit } from "./modal";
 
@@ -421,7 +421,7 @@ const EditTransporte = () => {
         </div>
         <div className="gap-5 mt-7">
           {!vehiculos || vehiculos.length == [] ? (
-            "No hay datos"
+            <NoData />
           ) : (
             <TableVehiculos datos={vehiculos} fun={handleGetVehiculo} />
           )}
@@ -441,7 +441,7 @@ const EditTransporte = () => {
             <ButtonAdd name={"Agregar Motoristas"} fun={handleShowModalMotoristas}/>
           </div>
         </div>
-        <div className="gap-5 mt-7">{!motoristas || motoristas.length == [] ? 'No hay datos' : <TableMotoristas datos={motoristas} fun={handleGetMotoristasEdit} />}</div>
+        <div className="gap-5 mt-7">{!motoristas || motoristas.length == [] ? <NoData /> : <TableMotoristas datos={motoristas} fun={handleGetMotoristasEdit} />}</div>
         <hr className="text-gray-400 mt-7" />
       </div>
 

@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback, use } from "react";
-import { ButtonAdd } from "../buttons";
+import { useState, useEffect, useCallback } from "react";
+import { ButtonAdd, Pagination } from "../buttons";
 import { TableComponent } from "./tableClientes";
+import { NoData } from "../alerts";
 import {
   getClientes,
   postEmpresas,
@@ -121,6 +122,7 @@ const Search = ({ sts }) => {
 
   useEffect(() => {
     fetchData();
+    console.log(datos)
   }, [fetchData]);
 
   return (
@@ -149,16 +151,12 @@ const Search = ({ sts }) => {
       </div>
       <div className="mt-7 text-center">
         {!datos || datos.data.length == 0 ? (
-          <h1 className="ml-2">No hay datos</h1>
+          <NoData />
         ) : (
           <TableComponent datos={datos.data} />
         )}
-        <hr className="text-gray-200 mt-7" />
-        <button className="px-2 mt-5 text-gray-600  border py-1 rounded border-gray-400" onClick={()=>setPagination(1)}>{'<<'}</button>
-        <button className="px-2 mt-5 text-gray-600 border py-1 ml-1 rounded border-gray-400" onClick={()=>handlePagination(-1)}>{'<'}</button>
-        <span className="px-2 text-gray-600 ml-1">{pagination} {' / '} {datos && datos.pagination.totalPages}</span>
-        <button className="px-2 mt-5 text-gray-600 border py-1 ml-1 rounded border-gray-400" onClick={()=>handlePagination(1)}>{'>'}</button>
-        <button className="px-2 mt-5 text-gray-600 border py-1 ml-1 rounded border-gray-400" onClick={()=>setPagination(datos && datos.pagination.totalPages)}>{'>>'}</button>
+        <hr className="text-gray-200 mt-7 mb-4" />
+        {datos && datos.pagination.totalPages > 1 && <Pagination pg={pagination} sp={setPagination} hp={handlePagination} dt={datos}/>}
       </div>
 
       {isOpen && (

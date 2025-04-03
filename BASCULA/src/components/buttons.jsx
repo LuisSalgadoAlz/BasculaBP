@@ -44,5 +44,36 @@ export const ButtonVolver = ({ name, fun }) => {
   );
 };
 
+export const Pagination = ({ pg, sp, hp, dt }) => {
+  return (
+    <div className="flex items-center justify-center space-x-2">
+      <button
+        className="w-8 h-8 text-sm bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200"
+        onClick={() => sp(1)}
+      >
+        {'<<'}
+      </button>
+      <button
+        className="w-8 h-8 text-sm bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200"
+        onClick={() => hp(-1)}
+      >
+        {'<'}
+      </button>
+      <span className="px-2 text-gray-600">{pg} {' / '} {dt && dt.pagination.totalPages}</span>
+      <button
+        className="w-8 h-8 text-sm bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200"
+        onClick={() => hp(1)}
+      >
+        {'>'}
+      </button>
+      <button
+        className="w-8 h-8 text-sm bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200"
+        onClick={() => sp(dt && dt.pagination.totalPages)}
+      >
+        {'>>'}
+      </button>
+    </div>
+  );
+};
 
 

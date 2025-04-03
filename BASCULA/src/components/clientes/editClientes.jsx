@@ -13,7 +13,7 @@ import {
   updateDireccionesPorID,
 } from "../../hooks/formClientes";
 import { TableDirecciones } from "./tableClientes";
-import { ModalSuccess, ModalErr } from "../alerts";
+import { ModalSuccess, ModalErr, NoData } from "../alerts";
 import { ModalDirecciones, ModalDireccionesEdit } from "./modal";
 
 const EditClientes = () => {
@@ -263,7 +263,7 @@ const EditClientes = () => {
         </div>
         <div className="gap-5 mt-7">
           {!direcciones || direcciones.length == 0 ? (
-            "No hay datos"
+            <NoData />
           ) : (
             <TableDirecciones datos={direcciones} fun={handleUpdateDireccion} />
           )}
