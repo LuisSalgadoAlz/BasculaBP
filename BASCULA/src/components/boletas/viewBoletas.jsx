@@ -15,7 +15,6 @@ const ViewBoletas = () => {
         />
         <input
           className="p-2.5 text-sm font-medium text-gray-600  rounded-lg border border-gray-200 max-sm:hidden"
-          value={new Date().toISOString().split('T')[0]}
           type="date"
         />
         <ButtonAdd name="Exportar"/>

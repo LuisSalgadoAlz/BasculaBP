@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
-import { cargando, claseFormInputs, classFormSelct, classTextArea, hoy } from "../constants/boletas";
+import { cargando, claseFormInputs, classFormSelct, classTextArea, fechaCorta, hoy } from "../constants/boletas";
 import { ESTADOS_BOLETAS, Proceso, URLHOST } from "../constants/global";
 import SelectFormBoletas from "./boletas/select";
 import { InputsFormBoletas } from "./boletas/inputs";
+import { PiGaugeThin } from "react-icons/pi";
+
 
 export const ModalSuccess = ({ name, hdClose }) => {
   return (
@@ -120,14 +122,14 @@ export const NoData = () => {
   );
 };
 
-export const ModalBoletas = ({hdlClose, handleChange}) => {
+export const ModalBoletas = ({hdlClose, hdlChange}) => {
   const fillData = {
     Proceso, "Placa" : cargando, "Clientes" : cargando, "Transportes": cargando, "Motoristas": cargando, "Producto" : cargando, "Origen": cargando, "Destino": cargando, "Flete": cargando
   }
   
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4 sm:p-6 min-h-screen bg-opa-50">
-    <div className="bg-white w-full max-w-4xl rounded-2xl p-6 shadow-lg sm:w-[90%] md:w-[80%] lg:w-[60%] max-h-[90vh] overflow-y-auto boletas border-8 border-white">
+    <div className="bg-white w-full max-w-5xl rounded-2xl p-6 shadow-lg sm:w-[90%] md:w-[80%] lg:w-[60%] max-h-[90vh] overflow-y-auto boletas border-8 border-white">
       <div className="mb-2">
         <h2 className="text-2xl font-bold text-gray-800">Boletas</h2>
         <p className="text-sm text-gray-500">Creación de entrada y salida de material del {new Date().toLocaleDateString()}</p>
@@ -145,25 +147,35 @@ export const ModalBoletas = ({hdlClose, handleChange}) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 p-2 mt-2 place-content-center">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {["Proceso", "Placa", "Clientes", "Transportes", "Motoristas", "Producto", "Origen", "Destino", "Flete"].map((item) => (
-            <SelectFormBoletas key={item} classCss={classFormSelct} name={item} data={fillData[item]} fun={handleChange} />
+            <SelectFormBoletas key={item} classCss={classFormSelct} name={item} data={fillData[item]} fun={hdlChange} />
           ))}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2  place-content-center">
-          {["Documento", "Peso entrada", "Peso salida", "Peso teorico", "Peso neto", "Desviacion", "Observacion"].map((item) => (
-            <InputsFormBoletas key={item} data={claseFormInputs} name={item} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2  place-content-center p-1">
+          <label>Peso de Entrada</label>
+          <div className="flex gap-3">
+            <input type="text" name='pesoIn' className={claseFormInputs} onChange={hdlChange} disabled/>
+            <button className="text-2xl"><PiGaugeThin/></button>
+          </div>
+          <label>Peso de salida</label>
+          <div className="flex gap-3">
+            <input type="text" name='pesoIn' className={claseFormInputs} onChange={hdlChange} disabled/>
+            <button className="text-2xl"><PiGaugeThin /></button>
+          </div>
+          {["Documento", "Peso teorico", "Peso neto", "Desviacion", "Observacion"].map((item) => (
+            <InputsFormBoletas key={item} data={claseFormInputs} name={item} fun={hdlChange} />
           ))}
           <label>Fecha de entrada</label>
-          <input type="datetime-local" name='fechaEntrada' className={claseFormInputs} disabled/>
+          <input type="text" name='fechaIn' className={claseFormInputs} value={new Date()} disabled/>
           <label>Fecha de salida</label>
-          <input type="datetime-local" name='fechaSalida' className={claseFormInputs} disabled/>
+          <input type="text" name='fechaEntrada' className={claseFormInputs} value={'-----'} disabled/>
         </div>
       </div>
 
-      <div className="mt-4">
-        <select name="estado" className={classTextArea}>
+      <div className="mt-3">
+        <select name="estado" className={claseFormInputs} onChange={hdlChange}>
           {ESTADOS_BOLETAS.map((el)=>(
-            <option value={el.id}>{el.nombre}</option>
+            <option key={el.id} value={el.id}>{el.nombre}</option>
           ))}
         </select>
       </div>

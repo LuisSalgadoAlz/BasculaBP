@@ -60,3 +60,5 @@ export const cargando = [
     nombre: "Cargando datos",
   },
 ];
+
+export const fechaCorta = ''

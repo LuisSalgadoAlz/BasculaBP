@@ -1,17 +1,29 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {ButtonAdd} from "../components/buttons";
 import ViewBoletas from "../components/boletas/viewBoletas";
-import FormBoletas from "../components/boletas/formBoletas";
 import CardHeader from "../components/card-header";
 import { ModalBoletas } from "../components/alerts";
 
 const Boletas = () => {
   const [openModelForm, setOpenModalForm] = useState(false)
-
+  const [formBoletas, setFormBoletas] = useState()
   const handleClik = () => {
     setOpenModalForm(!openModelForm)
   }
   
+  const handleChange = (e) => {
+    const {name, value} = e.target
+    setFormBoletas((prev) => ({
+      ...prev,
+      [name] : value, 
+    }))
+  }
+  
+  useEffect(() => {
+    console.log(formBoletas)
+  }, [formBoletas])
+  
+
   return (
     <>
       <div className="flex justify-between w-full gap-5 max-sm:flex-col max-md:flex-col mb-4">
@@ -30,7 +42,7 @@ const Boletas = () => {
       </div>
       <div className="mt-6 bg-white shadow rounded-xl px-6 py-7">
         <ViewBoletas />
-        {openModelForm && <ModalBoletas hdlClose={handleClik} />}
+        {openModelForm && <ModalBoletas hdlClose={handleClik} hdlChange={handleChange} />}
       </div>
     </>
   );
