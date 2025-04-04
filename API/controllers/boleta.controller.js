@@ -37,7 +37,10 @@ const getAllData = async (req, res) => {
                 select: {id: true, nombre: true}, 
                 where: {
                     rClientes: {
-                        is: {...(socio ? {id: socio} : {})}
+                        is: {
+                            ...(socio ? {id: socio} : {}), 
+                            ...(tipo ? {tipo: tipo} : {}),
+                        }
                     }, 
                     rVehiculoEmpresa : {
                         some : {...(placa ? {placa : placa} : {})}
@@ -55,7 +58,8 @@ const getAllData = async (req, res) => {
                             ...(empresa ? {id:empresa} : {}), 
                             rClientes : {
                                 is : {
-                                    ...(socio ? {id: socio} : {})
+                                    ...(socio ? {id: socio} : {}), 
+                                    ...(tipo ? {tipo: tipo} : {}),
                                 }
                             }
                         }, 
@@ -70,7 +74,8 @@ const getAllData = async (req, res) => {
                             ...(empresa ? {id:empresa} : {}), 
                             rClientes : {
                                 is : {
-                                    ...(socio ? {id: socio} : {})
+                                    ...(socio ? {id: socio} : {}), 
+                                    ...(tipo ? {tipo: tipo} : {}),
                                 }
                             }
                         }
