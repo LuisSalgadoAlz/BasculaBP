@@ -6,8 +6,6 @@ const setupWebSocket = (server) => {
   const wss = new WebSocket.Server({ server });
 
   wss.on("connection", (ws) => {
-    console.log("Cliente WebSocket conectado");
-
     const intervalId = setInterval(async () => {
       const peso = await obtenerPeso();
       wss.clients.forEach((client) => {

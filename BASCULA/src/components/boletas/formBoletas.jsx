@@ -1,172 +1,99 @@
-import { useCallback, useEffect, useState } from "react";
-
-import { InputsFormBoletas, PartInputsPesos, PartInputsPesos2 } from "./inputs";
+import { useEffect, useState } from "react";
 import SelectFormBoletas from "./select";
-import { getDataFormBoletas } from "../../hooks/formDataBoletas"
+import { InputsFormBoletas } from "./inputs";
+import { PiGaugeThin } from "react-icons/pi";
+import { claseFormInputs, classFormSelct } from "../../constants/boletas";
+import { ESTADOS_BOLETAS, URLWEBSOCKET } from "../../constants/global";
 
-import { getPeso } from '../../hooks/formsBoletas'
-import { hoy, claseFormInputs, classFormSelct, tipoTransporte, cargando } from '../../constants/boletas'
+export const ModalBoletas = ({hdlClose, hdlChange, fillData}) => {
+  const [peso, setPeso] = useState('00lb');
 
+  useEffect(() => {
+    const socket = new WebSocket(URLWEBSOCKET); 
 
-const FormBoletas = ({ opc }) => {
-  /* Tengo que convertir esto en un hook */
+    socket.onmessage = (event) => {
+      const newPeso = event.data;
+      setPeso(newPeso); 
+    };
 
-  const [clientes, setClientes] = useState()
-  const [procesos, setProcesos] = useState()
-  const [transporte, setTransporte] = useState()
-  const [motoristas, setMotoristas] = useState()
-  const [origen, setOrigen] = useState()
-  const [destino, setDestino] = useState()
-  const [producto, setProducto] = useState()
-  const [pesoEntrada, setPesoEntrada] = useState()
-  const [pesoSalida, setPesoSalida] = useState()
-  const [tipoDePeso, setTipoDePeso] = useState()
-  const [formData, setFormData] = useState()
-  const [placa, setPlaca] = useState('')
-  const [placas, setPlacas] = useState()
-  const [op, setOp] = useState(1)
+    socket.onerror = () => {
+      setPeso('No conectada')
+    }
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    if (name=='Placa') placaXtransporte(value)
-
-    if (name=='Proceso') setOp(value)
-    
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
-  };
-
-  const placaXtransporte = (value) => {
-    setPlaca(value)
-  }
-
-  /* Parte de rendimiendo de obtencion de datos */
-  const fetchData = useCallback(() => {
-    /**
-     * ? Aqui iran los fectcorrectos
-     */
-  }, [placa, formData]); 
-
-  useEffect(() => { 
-    fetchData()
-  }, [fetchData]);
-
-  const handleClickPesoEntrada = async (e) => {
-    e.preventDefault()
-    getPeso(setPesoEntrada)
-  }
-
-  const handleClickSalida = (e) => {
-    e.preventDefault()
-    getPeso(setPesoSalida)
-  }
-
-  const handleDataEnter = (e) => {
-    e.preventDefault();
-    const data = getDataFormBoletas(formData, op, pesoEntrada, pesoSalida);
-    console.log(data)
-  };
+    return () => {
+      socket.close();
+    };
+  }, []);  
 
   return (
-    <>
-      <div className="bg-[#98591B] p-4 rounded-sm text-white border-0 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl">Boletas</h1>
-          <h1 className="text-sm text-gray-100">
-            Gestión de entrada y salida de material
-          </h1>
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4 sm:p-6 min-h-screen bg-opa-50">
+    <div className="bg-white w-full max-w-5xl rounded-2xl p-6 shadow-lg sm:w-[90%] md:w-[80%] lg:w-[60%] max-h-[90vh] overflow-y-auto boletas border-8 border-white">
+      <div className="mb-1">
+        <h2 className="text-2xl font-bold text-gray-800">Boletas</h2>
+        <p className="text-sm text-gray-500">Creación de entrada y salida de material del {new Date().toLocaleDateString()}</p>
+      </div>
+
+      <div className="mt-6 p-4 bg-gray-100 rounded-lg border border-gray-300">
+        <h3 className="text-lg font-semibold text-gray-700">Lectura de Peso</h3>
+        <div className="flex justify-between items-center mt-2">
+          <span className="text-xl font-bold text-gray-900">Peso Actual:</span>
+          <span className="text-xl font-bold text-gray-900">{peso}</span>
         </div>
-        <div>{hoy.toLocaleDateString()}</div>
+        <p className="text-sm text-gray-500">Peso en tiempo real de la báscula</p>
       </div>
-      <div className="mt-4">
-        <form className="grid grid-flow-col grid-cols-2 grid-rows-1">
-          <div className="mt-2 p-2">
-            <div className="flex flex-wrap gap-3">
-              <div className="flex-1">
-                <SelectFormBoletas classCss={classFormSelct} name= "Proceso" data={procesos ? procesos : cargando} fun={handleChange}/>
-              </div>
-              <div className="flex-1">
-                <SelectFormBoletas classCss={classFormSelct} name= "Placa" data={placas ? placas : cargando} fun={handleChange}/>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-3 mt-1.5">
-              <div className="flex-1 max-sm:flex-auto">
-                <SelectFormBoletas classCss={classFormSelct} name= "Tipo transporte" data={tipoTransporte} fun={handleChange}/>
-              </div>
-              <div className="flex-1 max-sm:flex-auto">
-                <SelectFormBoletas classCss={classFormSelct} data={transporte ? transporte : cargando} name={'Transportes'} fun={handleChange}/>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-3 mt-1.5">
-              <div className="grow">
-                <SelectFormBoletas classCss={classFormSelct} data={clientes ? clientes : cargando} name={'Clientes'} fun={handleChange}/>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-3 mt-1.5">
-              <div className="grow">
-                <SelectFormBoletas classCss={classFormSelct} data={motoristas ? motoristas : cargando} name={'Motoristas'} fun={handleChange}/> 
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-3 mt-1.5">
-              <div className="flex-1 max-md:flex-auto">
-                <SelectFormBoletas classCss={classFormSelct} data={producto ? producto : cargando} name={'Tipo de producto'} fun={handleChange}/>
-              </div>
-              <div className="flex-1 max-md:flex-auto">
-                <SelectFormBoletas classCss={classFormSelct} data={tipoDePeso ? tipoDePeso : cargando} name={'Tipo de peso'} fun={handleChange}/>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-3 mt-1.5">
-              <div className="flex-1">
-                <SelectFormBoletas classCss={classFormSelct} data={origen ? origen : cargando} name={'Origen'} fun={handleChange}/>
-              </div>
-              <div className="flex-1">
-                <SelectFormBoletas classCss={classFormSelct} data={destino ? destino : cargando} name={'Destino'} fun={handleChange}/>
-              </div>
-            </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 p-2 mt-2 place-content-center">
+        <div className="grid grid-cols-1 sm:grid-cols-2 ">
+          {["Proceso", "Placa", "Clientes", "Transportes", "Motoristas", "Producto", "Origen", "Destino", "Flete"].map((item) => (
+            <SelectFormBoletas key={item} classCss={classFormSelct} name={item} data={fillData[item]} fun={hdlChange} />
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2  place-content-center p-1">
+          <label>Peso de Entrada</label>
+          <div className="flex gap-3">
+            <input type="text" name='pesoIn' className={claseFormInputs} onChange={hdlChange} placeholder="Peso de entrada" disabled/>
+            <button className="text-2xl"><PiGaugeThin/></button>
           </div>
-          <div className="mt-2 p-2">
-            <div className="flex flex-wrap gap-3">
-              <div className="grow">
-                <InputsFormBoletas data={claseFormInputs} fun={handleChange} name={"Documento"} />
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-3 mt-1.5">
-              {op==1 && <PartInputsPesos css={claseFormInputs} fun1={handleChange} id={"Peso entrada"} data={pesoEntrada} fun2={handleClickPesoEntrada} />}
-              {op==2 && <PartInputsPesos2 css={claseFormInputs} fun1={handleChange} id={"Peso salida"} data={pesoSalida} fun2={handleClickSalida} />}
-            </div>
-            <div className="flex flex-wrap gap-3 mt-1.5">
-              <div className="grow">
-                <InputsFormBoletas data={claseFormInputs} name={"Peso teorico"} />
-              </div>
-              <div className="grow">
-                <InputsFormBoletas data={claseFormInputs} name={"Peso neto"} />
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-3 mt-1.5">
-              <div className="grow">
-                <InputsFormBoletas data={claseFormInputs} name={"Desviacion"} />
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-3 mt-1.5">
-              <div className="grow">
-                <InputsFormBoletas data={claseFormInputs} name={"Observaciones"} />
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-3 mt-5">
-              <div className="grow">
-                <button className={claseFormInputs}>Cancelar</button>
-              </div>
-              <div className="grow">
-                <button onClick={handleDataEnter} className={claseFormInputs}>Guardar</button>
-              </div>
-            </div>
+          <label>Peso de salida</label>
+          <div className="flex gap-3">
+            <input type="text" name='pesoOut' className={claseFormInputs} onChange={hdlChange} disabled placeholder="Peso de salida"/>
+            <button className="text-2xl"><PiGaugeThin /></button>
           </div>
-        </form>
+          {["Documento", "Orden de Compra","Peso teorico", "Peso neto", "Desviacion", "Observacion"].map((item) => (
+            <InputsFormBoletas key={item} data={claseFormInputs} name={item} fun={hdlChange} />
+          ))}
+          <label>Fecha de entrada</label>
+          <input type="text" name='fechaIn' className={claseFormInputs} value={new Date()} disabled/>
+          <label>Fecha de salida</label>
+          <input type="text" name='fechaEntrada' className={claseFormInputs} value={'-----'} disabled/>
+        </div>
       </div>
-    </>
+
+      <div className="mt-3 px-3">
+        <select name="estado" className={claseFormInputs} onChange={hdlChange}>
+          {ESTADOS_BOLETAS.map((el)=>(
+            <option key={el.id} value={el.id}>{el.nombre}</option>
+          ))}
+        </select>
+      </div>
+
+      <hr className="text-gray-300 mt-2" />
+      <div className="flex flex-col sm:flex-row justify-end mt-6 space-y-2 sm:space-y-0 sm:space-x-4">
+        <button
+          onClick={hdlClose}
+          className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-transform duration-300 ease-in-out hover:scale-105"
+        >
+          Cancelar
+        </button>
+        <button
+          className="px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700 transition-transform duration-300 ease-in-out hover:scale-105"
+        >
+          Guardar
+        </button>
+      </div>
+    </div>
+  </div>
+
   );
 };
-
-export default FormBoletas;

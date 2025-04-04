@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import {ButtonAdd} from "../components/buttons";
 import ViewBoletas from "../components/boletas/viewBoletas";
 import CardHeader from "../components/card-header";
-import { ModalBoletas } from "../components/alerts";
+import { ModalBoletas } from "../components/boletas/formBoletas";
+import { Proceso } from "../constants/global";
+import { cargando } from "../constants/boletas";
 
 const Boletas = () => {
   const [openModelForm, setOpenModalForm] = useState(false)
@@ -23,6 +25,9 @@ const Boletas = () => {
     console.log(formBoletas)
   }, [formBoletas])
   
+  const fillData = {
+    Proceso, "Placa" : cargando, "Clientes" : cargando, "Transportes": cargando, "Motoristas": cargando, "Producto" : cargando, "Origen": cargando, "Destino": cargando, "Flete": cargando
+  }
 
   return (
     <>
@@ -42,7 +47,7 @@ const Boletas = () => {
       </div>
       <div className="mt-6 bg-white shadow rounded-xl px-6 py-7">
         <ViewBoletas />
-        {openModelForm && <ModalBoletas hdlClose={handleClik} hdlChange={handleChange} />}
+        {openModelForm && <ModalBoletas hdlClose={handleClik} hdlChange={handleChange} fillData={fillData}/>}
       </div>
     </>
   );

@@ -1,4 +1,5 @@
 export const URLHOST = 'http://192.9.100.56:3000/'
+export const URLWEBSOCKET = 'ws://192.9.100.56:3000'
 export const ESTADOS_BOLETAS = [
     {
         id : 0, 
@@ -15,6 +16,10 @@ export const ESTADOS_BOLETAS = [
     {
         id : 3, 
         nombre : '🟢 Completado'
+    }, 
+    {
+        id : 4, 
+        nombre : '🟠 Cancelar boleta'
     }, 
 ]
 
