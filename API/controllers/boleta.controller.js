@@ -11,7 +11,7 @@ const getAllData = async (req, res) => {
         const empresa = req.query.empresa !== undefined ? parseInt(req.query.empresa) : undefined
         const mts = req.query.motorista !== undefined ? parseInt(req.query.motorista) : undefined;
 
-        const [socios, empresas, vehiculos, motoristas] = await Promise.all([
+        const [socios, direcciones,empresas, vehiculos, motoristas] = await Promise.all([
             db.socios.findMany({
                 select: {id: true, nombre: true},
                 where: {
@@ -28,7 +28,11 @@ const getAllData = async (req, res) => {
                         },
                     }
                 } 
-            }), 
+            }),
+            db.direcciones.findMany({
+                select : {id: true, nombre: true}, 
+                where : {idCliente: socio}
+            }),
             db.empresa.findMany({
                 select: {id: true, nombre: true}, 
                 where: {
@@ -45,8 +49,7 @@ const getAllData = async (req, res) => {
             }), 
             db.vehiculo.findMany({
                 select : {id: true, placa : true}, 
-                where : {
-                    placa : placa, 
+                where : { 
                     rEmpresaVehiculo : {
                         is : {
                             ...(empresa ? {id:empresa} : {}), 
@@ -62,7 +65,6 @@ const getAllData = async (req, res) => {
             db.motoristas.findMany({
                 select : {id: true, nombre : true}, 
                 where : {
-                    id: mts,
                     rEmpresaM : {
                         is : {
                             ...(empresa ? {id:empresa} : {}), 
@@ -76,7 +78,7 @@ const getAllData = async (req, res) => {
                 }
             })
         ]);
-        res.status(200).json({socios, empresas, vehiculos, motoristas});
+        res.status(200).json({socios, direcciones, empresas, vehiculos, motoristas});
     }catch (err) {
         console.log(err)
     }
