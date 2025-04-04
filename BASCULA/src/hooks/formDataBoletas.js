@@ -1,28 +1,22 @@
-/**
- * 
- * @param {*} arr 
- * @param {*} type 
- * @param {*} pesoIn 
- * @param {*} pesoOut 
- * @returns 
- * Esto se convertira en el procesamiento de datos mas limpios y tambien el hook que verifica los 
- * campos esten llenos y correctamente ingresados
- * 
- *  separar codigo 
- * 
- * verificar
- * 
- * limpiar
- * 
- * elegir
- */
+import { URLHOST } from "../constants/global";
+import Cookies from 'js-cookie'
 
-export const getDataFormBoletas = (arr, type, pesoIn, pesoOut) => {
-  if (type == 1 && pesoIn) {
-    return {
-      ...arr,
-      "Peso entrada": pesoIn.peso[0].replaceAll("lb", ""),
-    };
+export const getAllDataForSelect = async (socios, empresa, placa, motorista, fun) => {
+  try {
+    const response = await fetch(`${URLHOST}boletas/?socios=${socios}&placa=${placa}&empresa=${empresa}&motorista=${motorista}`, {
+      method: "GET",
+      headers: {
+        Authorization: Cookies.get('token'),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API");
+    }
+
+    const data = await response.json();
+    fun(data);
+  } catch (error) {
+    console.error("Error al obtener los clientes:", error);
   }
-  return { ...arr, pesoOut };
 };
