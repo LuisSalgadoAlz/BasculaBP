@@ -12,7 +12,7 @@ const setupWebSocket = (server) => {
       const peso = await obtenerPeso();
       wss.clients.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {
-          client.send(`Peso: ${peso}`);
+          client.send(`${peso}`);
         }
       });
     }, 100);
