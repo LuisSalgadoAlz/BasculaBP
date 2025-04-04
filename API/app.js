@@ -11,6 +11,7 @@ const motoristas = require("./routes/motorista.routes")
 const tipodepeso = require("./routes/tipoDePeso.routes")
 const empresas = require("./routes/empresas.routes");
 const setupWebSocket = require("./sockets/websocketPeso");
+const boletas = require("./routes/boleta.routes");
 
 
 const server = http.createServer(app);
@@ -28,6 +29,7 @@ app.use('/socios', socios)
 app.use('/motoristas', motoristas)
 app.use('/tipoDePeso', tipodepeso)
 app.use('/empresas', empresas)
+app.use('/boletas', boletas)
 
 setupWebSocket(server);
 
