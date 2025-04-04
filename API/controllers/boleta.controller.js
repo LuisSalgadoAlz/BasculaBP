@@ -10,10 +10,62 @@ const getAllData = async (req, res) => {
         const placa = req.query.placa || '';
         const empresa = req.query.empresa !== undefined ? parseInt(req.query.empresa) : undefined
 
-        const [socios, empresas] = Promise.all[(
-            db.socios.
-        )]
-        res.status(200).json({socios, empresas});
+        const dataAndFilter = await db.socios.findMany({
+            select: {
+              id: true, 
+              nombre: true, 
+              drSocios: {
+                select: {
+                  id: true, 
+                  nombre: true
+                }
+              },
+              rEmpresa: {
+                select: {
+                  id: true, 
+                  nombre: true,
+                  rMotoristaEmpresa: {
+                    select: {
+                      id: true, 
+                      nombre: true
+                    },
+                  }, 
+                  rVehiculoEmpresa: {
+                    select: {
+                      id: true, 
+                      placa: true
+                    }
+                  }
+                },
+                where : {
+                    id: empresa,
+                    rVehiculoEmpresa : {
+                        some:{
+                            ...(placa ? {placa : placa } : {})
+                        }
+                    }
+                }
+              },
+            },
+            where: { 
+              estado: true, 
+              ...(tipo !== '' ? {tipo: {equals: tipo}} : {}),
+              ...(socio ? {id: socio} : {}),
+              rEmpresa: {
+                some: {
+                  ...(placa ? {
+                    rVehiculoEmpresa: {
+                      some: {
+                        placa: placa
+                      }
+                    }
+                  } : {})
+                }
+              }
+            }
+          });
+
+        res.status(200).json(dataAndFilter);
     }catch (err) {
         console.log(err)
     }
