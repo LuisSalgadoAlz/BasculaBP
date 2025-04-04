@@ -21,6 +21,7 @@
     "jsonwebtoken": "^9.0.2",
     "nodemo": "^1.0.0",
     "nodemon": "^3.1.9",
-    "react-router": "^7.3.0"
+    "react-router": "^7.3.0",
+    "ws": "^8.18.1"
   }
 }
