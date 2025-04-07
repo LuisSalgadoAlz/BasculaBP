@@ -1,0 +1,8 @@
+model Movimientos{
+    id Int @id @default(autoincrement())
+    nombre String
+    tipo Int
+
+    /* Relacion con boleta */
+    boletasMovimientos Boleta[]
+}

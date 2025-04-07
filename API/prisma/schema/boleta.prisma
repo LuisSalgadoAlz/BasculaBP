@@ -9,6 +9,7 @@ model Boleta {
     idProveedores Int
     idOrigen Int
     idDestino Int
+    idMovimiento Int
     manifiesto Int? /* Opcional */
     estado String /* Entrando, Saliendo, Terminado listo para imprimir */
     impreso Boolean /* si / no */
@@ -30,4 +31,5 @@ model Boleta {
     tipoDeProductoBoleta Producto @relation(fields: [idTipoDeProducto], references: [id])
     proveedoresBoleta Proveedores @relation(fields: [idProveedores], references: [id])
     motoristaBoleta Motoristas @relation(fields: [idMotorista], references: [id], onDelete: NoAction, onUpdate: NoAction)
+    boletasMovimientos Movimientos @relation(fields: [idMovimiento], references: [id])
 }
