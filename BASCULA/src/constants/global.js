@@ -3,24 +3,27 @@ export const URLWEBSOCKET = 'ws://192.9.100.56:3000'
 export const ESTADOS_BOLETAS = [
     {
         id : 0, 
-        nombre : '🟡 Pendiente'
+        nombre : '🟡 Creando -> Boleta Normal'
+    },
+    {
+        id : 1, 
+        nombre : '🔵 Creando -> Boleta Casulla'
+    }, 
+]
+
+export const ESTADOS_BOLETAS_TERMINADA = [
+    {
+        id : 0, 
+        nombre : '🟢 Completo e Impreso'
     },
     {
         id : 1, 
         nombre : '🔴 Completo (pero peso fuera de tolerancia)'
-    }, 
+    },
     {
         id : 2, 
-        nombre : '🔵 Convenio Casulla'
-    }, 
-    {
-        id : 3, 
-        nombre : '🟢 Completado'
-    }, 
-    {
-        id : 4, 
-        nombre : '🟠 Cancelar boleta'
-    }, 
+        nombre : '🔴 Cancelada'
+    },
 ]
 
 export const Proceso = [
@@ -29,7 +32,7 @@ export const Proceso = [
         nombre : 'Entrada de material'
     },
     {
-        id : 0, 
+        id : 1, 
         nombre : 'Salida de material'
     },
 ]

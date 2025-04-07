@@ -7,21 +7,12 @@ import { Proceso } from "../constants/global";
 import { cargando } from "../constants/boletas";
 import { getAllDataForSelect } from "../hooks/formDataBoletas";
 
-
 const Boletas = () => {
   const [openModelForm, setOpenModalForm] = useState(false);
-  const [formBoletas, setFormBoletas] = useState({Clientes:  '', Destino : '', Flete : '', Motoristas : '', Origen : '', Placa : '', Proceso : '', Producto : '', Transportes : '',});
-  const [datos, setDatos] =useState()
-  const [dataSelets, setDataSelects] = useState({
-    Proceso,
-    Placa: cargando,
-    Clientes: cargando,
-    Transportes: cargando,
-    Motoristas: cargando,
-    Producto: cargando,
-    Origen: cargando,
-    Destino: cargando,
-    Flete: cargando,
+  const [formBoletas, setFormBoletas] = useState({ Clientes: "", Destino: "", Flete: "", Motoristas: "", Origen: "", Placa: "", Proceso: "", Producto: "", Transportes: "", Estado: 0, pesoIn:0, pesoOut: 0
+  });
+  const [plc, setPlc] = useState("");
+  const [dataSelets, setDataSelects] = useState({ Proceso, Placa: cargando, Clientes: cargando, Transportes: cargando, Motoristas: cargando, Producto: cargando, Origen: cargando, Destino: cargando, Flete: cargando,
   });
 
   const handleClik = () => {
@@ -34,12 +25,14 @@ const Boletas = () => {
       ...prev,
       [name]: value,
     }));
+    if (name == "Placa") setPlc(value);
   };
 
+
   useEffect(() => {
-    const response = getAllDataForSelect(formBoletas.Clientes, formBoletas.Transportes, formBoletas.Placa, formBoletas.Motoristas, setDatos)
-    console.log(datos)
-  }, [formBoletas, datos]);
+    getAllDataForSelect(formBoletas.Proceso, plc, formBoletas.Clientes, formBoletas.Transportes,setDataSelects);
+    console.log(formBoletas);
+  }, [formBoletas]);
 
   return (
     <>
@@ -61,17 +54,17 @@ const Boletas = () => {
       </div>
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-3 mt-5">
         <CardHeader
-          data={15}
+          data={0}
           name={"Total de entradas de material"}
           title={"Entradas"}
         />
         <CardHeader
-          data={25}
+          data={0}
           name={"Total de salidas de material"}
           title={"Salidas"}
         />
         <CardHeader
-          data={4}
+          data={0}
           name={"Total de salidas de material"}
           title={"Pendientes"}
         />
@@ -83,6 +76,10 @@ const Boletas = () => {
             hdlClose={handleClik}
             hdlChange={handleChange}
             fillData={dataSelets}
+            typeBol={formBoletas?.Proceso}
+            typeStructure={formBoletas?.Estado}
+            formBol = {setFormBoletas}
+            boletas = {formBoletas}
           />
         )}
       </div>

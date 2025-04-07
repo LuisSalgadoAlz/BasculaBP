@@ -1,9 +1,9 @@
 import { URLHOST } from "../constants/global";
 import Cookies from 'js-cookie'
 
-export const getAllDataForSelect = async (socios, empresa, placa, motorista, fun) => {
+export const getAllDataForSelect = async (tipo, placa, socio, empresa, fun) => {
   try {
-    const response = await fetch(`${URLHOST}boletas/?socios=${socios}&placa=${placa}&empresa=${empresa}&motorista=${motorista}`, {
+    const response = await fetch(`${URLHOST}boletas?tipo=${tipo}&placa=${placa}&socio=${socio}&empresa=${empresa}`, {
       method: "GET",
       headers: {
         Authorization: Cookies.get('token'),
@@ -15,7 +15,9 @@ export const getAllDataForSelect = async (socios, empresa, placa, motorista, fun
     }
 
     const data = await response.json();
-    fun(data);
+    fun((prev)=> ({
+      ...prev, ...data
+    }));
   } catch (error) {
     console.error("Error al obtener los clientes:", error);
   }

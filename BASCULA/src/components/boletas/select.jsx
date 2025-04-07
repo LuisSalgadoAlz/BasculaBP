@@ -2,7 +2,7 @@ import React from "react";
 
 import Select from "react-select";
 
-const SelectFormBoletas = ({ classCss, data = {}, name, fun }) => {
+const SelectFormBoletas = ({ classCss, data = {}, name, fun, stt = false }) => {
   const opt = data.map((el) => {
     return {
       value: el.id,
@@ -51,6 +51,7 @@ const SelectFormBoletas = ({ classCss, data = {}, name, fun }) => {
         styles={classCss}
         onChange={handleChange}
         options={opt}
+        isDisabled={stt}
       />
     </>
   );
