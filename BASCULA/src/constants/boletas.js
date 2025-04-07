@@ -1,3 +1,5 @@
+import { Proceso } from "./global";
+
 const tiempoTranscurrido = Date.now();
 export const hoy = new Date(tiempoTranscurrido);
 
@@ -61,4 +63,31 @@ export const cargando = [
   },
 ];
 
-export const fechaCorta = ''
+export const fechaCorta = "";
+
+export const initialStateFormBoletas = {
+  Clientes: "",
+  Destino: "",
+  Flete: "",
+  Motoristas: "",
+  Origen: "",
+  Placa: "",
+  Proceso: "",
+  Producto: "",
+  Transportes: "",
+  Estado: 0,
+  pesoIn: 0,
+  pesoOut: 0,
+};
+
+export const initialSateDataFormSelet = {
+  Proceso,
+  Placa: cargando,
+  Clientes: cargando,
+  Transportes: cargando,
+  Motoristas: cargando,
+  Producto: cargando,
+  Origen: cargando,
+  Destino: cargando,
+  Flete: cargando,
+};

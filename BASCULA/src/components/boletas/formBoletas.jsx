@@ -6,7 +6,6 @@ import { ESTADOS_BOLETAS, URLWEBSOCKET } from "../../constants/global";
 
 export const ModalBoletas = ({hdlClose, hdlChange, fillData, typeBol, typeStructure, formBol, boletas}) => {
   const [peso, setPeso] = useState('00lb');
-  const [formState, setFormState] = useState(true)
 
   const getPesoIn = () => {
     formBol((prev)=> ({
@@ -25,7 +24,6 @@ export const ModalBoletas = ({hdlClose, hdlChange, fillData, typeBol, typeStruct
 
   useEffect(() => {
     const socket = new WebSocket(URLWEBSOCKET); 
-    console.log(boletas.Proceso)
     socket.onmessage = (event) => {
       const newPeso = event.data;
       setPeso(newPeso); 
@@ -63,10 +61,10 @@ export const ModalBoletas = ({hdlClose, hdlChange, fillData, typeBol, typeStruct
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2  place-content-center">
-            {typeStructure == 0 ? <PartInputsPesos fun={getPesoIn} hdlChange={hdlChange} val={boletas} /> : <PartInputsPesos2 fun={getPesoOut} hdlChange={hdlChange} val={boletas}/>}
+            {typeStructure == 0 ? <PartInputsPesos fun={getPesoIn} hdlChange={hdlChange} val={boletas} stt={boletas.Proceso==='' ? true : false}/> : <PartInputsPesos2 fun={getPesoOut} hdlChange={hdlChange} val={boletas}/>}
             {typeBol==1 && <InputsFormBoletas data={claseFormInputs} name={'Orden de compra'} fun={hdlChange} />}
             {["Documento","Peso teorico", "Peso neto", "Desviacion", "Observacion"].map((item) => (
-              <InputsFormBoletas key={item} data={claseFormInputs} name={item} fun={hdlChange} />
+              <InputsFormBoletas key={item} data={claseFormInputs} name={item} fun={hdlChange} stt={boletas.Proceso==='' ? true : false}/>
             ))}
             <label className="block mb-2 text-sm font-medium text-gray-900">Fecha de entrada</label>
             <input type="text" name='fechaIn' className={claseFormInputs} value={new Date()} disabled/>

@@ -3,20 +3,18 @@ import { ButtonAdd } from "../components/buttons";
 import ViewBoletas from "../components/boletas/viewBoletas";
 import CardHeader from "../components/card-header";
 import { ModalBoletas } from "../components/boletas/formBoletas";
-import { Proceso } from "../constants/global";
-import { cargando } from "../constants/boletas";
+import { initialSateDataFormSelet, initialStateFormBoletas } from "../constants/boletas";
 import { getAllDataForSelect } from "../hooks/formDataBoletas";
 
 const Boletas = () => {
   const [openModelForm, setOpenModalForm] = useState(false);
-  const [formBoletas, setFormBoletas] = useState({ Clientes: "", Destino: "", Flete: "", Motoristas: "", Origen: "", Placa: "", Proceso: "", Producto: "", Transportes: "", Estado: 0, pesoIn:0, pesoOut: 0
-  });
+  const [formBoletas, setFormBoletas] = useState(initialStateFormBoletas);
   const [plc, setPlc] = useState("");
-  const [dataSelets, setDataSelects] = useState({ Proceso, Placa: cargando, Clientes: cargando, Transportes: cargando, Motoristas: cargando, Producto: cargando, Origen: cargando, Destino: cargando, Flete: cargando,
-  });
+  const [dataSelets, setDataSelects] = useState(initialSateDataFormSelet);
 
   const handleClik = () => {
     setOpenModalForm(!openModelForm);
+    setFormBoletas(initialStateFormBoletas)
   };
 
   const handleChange = (e) => {
