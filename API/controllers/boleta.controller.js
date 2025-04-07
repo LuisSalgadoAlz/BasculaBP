@@ -5,85 +5,112 @@ const db = new PrismaClient();
 const getAllData = async (req, res) => {
     try {
         /* 0 Proveedor 1 Cliente */
-        const tipo = req.query.tipo !== undefined ? parseInt(req.query.tipo) : undefined;
-        const socio = req.query.socio !== undefined ? parseInt(req.query.socio) : undefined;
-        const placa = req.query.placa !== undefined ? req.query.placa : undefined
-        const empresa = req.query.empresa !== undefined ? parseInt(req.query.empresa) : undefined
-        const mts = req.query.motorista !== undefined ? parseInt(req.query.motorista) : undefined;
+        const tipo = req.query.tipo !== undefined ? parseInt(req.query.tipo) : null;
+        const placa = req.query.placa != undefined ? req.query.placa : null;
+        const socio = req.query.socio != undefined ? parseInt(req.query.socio) : null;
+        const empresa = req.query.empresa != undefined ? parseInt(req.query.empresa) : null;
 
-        const [socios, direcciones,empresas, vehiculos, motoristas] = await Promise.all([
+        const [Clientes, Origen, Destino,Transportes, Vehiculo, Motoristas, Producto] = await Promise.all([
             db.socios.findMany({
                 select: {id: true, nombre: true},
-                where: {
-                    ...(tipo ? { tipo : tipo } : {}),
-                    rEmpresa: {
-                        some: {
-                            ...(empresa ? {id: empresa} : {}),
+                where : {
+                    estado : true, 
+                    ...(tipo==0 || tipo==1 ? {tipo :tipo} : {}), 
+                    rEmpresa : {
+                        some : {
                             rVehiculoEmpresa : {
-                                some : {...(placa ? {placa : placa} : {})}
-                            }, 
-                            rMotoristaEmpresa : {
-                                some : {...mts ? {id: mts} : {}}
+                                some : {
+                                    ...(placa ? {placa : placa} : {})
+                                }
                             }
-                        },
+                        }
                     }
+                }
+            }),
+            db.direcciones.findMany({
+                select: {id: true, nombre: true},
+                where: {
+                    estado: true, 
+                    drClientes: {
+                        is: {
+                            ...(socio ? {id : socio }: {})
+                        }
+                    },
+                    OR: [
+                        { tipo: 0 },
+                        { tipo: 2 }
+                    ]
                 } 
             }),
             db.direcciones.findMany({
-                select : {id: true, nombre: true}, 
-                where : {idCliente: socio}
+                select: {id: true, nombre: true},
+                where: {
+                    estado : true, 
+                    drClientes: {
+                        is: {
+                            ...(socio ? {id : socio }: {})
+                        }
+                    },
+                    OR: [
+                        { tipo: 1 },
+                        { tipo: 2 }
+                    ]
+                } 
             }),
             db.empresa.findMany({
                 select: {id: true, nombre: true}, 
-                where: {
-                    rClientes: {
+                where : {
+                    estado : true, 
+                    rClientes : {
                         is: {
-                            ...(socio ? {id: socio} : {}), 
-                            ...(tipo ? {tipo: tipo} : {}),
+                            ...(socio ? {id : socio }: {})
+                        }
+                    },
+                    rClientes : {
+                        is: {
+                            ...(tipo==0 || tipo==1 ? {tipo :tipo} : {})
                         }
                     }, 
-                    rVehiculoEmpresa : {
-                        some : {...(placa ? {placa : placa} : {})}
-                    }, 
-                    rMotoristaEmpresa : {
-                        some : {...mts ? {id: mts} : {}}
+                    rVehiculoEmpresa :{
+                        some:{
+                            ...(placa ? {placa : placa} : {})
+                        }
                     }
                 }
             }), 
             db.vehiculo.findMany({
-                select : {id: true, placa : true}, 
-                where : { 
+                select : {placa :  true}, 
+                where : {   
+                    estado: true, 
                     rEmpresaVehiculo : {
-                        is : {
-                            ...(empresa ? {id:empresa} : {}), 
-                            rClientes : {
-                                is : {
-                                    ...(socio ? {id: socio} : {}), 
-                                    ...(tipo ? {tipo: tipo} : {}),
-                                }
-                            }
-                        }, 
-                    }
-                }
-            }), 
-            db.motoristas.findMany({
-                select : {id: true, nombre : true}, 
-                where : {
-                    rEmpresaM : {
-                        is : {
-                            ...(empresa ? {id:empresa} : {}), 
-                            rClientes : {
-                                is : {
-                                    ...(socio ? {id: socio} : {}), 
-                                    ...(tipo ? {tipo: tipo} : {}),
-                                }
-                            }
+                        rClientes : {
+                            ...(tipo==0 || tipo==1 ? {tipo :tipo} : {})
                         }
                     }
-                }
+                },
+                distinct : ['placa']
+            }), 
+            db.motoristas.findMany({
+                select : {id: true, nombre : true},
+                where : {   
+                    estado: true, 
+                    rEmpresaM : {
+                        ...(empresa ? {id : empresa} : {}),
+                        rClientes : {
+                            ...(tipo==0 || tipo==1 ? {tipo :tipo} : {}), 
+                        }
+                    }
+                } 
+            }), 
+            db.producto.findMany({
+                select : {id: true, nombre : true}, 
             })
         ]);
-        res.status(200).json({socios, direcciones, empresas, vehiculos, motoristas});
+        const Placa = Vehiculo.map((el)=>({
+            id: el.placa, 
+            nombre : el.placa
+        }))
+        res.status(200).json({Clientes, Origen, Destino,Transportes, Placa, Motoristas, Producto});
     }catch (err) {
         console.log(err)
     }

@@ -20,7 +20,6 @@ const setupWebSocket = (server) => {
     }, 100);
   
     ws.on("close", () => {
-      console.log("Cliente WebSocket desconectado");
       clearInterval(intervalId);
     });
   });
