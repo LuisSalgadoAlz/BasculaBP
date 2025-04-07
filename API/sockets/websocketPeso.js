@@ -7,17 +7,21 @@ const setupWebSocket = (server) => {
 
   wss.on("connection", (ws) => {
     const intervalId = setInterval(async () => {
-      const peso = await obtenerPeso();
-      wss.clients.forEach((client) => {
-        if (client.readyState === WebSocket.OPEN) {
-          client.send(`${peso}`);
-        }
-      });
+      try {
+        const peso = await obtenerPeso();
+        wss.clients.forEach((client) => {
+          if (client.readyState === WebSocket.OPEN) {
+            client.send(`${peso}`);
+          }
+        });
+      } catch (err) {
+        console.error("Error al obtener el peso:", err.message);
+      }
     }, 100);
-
+  
     ws.on("close", () => {
       console.log("Cliente WebSocket desconectado");
-      clearInterval(intervalId); // Asegúrate de detener el intervalo si el cliente se desconecta
+      clearInterval(intervalId);
     });
   });
 };
