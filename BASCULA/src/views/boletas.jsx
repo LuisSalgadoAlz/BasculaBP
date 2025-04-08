@@ -4,7 +4,7 @@ import ViewBoletas from "../components/boletas/viewBoletas";
 import CardHeader from "../components/card-header";
 import { ModalBoletas } from "../components/boletas/formBoletas";
 import { initialSateDataFormSelet, initialStateFormBoletas } from "../constants/boletas";
-import { getAllDataForSelect, postBoletasNormal } from "../hooks/formDataBoletas";
+import { formaterData, getAllDataForSelect, postBoletasNormal } from "../hooks/formDataBoletas";
 
 const Boletas = () => {
   const [openModelForm, setOpenModalForm] = useState(false);
@@ -35,25 +35,8 @@ const Boletas = () => {
   }
 
   const handleSubmit = () => {
-    const allData = {
-      idCliente : formBoletas?.Clientes,
-      idOrigen : formBoletas?.Origen,
-      idDestino: formBoletas?.Destino,
-      manifiesto: formBoletas?.Documento,
-      pesoTeorico: formBoletas['Peso Teorico'],
-      estado: 'Pendiente',
-      idUsuario: 5,
-      idMotorista: formBoletas?.Motoristas,
-      fechaInicio: formBoletas?.fechaInicio,
-      pesoInicial: formBoletas?.pesoIn,
-      idPlaca: formBoletas?.Placa,
-      idEmpresa: formBoletas?.Transportes,
-      idMovimiento: formBoletas?.Proceso,
-      idProducto: formBoletas?.Producto,
-      observaciones: formBoletas?.Observacion,
-    }
-    console.log(allData)
-    postBoletasNormal(allData)
+    const response = formaterData(formBoletas)
+    postBoletasNormal(response)
   }
   
   useEffect(() => {

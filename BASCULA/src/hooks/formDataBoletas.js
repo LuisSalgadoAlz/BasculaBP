@@ -44,3 +44,24 @@ export const postBoletasNormal = async (boleta) => {
     console.error("Error al obtener los datos:", error);
   }
 };
+
+export const formaterData = (formBoletas) => {
+  const allData = {
+    idCliente : formBoletas?.Clientes,
+    idOrigen : formBoletas?.Origen,
+    idDestino: formBoletas?.Destino,
+    manifiesto: formBoletas?.Documento,
+    pesoTeorico: formBoletas['Peso Teorico'],
+    estado: 'Pendiente',
+    idUsuario: 5,
+    idMotorista: formBoletas?.Motoristas,
+    fechaInicio: formBoletas?.fechaInicio,
+    pesoInicial: formBoletas?.pesoIn,
+    idPlaca: formBoletas?.Placa,
+    idEmpresa: formBoletas?.Transportes,
+    idMovimiento: formBoletas?.Proceso,
+    idProducto: formBoletas?.Producto,
+    observaciones: formBoletas?.Observacion,
+  }
+  return allData
+}

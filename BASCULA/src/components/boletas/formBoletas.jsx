@@ -72,7 +72,7 @@ export const ModalBoletas = ({hdlClose, hdlChange, fillData, typeBol, typeStruct
             <SelectFormBoletas classCss={classFormSelct} name={'Flete'} data={fillData['Flete']} fun={hdlChange} stt={(boletas.Proceso==='')? true : false}/>
             {typeStructure == 0 ? <PartInputsPesos fun={getPesoIn} hdlChange={hdlChange} val={boletas} stt={boletas.Proceso==='' ? true : false}/> : <PartInputsPesos2 fun={getPesoOut} hdlChange={hdlChange} val={boletas}/>}
             {typeBol==1 && <InputsFormBoletas data={claseFormInputs} name={'Orden de compra'} fun={hdlChange} />}
-            {["Documento", "Peso Teorico", "Observacion"].map((item) => (
+            {["Documento", "Observacion"].map((item) => (
               <InputsFormBoletas key={item} data={claseFormInputs} name={item} fun={hdlChange} stt={boletas.Proceso==='' ? true : false}/>
             ))}
           </div>
