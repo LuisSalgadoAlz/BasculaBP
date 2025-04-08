@@ -210,11 +210,44 @@ const postBoletasNormal = async (req, res) => {
 };
 
 const getDataBoletas = async(req, res) => {
-    const data = await db.boleta.findMany()
+    const data = await db.boleta.findMany({
+      select : {
+        id: true, 
+        estado: true, 
+        clienteBoleta: {
+          select : {
+            nombre: true
+          }
+        }, 
+        placasBoletas : {
+         select: {
+          placa : true
+         }
+        }, 
+        empresaBoleta : {
+          select : {
+            nombre: true
+          }
+        }, 
+        motoristaBoleta: {
+          select : { 
+            nombre: true
+          }
+        },
+        fechaInicio: true,
+      }, 
+      where : {
+        estado : 'Pendiente'
+      }
+    })
 
     const dataUTCHN = data.map((el) => ({
-        ...el, 
-        fechaInicio : el.fechaInicio.toLocaleString()
+        Id: el.id,
+        Placa : el.placasBoletas.placa,
+        Cliente : el.clienteBoleta.nombre, 
+        Transporte: el.empresaBoleta.nombre, 
+        Motorista: el.motoristaBoleta.nombre,  
+        Fecha : el.fechaInicio.toLocaleString()
     }))
 
     res.send(dataUTCHN)
