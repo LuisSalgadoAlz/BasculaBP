@@ -1,5 +1,4 @@
 import React from "react";
-
 import Select from "react-select";
 
 const SelectFormBoletas = ({ classCss, data = {}, name, fun, stt = false }) => {
@@ -33,6 +32,7 @@ const SelectFormBoletas = ({ classCss, data = {}, name, fun, stt = false }) => {
         onChange={handleChange}
         options={opt}
         isDisabled={stt}
+        isClearable
       />
     </>
   );

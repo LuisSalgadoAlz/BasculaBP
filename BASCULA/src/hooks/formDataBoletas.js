@@ -1,9 +1,9 @@
 import { URLHOST } from "../constants/global";
 import Cookies from 'js-cookie'
 
-export const getAllDataForSelect = async (tipo, placa, socio, empresa, fun) => {
+export const getAllDataForSelect = async (tipo, placa, socio, empresa, motorista,fun) => {
   try {
-    const response = await fetch(`${URLHOST}boletas?tipo=${tipo}&placa=${placa}&socio=${socio}&empresa=${empresa}`, {
+    const response = await fetch(`${URLHOST}boletas?tipo=${tipo}&placa=${placa}&socio=${socio}&empresa=${empresa}&motorista=${motorista}`, {
       method: "GET",
       headers: {
         Authorization: Cookies.get('token'),

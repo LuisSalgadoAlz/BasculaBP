@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { ButtonAdd } from "../components/buttons";
 import ViewBoletas from "../components/boletas/viewBoletas";
 import CardHeader from "../components/card-header";
@@ -9,8 +9,10 @@ import { getAllDataForSelect } from "../hooks/formDataBoletas";
 const Boletas = () => {
   const [openModelForm, setOpenModalForm] = useState(false);
   const [formBoletas, setFormBoletas] = useState(initialStateFormBoletas);
-  const [plc, setPlc] = useState("");
   const [dataSelets, setDataSelects] = useState(initialSateDataFormSelet);
+  const [plc, setPlc] = useState("");
+
+  const formRefBoletas = useRef()
 
   const handleClik = () => {
     setOpenModalForm(!openModelForm);
@@ -26,9 +28,13 @@ const Boletas = () => {
     if (name == "Placa") setPlc(value);
   };
 
+  const limpiar = () => {
+    setFormBoletas(initialStateFormBoletas)
+    setDataSelects(initialSateDataFormSelet)
+  }
 
   useEffect(() => {
-    getAllDataForSelect(formBoletas.Proceso, plc, formBoletas.Clientes, formBoletas.Transportes,setDataSelects);
+    getAllDataForSelect(formBoletas.Proceso, plc, formBoletas.Clientes, formBoletas.Transportes, formBoletas.Motoristas,setDataSelects);
     console.log(formBoletas);
   }, [formBoletas]);
 
@@ -78,6 +84,8 @@ const Boletas = () => {
             typeStructure={formBoletas?.Estado}
             formBol = {setFormBoletas}
             boletas = {formBoletas}
+            hdlClean={limpiar}
+            refBoletas={formRefBoletas}
           />
         )}
       </div>

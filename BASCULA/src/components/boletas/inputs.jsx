@@ -1,4 +1,3 @@
-import { FaWeight } from "react-icons/fa";
 import { claseFormInputs } from "../../constants/boletas";
 import { PiGaugeThin } from "react-icons/pi";
 

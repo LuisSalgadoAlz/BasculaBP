@@ -4,7 +4,7 @@ import { InputsFormBoletas, PartInputsPesos, PartInputsPesos2 } from "./inputs";
 import { claseFormInputs, classFormSelct } from "../../constants/boletas";
 import { ESTADOS_BOLETAS, URLWEBSOCKET } from "../../constants/global";
 
-export const ModalBoletas = ({hdlClose, hdlChange, fillData, typeBol, typeStructure, formBol, boletas}) => {
+export const ModalBoletas = ({hdlClose, hdlChange, fillData, typeBol, typeStructure, formBol, boletas, hdlClean}) => {
   const [peso, setPeso] = useState('00lb');
   
   const getPesoIn = () => {
@@ -71,13 +71,13 @@ export const ModalBoletas = ({hdlClose, hdlChange, fillData, typeBol, typeStruct
             <SelectFormBoletas classCss={classFormSelct} name={'Destino'} data={fillData['Destino']} fun={hdlChange} stt={(boletas.Proceso==='')? true : false}/>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 place-content-start">
-          <SelectFormBoletas classCss={classFormSelct} name={'Flete'} data={fillData['Flete']} fun={hdlChange} stt={(boletas.Proceso==='')? true : false}/>
+            <SelectFormBoletas classCss={classFormSelct} name={'Flete'} data={fillData['Flete']} fun={hdlChange} stt={(boletas.Proceso==='')? true : false}/>
             {typeStructure == 0 ? <PartInputsPesos fun={getPesoIn} hdlChange={hdlChange} val={boletas} stt={boletas.Proceso==='' ? true : false}/> : <PartInputsPesos2 fun={getPesoOut} hdlChange={hdlChange} val={boletas}/>}
             {typeBol==1 && <InputsFormBoletas data={claseFormInputs} name={'Orden de compra'} fun={hdlChange} />}
             {["Documento", "Peso Teorico", "Observacion"].map((item) => (
               <InputsFormBoletas key={item} data={claseFormInputs} name={item} fun={hdlChange} stt={boletas.Proceso==='' ? true : false}/>
             ))}
-            
+        
           </div>
         </div>
             
@@ -85,6 +85,7 @@ export const ModalBoletas = ({hdlClose, hdlChange, fillData, typeBol, typeStruct
 
         <div className="mt-3 px-3 grid grid-cols-3 gap-2 justify-between max-sm:grid-rows-3 max-sm:grid-cols-1">
           <button
+            onClick={hdlClean}
             className="px-4 py-2 bg-white text-gray-700 rounded-lg hover:bg-gray-400 transition-transform duration-300 ease-in-out hover:scale-105"
           >
             Limpiar

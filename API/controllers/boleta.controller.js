@@ -9,6 +9,7 @@ const getAllData = async (req, res) => {
         const placa = req.query.placa != undefined ? req.query.placa : null;
         const socio = req.query.socio != undefined ? parseInt(req.query.socio) : null;
         const empresa = req.query.empresa != undefined ? parseInt(req.query.empresa) : null;
+        const motorista = req.query.motorista != undefined ? parseFloat(req.query.motorista) : null;
 
         const [Clientes, Origen, Destino,Transportes, Vehiculo, Motoristas, Producto, Movimientos] = await Promise.all([
             db.socios.findMany({
@@ -18,9 +19,15 @@ const getAllData = async (req, res) => {
                     ...(tipo==0 || tipo==1 ? {tipo :tipo} : {}), 
                     rEmpresa : {
                         some : {
+                            ...(empresa ? {id : empresa} : {}),
                             rVehiculoEmpresa : {
                                 some : {
                                     ...(placa ? {placa : placa} : {})
+                                }
+                            }, 
+                            rMotoristaEmpresa : {
+                                some : {
+                                    ...(motorista ? {id : motorista} : {})
                                 }
                             }
                         }
@@ -33,7 +40,8 @@ const getAllData = async (req, res) => {
                     estado: true, 
                     drClientes: {
                         is: {
-                            ...(socio ? {id : socio }: {})
+                            ...(socio ? {id : socio }: {}),
+                            ...(tipo==0 || tipo==1 ? {tipo :tipo} : {})
                         }
                     },
                     OR: [
@@ -48,7 +56,8 @@ const getAllData = async (req, res) => {
                     estado : true, 
                     drClientes: {
                         is: {
-                            ...(socio ? {id : socio }: {})
+                            ...(socio ? {id : socio }: {}),
+                            ...(tipo==0 || tipo==1 ? {tipo :tipo} : {})
                         }
                     },
                     OR: [
@@ -63,17 +72,18 @@ const getAllData = async (req, res) => {
                     estado : true, 
                     rClientes : {
                         is: {
-                            ...(socio ? {id : socio }: {})
-                        }
-                    },
-                    rClientes : {
-                        is: {
+                            ...(socio ? {id : socio }: {}), 
                             ...(tipo==0 || tipo==1 ? {tipo :tipo} : {})
                         }
-                    }, 
+                    },
                     rVehiculoEmpresa :{
                         some:{
                             ...(placa ? {placa : placa} : {})
+                        }
+                    }, 
+                    rMotoristaEmpresa: {
+                        some : {
+                            ...(motorista ? {id : motorista} : {})
                         }
                     }
                 }
@@ -83,9 +93,11 @@ const getAllData = async (req, res) => {
                 where : {   
                     estado: true, 
                     rEmpresaVehiculo : {
+                        ...(empresa ? {id : empresa} : {}), 
                         rClientes : {
+                            ...(socio ? {id : socio }: {}),
                             ...(tipo==0 || tipo==1 ? {tipo :tipo} : {})
-                        }
+                        }, 
                     }
                 },
                 distinct : ['placa']
@@ -97,6 +109,7 @@ const getAllData = async (req, res) => {
                     rEmpresaM : {
                         ...(empresa ? {id : empresa} : {}),
                         rClientes : {
+                            ...(socio ? {id : socio }: {}),
                             ...(tipo==0 || tipo==1 ? {tipo :tipo} : {}), 
                         }
                     }
