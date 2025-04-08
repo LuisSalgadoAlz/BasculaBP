@@ -1,5 +1,5 @@
 model Boleta {
-    id String @id
+    id Int @id @default(autoincrement())
     idPlaca Int
     idEmpresa Int
     idCliente Int
@@ -12,6 +12,7 @@ model Boleta {
     impreso Boolean?
     idUsuario Int 
     idMotorista Int
+    ordenDeCompra Int?
     pesoTeorico Float? 
     pesoNeto Float?
     desviacion Float?
