@@ -169,6 +169,18 @@ const postBoletasNormal = async (req, res) => {
       idProducto,
       observaciones,
     } = req.body;
+    
+    const placaData = await db.vehiculo.findFirst({
+      select: {
+        id:true,
+      },
+      where : { 
+        placa : idPlaca, 
+        rEmpresaVehiculo : {
+          id: idEmpresa
+        }
+      }
+    })
 
     const nuevaBoleta = await db.boleta.create({
       data: {
@@ -182,7 +194,7 @@ const postBoletasNormal = async (req, res) => {
         idMotorista: parseInt(idMotorista),
         fechaInicio: fechaInicio,
         pesoInicial: parseFloat(pesoInicial),
-        idPlaca: parseInt(2064),
+        idPlaca: placaData.id,
         idEmpresa : parseInt(idEmpresa),
         idMovimiento: parseInt(idMovimiento),
         idProducto: parseInt(idProducto),
@@ -190,9 +202,7 @@ const postBoletasNormal = async (req, res) => {
       },
     });
 
-    res
-      .status(201)
-      .json({ msg: "Boleta creado exitosamente", boleta: nuevaBoleta });
+    res.status(201).json({ msg: "Boleta creado exitosamente", boleta: nuevaBoleta });
   } catch (error) {
     console.error(error);
     res.status(500).json({ msg: `Error al crear usuario: ${error.message}` });
