@@ -22,3 +22,25 @@ export const getAllDataForSelect = async (tipo, placa, socio, empresa, motorista
     console.error("Error al obtener los clientes:", error);
   }
 };
+
+export const postBoletasNormal = async (boleta) => {
+  try {
+    const response = await fetch(`${URLHOST}boletas/`, {
+      method: "POST",
+      body: JSON.stringify(boleta),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: Cookies.get('token'),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API");
+    }
+
+    const data = await response.json();
+    console.log(data);
+  } catch (error) {
+    console.error("Error al obtener los datos:", error);
+  }
+};

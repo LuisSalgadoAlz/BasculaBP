@@ -4,7 +4,7 @@ import ViewBoletas from "../components/boletas/viewBoletas";
 import CardHeader from "../components/card-header";
 import { ModalBoletas } from "../components/boletas/formBoletas";
 import { initialSateDataFormSelet, initialStateFormBoletas } from "../constants/boletas";
-import { getAllDataForSelect } from "../hooks/formDataBoletas";
+import { getAllDataForSelect, postBoletasNormal } from "../hooks/formDataBoletas";
 
 const Boletas = () => {
   const [openModelForm, setOpenModalForm] = useState(false);
@@ -12,8 +12,6 @@ const Boletas = () => {
   const [dataSelets, setDataSelects] = useState(initialSateDataFormSelet);
   const [plc, setPlc] = useState("");
   const [newRender, setNewRender] = useState(0);
-
-  const formRefBoletas = useRef()
 
   const handleClik = () => {
     setOpenModalForm(!openModelForm);
@@ -36,11 +34,31 @@ const Boletas = () => {
     setDataSelects(initialSateDataFormSelet)
   }
 
-
+  const handleSubmit = () => {
+    const allData = {
+      idCliente : formBoletas?.Clientes,
+      idOrigen : formBoletas?.Origen,
+      idDestino: formBoletas?.Destino,
+      manifiesto: formBoletas?.Documento,
+      pesoTeorico: formBoletas['Peso Teorico'],
+      estado: 'Pendiente',
+      idUsuario: 5,
+      idMotorista: formBoletas?.Motoristas,
+      fechaInicio: formBoletas?.fechaInicio,
+      pesoInicial: formBoletas?.pesoIn,
+      idPlaca: formBoletas?.Placa,
+      idEmpresa: formBoletas?.Transportes,
+      idMovimiento: formBoletas?.Proceso,
+      idProducto: formBoletas?.Producto,
+      observaciones: formBoletas?.Observacion,
+    }
+    console.log(allData)
+    postBoletasNormal(allData)
+  }
+  
   useEffect(() => {
     getAllDataForSelect(formBoletas.Proceso, plc, formBoletas.Clientes, formBoletas.Transportes, formBoletas.Motoristas,setDataSelects);
-    console.log(formBoletas);
-  }, [formBoletas]);
+  }, [formBoletas.Proceso, plc, formBoletas.Clientes, formBoletas.Transportes, formBoletas.Motoristas]);
 
   return (
     <>
@@ -90,6 +108,7 @@ const Boletas = () => {
             boletas = {formBoletas}
             hdlClean = {limpiar}
             key={newRender}
+            hdlSubmit={handleSubmit}
           />
         )}
       </div>

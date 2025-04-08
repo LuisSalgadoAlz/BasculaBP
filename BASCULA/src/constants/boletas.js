@@ -6,7 +6,7 @@ export const hoy = new Date(tiempoTranscurrido);
 export const claseFormInputs =
   "bg-gray-50 border border-gray-600 text-gray-900 text-sm rounded-lg focus:ring-[#955e37] focus:border-[#955e37] block w-full p-2";
 
-  export const classFormSelct = {
+export const classFormSelct = {
     control: (provided, state) => ({
       ...provided,
       backgroundColor: "#f9fafb", // gris claro
@@ -50,7 +50,7 @@ export const claseFormInputs =
       ...provided,
       color: "#111827",
     }),
-  };
+};
 
 export const classTextArea =
   "bg-gray-50 border border-gray-600 text-gray-900 text-sm rounded-lg focus:ring-[#955e37] block w-full p-2";
@@ -88,7 +88,7 @@ export const initialStateFormBoletas = {
   Estado: 0,
   pesoIn: 0,
   pesoOut: 0,
-  fechaInicial: new Date(),
+  fechaInicio: hoy
 };
 
 export const initialSateDataFormSelet = {
@@ -102,3 +102,12 @@ export const initialSateDataFormSelet = {
   Destino: cargando,
   Flete: cargando,
 };
+
+export const buttonSave = 
+  "px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700 transition-transform duration-300 ease-in-out hover:scale-105"
+
+export const buttonCancel =
+  "px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-transform duration-300 ease-in-out hover:scale-105"
+
+export const buttonClean = 
+  "px-4 py-2 bg-white text-gray-700 rounded-lg hover:bg-gray-400 transition-transform duration-300 ease-in-out hover:scale-105"
