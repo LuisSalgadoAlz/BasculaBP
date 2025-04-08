@@ -4,8 +4,9 @@ import { InputsFormBoletas, PartInputsPesos, PartInputsPesos2 } from "./inputs";
 import { claseFormInputs, classFormSelct, } from "../../constants/boletas";
 import { ESTADOS_BOLETAS, URLWEBSOCKET } from "../../constants/global";
 
-export const ModalBoletas = ({hdlClose, hdlChange, fillData, typeBol, typeStructure, formBol, boletas, hdlClean, key}) => {
+export const ModalBoletas = ({hdlClose, hdlChange, fillData, typeBol, typeStructure, formBol, boletas, hdlClean}) => {
   const [peso, setPeso] = useState('00lb');
+  const [key, setKey] = useState();
   const getPesoIn = () => {
     formBol((prev)=> ({
       ...prev, 
@@ -19,7 +20,6 @@ export const ModalBoletas = ({hdlClose, hdlChange, fillData, typeBol, typeStruct
       'pesoOut' : peso.replaceAll('lb', ''), 
     }))
   } 
-
 
   useEffect(() => {
     const socket = new WebSocket(URLWEBSOCKET); 
@@ -52,7 +52,7 @@ export const ModalBoletas = ({hdlClose, hdlChange, fillData, typeBol, typeStruct
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 p-2 place-content-center">
+        <div key={key} className="grid grid-cols-1 md:grid-cols-2 gap-x-10 p-2 place-content-center">
           <div className="grid grid-cols-1 gap-y-2 sm:grid-cols-2 ">
             <label className="block mb-2 text-sm font-medium text-gray-900">Flete</label>
             <select name="Estado" className={claseFormInputs} onChange={hdlChange}>
@@ -61,7 +61,7 @@ export const ModalBoletas = ({hdlClose, hdlChange, fillData, typeBol, typeStruct
               ))}
             </select>
             <SelectFormBoletas  classCss={classFormSelct} name={'Proceso'} data={fillData['Proceso']} fun={hdlChange}/>
-            <SelectFormBoletas key={`render${key}`} classCss={classFormSelct} name={'Placa'} data={fillData['Placa']} fun={hdlChange} stt={(boletas.Proceso==='')? true : false}/>
+            <SelectFormBoletas key={`1${key}`} classCss={classFormSelct} name={'Placa'} data={fillData['Placa']} fun={hdlChange} stt={(boletas.Proceso==='')? true : false}/>
             <SelectFormBoletas classCss={classFormSelct} name={'Clientes'} data={fillData['Clientes']} fun={hdlChange} stt={(boletas.Proceso==='')? true : false}/>
             <SelectFormBoletas classCss={classFormSelct} name={'Transportes'} data={fillData['Transportes']} fun={hdlChange} stt={(boletas.Proceso==='')? true : false}/>
             <SelectFormBoletas classCss={classFormSelct} name={'Motoristas'} data={fillData['Motoristas']} fun={hdlChange} stt={(boletas.Proceso==='')? true : false}/>
@@ -76,7 +76,6 @@ export const ModalBoletas = ({hdlClose, hdlChange, fillData, typeBol, typeStruct
             {["Documento", "Peso Teorico", "Observacion"].map((item) => (
               <InputsFormBoletas key={item} data={claseFormInputs} name={item} fun={hdlChange} stt={boletas.Proceso==='' ? true : false}/>
             ))}
-        
           </div>
         </div>
             

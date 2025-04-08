@@ -29,7 +29,7 @@ const Boletas = () => {
     if (name == "Placa") setPlc(value);
   };
 
-  const limpiar = () => {
+  const limpiar = (fun) => {
     const key = newRender + 1
     setNewRender(key)
     setFormBoletas(initialStateFormBoletas)
