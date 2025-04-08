@@ -1,7 +1,0 @@
-model TiposDePeso {
-    id Int @id @default(autoincrement())
-    nombre String
-    estado String
-    /* Relacion con boleta */
-    boletaTiposDePeso Boleta[]
-}

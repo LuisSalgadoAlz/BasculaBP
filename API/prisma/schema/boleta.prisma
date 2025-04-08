@@ -1,35 +1,32 @@
 model Boleta {
     id String @id
     idPlaca Int
-    Categoria String /* Propio o Contratado */
     idEmpresa Int
-    idTipoDePeso Int
     idCliente Int
-    idTipoDeProducto Int
-    idProveedores Int
+    idProducto Int
     idOrigen Int
     idDestino Int
     idMovimiento Int
-    manifiesto Int? /* Opcional */
-    estado String /* Entrando, Saliendo, Terminado listo para imprimir */
-    impreso Boolean /* si / no */
-    idUsuario Int /* Es el despachador */
-    fechaDeEmision DateTime
+    manifiesto Int?
+    estado String 
+    impreso Boolean?
+    idUsuario Int 
     idMotorista Int
-    pesoTeorico Float? /* Opcional */
+    pesoTeorico Float? 
+    pesoNeto Float?
+    desviacion Float?
+    observaciones String @db.VarChar(255)
     pesoInicial Float
-    pesoFinal Float
+    pesoFinal Float?
     fechaInicio DateTime
-    fechaFin DateTime
+    fechaFin DateTime?
 
     /* Relaciones dentro de la boleta */
     placasBoletas Vehiculo @relation(fields: [idPlaca], references: [id], onDelete: NoAction, onUpdate: NoAction)
     despachador Usuarios @relation(fields: [idUsuario], references: [id])
     empresaBoleta Empresa @relation(fields: [idEmpresa], references: [id], onDelete: NoAction, onUpdate: NoAction)
-    tipoDePesoBoleta TiposDePeso @relation(fields: [idTipoDePeso], references: [id])
     clienteBoleta Socios @relation(fields: [idCliente], references: [id])
-    tipoDeProductoBoleta Producto @relation(fields: [idTipoDeProducto], references: [id])
-    proveedoresBoleta Proveedores @relation(fields: [idProveedores], references: [id])
+    tipoDeProductoBoleta Producto @relation(fields: [idProducto], references: [id])
     motoristaBoleta Motoristas @relation(fields: [idMotorista], references: [id], onDelete: NoAction, onUpdate: NoAction)
     boletasMovimientos Movimientos @relation(fields: [idMovimiento], references: [id])
 }
