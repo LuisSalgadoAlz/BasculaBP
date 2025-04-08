@@ -11,6 +11,7 @@ const Boletas = () => {
   const [formBoletas, setFormBoletas] = useState(initialStateFormBoletas);
   const [dataSelets, setDataSelects] = useState(initialSateDataFormSelet);
   const [plc, setPlc] = useState("");
+  const [newRender, setNewRender] = useState(0);
 
   const formRefBoletas = useRef()
 
@@ -29,9 +30,12 @@ const Boletas = () => {
   };
 
   const limpiar = () => {
+    const key = newRender + 1
+    setNewRender(key)
     setFormBoletas(initialStateFormBoletas)
     setDataSelects(initialSateDataFormSelet)
   }
+
 
   useEffect(() => {
     getAllDataForSelect(formBoletas.Proceso, plc, formBoletas.Clientes, formBoletas.Transportes, formBoletas.Motoristas,setDataSelects);
@@ -84,8 +88,8 @@ const Boletas = () => {
             typeStructure={formBoletas?.Estado}
             formBol = {setFormBoletas}
             boletas = {formBoletas}
-            hdlClean={limpiar}
-            refBoletas={formRefBoletas}
+            hdlClean = {limpiar}
+            key={newRender}
           />
         )}
       </div>

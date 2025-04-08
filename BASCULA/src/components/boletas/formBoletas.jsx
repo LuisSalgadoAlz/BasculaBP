@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 import SelectFormBoletas from "./select";
 import { InputsFormBoletas, PartInputsPesos, PartInputsPesos2 } from "./inputs";
-import { claseFormInputs, classFormSelct } from "../../constants/boletas";
+import { claseFormInputs, classFormSelct, } from "../../constants/boletas";
 import { ESTADOS_BOLETAS, URLWEBSOCKET } from "../../constants/global";
 
-export const ModalBoletas = ({hdlClose, hdlChange, fillData, typeBol, typeStructure, formBol, boletas, hdlClean}) => {
+export const ModalBoletas = ({hdlClose, hdlChange, fillData, typeBol, typeStructure, formBol, boletas, hdlClean, key}) => {
   const [peso, setPeso] = useState('00lb');
-  
   const getPesoIn = () => {
     formBol((prev)=> ({
       ...prev, 
@@ -61,8 +60,8 @@ export const ModalBoletas = ({hdlClose, hdlChange, fillData, typeBol, typeStruct
                 <option key={el.id} value={el.id}>{el.nombre}</option>
               ))}
             </select>
-            <SelectFormBoletas classCss={classFormSelct} name={'Proceso'} data={fillData['Proceso']} fun={hdlChange}/>
-            <SelectFormBoletas classCss={classFormSelct} name={'Placa'} data={fillData['Placa']} fun={hdlChange} stt={(boletas.Proceso==='')? true : false}/>
+            <SelectFormBoletas  classCss={classFormSelct} name={'Proceso'} data={fillData['Proceso']} fun={hdlChange}/>
+            <SelectFormBoletas key={`render${key}`} classCss={classFormSelct} name={'Placa'} data={fillData['Placa']} fun={hdlChange} stt={(boletas.Proceso==='')? true : false}/>
             <SelectFormBoletas classCss={classFormSelct} name={'Clientes'} data={fillData['Clientes']} fun={hdlChange} stt={(boletas.Proceso==='')? true : false}/>
             <SelectFormBoletas classCss={classFormSelct} name={'Transportes'} data={fillData['Transportes']} fun={hdlChange} stt={(boletas.Proceso==='')? true : false}/>
             <SelectFormBoletas classCss={classFormSelct} name={'Motoristas'} data={fillData['Motoristas']} fun={hdlChange} stt={(boletas.Proceso==='')? true : false}/>
