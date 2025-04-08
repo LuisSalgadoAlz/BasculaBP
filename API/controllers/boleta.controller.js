@@ -10,7 +10,7 @@ const getAllData = async (req, res) => {
         const socio = req.query.socio != undefined ? parseInt(req.query.socio) : null;
         const empresa = req.query.empresa != undefined ? parseInt(req.query.empresa) : null;
 
-        const [Clientes, Origen, Destino,Transportes, Vehiculo, Motoristas, Producto] = await Promise.all([
+        const [Clientes, Origen, Destino,Transportes, Vehiculo, Motoristas, Producto, Movimientos] = await Promise.all([
             db.socios.findMany({
                 select: {id: true, nombre: true},
                 where : {
@@ -104,13 +104,17 @@ const getAllData = async (req, res) => {
             }), 
             db.producto.findMany({
                 select : {id: true, nombre : true}, 
+            }), 
+            db.movimientos.findMany({
+                select : {id: true, nombre: true},
             })
         ]);
         const Placa = Vehiculo.map((el)=>({
             id: el.placa, 
             nombre : el.placa
         }))
-        res.status(200).json({Clientes, Origen, Destino,Transportes, Placa, Motoristas, Producto});
+        const Flete = Movimientos;
+        res.status(200).json({Clientes, Origen, Destino,Transportes, Placa, Motoristas, Producto, Flete});
     }catch (err) {
         console.log(err)
     }

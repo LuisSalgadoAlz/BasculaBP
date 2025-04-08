@@ -3,11 +3,11 @@ export const URLWEBSOCKET = 'ws://192.9.100.56:3000'
 export const ESTADOS_BOLETAS = [
     {
         id : 0, 
-        nombre : '🟡 Creando -> Boleta Normal'
+        nombre : '🟢 Boleta Normal'
     },
     {
         id : 1, 
-        nombre : '🔵 Creando -> Boleta Casulla'
+        nombre : '🔵 Boleta Casulla'
     }, 
 ]
 
@@ -22,7 +22,7 @@ export const ESTADOS_BOLETAS_TERMINADA = [
     },
     {
         id : 2, 
-        nombre : '🔴 Cancelada'
+        nombre : '❌ Cancelada'
     },
 ]
 

@@ -10,26 +10,6 @@ const SelectFormBoletas = ({ classCss, data = {}, name, fun, stt = false }) => {
     };
   });
 
-  const customStyles = {
-    control: (provided, state) => ({
-      ...provided,
-      backgroundColor: "#f9fafb", // bg-gray-50
-      borderColor: state.isFocused ? "#955e37" : "#d1d5db", // border-gray-300 y focus
-      color: "#111827", // text-gray-900
-      fontSize: "0.875rem", // text-sm
-      borderRadius: "0.5rem", // rounded-lg
-      padding: "0.5rem", // p-2
-      boxShadow: state.isFocused ? "0 0 0 3px rgba(149, 94, 55, 0.2)" : "none",
-      "&:hover": {
-        borderColor: "#955e37",
-      },
-    }),
-    menu: (provided) => ({
-      ...provided,
-      zIndex: 20,
-    }),
-  };
-
   const handleChange = (selectedOption) => {
     /* React select no recibe como tal un objeto de event por eso se crea el fakeEvent */
     const fakeEvent = {
@@ -48,7 +28,8 @@ const SelectFormBoletas = ({ classCss, data = {}, name, fun, stt = false }) => {
       </label>
       <Select
         name={name}
-        styles={classCss}
+        styles={{...classCss, menuPortal: (base) => ({ ...base, zIndex: 9999 }),}}
+        menuPortalTarget={document.body}
         onChange={handleChange}
         options={opt}
         isDisabled={stt}

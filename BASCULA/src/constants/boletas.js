@@ -6,41 +6,51 @@ export const hoy = new Date(tiempoTranscurrido);
 export const claseFormInputs =
   "bg-gray-50 border border-gray-600 text-gray-900 text-sm rounded-lg focus:ring-[#955e37] focus:border-[#955e37] block w-full p-2";
 
-export const classFormSelct = {
-  control: (provided, state) => ({
-    ...provided,
-    backgroundColor: "#f9fafb", // bg-gray-50 / D1D5DB
-    borderColor: "#4A5565",
-    color: "#111827",
-    fontSize: "0.875rem",
-    borderRadius: "0.5rem",
-    padding: "0",
-    boxShadow: state.isFocused ? "#4A5565" : "none",
-    "&:hover": {
-      borderColor: "#4A5565",
-    },
-  }),
-  menu: (provided) => ({
-    ...provided,
-    zIndex: 20,
-  }),
-  menuList: (provided) => ({
-    ...provided,
-    backgroundColor: "#f3f4f6", // bg-gray-100
-  }),
-  option: (provided, state) => ({
-    ...provided,
-    backgroundColor: state.isSelected ? "#d1d5db" : "#f3f4f6", // bg-gray-300 si está seleccionado
-    color: state.isSelected ? "#000000" : "#111827", // Texto negro en la opción seleccionada
-    "&:hover": {
-      backgroundColor: "#e5e7eb", // bg-gray-200 al pasar el mouse
-    },
-  }),
-  singleValue: (provided) => ({
-    ...provided,
-    color: "#111827",
-  }),
-};
+  export const classFormSelct = {
+    control: (provided, state) => ({
+      ...provided,
+      backgroundColor: "#f9fafb", // gris claro
+      borderColor: "#4A5565", // gris oscuro
+      color: "#111827", // texto
+      fontSize: "0.875rem", // 14px
+      borderRadius: "0.5rem", // bordes redondeados
+      padding: "0",
+      minHeight: "2.5rem",
+      boxShadow: state.isFocused ? "0 0 0 2px #4A5565" : "none",
+      "&:hover": {
+        borderColor: "#4A5565",
+      },
+    }),
+    menu: (provided) => ({
+      ...provided,
+      zIndex: 20,
+      marginTop: "0.25rem",
+      borderRadius: "0.5rem",
+      overflow: "hidden",
+    }),
+    menuList: (provided) => ({
+      ...provided,
+      backgroundColor: "#f3f4f6", // gris más claro
+      padding: 0,
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected
+        ? "#d1d5db"
+        : state.isFocused
+        ? "#e5e7eb"
+        : "#f3f4f6",
+      color: "#111827",
+      padding: "0.5rem 1rem",
+      fontSize: "0.875rem",
+      cursor: "pointer",
+      whiteSpace: "normal",
+    }),
+    singleValue: (provided) => ({
+      ...provided,
+      color: "#111827",
+    }),
+  };
 
 export const classTextArea =
   "bg-gray-50 border border-gray-600 text-gray-900 text-sm rounded-lg focus:ring-[#955e37] block w-full p-2";
@@ -78,6 +88,7 @@ export const initialStateFormBoletas = {
   Estado: 0,
   pesoIn: 0,
   pesoOut: 0,
+  fechaInicial: new Date(),
 };
 
 export const initialSateDataFormSelet = {
