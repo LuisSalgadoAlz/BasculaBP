@@ -9,6 +9,11 @@ export const ESTADOS_BOLETAS = [
         id : 1, 
         nombre : '🔵 Boleta Casulla'
     }, 
+    ,
+    {
+        id : 2, 
+        nombre : '🟣 Boleta Vehiculo Particular'
+    }, 
 ]
 
 export const ESTADOS_BOLETAS_TERMINADA = [

@@ -1,10 +1,10 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, use } from "react";
 import { ButtonAdd } from "../components/buttons";
 import ViewBoletas from "../components/boletas/viewBoletas";
 import CardHeader from "../components/card-header";
 import { ModalBoletas } from "../components/boletas/formBoletas";
 import { initialSateDataFormSelet, initialStateFormBoletas } from "../constants/boletas";
-import { formaterData, getAllDataForSelect, postBoletasNormal } from "../hooks/formDataBoletas";
+import { formaterData, getAllDataForSelect, postBoletasNormal, getDataBoletas } from "../hooks/formDataBoletas";
 
 const Boletas = () => {
   const [openModelForm, setOpenModalForm] = useState(false);
@@ -12,6 +12,7 @@ const Boletas = () => {
   const [dataSelets, setDataSelects] = useState(initialSateDataFormSelet);
   const [plc, setPlc] = useState("");
   const [newRender, setNewRender] = useState(0);
+  const [dataTable, setDataTable] = useState()
 
   const handleClik = () => {
     setOpenModalForm(!openModelForm);
@@ -34,13 +35,19 @@ const Boletas = () => {
     setDataSelects(initialSateDataFormSelet)
   }
 
-  const handleSubmit = () => {
+  /**
+   * ! Parte en desarrollo, faltan validaciones para la primera parte
+   * ! Ademas, de la otra parte del convenio casulla
+   */
+  const handleSubmit = async () => {
     const response = formaterData(formBoletas)
-    postBoletasNormal(response)
+    await postBoletasNormal(response)
+    getDataBoletas(setDataTable)
   }
   
   useEffect(() => {
     getAllDataForSelect(formBoletas.Proceso, plc, formBoletas.Clientes, formBoletas.Transportes, formBoletas.Motoristas,setDataSelects);
+    getDataBoletas(setDataTable)
   }, [formBoletas.Proceso, plc, formBoletas.Clientes, formBoletas.Transportes, formBoletas.Motoristas]);
 
   return (
@@ -79,7 +86,7 @@ const Boletas = () => {
         />
       </div>
       <div className="mt-6 bg-white shadow rounded-xl px-6 py-7">
-        <ViewBoletas />
+        <ViewBoletas boletas={dataTable}/>
         {openModelForm && (
           <ModalBoletas
             hdlClose={handleClik}
