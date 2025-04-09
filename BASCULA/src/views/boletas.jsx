@@ -44,6 +44,7 @@ const Boletas = () => {
     const response = formaterData(formBoletas)
     await postBoletasNormal(response)
     getDataBoletas(setDataTable)
+    console.log(response)
   }
   
   useEffect(() => {

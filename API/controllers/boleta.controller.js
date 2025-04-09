@@ -169,12 +169,17 @@ const postBoletasNormal = async (req, res) => {
       idEmpresa,
       idMovimiento,
       idProducto,
-      observaciones,
+      observaciones, 
+      ordenDeCompra
     } = req.body;
     
+
+    console.log(req.body)
+
     const placaData = await db.vehiculo.findFirst({
       select: {
         id:true,
+        placa: true
       },
       where : { 
         placa : idPlaca, 
@@ -184,11 +189,21 @@ const postBoletasNormal = async (req, res) => {
       }
     })
 
-    console.log(placaData)
+    const empresa = await db.empresa.findUnique({where :{id: parseInt(idEmpresa)}})
+    const motorista = await db.motoristas.findUnique({where :{id: parseInt(idMotorista)}})
+    const socio = await db.socios.findUnique({where :{id: parseInt(idCliente)}})
+    const origen = await db.direcciones.findUnique({where :{id: parseInt(idOrigen)}})
+    const destino = await db.direcciones.findUnique({where :{id: parseInt(idDestino)}})
 
     const nuevaBoleta = await db.boleta.create({
       data: {
-        idCliente : parseInt(idCliente),
+        idSocio : parseInt(idCliente),
+        placa: placaData.placa,
+        empresa: empresa.nombre, 
+        motorista: motorista.nombre, 
+        socio: socio.nombre, 
+        origen: origen.nombre, 
+        destino: destino.nombre, 
         boletaType : parseInt(boletaType), 
         idOrigen: parseInt(idOrigen),
         idDestino: parseInt(idDestino),
@@ -205,6 +220,7 @@ const postBoletasNormal = async (req, res) => {
         idProducto: parseInt(idProducto),
         observaciones,
         proceso,
+        ordenDeCompra: parseInt(ordenDeCompra), 
       },
     });
 

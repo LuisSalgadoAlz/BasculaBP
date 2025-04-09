@@ -72,6 +72,7 @@ export const formaterData = (formBoletas) => {
     idOrigen : formBoletas?.Origen,
     idDestino: formBoletas?.Destino,
     manifiesto: formBoletas?.Documento,
+    ordenDeCompra : formBoletas['Orden de compra'], 
     pesoTeorico: formBoletas['Peso Teorico'],
     estado: 'Pendiente',
     idUsuario: 5,
@@ -80,9 +81,9 @@ export const formaterData = (formBoletas) => {
     pesoInicial: formBoletas?.pesoIn,
     idPlaca: formBoletas?.Placa,
     idEmpresa: formBoletas?.Transportes,
-    idMovimiento: formBoletas?.Flete,
+    idMovimiento: formBoletas?.Movimiento,
     idProducto: formBoletas?.Producto,
-    observaciones: formBoletas?.Observacion,
+    observaciones: formBoletas?.Observaciones,
     proceso: formBoletas?.Proceso, 
   }
   return allData

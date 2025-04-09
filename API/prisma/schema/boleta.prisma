@@ -2,18 +2,29 @@ model Boleta {
     id Int @id @default(autoincrement())
     boletaType Int
     idPlaca Int
+    placa String 
     idEmpresa Int
-    idCliente Int
+    empresa String
+    idSocio Int
+    socio String
     idProducto Int 
     proceso Int
-    idOrigen Int
-    idDestino Int
+    idOrigen Int?
+    origen String
+    idDestino Int?
+    destino String?
+    idTransladoOrigen Int?
+    transladoOrigen String?
+    idTransladoDestino String?
+    transladoDestino Int? 
     idMovimiento Int
+    movimiento String?
     manifiesto Int?
     estado String 
     impreso Boolean?
     idUsuario Int 
     idMotorista Int
+    motorista String
     ordenDeCompra Int?
     pesoTeorico Float? 
     pesoNeto Float?
@@ -28,7 +39,7 @@ model Boleta {
     placasBoletas Vehiculo @relation(fields: [idPlaca], references: [id], onDelete: NoAction, onUpdate: NoAction)
     despachador Usuarios @relation(fields: [idUsuario], references: [id])
     empresaBoleta Empresa @relation(fields: [idEmpresa], references: [id], onDelete: NoAction, onUpdate: NoAction)
-    clienteBoleta Socios @relation(fields: [idCliente], references: [id])
+    clienteBoleta Socios @relation(fields: [idSocio], references: [id])
     tipoDeProductoBoleta Producto @relation(fields: [idProducto], references: [id])
     motoristaBoleta Motoristas @relation(fields: [idMotorista], references: [id], onDelete: NoAction, onUpdate: NoAction)
     boletasMovimientos Movimientos @relation(fields: [idMovimiento], references: [id])
