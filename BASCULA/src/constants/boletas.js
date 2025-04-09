@@ -88,8 +88,9 @@ export const initialStateFormBoletas = {
   Estado: 0,
   pesoIn: 0,
   pesoOut: 0,
-  fechaInicio: hoy
 };
+
+export const initialStateStats = {entrada: 0, salida: 0, pendientes: 0}
 
 export const initialSateDataFormSelet = {
   Proceso,

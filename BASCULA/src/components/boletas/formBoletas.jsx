@@ -65,16 +65,14 @@ export const ModalBoletas = ({hdlClose, hdlChange, fillData, typeBol, typeStruct
             <SelectFormBoletas classCss={classFormSelct} name={'Transportes'} data={fillData['Transportes']} fun={hdlChange} stt={(boletas.Proceso==='')? true : false}/>
             <SelectFormBoletas classCss={classFormSelct} name={'Motoristas'} data={fillData['Motoristas']} fun={hdlChange} stt={(boletas.Proceso==='')? true : false}/>
             <SelectFormBoletas classCss={classFormSelct} name={'Producto'} data={fillData['Producto']} fun={hdlChange} stt={(boletas.Proceso==='')? true : false}/>
-            <SelectFormBoletas classCss={classFormSelct} name={'Origen'} data={fillData['Origen']} fun={hdlChange} stt={(boletas.Proceso==='')? true : false}/>
-            <SelectFormBoletas classCss={classFormSelct} name={'Destino'} data={fillData['Destino']} fun={hdlChange} stt={(boletas.Proceso==='')? true : false}/>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 place-content-start">
-            <SelectFormBoletas classCss={classFormSelct} name={'Flete'} data={fillData['Flete']} fun={hdlChange} stt={(boletas.Proceso==='')? true : false}/>
+            <SelectFormBoletas classCss={classFormSelct} name={'Movimiento'} data={fillData['Flete']} fun={hdlChange} stt={(boletas.Proceso==='')? true : false}/>
+            <SelectFormBoletas classCss={classFormSelct} name={'Origen'} data={fillData['Origen']} fun={hdlChange} stt={(boletas.Proceso==='')? true : false}/>
+            <SelectFormBoletas classCss={classFormSelct} name={'Destino'} data={fillData['Destino']} fun={hdlChange} stt={(boletas.Proceso==='')? true : false}/>
             {typeStructure == 0 ? <PartInputsPesos fun={getPesoIn} hdlChange={hdlChange} val={boletas} stt={boletas.Proceso==='' ? true : false}/> : <PartInputsPesos2 fun={getPesoOut} hdlChange={hdlChange} val={boletas}/>}
-            {typeBol==1 && <InputsFormBoletas data={claseFormInputs} name={'Orden de compra'} fun={hdlChange} />}
-            {["Documento", "Observacion"].map((item) => (
-              <InputsFormBoletas key={item} data={claseFormInputs} name={item} fun={hdlChange} stt={boletas.Proceso==='' ? true : false}/>
-            ))}
+            {typeBol==0 ? <InputsFormBoletas data={claseFormInputs} name={'Orden de compra'} fun={hdlChange} /> : <InputsFormBoletas data={claseFormInputs} name={'Documento'} fun={hdlChange} />}
+            <InputsFormBoletas data={claseFormInputs} name={'Observaciones'} fun={hdlChange} />
           </div>
         </div>
             

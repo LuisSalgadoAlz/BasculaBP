@@ -3,11 +3,12 @@ import { ButtonAdd } from "../components/buttons";
 import ViewBoletas from "../components/boletas/viewBoletas";
 import CardHeader from "../components/card-header";
 import { ModalBoletas } from "../components/boletas/formBoletas";
-import { initialSateDataFormSelet, initialStateFormBoletas } from "../constants/boletas";
-import { formaterData, getAllDataForSelect, postBoletasNormal, getDataBoletas } from "../hooks/formDataBoletas";
+import { initialSateDataFormSelet, initialStateFormBoletas, initialStateStats } from "../constants/boletas";
+import { formaterData, getAllDataForSelect, postBoletasNormal, getDataBoletas, getStatsBoletas } from "../hooks/formDataBoletas";
 
 const Boletas = () => {
   const [openModelForm, setOpenModalForm] = useState(false);
+  const [stats, setStats] = useState(initialStateStats)
   const [formBoletas, setFormBoletas] = useState(initialStateFormBoletas);
   const [dataSelets, setDataSelects] = useState(initialSateDataFormSelet);
   const [plc, setPlc] = useState("");
@@ -48,6 +49,7 @@ const Boletas = () => {
   useEffect(() => {
     getAllDataForSelect(formBoletas.Proceso, plc, formBoletas.Clientes, formBoletas.Transportes, formBoletas.Motoristas,setDataSelects);
     getDataBoletas(setDataTable)
+    getStatsBoletas(setStats)
   }, [formBoletas.Proceso, plc, formBoletas.Clientes, formBoletas.Transportes, formBoletas.Motoristas]);
 
   return (
@@ -70,23 +72,23 @@ const Boletas = () => {
       </div>
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-3 mt-5">
         <CardHeader
-          data={0}
+          data={stats['entrada']}
           name={"Total de entradas de material"}
           title={"Entradas"}
         />
         <CardHeader
-          data={0}
+          data={stats['salida']}
           name={"Total de salidas de material"}
           title={"Salidas"}
         />
         <CardHeader
-          data={0}
+          data={stats['pendientes']}
           name={"Total de salidas de material"}
           title={"Pendientes"}
         />
       </div>
       <div className="mt-6 bg-white shadow rounded-xl px-6 py-7">
-        <ViewBoletas boletas={dataTable}/>
+        <ViewBoletas boletas={dataTable} sts={setStats}/>
         {openModelForm && (
           <ModalBoletas
             hdlClose={handleClik}

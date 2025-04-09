@@ -68,6 +68,7 @@ export const getDataBoletas = async (fun) => {
 export const formaterData = (formBoletas) => {
   const allData = {
     idCliente : formBoletas?.Clientes,
+    boletaType: formBoletas?.Estado, 
     idOrigen : formBoletas?.Origen,
     idDestino: formBoletas?.Destino,
     manifiesto: formBoletas?.Documento,
@@ -75,13 +76,34 @@ export const formaterData = (formBoletas) => {
     estado: 'Pendiente',
     idUsuario: 5,
     idMotorista: formBoletas?.Motoristas,
-    fechaInicio: formBoletas?.fechaInicio,
+    fechaInicio: new Date(),
     pesoInicial: formBoletas?.pesoIn,
     idPlaca: formBoletas?.Placa,
     idEmpresa: formBoletas?.Transportes,
-    idMovimiento: formBoletas?.Proceso,
+    idMovimiento: formBoletas?.Flete,
     idProducto: formBoletas?.Producto,
     observaciones: formBoletas?.Observacion,
+    proceso: formBoletas?.Proceso, 
   }
   return allData
 }
+
+export const getStatsBoletas = async (fun) => {
+  try {
+    const response = await fetch(`${URLHOST}boletas/stats`, {
+      method: "GET",
+      headers: {
+        Authorization: Cookies.get('token'),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API");
+    }
+
+    const data = await response.json();
+    fun(data);
+  } catch (error) {
+    console.error("Error al obtener los clientes:", error);
+  }
+};
