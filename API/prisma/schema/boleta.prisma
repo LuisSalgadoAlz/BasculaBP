@@ -1,9 +1,11 @@
 model Boleta {
     id Int @id @default(autoincrement())
+    boletaType Int
     idPlaca Int
     idEmpresa Int
     idCliente Int
-    idProducto Int
+    idProducto Int 
+    proceso Int
     idOrigen Int
     idDestino Int
     idMovimiento Int

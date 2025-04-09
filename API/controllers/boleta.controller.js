@@ -154,6 +154,8 @@ const postBoletasNormal = async (req, res) => {
   try {
     const {
       idCliente,
+      boletaType, 
+      proceso, 
       idOrigen,
       idDestino,
       manifiesto,
@@ -182,9 +184,12 @@ const postBoletasNormal = async (req, res) => {
       }
     })
 
+    console.log(placaData)
+
     const nuevaBoleta = await db.boleta.create({
       data: {
         idCliente : parseInt(idCliente),
+        boletaType : parseInt(boletaType), 
         idOrigen: parseInt(idOrigen),
         idDestino: parseInt(idDestino),
         manifiesto: parseInt(manifiesto),
@@ -199,6 +204,7 @@ const postBoletasNormal = async (req, res) => {
         idMovimiento: parseInt(idMovimiento),
         idProducto: parseInt(idProducto),
         observaciones,
+        proceso,
       },
     });
 
@@ -235,6 +241,7 @@ const getDataBoletas = async(req, res) => {
           }
         },
         fechaInicio: true,
+        proceso: true
       }, 
       where : {
         estado : 'Pendiente'
@@ -244,6 +251,7 @@ const getDataBoletas = async(req, res) => {
     const dataUTCHN = data.map((el) => ({
         Id: el.id,
         Placa : el.placasBoletas.placa,
+        Proceso: el.proceso == 0 ? 'Entrada de material':'Salida de material' ,
         Cliente : el.clienteBoleta.nombre, 
         Transporte: el.empresaBoleta.nombre, 
         Motorista: el.motoristaBoleta.nombre,  
@@ -253,8 +261,29 @@ const getDataBoletas = async(req, res) => {
     res.send(dataUTCHN)
 }
 
+const getStatsBoletas = async(req, res) => {
+  try{
+    const [entrada, salida, pendientes] = await Promise.all([
+      db.boleta.count({
+        where : { proceso : 0 }
+      }), 
+      db.boleta.count({
+        where : {proceso : 1}
+      }), 
+      db.boleta.count({
+        where: {estado : 'Pendiente'}
+      })
+    ])
+    res.status(201).send({entrada, salida, pendientes})
+  }catch(err) {
+    res.status(501).send({msg: 'Error en el server'})
+  }
+
+}
+
 module.exports = {
   getAllData,
   postBoletasNormal,
-  getDataBoletas
+  getDataBoletas, 
+  getStatsBoletas
 };
