@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import SelectFormBoletas from "./select";
-import { InputsFormBoletas, PartInputsPesos, PartInputsPesos2 } from "./inputs";
+import { InputsFormBoletas, PartInputsPesos, PartInputsPesos2, TransladoExterno, TransladoInterno, TransladoNormal } from "./inputs";
 import { buttonCancel, buttonClean, buttonSave, claseFormInputs, classFormSelct, } from "../../constants/boletas";
 import { ESTADOS_BOLETAS, URLWEBSOCKET } from "../../constants/global";
 
@@ -60,16 +60,23 @@ export const ModalBoletas = ({hdlClose, hdlChange, fillData, typeBol, typeStruct
               ))}
             </select>
             <SelectFormBoletas classCss={classFormSelct} name={'Proceso'} data={fillData['Proceso']} fun={hdlChange}/>
-            <SelectFormBoletas classCss={classFormSelct} name={'Placa'} data={fillData['Placa']} fun={hdlChange} stt={(boletas.Proceso==='')? true : false}/>
             <SelectFormBoletas classCss={classFormSelct} name={'Clientes'} data={fillData['Clientes']} fun={hdlChange} stt={(boletas.Proceso==='')? true : false}/>
             <SelectFormBoletas classCss={classFormSelct} name={'Transportes'} data={fillData['Transportes']} fun={hdlChange} stt={(boletas.Proceso==='')? true : false}/>
+            <SelectFormBoletas classCss={classFormSelct} name={'Placa'} data={fillData['Placa']} fun={hdlChange} stt={(boletas.Proceso==='')? true : false}/>
             <SelectFormBoletas classCss={classFormSelct} name={'Motoristas'} data={fillData['Motoristas']} fun={hdlChange} stt={(boletas.Proceso==='')? true : false}/>
             <SelectFormBoletas classCss={classFormSelct} name={'Producto'} data={fillData['Producto']} fun={hdlChange} stt={(boletas.Proceso==='')? true : false}/>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 place-content-start">
             <SelectFormBoletas classCss={classFormSelct} name={'Movimiento'} data={fillData['Flete']} fun={hdlChange} stt={(boletas.Proceso==='')? true : false}/>
-            <SelectFormBoletas classCss={classFormSelct} name={'Origen'} data={fillData['Origen']} fun={hdlChange} stt={(boletas.Proceso==='')? true : false}/>
-            <SelectFormBoletas classCss={classFormSelct} name={'Destino'} data={fillData['Destino']} fun={hdlChange} stt={(boletas.Proceso==='')? true : false}/>
+            
+            {boletas.Movimiento == 10 ? (
+              <TransladoInterno bol={boletas} hdl={hdlChange} fill={fillData} />
+            ) : boletas.Movimiento == 11 ? (
+              <TransladoExterno bol={boletas} hdl={hdlChange} fill={fillData} />
+            ) : (
+              <TransladoNormal bol={boletas} hdl={hdlChange} fill={fillData} />
+            )}
+
             {typeStructure == 0 ? <PartInputsPesos fun={getPesoIn} hdlChange={hdlChange} val={boletas} stt={boletas.Proceso==='' ? true : false}/> : <PartInputsPesos2 fun={getPesoOut} hdlChange={hdlChange} val={boletas}/>}
             {typeBol==0 ? <InputsFormBoletas data={claseFormInputs} name={'Orden de compra'} fun={hdlChange} /> : <InputsFormBoletas data={claseFormInputs} name={'Documento'} fun={hdlChange} />}
             <InputsFormBoletas data={claseFormInputs} name={'Observaciones'} fun={hdlChange} />

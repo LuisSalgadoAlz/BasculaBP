@@ -75,7 +75,7 @@ export const formaterData = (formBoletas) => {
     ordenDeCompra : formBoletas['Orden de compra'], 
     pesoTeorico: formBoletas['Peso Teorico'],
     estado: 'Pendiente',
-    idUsuario: 5,
+    idUsuario: Cookies.get('token'),
     idMotorista: formBoletas?.Motoristas,
     fechaInicio: new Date(),
     pesoInicial: formBoletas?.pesoIn,

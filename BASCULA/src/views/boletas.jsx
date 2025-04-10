@@ -27,6 +27,7 @@ const Boletas = () => {
       [name]: value,
     }));
     if (name == "Placa") setPlc(value);
+    console.log(formBoletas)
   };
 
   const limpiar = (fun) => {
