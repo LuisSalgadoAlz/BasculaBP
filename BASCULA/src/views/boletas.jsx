@@ -12,6 +12,7 @@ const Boletas = () => {
   const [formBoletas, setFormBoletas] = useState(initialStateFormBoletas);
   const [dataSelets, setDataSelects] = useState(initialSateDataFormSelet);
   const [plc, setPlc] = useState("");
+  const [move, setMove] = useState('');
   const [newRender, setNewRender] = useState(0);
   const [dataTable, setDataTable] = useState()
 
@@ -21,13 +22,13 @@ const Boletas = () => {
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, data } = e.target;
     setFormBoletas((prev) => ({
       ...prev,
       [name]: value,
     }));
     if (name == "Placa") setPlc(value);
-    console.log(formBoletas)
+    if (name == "Movimiento") setMove(data)
   };
 
   const limpiar = (fun) => {
@@ -103,6 +104,7 @@ const Boletas = () => {
             hdlClean = {limpiar}
             key={newRender}
             hdlSubmit={handleSubmit}
+            move={move}
           />
         )}
       </div>

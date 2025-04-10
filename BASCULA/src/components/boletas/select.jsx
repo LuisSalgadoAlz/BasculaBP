@@ -15,6 +15,7 @@ const SelectFormBoletas = ({ classCss, data = {}, name, fun, stt = false }) => {
       target: {
         name,
         value: selectedOption ? selectedOption.value : "",
+        data : selectedOption ? selectedOption.label : ""
       },
     };
     fun(fakeEvent); 

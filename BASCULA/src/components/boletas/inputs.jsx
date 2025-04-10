@@ -109,14 +109,14 @@ export const TransladoInterno = ({bol, fill, hdl}) => {
     <>
       <SelectFormBoletas
         classCss={classFormSelct}
-        name={"Translado origen"}
+        name={"Traslado origen"}
         data={fill["TransladosI"]}
         fun={hdl}
         stt={bol.Proceso === "" ? true : false}
       />
       <SelectFormBoletas
         classCss={classFormSelct}
-        name={"Translado destino"}
+        name={"Traslado destino"}
         data={fill["TransladosI"]}
         fun={hdl}
         stt={bol.Proceso === "" ? true : false}
@@ -130,15 +130,15 @@ export const TransladoExterno = ({bol, fill, hdl}) => {
     <>
       <SelectFormBoletas
         classCss={classFormSelct}
-        name={"Translado origen"}
+        name={"Traslado origen"}
         data={fill["TransladosE"]}
         fun={hdl}
         stt={bol.Proceso === "" ? true : false}
       />
       <SelectFormBoletas
         classCss={classFormSelct}
-        name={"Translado destino"}
-        data={fill["TransladosE"]}
+        name={"Traslado destino"}
+        data={fill["TransladosI"]}
         fun={hdl}
         stt={bol.Proceso === "" ? true : false}
       />

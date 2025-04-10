@@ -4,7 +4,7 @@ import { InputsFormBoletas, PartInputsPesos, PartInputsPesos2, TransladoExterno,
 import { buttonCancel, buttonClean, buttonSave, claseFormInputs, classFormSelct, } from "../../constants/boletas";
 import { ESTADOS_BOLETAS, URLWEBSOCKET } from "../../constants/global";
 
-export const ModalBoletas = ({hdlClose, hdlChange, fillData, typeBol, typeStructure, formBol, boletas, hdlClean, hdlSubmit}) => {
+export const ModalBoletas = ({hdlClose, hdlChange, fillData, typeBol, typeStructure, formBol, boletas, hdlClean, hdlSubmit, move}) => {
   const [peso, setPeso] = useState('00lb');
   const getPesoIn = () => {
     formBol((prev)=> ({
@@ -69,9 +69,9 @@ export const ModalBoletas = ({hdlClose, hdlChange, fillData, typeBol, typeStruct
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 place-content-start">
             <SelectFormBoletas classCss={classFormSelct} name={'Movimiento'} data={fillData['Flete']} fun={hdlChange} stt={(boletas.Proceso==='')? true : false}/>
             
-            {boletas.Movimiento == 10 ? (
+            {move == 'Traslado Interno' ? (
               <TransladoInterno bol={boletas} hdl={hdlChange} fill={fillData} />
-            ) : boletas.Movimiento == 11 ? (
+            ) : move == 'Traslado Externo' ? (
               <TransladoExterno bol={boletas} hdl={hdlChange} fill={fillData} />
             ) : (
               <TransladoNormal bol={boletas} hdl={hdlChange} fill={fillData} />
