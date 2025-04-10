@@ -23,7 +23,8 @@ const getAllData = async (req, res) => {
       Vehiculo,
       Motoristas,
       Producto,
-      Movimientos,
+      MovimientosE,
+      MovimientosS,
       TransladosI, 
       TransladosE, 
     ] = await Promise.all([
@@ -130,6 +131,12 @@ const getAllData = async (req, res) => {
       db.movimientos.findMany({
         select: { id: true, nombre: true },
       }),
+      db.movimientos.findMany({
+        select: { id: true, nombre: true },
+        where : {
+          nombre : {notIn: ["Traslado Interno","Traslado Externo"]}
+        }
+      }),
       db.translado.findMany({
         select:{id: true, nombre: true},
         where:{tipo: 0}
@@ -142,7 +149,8 @@ const getAllData = async (req, res) => {
       id: el.placa,
       nombre: el.placa,
     }));
-    const Flete = Movimientos;
+    const Flete = MovimientosE;
+    const FleteS = MovimientosS
     res
       .status(200)
       .json({
@@ -154,6 +162,7 @@ const getAllData = async (req, res) => {
         Motoristas,
         Producto,
         Flete,
+        FleteS,
         TransladosI,
         TransladosE, 
       });
@@ -184,7 +193,8 @@ const postBoletasNormal = async (req, res) => {
       observaciones, 
       ordenDeCompra, 
       idTrasladoOrigen, 
-      idTrasladoDestino
+      idTrasladoDestino, 
+      ordenDeTransferencia
     } = req.body;
     
 
@@ -255,6 +265,7 @@ const postBoletasNormal = async (req, res) => {
         trasladoDestino: transladoDestino.nombre, 
         proceso,
         ordenDeCompra: parseInt(ordenDeCompra), 
+        ordenDeTransferencia: isTraslado ? parseInt(ordenDeTransferencia) : null
       },
     });
 

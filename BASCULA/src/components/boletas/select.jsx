@@ -1,13 +1,17 @@
 import React from "react";
 import Select from "react-select";
 
-const SelectFormBoletas = ({ classCss, data = {}, name, fun, stt = false }) => {
+const SelectFormBoletas = ({ classCss, data = {}, name, fun, stt = false, val }) => {
   const opt = data.map((el) => {
     return {
       value: el.id,
       label: el.nombre,
     };
   });
+
+  const selectedValue = val !== undefined
+  ? opt.find((item) => item.value === val) || null
+  : undefined; 
 
   const handleChange = (selectedOption) => {
     /* React select no recibe como tal un objeto de event por eso se crea el fakeEvent */
@@ -34,6 +38,7 @@ const SelectFormBoletas = ({ classCss, data = {}, name, fun, stt = false }) => {
         options={opt}
         isDisabled={stt}
         isClearable
+        {...(val !== undefined ? { value: selectedValue } : {})}
       />
     </>
   );

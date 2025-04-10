@@ -8,7 +8,7 @@ model Boleta {
     idSocio Int
     socio String
     idProducto Int 
-    producto String
+    producto String?
     proceso Int
     idOrigen Int?
     origen String?
@@ -28,6 +28,7 @@ model Boleta {
     idMotorista Int
     motorista String
     ordenDeCompra Int?
+    ordenDeTransferencia Int?
     pesoTeorico Float? 
     pesoNeto Float?
     desviacion Float?

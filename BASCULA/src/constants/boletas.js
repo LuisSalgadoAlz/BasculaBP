@@ -102,6 +102,7 @@ export const initialSateDataFormSelet = {
   Origen: cargando,
   Destino: cargando,
   Flete: cargando,
+  FleteS: cargando,
 };
 
 export const buttonSave = 
@@ -112,3 +113,6 @@ export const buttonCancel =
 
 export const buttonClean = 
   "px-4 py-2 bg-white text-gray-700 rounded-lg hover:bg-gray-400 transition-transform duration-300 ease-in-out hover:scale-105"
+
+export const buttonCalcular = 
+  "col-span-2 mt-2 py-2 bg-white text-gray-700 rounded-lg hover:bg-gray-400 transition-transform duration-300 ease-in-out"

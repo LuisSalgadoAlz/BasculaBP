@@ -67,7 +67,7 @@ export const getDataBoletas = async (fun) => {
 
 export const formaterData = (formBoletas) => {
   const allData = {
-    idCliente : formBoletas?.Clientes,
+    idCliente : formBoletas?.Socios,
     boletaType: formBoletas?.Estado, 
     manifiesto: formBoletas?.Documento,
     ordenDeCompra : formBoletas['Orden de compra'], 
@@ -87,6 +87,7 @@ export const formaterData = (formBoletas) => {
     idTrasladoDestino: formBoletas['Traslado destino'], 
     idOrigen : formBoletas?.Origen,
     idDestino: formBoletas?.Destino,
+    ordenDeTransferencia : formBoletas['Orden de Transferencia'] || null, 
   }
   console.log(allData)
   return allData

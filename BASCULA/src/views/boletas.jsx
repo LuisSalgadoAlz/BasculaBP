@@ -2,12 +2,13 @@ import { useEffect, useState, useRef, use } from "react";
 import { ButtonAdd } from "../components/buttons";
 import ViewBoletas from "../components/boletas/viewBoletas";
 import CardHeader from "../components/card-header";
-import { ModalBoletas } from "../components/boletas/formBoletas";
+import { ModalBoletas, ModalNormal } from "../components/boletas/formBoletas";
 import { initialSateDataFormSelet, initialStateFormBoletas, initialStateStats } from "../constants/boletas";
 import { formaterData, getAllDataForSelect, postBoletasNormal, getDataBoletas, getStatsBoletas } from "../hooks/formDataBoletas";
 
 const Boletas = () => {
   const [openModelForm, setOpenModalForm] = useState(false);
+  const [openModelFormEspecial, setOpenModelFormEspecial] = useState(false);
   const [stats, setStats] = useState(initialStateStats)
   const [formBoletas, setFormBoletas] = useState(initialStateFormBoletas);
   const [dataSelets, setDataSelects] = useState(initialSateDataFormSelet);
@@ -15,12 +16,24 @@ const Boletas = () => {
   const [move, setMove] = useState('');
   const [newRender, setNewRender] = useState(0);
   const [dataTable, setDataTable] = useState()
+  const [err, setErr] = useState(false)
+  const [success, setSuccess] = useState()
 
   const handleClik = () => {
     setOpenModalForm(!openModelForm);
     setFormBoletas(initialStateFormBoletas)
   };
 
+  const handleClikModal = () => {
+    setOpenModalForm(!opeopenModelFormEspecialnModelForm);
+    setFormBoletas(initialStateFormBoletas)
+  };
+
+
+  /**
+   * ! Controla todos los cambios hechos en el formulario de Boletas
+   * @param {*} e 
+   */
   const handleChange = (e) => {
     const { name, value, data } = e.target;
     setFormBoletas((prev) => ({
@@ -29,13 +42,17 @@ const Boletas = () => {
     }));
     if (name == "Placa") setPlc(value);
     if (name == "Movimiento") setMove(data)
+    if (name == "Estado" && value==1) {
+      setFormBoletas((prev) => ({...prev, ['Proceso'] : 1}))
+    }
   };
 
   const limpiar = (fun) => {
     const key = newRender + 1
-    setNewRender(key)
     setFormBoletas(initialStateFormBoletas)
     setDataSelects(initialSateDataFormSelet)
+    setPlc('')
+    setNewRender(key)
   }
 
   /**
@@ -66,11 +83,7 @@ const Boletas = () => {
           </h1>
         </div>
         <div className="parte-der flex items-center justify-center gap-3 max-sm:text-sm max-sm:flex-col">
-          {openModelForm ? (
-            <ButtonAdd name="Volver" fun={handleClik} />
-          ) : (
-            <ButtonAdd name="Nueva boleta" fun={handleClik} />
-          )}
+          <ButtonAdd name="Nueva boleta" fun={handleClik} />
         </div>
       </div>
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-3 mt-5">
@@ -93,7 +106,7 @@ const Boletas = () => {
       <div className="mt-6 bg-white shadow rounded-xl px-6 py-7">
         <ViewBoletas boletas={dataTable} sts={setStats}/>
         {openModelForm && (
-          <ModalBoletas
+          <ModalNormal
             hdlClose={handleClik}
             hdlChange={handleChange}
             fillData={dataSelets}
@@ -102,9 +115,10 @@ const Boletas = () => {
             formBol = {setFormBoletas}
             boletas = {formBoletas}
             hdlClean = {limpiar}
-            key={newRender}
             hdlSubmit={handleSubmit}
             move={move}
+            clean={newRender}
+            key={newRender}
           />
         )}
       </div>
