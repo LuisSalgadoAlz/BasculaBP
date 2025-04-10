@@ -8,9 +8,10 @@ model Boleta {
     idSocio Int
     socio String
     idProducto Int 
+    producto String
     proceso Int
     idOrigen Int?
-    origen String
+    origen String?
     idDestino Int?
     destino String?
     idTransladoOrigen Int?
@@ -23,6 +24,7 @@ model Boleta {
     estado String 
     impreso Boolean?
     idUsuario Int 
+    usuario String
     idMotorista Int
     motorista String
     ordenDeCompra Int?

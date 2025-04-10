@@ -2,8 +2,8 @@ BEGIN TRY
 
 BEGIN TRAN;
 
--- DropIndex
-ALTER TABLE [dbo].[Vehiculo] DROP CONSTRAINT [Vehiculo_placa_key];
+-- AlterTable
+ALTER TABLE [dbo].[Boleta] ALTER COLUMN [origen] NVARCHAR(1000) NULL;
 
 COMMIT TRAN;
 

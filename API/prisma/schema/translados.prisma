@@ -1,5 +1,6 @@
 model Translado {
     id Int @id @default(autoincrement())
+    code String
     nombre String
     tipo Int /* 0: Interno, 1: Externo*/
     estado Boolean 

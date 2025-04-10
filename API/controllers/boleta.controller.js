@@ -1,6 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const dotenv = require("dotenv");
 const db = new PrismaClient();
+const jwt = require('jsonwebtoken');
 
 const getAllData = async (req, res) => {
   try {
@@ -23,6 +24,8 @@ const getAllData = async (req, res) => {
       Motoristas,
       Producto,
       Movimientos,
+      TransladosI, 
+      TransladosE, 
     ] = await Promise.all([
       db.socios.findMany({
         select: { id: true, nombre: true },
@@ -127,6 +130,13 @@ const getAllData = async (req, res) => {
       db.movimientos.findMany({
         select: { id: true, nombre: true },
       }),
+      db.translado.findMany({
+        select:{id: true, nombre: true},
+        where:{tipo: 0}
+      }), 
+      db.translado.findMany({
+        select:{id: true, nombre: true},
+      })
     ]);
     const Placa = Vehiculo.map((el) => ({
       id: el.placa,
@@ -144,6 +154,8 @@ const getAllData = async (req, res) => {
         Motoristas,
         Producto,
         Flete,
+        TransladosI,
+        TransladosE, 
       });
   } catch (err) {
     console.log(err);
@@ -174,7 +186,13 @@ const postBoletasNormal = async (req, res) => {
     } = req.body;
     
 
-    console.log(req.body)
+    const verificado = jwt.verify(idUsuario, process.env.SECRET_KEY);
+
+    const despachador =  await db.usuarios.findUnique({
+      where: {
+        usuarios: verificado['usuarios']
+      }
+    })
 
     const placaData = await db.vehiculo.findFirst({
       select: {
@@ -194,6 +212,7 @@ const postBoletasNormal = async (req, res) => {
     const socio = await db.socios.findUnique({where :{id: parseInt(idCliente)}})
     const origen = await db.direcciones.findUnique({where :{id: parseInt(idOrigen)}})
     const destino = await db.direcciones.findUnique({where :{id: parseInt(idDestino)}})
+    const producto = await db.producto.findUnique({where: {id: parseInt(idProducto)}})
 
     const nuevaBoleta = await db.boleta.create({
       data: {
@@ -210,7 +229,8 @@ const postBoletasNormal = async (req, res) => {
         manifiesto: parseInt(manifiesto),
         pesoTeorico: parseFloat(pesoTeorico),
         estado: estado,
-        idUsuario: parseFloat(idUsuario),
+        idUsuario: parseFloat(despachador['id']),
+        usuario : despachador['usuarios'], 
         idMotorista: parseInt(idMotorista),
         fechaInicio: fechaInicio,
         pesoInicial: parseFloat(pesoInicial),
@@ -218,6 +238,7 @@ const postBoletasNormal = async (req, res) => {
         idEmpresa : parseInt(idEmpresa),
         idMovimiento: parseInt(idMovimiento),
         idProducto: parseInt(idProducto),
+        producto: producto.nombre, 
         observaciones,
         proceso,
         ordenDeCompra: parseInt(ordenDeCompra), 
@@ -236,26 +257,11 @@ const getDataBoletas = async(req, res) => {
       select : {
         id: true, 
         estado: true, 
-        clienteBoleta: {
-          select : {
-            nombre: true
-          }
-        }, 
-        placasBoletas : {
-         select: {
-          placa : true
-         }
-        }, 
-        empresaBoleta : {
-          select : {
-            nombre: true
-          }
-        }, 
-        motoristaBoleta: {
-          select : { 
-            nombre: true
-          }
-        },
+        proceso: true, 
+        empresa: true, 
+        motorista: true, 
+        socio: true, 
+        placa: true,
         fechaInicio: true,
         proceso: true
       }, 
@@ -266,11 +272,11 @@ const getDataBoletas = async(req, res) => {
 
     const dataUTCHN = data.map((el) => ({
         Id: el.id,
-        Placa : el.placasBoletas.placa,
+        Placa : el.placa, 
         Proceso: el.proceso == 0 ? 'Entrada de material':'Salida de material' ,
-        Cliente : el.clienteBoleta.nombre, 
-        Transporte: el.empresaBoleta.nombre, 
-        Motorista: el.motoristaBoleta.nombre,  
+        Cliente : el.socio, 
+        Transporte: el.empresa, 
+        Motorista: el.motorista,  
         Fecha : el.fechaInicio.toLocaleString()
     }))
 
