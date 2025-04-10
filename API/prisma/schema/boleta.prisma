@@ -14,10 +14,10 @@ model Boleta {
     origen String?
     idDestino Int?
     destino String?
-    idTransladoOrigen Int?
-    transladoOrigen String?
-    idTransladoDestino String?
-    transladoDestino Int? 
+    idTrasladoOrigen Int?
+    trasladoOrigen String?
+    idTrasladoDestino Int?
+    trasladoDestino String? 
     idMovimiento Int
     movimiento String?
     manifiesto Int?

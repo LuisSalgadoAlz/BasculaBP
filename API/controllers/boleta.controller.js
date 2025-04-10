@@ -14,7 +14,7 @@ const getAllData = async (req, res) => {
       req.query.empresa != undefined ? parseInt(req.query.empresa) : null;
     const motorista =
       req.query.motorista != undefined ? parseFloat(req.query.motorista) : null;
-
+      
     const [
       Clientes,
       Origen,
@@ -182,7 +182,9 @@ const postBoletasNormal = async (req, res) => {
       idMovimiento,
       idProducto,
       observaciones, 
-      ordenDeCompra
+      ordenDeCompra, 
+      idTrasladoOrigen, 
+      idTrasladoDestino
     } = req.body;
     
 
@@ -210,9 +212,15 @@ const postBoletasNormal = async (req, res) => {
     const empresa = await db.empresa.findUnique({where :{id: parseInt(idEmpresa)}})
     const motorista = await db.motoristas.findUnique({where :{id: parseInt(idMotorista)}})
     const socio = await db.socios.findUnique({where :{id: parseInt(idCliente)}})
-    const origen = await db.direcciones.findUnique({where :{id: parseInt(idOrigen)}})
-    const destino = await db.direcciones.findUnique({where :{id: parseInt(idDestino)}})
     const producto = await db.producto.findUnique({where: {id: parseInt(idProducto)}})
+    const move = await db.movimientos.findUnique({where:{id: parseInt(idMovimiento)}})
+
+    const isTraslado = (move.nombre == 'Traslado Interno' || move.nombre == 'Traslado Externo') ? true: false;
+
+    const origen = !isTraslado && await db.direcciones.findUnique({where :{id: parseInt(idOrigen)}})
+    const destino = !isTraslado && await db.direcciones.findUnique({where :{id: parseInt(idDestino)}})
+    const transladoOrigen = isTraslado && await db.translado.findUnique({where: {id: parseInt(idTrasladoOrigen)}})
+    const transladoDestino = isTraslado && await db.translado.findUnique({where: {id: parseInt(idTrasladoDestino)}})
 
     const nuevaBoleta = await db.boleta.create({
       data: {
@@ -224,8 +232,8 @@ const postBoletasNormal = async (req, res) => {
         origen: origen.nombre, 
         destino: destino.nombre, 
         boletaType : parseInt(boletaType), 
-        idOrigen: parseInt(idOrigen),
-        idDestino: parseInt(idDestino),
+        idOrigen: !isTraslado ? parseInt(idOrigen) : null,
+        idDestino: !isTraslado ? parseInt(idDestino) : null,
         manifiesto: parseInt(manifiesto),
         pesoTeorico: parseFloat(pesoTeorico),
         estado: estado,
@@ -237,9 +245,14 @@ const postBoletasNormal = async (req, res) => {
         idPlaca: placaData.id,
         idEmpresa : parseInt(idEmpresa),
         idMovimiento: parseInt(idMovimiento),
+        movimiento: move.nombre, 
         idProducto: parseInt(idProducto),
         producto: producto.nombre, 
         observaciones,
+        idTrasladoOrigen : isTraslado ? parseInt(idTrasladoOrigen) : null, 
+        idTrasladoDestino : isTraslado ? parseInt(idTrasladoDestino) : null, 
+        trasladoOrigen: transladoOrigen.nombre, 
+        trasladoDestino: transladoDestino.nombre, 
         proceso,
         ordenDeCompra: parseInt(ordenDeCompra), 
       },
