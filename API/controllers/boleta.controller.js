@@ -1,5 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const dotenv = require("dotenv");
+const e = require("express");
 const db = new PrismaClient();
 const jwt = require("jsonwebtoken");
 
@@ -146,6 +147,7 @@ const getAllData = async (req, res) => {
       id: el.placa,
       nombre: el.placa,
     }));
+    Clientes.push({ id:-998, nombre: 'Cliente X'} , { id:-999, nombre: 'Proveedor X'})
     const Flete = MovimientosE;
     const FleteS = MovimientosS;
     res.status(200).json({
