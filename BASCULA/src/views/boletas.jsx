@@ -66,6 +66,8 @@ const Boletas = () => {
     if (name == "Estado" && value==1) {
       setFormBoletas((prev) => ({...prev, ['Proceso'] : 1}))
     }
+
+    console.log(formBoletas?.Socios)
   };
 
   const closeAllDataOfForm = () => {

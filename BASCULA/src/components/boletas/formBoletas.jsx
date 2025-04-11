@@ -179,12 +179,6 @@ export const ModalOut = ({hdlClose, hdlChange, fillData, typeBol, typeStructure,
   const [peso, setPeso] = useState('00lb');
   const [modal, setModal] = useState(false)
   const [dataPrev, setDataPrev] = useState()
-  const getPesoIn = () => {
-    formBol((prev)=> ({
-      ...prev, 
-      'pesoIn' : parseInt(peso.replaceAll('lb', '')), 
-    }))
-  }
 
   const getPesoOut = () => {
     formBol((prev)=> ({
