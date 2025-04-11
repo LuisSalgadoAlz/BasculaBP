@@ -2,13 +2,13 @@ import { useEffect, useState, useRef, use } from "react";
 import { ButtonAdd } from "../components/buttons";
 import ViewBoletas from "../components/boletas/viewBoletas";
 import CardHeader from "../components/card-header";
-import { ModalBoletas, ModalNormal } from "../components/boletas/formBoletas";
+import { ModalBoletas, ModalNormal, ModalOut } from "../components/boletas/formBoletas";
 import { initialSateDataFormSelet, initialStateFormBoletas, initialStateStats } from "../constants/boletas";
-import { formaterData, getAllDataForSelect, postBoletasNormal, getDataBoletas, getStatsBoletas } from "../hooks/formDataBoletas";
+import { formaterData, getAllDataForSelect, postBoletasNormal, getDataBoletas, getStatsBoletas, formaterDataNewPlaca, verificarDataNewPlaca, getDataBoletasPorID, getDataParaForm, updateBoletaOut, verificarDataCompleto } from "../hooks/formDataBoletas";
+import { ModalErr, ModalSuccess } from "../components/alerts";
 
 const Boletas = () => {
   const [openModelForm, setOpenModalForm] = useState(false);
-  const [openModelFormEspecial, setOpenModelFormEspecial] = useState(false);
   const [stats, setStats] = useState(initialStateStats)
   const [formBoletas, setFormBoletas] = useState(initialStateFormBoletas);
   const [dataSelets, setDataSelects] = useState(initialSateDataFormSelet);
@@ -18,20 +18,41 @@ const Boletas = () => {
   const [dataTable, setDataTable] = useState()
   const [err, setErr] = useState(false)
   const [success, setSuccess] = useState()
+  const [msg, setMsg] = useState()
+
+  /**
+   * Variables para la segunda parte
+   */
+
+  const [outBol, setOutBol] = useState(false);
+
+  /**
+   * Area de los modals
+   */
+  const handleCloseSuccess = () => {
+    setOpenModalForm(false)
+    setSuccess(false)
+    setOutBol(false)
+  }
 
   const handleClik = () => {
     setOpenModalForm(!openModelForm);
     setFormBoletas(initialStateFormBoletas)
+    setDataSelects(initialSateDataFormSelet)
+    getAllDataForSelect('', plc, formBoletas.Socios, formBoletas.Transportes, formBoletas.Motoristas,setDataSelects);
+    setPlc('')
   };
 
-  const handleClikModal = () => {
-    setOpenModalForm(!opeopenModelFormEspecialnModelForm);
+  const handleCloseCompleto=() => {
+    setOutBol(false)
     setFormBoletas(initialStateFormBoletas)
-  };
-
+    setDataSelects(initialSateDataFormSelet)
+    getAllDataForSelect('', plc, formBoletas.Socios, formBoletas.Transportes, formBoletas.Motoristas,setDataSelects);
+    setPlc('')
+  }
 
   /**
-   * ! Controla todos los cambios hechos en el formulario de Boletas
+   *  Controla todos los cambios hechos en el formulario de Boletas
    * @param {*} e 
    */
   const handleChange = (e) => {
@@ -53,24 +74,69 @@ const Boletas = () => {
     setDataSelects(initialSateDataFormSelet)
     setPlc('')
     setNewRender(key)
+    getAllDataForSelect('', plc, formBoletas.Socios, formBoletas.Transportes, formBoletas.Motoristas,setDataSelects);
   }
 
   /**
-   * ! Parte en desarrollo, faltan validaciones para la primera parte
-   * ! Ademas, de la otra parte del convenio casulla
+   * Todo: terminada Primera parte
    */
-  const handleSubmit = async () => {
+  const handleSubmitNewPlaca = async () => {
+    const response = formaterDataNewPlaca(formBoletas) 
+    const isCorrect = verificarDataNewPlaca(setErr,response, setMsg) 
+    if (isCorrect) {
+      await postBoletasNormal(response)
+      setSuccess(true)
+      setMsg('agregar nueva boleta')
+      getDataBoletas(setDataTable)
+    }
+  }
+
+  /**
+   * Todo: Segunda Parte area donde sacan las boletas
+   * ! Trabajando aqui
+   */
+
+  const handleOutBol = (data) => {
+    setOutBol(true)
+    getDataParaForm(setFormBoletas, data)
+  }
+
+  const handleCompleteOut = async() => {
     const response = formaterData(formBoletas)
-    await postBoletasNormal(response)
-    getDataBoletas(setDataTable)
-    console.log(response)
+    const isCorrect = verificarDataCompleto(setErr, response, setMsg)
+    console.log(isCorrect)
+    if (isCorrect) {
+      await updateBoletaOut(response, formBoletas.idBoleta)
+      setSuccess(true)
+      setMsg('dar salida a boleta')
+      getDataBoletas(setDataTable)
+    }
+    /* const isMsg = await updateBoletaOut(response, formBoletas.idBoleta) */
   }
   
   useEffect(() => {
-    getAllDataForSelect(formBoletas.Proceso, plc, formBoletas.Clientes, formBoletas.Transportes, formBoletas.Motoristas,setDataSelects);
+    getAllDataForSelect('', plc, formBoletas.Socios, formBoletas.Transportes, formBoletas.Motoristas,setDataSelects);
     getDataBoletas(setDataTable)
     getStatsBoletas(setStats)
-  }, [formBoletas.Proceso, plc, formBoletas.Clientes, formBoletas.Transportes, formBoletas.Motoristas]);
+  }, [formBoletas.Socios, plc, formBoletas.Transportes, formBoletas.Motoristas, formBoletas]);
+
+
+  /**
+   * Todo : area de lass props
+   */
+
+  const propsModalNormalNewPlacas = {
+    hdlClose: handleClik,
+    hdlChange: handleChange,
+    fillData: dataSelets,
+    typeBol: formBoletas?.Proceso,
+    typeStructure: formBoletas?.Estado,
+    formBol: setFormBoletas,
+    boletas: formBoletas,
+    hdlClean: limpiar,
+    hdlSubmit: handleSubmitNewPlaca,
+    clean: newRender,
+  };
 
   return (
     <>
@@ -87,27 +153,18 @@ const Boletas = () => {
         </div>
       </div>
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-3 mt-5">
-        <CardHeader
-          data={stats['entrada']}
-          name={"Total de entradas de material"}
-          title={"Entradas"}
-        />
-        <CardHeader
-          data={stats['salida']}
-          name={"Total de salidas de material"}
-          title={"Salidas"}
-        />
-        <CardHeader
-          data={stats['pendientes']}
-          name={"Total de salidas de material"}
-          title={"Pendientes"}
-        />
+        <CardHeader data={stats['entrada']} name={"Total de entradas de material"} title={"Entradas"}/>
+        <CardHeader data={stats['salida']} name={"Total de salidas de material"} title={"Salidas"}/>
+        <CardHeader data={stats['pendientes']} name={"Total de salidas de material"} title={"Pendientes"}/>
       </div>
       <div className="mt-6 bg-white shadow rounded-xl px-6 py-7">
-        <ViewBoletas boletas={dataTable} sts={setStats}/>
-        {openModelForm && (
-          <ModalNormal
-            hdlClose={handleClik}
+        <ViewBoletas boletas={dataTable} sts={setStats} hdlOut={handleOutBol}/>
+      </div>
+
+      {/* Modals de control de boletas */}
+      {openModelForm && (<ModalNormal key={newRender} {...propsModalNormalNewPlacas}/>)}
+      {outBol && (<ModalOut key={newRender} 
+            hdlClose={handleCloseCompleto}
             hdlChange={handleChange}
             fillData={dataSelets}
             typeBol={formBoletas?.Proceso}
@@ -115,13 +172,14 @@ const Boletas = () => {
             formBol = {setFormBoletas}
             boletas = {formBoletas}
             hdlClean = {limpiar}
-            hdlSubmit={handleSubmit}
+            hdlSubmit={handleCompleteOut}
             move={move}
             clean={newRender}
-            key={newRender}
-          />
-        )}
-      </div>
+      />)}
+
+      {/* Area de modals de errores */}
+      {err && <ModalErr name={msg} hdClose={()=>setErr(false)} />}
+      {success && <ModalSuccess name={msg} hdClose={handleCloseSuccess} />}
     </>
   );
 };

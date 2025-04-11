@@ -1,13 +1,6 @@
-import { CiEdit } from "react-icons/ci";
-import { useNavigate } from "react-router";
+import { IoExitOutline } from "react-icons/io5";
 
-export const TableBoletas = ({ datos = [{}] }) => {
-    const navigate = useNavigate();
-  
-    const handleGetInfo = (data) => {
-      navigate(`./${data.id}`);
-    };
-  
+export const TableBoletas = ({ datos = [{}], fun }) => {
     return (
       <>
         <div className="relative overflow-x-auto">
@@ -22,7 +15,7 @@ export const TableBoletas = ({ datos = [{}] }) => {
                   )
                 )}
                 <th scope="col" className="px-6 py-3 text-center">
-                  Editar
+                  Salida
                 </th>
               </tr>
             </thead>
@@ -57,10 +50,10 @@ export const TableBoletas = ({ datos = [{}] }) => {
                   <td className="py-3 text-center">
                     <button
                       className="font-medium text-gray-800 hover:underline text-center"
-                      onClick={() => handleGetInfo(fila)}
+                      onClick={()=>fun(fila)}
                     >
                       <span className="text-center">
-                        <CiEdit className="text-xl" />
+                        <IoExitOutline className="text-xl" />
                       </span>
                     </button>
                   </td>

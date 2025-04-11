@@ -2,7 +2,7 @@ import { claseFormInputs, classFormSelct } from "../../constants/boletas";
 import { PiGaugeThin } from "react-icons/pi";
 import SelectFormBoletas from "./select";
 
-export const InputsFormBoletas = ({ data, name, fun, stt = false }) => {
+export const InputsFormBoletas = ({ data, name, fun, stt = false, val }) => {
   return (
     <>
       <label className="block mb-2 text-sm font-medium text-gray-900 ">
@@ -17,6 +17,7 @@ export const InputsFormBoletas = ({ data, name, fun, stt = false }) => {
         required
         onChange={fun}
         disabled={stt}
+        {...(val !== undefined ? { value: val ?? '' } : {})}
       />
     </>
   );
@@ -62,6 +63,30 @@ export const PartInputsPesos2 = ({ fun, hdlChange, val, stt = false }) => {
           value={val.pesoIn}
         />
       </div>
+      <label className="block mb-2 text-sm font-medium text-gray-900">
+        Peso de salida
+      </label>
+      <div className="flex gap-3">
+        <input
+          type="number"
+          name="pesoOut"
+          className={claseFormInputs}
+          onChange={hdlChange}
+          placeholder="Peso de Salida"
+          disabled
+          value={val.pesoOut}
+        />
+        <button className="text-2xl" onClick={fun}>
+          <PiGaugeThin />
+        </button>
+      </div>
+    </>
+  );
+};
+
+export const PartPesosDeSalida = ({ fun, hdlChange, val, stt = false }) => {
+  return (
+    <>
       <label className="block mb-2 text-sm font-medium text-gray-900">
         Peso de salida
       </label>

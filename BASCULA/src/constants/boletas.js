@@ -88,6 +88,7 @@ export const initialStateFormBoletas = {
   Estado: 0,
   pesoIn: 0,
   pesoOut: 0,
+  Socios: ""
 };
 
 export const initialStateStats = {entrada: 0, salida: 0, pendientes: 0}

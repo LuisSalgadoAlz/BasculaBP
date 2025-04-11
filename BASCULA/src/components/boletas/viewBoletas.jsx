@@ -2,7 +2,7 @@ import {ButtonAdd} from "../buttons";
 import { NoData } from "../alerts";
 import { TableBoletas } from "./tableBoletas";
 
-const ViewBoletas = ({ boletas }) => {
+const ViewBoletas = ({ boletas, hdlOut }) => {
   return (
     <>
       <div className="filtros grid grid-rows-1 grid-cols-5 grid-flow-col gap-2 max-md:grid-rows-2 max-md:grid-cols-2 max-sm:grid-rows-2 max-sm:grid-cols-1">
@@ -26,7 +26,7 @@ const ViewBoletas = ({ boletas }) => {
         </button>
       </div>
       <div className="mt-4">
-        {!boletas || boletas.length == 0 ? <NoData /> : <TableBoletas datos={boletas} />} 
+        {!boletas || boletas.length == 0 ? <NoData /> : <TableBoletas datos={boletas} fun={hdlOut} />} 
       </div>
     </>
   );
