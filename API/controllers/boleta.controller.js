@@ -427,7 +427,7 @@ const updateBoletaOut = async(req, res) => {
       estado,
       idUsuario,
       idMotorista,
-      fechaInicio,
+      fechaFin,
       pesoInicial,
       idPlaca,
       idEmpresa,
@@ -438,10 +438,13 @@ const updateBoletaOut = async(req, res) => {
       idTrasladoOrigen,
       idTrasladoDestino,
       ordenDeTransferencia,
+      pesoNeto, 
+      pesoFinal, 
+      desviacion
     } = req.body;
 
     const verificado = jwt.verify(idUsuario, process.env.SECRET_KEY);
-
+    
     const despachador = await db.usuarios.findUnique({
       where: {
         usuarios: verificado["usuarios"],
@@ -482,7 +485,7 @@ const updateBoletaOut = async(req, res) => {
         ? true
         : false;
 
-        console.log(req.params.id)
+    
 
     const origen =
       !isTraslado &&
@@ -500,6 +503,10 @@ const updateBoletaOut = async(req, res) => {
       (await db.translado.findUnique({
         where: { id: parseInt(idTrasladoDestino) },
       }));
+
+
+    
+    
 
     const nuevaBoleta = await db.boleta.update({
       where: {
@@ -522,8 +529,8 @@ const updateBoletaOut = async(req, res) => {
         idUsuario: parseFloat(despachador["id"]),
         usuario: despachador["usuarios"],
         idMotorista: parseInt(idMotorista),
-        fechaInicio: fechaInicio,
-        pesoInicial: parseFloat(pesoInicial),
+        fechaFin: fechaFin,
+        pesoFinal: parseFloat(pesoFinal),
         idPlaca: placaData.id,
         idEmpresa: parseInt(idEmpresa),
         idMovimiento: parseInt(idMovimiento),
@@ -536,6 +543,8 @@ const updateBoletaOut = async(req, res) => {
         trasladoOrigen: transladoOrigen.nombre,
         trasladoDestino: transladoDestino.nombre,
         proceso,
+        pesoNeto: parseFloat(pesoNeto), 
+        desviacion: parseFloat(desviacion), 
         ordenDeCompra: parseInt(ordenDeCompra),
         ordenDeTransferencia: isTraslado
           ? parseInt(ordenDeTransferencia)
