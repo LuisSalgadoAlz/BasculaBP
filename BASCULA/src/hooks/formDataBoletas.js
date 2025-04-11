@@ -119,7 +119,7 @@ export const getStatsBoletas = async (fun) => {
 
 export const getDataParaForm = async(setFormBoletas, data) => {
   const response = await getDataBoletasPorID(data.Id)  
-  console.log(response.idPlaca)
+  console.log(response)
   setFormBoletas((prev)=>({
     ...prev,
     Socios: response.idSocio,
@@ -168,17 +168,22 @@ export const updateBoletaOut = async (boleta, id) => {
  */
 
 export const formaterData = (formBoletas) => {
+  const pesoNeto = Math.abs(formBoletas?.pesoOut - formBoletas?.pesoIn);
+  const tolerancia = formBoletas['Peso Teorico'] * 0.005;
+  const desviacion = Math.abs(Math.abs(pesoNeto) - formBoletas['Peso Teorico']);
+  const fueraTol = desviacion > tolerancia
+
   const allData = {
     idCliente : formBoletas?.Socios,
     boletaType: formBoletas?.Estado, 
     manifiesto: formBoletas?.Documento,
     ordenDeCompra : formBoletas['Orden de compra'], 
     pesoTeorico: formBoletas['Peso Teorico'],
-    estado: 'Completado',
+    estado: fueraTol ? 'Completo(Fuera de tolerancia)' : 'Completado',
     idUsuario: Cookies.get('token'),
     idMotorista: formBoletas?.Motoristas,
     fechaFin: new Date(),
-    pesoInicial: formBoletas?.pesoIn,
+    pesoFinal: formBoletas?.pesoOut,
     idPlaca: formBoletas?.Placa,
     idEmpresa: formBoletas?.Transportes,
     idMovimiento: formBoletas?.Movimiento,
@@ -190,7 +195,9 @@ export const formaterData = (formBoletas) => {
     idOrigen : formBoletas?.Origen,
     idDestino: formBoletas?.Destino,
     ordenDeTransferencia : formBoletas['Orden de Transferencia'] || null, 
-    tipoSocio: formBoletas?.tipoSocio
+    tipoSocio: formBoletas?.tipoSocio, 
+    pesoNeto: pesoNeto, 
+    desviacion: desviacion
   }
   return allData
 }
@@ -238,7 +245,7 @@ export const verificarDataCompleto = (funError, data, setMsg) => {
 
   console.log(data)
   
-  if (!idCliente || !idEmpresa || !idMotorista || !idMovimiento || !idProducto || !proceso) {
+  if (!idCliente || !idEmpresa || !idMotorista || !idMovimiento || !idProducto) {
     setMsg('Por favor, ingresar todos los datos primer nivel')
     funError(true)
     return false

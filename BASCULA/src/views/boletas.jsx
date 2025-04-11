@@ -68,7 +68,14 @@ const Boletas = () => {
     }
   };
 
-  const limpiar = (fun) => {
+  const closeAllDataOfForm = () => {
+    setPlc('')
+    setFormBoletas(initialStateFormBoletas)
+    getAllDataForSelect('', plc, formBoletas.Socios, formBoletas.Transportes, formBoletas.Motoristas,setDataSelects);
+    setDataSelects(initialSateDataFormSelet)
+    getDataBoletas(setDataTable)
+  }
+  const limpiar = () => {
     const key = newRender + 1
     setFormBoletas(initialStateFormBoletas)
     setDataSelects(initialSateDataFormSelet)
@@ -87,7 +94,7 @@ const Boletas = () => {
       await postBoletasNormal(response)
       setSuccess(true)
       setMsg('agregar nueva boleta')
-      getDataBoletas(setDataTable)
+      closeAllDataOfForm()
     }
   }
 
@@ -109,9 +116,8 @@ const Boletas = () => {
       await updateBoletaOut(response, formBoletas.idBoleta)
       setSuccess(true)
       setMsg('dar salida a boleta')
-      getDataBoletas(setDataTable)
+      closeAllDataOfForm()    
     }
-    /* const isMsg = await updateBoletaOut(response, formBoletas.idBoleta) */
   }
   
   useEffect(() => {
