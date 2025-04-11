@@ -1,7 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const dotenv = require("dotenv");
 const db = new PrismaClient();
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 
 const getAllData = async (req, res) => {
   try {
@@ -14,7 +14,7 @@ const getAllData = async (req, res) => {
       req.query.empresa != undefined ? parseInt(req.query.empresa) : null;
     const motorista =
       req.query.motorista != undefined ? parseFloat(req.query.motorista) : null;
-      
+
     const [
       Clientes,
       Origen,
@@ -25,8 +25,8 @@ const getAllData = async (req, res) => {
       Producto,
       MovimientosE,
       MovimientosS,
-      TransladosI, 
-      TransladosE, 
+      TransladosI,
+      TransladosE,
     ] = await Promise.all([
       db.socios.findMany({
         select: { id: true, nombre: true },
@@ -133,39 +133,34 @@ const getAllData = async (req, res) => {
       }),
       db.movimientos.findMany({
         select: { id: true, nombre: true },
-        where : {
-          nombre : {notIn: ["Traslado Interno","Traslado Externo"]}
-        }
       }),
       db.translado.findMany({
-        select:{id: true, nombre: true},
-        where:{tipo: 0}
-      }), 
+        select: { id: true, nombre: true },
+        where: { tipo: 0 },
+      }),
       db.translado.findMany({
-        select:{id: true, nombre: true},
-      })
+        select: { id: true, nombre: true },
+      }),
     ]);
     const Placa = Vehiculo.map((el) => ({
       id: el.placa,
       nombre: el.placa,
     }));
     const Flete = MovimientosE;
-    const FleteS = MovimientosS
-    res
-      .status(200)
-      .json({
-        Clientes,
-        Origen,
-        Destino,
-        Transportes,
-        Placa,
-        Motoristas,
-        Producto,
-        Flete,
-        FleteS,
-        TransladosI,
-        TransladosE, 
-      });
+    const FleteS = MovimientosS;
+    res.status(200).json({
+      Clientes,
+      Origen,
+      Destino,
+      Transportes,
+      Placa,
+      Motoristas,
+      Producto,
+      Flete,
+      FleteS,
+      TransladosI,
+      TransladosE,
+    });
   } catch (err) {
     console.log(err);
   }
@@ -175,8 +170,8 @@ const postBoletasNormal = async (req, res) => {
   try {
     const {
       idCliente,
-      boletaType, 
-      proceso, 
+      boletaType,
+      proceso,
       idOrigen,
       idDestino,
       manifiesto,
@@ -190,146 +185,378 @@ const postBoletasNormal = async (req, res) => {
       idEmpresa,
       idMovimiento,
       idProducto,
-      observaciones, 
-      ordenDeCompra, 
-      idTrasladoOrigen, 
-      idTrasladoDestino, 
-      ordenDeTransferencia
+      observaciones,
+      ordenDeCompra,
+      idTrasladoOrigen,
+      idTrasladoDestino,
+      ordenDeTransferencia,
     } = req.body;
-    
 
     const verificado = jwt.verify(idUsuario, process.env.SECRET_KEY);
 
-    const despachador =  await db.usuarios.findUnique({
+    const despachador = await db.usuarios.findUnique({
       where: {
-        usuarios: verificado['usuarios']
-      }
-    })
+        usuarios: verificado["usuarios"],
+      },
+    });
 
     const placaData = await db.vehiculo.findFirst({
       select: {
-        id:true,
-        placa: true
+        id: true,
+        placa: true,
       },
-      where : { 
-        placa : idPlaca, 
-        rEmpresaVehiculo : {
-          id: idEmpresa
-        }
-      }
-    })
+      where: {
+        placa: idPlaca,
+        rEmpresaVehiculo: {
+          id: idEmpresa,
+        },
+      },
+    });
 
-    const empresa = await db.empresa.findUnique({where :{id: parseInt(idEmpresa)}})
-    const motorista = await db.motoristas.findUnique({where :{id: parseInt(idMotorista)}})
-    const socio = await db.socios.findUnique({where :{id: parseInt(idCliente)}})
-    const producto = await db.producto.findUnique({where: {id: parseInt(idProducto)}})
-    const move = await db.movimientos.findUnique({where:{id: parseInt(idMovimiento)}})
+    const empresa = await db.empresa.findUnique({
+      where: { id: parseInt(idEmpresa) },
+    });
+    const motorista = await db.motoristas.findUnique({
+      where: { id: parseInt(idMotorista) },
+    });
+    const socio = await db.socios.findUnique({
+      where: { id: parseInt(idCliente) },
+    });
+    const producto = await db.producto.findUnique({
+      where: { id: parseInt(idProducto) },
+    });
+    const move = await db.movimientos.findUnique({
+      where: { id: parseInt(idMovimiento) },
+    });
 
-    const isTraslado = (move.nombre == 'Traslado Interno' || move.nombre == 'Traslado Externo') ? true: false;
+    const isTraslado =
+      move.nombre == "Traslado Interno" || move.nombre == "Traslado Externo"
+        ? true
+        : false;
 
-    const origen = !isTraslado && await db.direcciones.findUnique({where :{id: parseInt(idOrigen)}})
-    const destino = !isTraslado && await db.direcciones.findUnique({where :{id: parseInt(idDestino)}})
-    const transladoOrigen = isTraslado && await db.translado.findUnique({where: {id: parseInt(idTrasladoOrigen)}})
-    const transladoDestino = isTraslado && await db.translado.findUnique({where: {id: parseInt(idTrasladoDestino)}})
+    const origen =
+      !isTraslado &&
+      (await db.direcciones.findUnique({ where: { id: parseInt(idOrigen) } }));
+    const destino =
+      !isTraslado &&
+      (await db.direcciones.findUnique({ where: { id: parseInt(idDestino) } }));
+    const transladoOrigen =
+      isTraslado &&
+      (await db.translado.findUnique({
+        where: { id: parseInt(idTrasladoOrigen) },
+      }));
+    const transladoDestino =
+      isTraslado &&
+      (await db.translado.findUnique({
+        where: { id: parseInt(idTrasladoDestino) },
+      }));
 
     const nuevaBoleta = await db.boleta.create({
       data: {
-        idSocio : parseInt(idCliente),
+        idSocio: parseInt(idCliente),
         placa: placaData.placa,
-        empresa: empresa.nombre, 
-        motorista: motorista.nombre, 
-        socio: socio.nombre, 
-        origen: origen.nombre, 
-        destino: destino.nombre, 
-        boletaType : parseInt(boletaType), 
+        empresa: empresa.nombre,
+        motorista: motorista.nombre,
+        socio: socio.nombre,
+        origen: origen.nombre,
+        destino: destino.nombre,
+        boletaType: parseInt(boletaType),
         idOrigen: !isTraslado ? parseInt(idOrigen) : null,
         idDestino: !isTraslado ? parseInt(idDestino) : null,
         manifiesto: parseInt(manifiesto),
         pesoTeorico: parseFloat(pesoTeorico),
         estado: estado,
-        idUsuario: parseFloat(despachador['id']),
-        usuario : despachador['usuarios'], 
+        idUsuario: parseFloat(despachador["id"]),
+        usuario: despachador["usuarios"],
         idMotorista: parseInt(idMotorista),
         fechaInicio: fechaInicio,
         pesoInicial: parseFloat(pesoInicial),
         idPlaca: placaData.id,
-        idEmpresa : parseInt(idEmpresa),
+        idEmpresa: parseInt(idEmpresa),
         idMovimiento: parseInt(idMovimiento),
-        movimiento: move.nombre, 
+        movimiento: move.nombre,
         idProducto: parseInt(idProducto),
-        producto: producto.nombre, 
+        producto: producto.nombre,
         observaciones,
-        idTrasladoOrigen : isTraslado ? parseInt(idTrasladoOrigen) : null, 
-        idTrasladoDestino : isTraslado ? parseInt(idTrasladoDestino) : null, 
-        trasladoOrigen: transladoOrigen.nombre, 
-        trasladoDestino: transladoDestino.nombre, 
+        idTrasladoOrigen: isTraslado ? parseInt(idTrasladoOrigen) : null,
+        idTrasladoDestino: isTraslado ? parseInt(idTrasladoDestino) : null,
+        trasladoOrigen: transladoOrigen.nombre,
+        trasladoDestino: transladoDestino.nombre,
         proceso,
-        ordenDeCompra: parseInt(ordenDeCompra), 
-        ordenDeTransferencia: isTraslado ? parseInt(ordenDeTransferencia) : null
+        ordenDeCompra: parseInt(ordenDeCompra),
+        ordenDeTransferencia: isTraslado
+          ? parseInt(ordenDeTransferencia)
+          : null,
       },
     });
 
-    res.status(201).json({ msg: "Boleta creado exitosamente", boleta: nuevaBoleta });
+    res
+      .status(201)
+      .json({ msg: "Boleta creado exitosamente", boleta: nuevaBoleta });
   } catch (error) {
     console.error(error);
     res.status(500).json({ msg: `Error al crear usuario: ${error.message}` });
   }
 };
 
-const getDataBoletas = async(req, res) => {
-    const data = await db.boleta.findMany({
-      select : {
-        id: true, 
-        estado: true, 
-        proceso: true, 
-        empresa: true, 
-        motorista: true, 
-        socio: true, 
-        placa: true,
-        fechaInicio: true,
-        proceso: true
+const getDataBoletas = async (req, res) => {
+  const data = await db.boleta.findMany({
+    select: {
+      id: true,
+      estado: true,
+      proceso: true,
+      empresa: true,
+      motorista: true,
+      socio: true,
+      placa: true,
+      fechaInicio: true,
+      proceso: true,
+    },
+    where: {
+      estado: "Pendiente",
+    },
+  });
+
+  const dataUTCHN = data.map((el) => ({
+    Id: el.id,
+    Placa: el.placa,
+    Cliente: el.socio,
+    Transporte: el.empresa,
+    Motorista: el.motorista,
+    Fecha: el.fechaInicio.toLocaleString(),
+  }));
+
+  res.send(dataUTCHN);
+};
+
+const postClientePlacaMoto = async (req, res) => {
+  try{
+    const { idCliente, idUsuario, idMotorista, pesoInicial, idPlaca, idEmpresa, } = req.body;
+
+    const empresa = await db.empresa.findUnique({where: { id: parseInt(idEmpresa) },});
+    const motorista = await db.motoristas.findUnique({where: { id: parseInt(idMotorista) }, });
+    const socio = await db.socios.findUnique({where: { id: parseInt(idCliente) }, });
+    const placaData = await db.vehiculo.findFirst({
+      select: { id: true, placa: true, },
+      where: { placa: idPlaca, rEmpresaVehiculo: { id: idEmpresa, },},
+    });
+    
+    const verificado = jwt.verify(idUsuario, process.env.SECRET_KEY);
+    const despachador = await db.usuarios.findUnique({
+      where: {
+        usuarios: verificado["usuarios"],
+      },
+    });
+    
+    const newBol = await db.boleta.create({
+      data: {
+        idSocio: parseInt(idCliente),
+        placa: placaData.placa,
+        empresa: empresa.nombre,
+        motorista: motorista.nombre,
+        socio: socio.nombre,
+        boletaType: 0,
+        estado: 'Pendiente',
+        idUsuario: parseFloat(despachador["id"]),
+        usuario: despachador["usuarios"],
+        idMotorista: parseInt(idMotorista),
+        fechaInicio: new Date(),
+        pesoInicial: parseFloat(pesoInicial),
+        idPlaca: placaData.id,
+        idEmpresa: parseInt(idEmpresa),
+      }
+    })
+    res.status(201).send({msg: 'Boleta creada en estado pendiente', Bol: newBol})
+  }catch(err){
+    console.log(err)
+  }
+};
+
+
+const getStatsBoletas = async (req, res) => {
+  try {
+    const [entrada, salida, pendientes] = await Promise.all([
+      db.boleta.count({
+        where: { proceso: 0 },
+      }),
+      db.boleta.count({
+        where: { proceso: 1 },
+      }),
+      db.boleta.count({
+        where: { estado: "Pendiente" },
+      }),
+    ]);
+    res.status(201).send({ entrada, salida, pendientes });
+  } catch (err) {
+    res.status(501).send({ msg: "Error en el server" });
+  }
+};
+
+const getBoletaID =  async(req, res) => {
+  try{
+    const data = await db.boleta.findUnique({
+      where: {
+        id: parseInt(req.params.id)
       }, 
-      where : {
-        estado : 'Pendiente'
+      include : {
+        clienteBoleta : {
+          select : {
+            tipo : true,
+          }
+        }
       }
     })
 
-    const dataUTCHN = data.map((el) => ({
-        Id: el.id,
-        Placa : el.placa, 
-        Proceso: el.proceso == 0 ? 'Entrada de material':'Salida de material' ,
-        Cliente : el.socio, 
-        Transporte: el.empresa, 
-        Motorista: el.motorista,  
-        Fecha : el.fechaInicio.toLocaleString()
-    }))
-
-    res.send(dataUTCHN)
-}
-
-const getStatsBoletas = async(req, res) => {
-  try{
-    const [entrada, salida, pendientes] = await Promise.all([
-      db.boleta.count({
-        where : { proceso : 0 }
-      }), 
-      db.boleta.count({
-        where : {proceso : 1}
-      }), 
-      db.boleta.count({
-        where: {estado : 'Pendiente'}
-      })
-    ])
-    res.status(201).send({entrada, salida, pendientes})
+    
+    return res.json(data)
   }catch(err) {
-    res.status(501).send({msg: 'Error en el server'})
+    return res.status(401).send('Error en el api')
   }
-
 }
 
+const updateBoletaOut = async(req, res) => {
+  try {
+    const {
+      idCliente,
+      boletaType,
+      proceso,
+      idOrigen,
+      idDestino,
+      manifiesto,
+      pesoTeorico,
+      estado,
+      idUsuario,
+      idMotorista,
+      fechaInicio,
+      pesoInicial,
+      idPlaca,
+      idEmpresa,
+      idMovimiento,
+      idProducto,
+      observaciones,
+      ordenDeCompra,
+      idTrasladoOrigen,
+      idTrasladoDestino,
+      ordenDeTransferencia,
+    } = req.body;
+
+    const verificado = jwt.verify(idUsuario, process.env.SECRET_KEY);
+
+    const despachador = await db.usuarios.findUnique({
+      where: {
+        usuarios: verificado["usuarios"],
+      },
+    });
+
+    const placaData = await db.vehiculo.findFirst({
+      select: {
+        id: true,
+        placa: true,
+      },
+      where: {
+        placa: idPlaca,
+        rEmpresaVehiculo: {
+          id: idEmpresa,
+        },
+      },
+    });
+
+    const empresa = await db.empresa.findUnique({
+      where: { id: parseInt(idEmpresa) },
+    });
+    const motorista = await db.motoristas.findUnique({
+      where: { id: parseInt(idMotorista) },
+    });
+    const socio = await db.socios.findUnique({
+      where: { id: parseInt(idCliente) },
+    });
+    const producto = await db.producto.findUnique({
+      where: { id: parseInt(idProducto) },
+    });
+    const move = await db.movimientos.findUnique({
+      where: { id: parseInt(idMovimiento) },
+    });
+
+    const isTraslado =
+      move.nombre == "Traslado Interno" || move.nombre == "Traslado Externo"
+        ? true
+        : false;
+
+        console.log(req.params.id)
+
+    const origen =
+      !isTraslado &&
+      (await db.direcciones.findUnique({ where: { id: parseInt(idOrigen) } }));
+    const destino =
+      !isTraslado &&
+      (await db.direcciones.findUnique({ where: { id: parseInt(idDestino) } }));
+    const transladoOrigen =
+      isTraslado &&
+      (await db.translado.findUnique({
+        where: { id: parseInt(idTrasladoOrigen) },
+      }));
+    const transladoDestino =
+      isTraslado &&
+      (await db.translado.findUnique({
+        where: { id: parseInt(idTrasladoDestino) },
+      }));
+
+    const nuevaBoleta = await db.boleta.update({
+      where: {
+        id : parseInt(req.params.id)
+      }, 
+      data: {
+        idSocio: parseInt(idCliente),
+        placa: placaData.placa,
+        empresa: empresa.nombre,
+        motorista: motorista.nombre,
+        socio: socio.nombre,
+        origen: origen.nombre,
+        destino: destino.nombre,
+        boletaType: parseInt(boletaType),
+        idOrigen: !isTraslado ? parseInt(idOrigen) : null,
+        idDestino: !isTraslado ? parseInt(idDestino) : null,
+        manifiesto: parseInt(manifiesto),
+        pesoTeorico: parseFloat(pesoTeorico),
+        estado: estado,
+        idUsuario: parseFloat(despachador["id"]),
+        usuario: despachador["usuarios"],
+        idMotorista: parseInt(idMotorista),
+        fechaInicio: fechaInicio,
+        pesoInicial: parseFloat(pesoInicial),
+        idPlaca: placaData.id,
+        idEmpresa: parseInt(idEmpresa),
+        idMovimiento: parseInt(idMovimiento),
+        movimiento: move.nombre,
+        idProducto: parseInt(idProducto),
+        producto: producto.nombre,
+        observaciones,
+        idTrasladoOrigen: isTraslado ? parseInt(idTrasladoOrigen) : null,
+        idTrasladoDestino: isTraslado ? parseInt(idTrasladoDestino) : null,
+        trasladoOrigen: transladoOrigen.nombre,
+        trasladoDestino: transladoDestino.nombre,
+        proceso,
+        ordenDeCompra: parseInt(ordenDeCompra),
+        ordenDeTransferencia: isTraslado
+          ? parseInt(ordenDeTransferencia)
+          : null,
+      },
+    });
+
+    res
+      .status(201)
+      .json({ msg: "Boleta creado exitosamente" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: `Error al crear usuario: ${error.message}` });
+  }
+}
 module.exports = {
   getAllData,
   postBoletasNormal,
-  getDataBoletas, 
-  getStatsBoletas
+  getDataBoletas,
+  getStatsBoletas,
+  postClientePlacaMoto,  
+  getBoletaID, 
+  updateBoletaOut
 };
