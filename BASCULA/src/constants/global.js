@@ -1,4 +1,4 @@
-export const URLHOST = 'http://192.9.100.56:3000/'
+export const URLHOST = 'http://192.168.100.3:3000/'
 export const URLWEBSOCKET = 'ws://192.9.100.56:3000'
 export const ESTADOS_BOLETAS = [
     {
@@ -9,7 +9,6 @@ export const ESTADOS_BOLETAS = [
         id : 1, 
         nombre : '🔵 Boleta Casulla'
     }, 
-    ,
     {
         id : 2, 
         nombre : '🟣 Boleta Vehiculo Particular'
