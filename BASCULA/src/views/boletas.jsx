@@ -1,10 +1,10 @@
-import { useEffect, useState, useRef, use } from "react";
+import { useEffect, useState } from "react";
 import { ButtonAdd } from "../components/buttons";
 import ViewBoletas from "../components/boletas/viewBoletas";
 import CardHeader from "../components/card-header";
-import { ModalBoletas, ModalNormal, ModalOut } from "../components/boletas/formBoletas";
+import { ModalNormal, ModalOut } from "../components/boletas/formBoletas";
 import { initialSateDataFormSelet, initialStateFormBoletas, initialStateStats } from "../constants/boletas";
-import { formaterData, getAllDataForSelect, postBoletasNormal, getDataBoletas, getStatsBoletas, formaterDataNewPlaca, verificarDataNewPlaca, getDataBoletasPorID, getDataParaForm, updateBoletaOut, verificarDataCompleto } from "../hooks/formDataBoletas";
+import { formaterData, getAllDataForSelect, postBoletasNormal, getDataBoletas, getStatsBoletas, formaterDataNewPlaca, verificarDataNewPlaca, getDataParaForm, updateBoletaOut, verificarDataCompleto } from "../hooks/formDataBoletas";
 import { ModalErr, ModalSuccess } from "../components/alerts";
 
 const Boletas = () => {
@@ -39,7 +39,7 @@ const Boletas = () => {
     setOpenModalForm(!openModelForm);
     setFormBoletas(initialStateFormBoletas)
     setDataSelects(initialSateDataFormSelet)
-    getAllDataForSelect('', plc, formBoletas.Socios, formBoletas.Transportes, formBoletas.Motoristas,setDataSelects);
+    getAllDataForSelect('', '', '', '', '',setDataSelects);
     setPlc('')
   };
 
@@ -47,7 +47,7 @@ const Boletas = () => {
     setOutBol(false)
     setFormBoletas(initialStateFormBoletas)
     setDataSelects(initialSateDataFormSelet)
-    getAllDataForSelect('', plc, formBoletas.Socios, formBoletas.Transportes, formBoletas.Motoristas,setDataSelects);
+    getAllDataForSelect('', '', '', '', '',setDataSelects);
     setPlc('')
   }
 
@@ -57,33 +57,33 @@ const Boletas = () => {
    */
   const handleChange = (e) => {
     const { name, value, data } = e.target;
-    setFormBoletas((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    if (name == "Placa") setPlc(value);
+    setFormBoletas((prev) => ({...prev, [name]: value}));
+    if (name == "Placa" && (formBoletas?.Socios ==-998 && formBoletas?.Socios ==-999)) setPlc(value);
     if (name == "Movimiento") setMove(data)
-    if (name == "Estado" && value==1) {
-      setFormBoletas((prev) => ({...prev, ['Proceso'] : 1}))
+    if (name == "Estado" && value==1) setFormBoletas((prev) => ({...prev, ['Proceso'] : 1}))
+    if (name == "Socios" && (value==-998 || value==-999)) {
+      setFormBoletas((prev) => ({
+        ...prev, ['Placa'] : "", ['Transportes'] : "Transportes X", ['Motoristas'] : ""
+      }))
     }
 
-    console.log(formBoletas?.Socios)
+    console.log(formBoletas)
   };
 
   const closeAllDataOfForm = () => {
     setPlc('')
     setFormBoletas(initialStateFormBoletas)
-    getAllDataForSelect('', plc, formBoletas.Socios, formBoletas.Transportes, formBoletas.Motoristas,setDataSelects);
-    setDataSelects(initialSateDataFormSelet)
+    getAllDataForSelect('', '', '', '', '',setDataSelects);
     getDataBoletas(setDataTable)
   }
+  
   const limpiar = () => {
     const key = newRender + 1
     setFormBoletas(initialStateFormBoletas)
     setDataSelects(initialSateDataFormSelet)
     setPlc('')
     setNewRender(key)
-    getAllDataForSelect('', plc, formBoletas.Socios, formBoletas.Transportes, formBoletas.Motoristas,setDataSelects);
+    getAllDataForSelect('', '', '', '', '',setDataSelects);
   }
 
   /**
@@ -107,13 +107,13 @@ const Boletas = () => {
 
   const handleOutBol = (data) => {
     setOutBol(true)
-    getDataParaForm(setFormBoletas, data)
+    getDataParaForm(setFormBoletas, data) 
   }
 
   const handleCompleteOut = async() => {
     const response = formaterData(formBoletas)
     const isCorrect = verificarDataCompleto(setErr, response, setMsg)
-    console.log(isCorrect)
+    console.log(response)
     if (isCorrect) {
       await updateBoletaOut(response, formBoletas.idBoleta)
       setSuccess(true)
@@ -146,6 +146,20 @@ const Boletas = () => {
     clean: newRender,
   };
 
+  const propsModalOutPlacas = {
+    hdlClose: handleCloseCompleto,
+    hdlChange: handleChange,
+    fillData: dataSelets,
+    typeBol: formBoletas?.Proceso,
+    typeStructure: formBoletas?.Estado,
+    formBol: setFormBoletas,
+    boletas: formBoletas,
+    hdlClean: limpiar,
+    hdlSubmit: handleCompleteOut,
+    move: move,
+    clean: newRender
+  };
+
   return (
     <>
       <div className="flex justify-between w-full gap-5 max-sm:flex-col max-md:flex-col mb-4">
@@ -171,19 +185,7 @@ const Boletas = () => {
 
       {/* Modals de control de boletas */}
       {openModelForm && (<ModalNormal key={newRender} {...propsModalNormalNewPlacas}/>)}
-      {outBol && (<ModalOut key={newRender} 
-            hdlClose={handleCloseCompleto}
-            hdlChange={handleChange}
-            fillData={dataSelets}
-            typeBol={formBoletas?.Proceso}
-            typeStructure={formBoletas?.Estado}
-            formBol = {setFormBoletas}
-            boletas = {formBoletas}
-            hdlClean = {limpiar}
-            hdlSubmit={handleCompleteOut}
-            move={move}
-            clean={newRender}
-      />)}
+      {outBol && (<ModalOut key={newRender} {...propsModalOutPlacas}/>)}
 
       {/* Area de modals de errores */}
       {err && <ModalErr name={msg} hdClose={()=>setErr(false)} />}

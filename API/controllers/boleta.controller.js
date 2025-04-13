@@ -374,6 +374,47 @@ const postClientePlacaMoto = async (req, res) => {
   }
 };
 
+const postClientePlacaMotoComodin = async (req, res) => {
+  try{
+    const { idCliente, idUsuario, idMotorista, pesoInicial, idPlaca, idEmpresa, } = req.body;
+    
+    const verificado = jwt.verify(idUsuario, process.env.SECRET_KEY);
+    const despachador = await db.usuarios.findUnique({
+      where: {
+        usuarios: verificado["usuarios"],
+      },
+    });
+    
+    const newBol = await db.boleta.create({
+      data: {
+        placa: idPlaca,
+        empresa: idEmpresa,
+        motorista: idMotorista,
+        socio: idCliente==-998 ? 'Cliente X' : 'Proveedor X',
+        boletaType: 0,
+        estado: 'Pendiente',
+        idUsuario: parseFloat(despachador["id"]),
+        usuario: despachador["usuarios"],
+        fechaInicio: new Date(),
+        pesoInicial: parseFloat(pesoInicial),
+        boletaType: 3
+      }
+    })
+    res.status(201).send({msg: 'Boleta creada en estado pendiente', Bol: newBol})
+  }catch(err){
+    console.log(err)
+  }
+};
+
+const postBoleta = async (req, res) => {
+  const { idCliente } = req.body;
+
+  if (idCliente == -998 || idCliente == -999) {
+    return postClientePlacaMotoComodin(req, res);
+  } else {
+    return postClientePlacaMoto(req, res);
+  }
+};
 
 const getStatsBoletas = async (req, res) => {
   try {
@@ -430,7 +471,6 @@ const updateBoletaOut = async(req, res) => {
       idUsuario,
       idMotorista,
       fechaFin,
-      pesoInicial,
       idPlaca,
       idEmpresa,
       idMovimiento,
@@ -562,12 +602,127 @@ const updateBoletaOut = async(req, res) => {
     res.status(500).json({ msg: `Error al crear usuario: ${error.message}` });
   }
 }
+
+const updateBoletaOutComdin = async(req, res) => {
+  try {
+    const {
+      idCliente,
+      idPlaca, 
+      proceso,
+      idOrigen,
+      idDestino,
+      manifiesto,
+      pesoTeorico,
+      estado,
+      idUsuario,
+      idMotorista,
+      fechaFin,
+      idEmpresa,
+      idMovimiento,
+      idProducto,
+      observaciones,
+      ordenDeCompra,
+      idTrasladoOrigen,
+      idTrasladoDestino,
+      ordenDeTransferencia,
+      pesoNeto, 
+      pesoFinal, 
+      desviacion
+    } = req.body;
+
+    const verificado = jwt.verify(idUsuario, process.env.SECRET_KEY);
+    
+    const despachador = await db.usuarios.findUnique({
+      where: {
+        usuarios: verificado["usuarios"],
+      },
+    });
+
+
+    const producto = await db.producto.findUnique({
+      where: { id: parseInt(idProducto) },
+    });
+    const move = await db.movimientos.findUnique({
+      where: { id: parseInt(idMovimiento) },
+    });
+
+    const isTraslado = move.nombre == "Traslado Interno" || move.nombre == "Traslado Externo"  ? true  : false;
+
+    
+
+    const origen = !isTraslado && idOrigen;
+    const destino =  !isTraslado && idDestino;
+    const transladoOrigen = isTraslado &&  (await db.translado.findUnique({where: { id: parseInt(idTrasladoOrigen) }, }));
+    const transladoDestino = isTraslado && (await db.translado.findUnique({ where: { id: parseInt(idTrasladoDestino) }, }));
+
+
+    const nuevaBoleta = await db.boleta.update({
+      where: {
+        id : parseInt(req.params.id)
+      }, 
+      data: {
+        placa: idPlaca,
+        empresa: idEmpresa,
+        motorista: idMotorista,
+        socio: idCliente==-998 ? 'Cliente X' : 'Proveedor X',
+        origen: !isTraslado ? origen : null ,
+        destino: !isTraslado ? destino : null,
+        boletaType: 4,
+        idOrigen: null,
+        idDestino: null,
+        manifiesto: parseInt(manifiesto),
+        pesoTeorico: parseFloat(pesoTeorico),
+        estado: estado,
+        idUsuario: parseFloat(despachador["id"]),
+        usuario: despachador["usuarios"],
+        idMotorista: null,
+        fechaFin: fechaFin,
+        pesoFinal: parseFloat(pesoFinal),
+        idPlaca: null,
+        idEmpresa: null,
+        idMovimiento: parseInt(idMovimiento),
+        movimiento: move.nombre,
+        idProducto: parseInt(idProducto),
+        producto: producto.nombre,
+        observaciones,
+        idTrasladoOrigen: isTraslado ? parseInt(idTrasladoOrigen) : null,
+        idTrasladoDestino: isTraslado ? parseInt(idTrasladoDestino) : null,
+        trasladoOrigen: transladoOrigen.nombre,
+        trasladoDestino: transladoDestino.nombre,
+        proceso,
+        pesoNeto: parseFloat(pesoNeto), 
+        desviacion: parseFloat(desviacion), 
+        ordenDeCompra: parseInt(ordenDeCompra),
+        ordenDeTransferencia: isTraslado
+          ? parseInt(ordenDeTransferencia)
+          : null,
+      },
+    });
+
+    res
+      .status(201)
+      .json({ msg: "Boleta creado exitosamente" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: `Error al crear usuario: ${error.message}` });
+  }
+}
+
+const updateBoleta = async (req, res) => {
+  const { idCliente } = req.body;
+
+  if (idCliente == -998 || idCliente == -999) {
+    return updateBoletaOutComdin(req, res);
+  } else {
+    return updateBoletaOut(req, res);
+  }
+}
 module.exports = {
   getAllData,
   postBoletasNormal,
   getDataBoletas,
-  getStatsBoletas,
-  postClientePlacaMoto,  
+  getStatsBoletas, 
   getBoletaID, 
-  updateBoletaOut
+  updateBoleta, 
+  postBoleta
 };

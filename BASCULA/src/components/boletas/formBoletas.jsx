@@ -5,6 +5,8 @@ import { buttonCalcular, buttonCancel, buttonClean, buttonSave, claseFormInputs,
 import { ESTADOS_BOLETAS, URLWEBSOCKET } from "../../constants/global";
 import { ModalPrevisual } from "../alerts";
 
+const formInputSelect = ['Transportes', 'Placa', 'Motoristas']
+
 export const ModalBoletas = ({hdlClose, hdlChange, fillData, typeBol, typeStructure, formBol, boletas, hdlClean, hdlSubmit, move, clean}) => {
   const [peso, setPeso] = useState('00lb');
   const getPesoIn = () => {
@@ -149,11 +151,12 @@ export const ModalNormal= ({hdlClose, hdlChange, fillData, formBol, boletas, hdl
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 p-2 place-content-center">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-2 p-2 place-content-center">
           <SelectFormBoletas key={clean} classCss={classFormSelct} name={'Socios'} data={fillData['Clientes']} fun={hdlChange}/>
-          <SelectFormBoletas classCss={classFormSelct} name={'Transportes'} data={fillData['Transportes']} fun={hdlChange}/>
-          <SelectFormBoletas classCss={classFormSelct} name={'Placa'} data={fillData['Placa']} fun={hdlChange}/>
-          <SelectFormBoletas classCss={classFormSelct} name={'Motoristas'} data={fillData['Motoristas']} fun={hdlChange}/>
+          {formInputSelect.map((field) => (
+            (boletas?.Socios !=-998 && boletas?.Socios !=-999) ? (<SelectFormBoletas key={field} classCss={classFormSelct} name={field} data={fillData[field]} fun={hdlChange}  /> )
+            : (<InputsFormBoletas key={field} data={claseFormInputs} name={field} fun={hdlChange} val={field=='Transportes' ? 'Transportes X' : undefined} stt={field=='Transportes' ? true : false}/>) 
+          ))}
           <PartInputsPesos fun={getPesoIn} hdlChange={hdlChange} val={boletas}/>
         </div>
    
@@ -175,7 +178,7 @@ export const ModalNormal= ({hdlClose, hdlChange, fillData, formBol, boletas, hdl
   );
 };
 
-export const ModalOut = ({hdlClose, hdlChange, fillData, typeBol, typeStructure, formBol, boletas, hdlClean, hdlSubmit, move, clean}) => {
+export const ModalOut = ({hdlClose, hdlChange, fillData, typeBol, typeStructure, formBol, boletas, hdlSubmit, move, clean}) => {
   const [peso, setPeso] = useState('00lb');
   const [modal, setModal] = useState(false)
   const [dataPrev, setDataPrev] = useState()
@@ -238,10 +241,13 @@ export const ModalOut = ({hdlClose, hdlChange, fillData, typeBol, typeStructure,
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 p-2 place-content-center">
           <div className="grid grid-cols-1 gap-y-2 sm:grid-cols-2 ">
             <SelectFormBoletas classCss={classFormSelct} name={'Proceso'} data={fillData['Proceso']} fun={hdlChange} val={boletas?.Proceso} stt={typeStructure==1 ? true : false}/>
-            <SelectFormBoletas key={clean} classCss={classFormSelct} name={'Socios'} val={boletas?.Socios} data={fillData['Clientes']} fun={hdlChange} />
-            <SelectFormBoletas classCss={classFormSelct} name={'Transportes'} val={boletas?.Transportes} data={fillData['Transportes']} fun={hdlChange}/>
-            <SelectFormBoletas classCss={classFormSelct} name={'Placa'} val={boletas?.Placa} data={fillData['Placa']} fun={hdlChange}/>
-            <SelectFormBoletas classCss={classFormSelct} name={'Motoristas'} val={boletas?.Motoristas} data={fillData['Motoristas']} fun={hdlChange}/>
+            <SelectFormBoletas key={clean} classCss={classFormSelct} name={'Socios'} val={boletas?.Socios} data={fillData['Clientes']} fun={hdlChange} stt={true} />
+
+            {formInputSelect.map((field) => (boletas?.Socios !=-998 && boletas?.Socios !=-999) ? (
+              <SelectFormBoletas key={field} classCss={classFormSelct} name={field} val={boletas?.[field]} data={fillData[field]} fun={hdlChange} stt={true}/>
+              ) : (<InputsFormBoletas key={field} data={claseFormInputs} name={field} fun={hdlChange} val={boletas?.[field]} stt={true} /> )
+            )}
+            
             <SelectFormBoletas classCss={classFormSelct} name={'Producto'} data={fillData['Producto']} fun={hdlChange}/>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 place-content-start">

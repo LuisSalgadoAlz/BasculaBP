@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { cargando, claseFormInputs, classFormSelct } from "../../constants/boletas";
+import { cargando, claseFormInputs, classFormSelct, tiposCamion } from "../../constants/boletas";
 import { SelectSociosSave } from "../selects";
 import { getSociosParaSelect } from "../../hooks/formDataEmpresas"
 
@@ -86,10 +86,9 @@ export const FormVehiculos = ({ fun }) => {
           </label>
           <select name={"tipo"} className={claseFormInputs} onChange={fun}> 
               <option value={-1} className="text-gray-400">Seleccione un tipo</option>
-              <option value={0}>Liviano</option>
-              <option value={1}>Mayoreo</option>
-              <option value={1}>Detalle</option>
-              <option value={1}>Importaciones</option>
+              {tiposCamion.map((el)=>(
+                <option value={el.id}>{el.nombre}</option>
+              ))}
           </select>
         </div>
       </div>   

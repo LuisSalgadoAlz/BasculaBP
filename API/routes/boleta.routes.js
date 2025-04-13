@@ -4,9 +4,9 @@ const {
   postBoletasNormal,
   getDataBoletas,
   getStatsBoletas,
-  postClientePlacaMoto,
   getBoletaID, 
-  updateBoletaOut
+  updateBoleta,
+  postBoleta
 } = require("../controllers/boleta.controller");
 const verificarToken = require("../middlewares/authJWT.js");
 
@@ -15,7 +15,7 @@ boletas.get("/stats", getStatsBoletas);
 boletas.get("/data", getDataBoletas);
 boletas.get("/boleta/:id", getBoletaID);
 boletas.post("/", postBoletasNormal);
-boletas.post("/newPlaca", postClientePlacaMoto);
-boletas.put("/:id", updateBoletaOut);
+boletas.post("/newPlaca", postBoleta);
+boletas.put("/:id", updateBoleta);
 
 module.exports = boletas;

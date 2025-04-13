@@ -1,11 +1,11 @@
 model Boleta {
     id Int @id @default(autoincrement())
     boletaType Int?
-    idPlaca Int
+    idPlaca Int?
     placa String 
-    idEmpresa Int
+    idEmpresa Int?
     empresa String
-    idSocio Int
+    idSocio Int?
     socio String
     idProducto Int?
     producto String?
@@ -25,7 +25,7 @@ model Boleta {
     impreso Boolean?
     idUsuario Int 
     usuario String
-    idMotorista Int
+    idMotorista Int?
     motorista String
     ordenDeCompra Int?
     ordenDeTransferencia Int?
@@ -39,11 +39,11 @@ model Boleta {
     fechaFin DateTime?
 
     /* Relaciones dentro de la boleta */
-    placasBoletas Vehiculo @relation(fields: [idPlaca], references: [id], onDelete: NoAction, onUpdate: NoAction)
+    placasBoletas Vehiculo? @relation(fields: [idPlaca], references: [id], onDelete: NoAction, onUpdate: NoAction)
     despachador Usuarios @relation(fields: [idUsuario], references: [id])
-    empresaBoleta Empresa @relation(fields: [idEmpresa], references: [id], onDelete: NoAction, onUpdate: NoAction)
-    clienteBoleta Socios @relation(fields: [idSocio], references: [id])
+    empresaBoleta Empresa? @relation(fields: [idEmpresa], references: [id], onDelete: NoAction, onUpdate: NoAction)
+    clienteBoleta Socios? @relation(fields: [idSocio], references: [id])
     tipoDeProductoBoleta Producto? @relation(fields: [idProducto], references: [id])
-    motoristaBoleta Motoristas @relation(fields: [idMotorista], references: [id], onDelete: NoAction, onUpdate: NoAction)
+    motoristaBoleta Motoristas? @relation(fields: [idMotorista], references: [id], onDelete: NoAction, onUpdate: NoAction)
     boletasMovimientos Movimientos? @relation(fields: [idMovimiento], references: [id])
 }

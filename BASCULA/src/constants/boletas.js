@@ -3,8 +3,7 @@ import { Proceso } from "./global";
 const tiempoTranscurrido = Date.now();
 export const hoy = new Date(tiempoTranscurrido);
 
-export const claseFormInputs =
-  "bg-gray-50 border border-gray-600 text-gray-900 text-sm rounded-lg focus:ring-[#955e37] focus:border-[#955e37] block w-full p-2";
+export const claseFormInputs = "bg-gray-50 border border-gray-600 text-gray-900 text-sm rounded-lg focus:ring-[#955e37] focus:border-[#955e37] block w-full p-2";
 
 export const classFormSelct = {
     control: (provided, state) => ({
@@ -52,8 +51,7 @@ export const classFormSelct = {
     }),
 };
 
-export const classTextArea =
-  "bg-gray-50 border border-gray-600 text-gray-900 text-sm rounded-lg focus:ring-[#955e37] block w-full p-2";
+export const classTextArea =  "bg-gray-50 border border-gray-600 text-gray-900 text-sm rounded-lg focus:ring-[#955e37] block w-full p-2";
 
 export const tipoTransporte = [
   {
@@ -91,6 +89,45 @@ export const initialStateFormBoletas = {
   Socios: ""
 };
 
+export const deptos = [
+  { id: "Baprosa", nombre: "Baprosa" },
+  { id: "Atlántida", nombre: "Atlántida" },
+  { id: "Choluteca", nombre: "Choluteca" },
+  { id: "Colón", nombre: "Colón" },
+  { id: "Comayagua", nombre: "Comayagua" },
+  { id: "Copán", nombre: "Copán" },
+  { id: "Cortés", nombre: "Cortés" },
+  { id: "El Paraíso", nombre: "El Paraíso" },
+  { id: "Francisco Morazán", nombre: "Francisco Morazán" },
+  { id: "Gracias a Dios", nombre: "Gracias a Dios" },
+  { id: "Intibucá", nombre: "Intibucá" },
+  { id: "Islas de la Bahía", nombre: "Islas de la Bahía" },
+  { id: "La Paz", nombre: "La Paz" },
+  { id: "Lempira", nombre: "Lempira" },
+  { id: "Ocotepeque", nombre: "Ocotepeque" },
+  { id: "Olancho", nombre: "Olancho" },
+  { id: "Santa Bárbara", nombre: "Santa Bárbara" },
+  { id: "Valle", nombre: "Valle" },
+  { id: "Yoro", nombre: "Yoro" },
+];
+
+export const tiposCamion = [
+  { id: 0, tipo: "peso", nombre: "Camión liviano" },
+  { id: 1, tipo: "peso", nombre: "Camión mediano" },
+  { id: 2, tipo: "peso", nombre: "Camión pesado" },
+  { id: 3, tipo: "uso", nombre: "Camión plataforma" },
+  { id: 4, tipo: "uso", nombre: "Camión furgón" },
+  { id: 5, tipo: "uso", nombre: "Camión refrigerado" },
+  { id: 6, tipo: "uso", nombre: "Camión cisterna" },
+  { id: 7, tipo: "uso", nombre: "Camión volteo" },
+  { id: 8, tipo: "uso", nombre: "Camión grúa" },
+  { id: 9, tipo: "uso", nombre: "Camión jaula" },
+  { id: 10, tipo: "uso", nombre: "Rastra o tráiler" },
+  { id: 11, tipo: "uso", nombre: "Camión lowboy" }
+];
+
+
+
 export const initialStateStats = {entrada: 0, salida: 0, pendientes: 0}
 
 export const initialSateDataFormSelet = {
@@ -106,14 +143,10 @@ export const initialSateDataFormSelet = {
   FleteS: cargando,
 };
 
-export const buttonSave = 
-  "px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700 transition-transform duration-300 ease-in-out hover:scale-105"
+export const buttonSave =  "px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700 transition-transform duration-300 ease-in-out hover:scale-105"
 
-export const buttonCancel =
-  "px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-transform duration-300 ease-in-out hover:scale-105"
+export const buttonCancel =  "px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-transform duration-300 ease-in-out hover:scale-105"
 
-export const buttonClean = 
-  "px-4 py-2 bg-white text-gray-700 rounded-lg hover:bg-gray-400 transition-transform duration-300 ease-in-out hover:scale-105"
+export const buttonClean =  "px-4 py-2 bg-white text-gray-700 rounded-lg hover:bg-gray-400 transition-transform duration-300 ease-in-out hover:scale-105"
 
-export const buttonCalcular = 
-  "col-span-2 mt-2 py-2 bg-white text-gray-700 rounded-lg hover:bg-gray-400 transition-transform duration-300 ease-in-out"
+export const buttonCalcular = "col-span-2 mt-2 py-2 bg-white text-gray-700 rounded-lg hover:bg-gray-400 transition-transform duration-300 ease-in-out"

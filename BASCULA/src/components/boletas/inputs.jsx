@@ -1,4 +1,4 @@
-import { claseFormInputs, classFormSelct } from "../../constants/boletas";
+import { claseFormInputs, classFormSelct, deptos } from "../../constants/boletas";
 import { PiGaugeThin } from "react-icons/pi";
 import SelectFormBoletas from "./select";
 
@@ -23,7 +23,7 @@ export const InputsFormBoletas = ({ data, name, fun, stt = false, val }) => {
   );
 };
 
-export const PartInputsPesos = ({ fun, hdlChange, val, stt = false }) => {
+export const PartInputsPesos = ({ fun, hdlChange, val }) => {
   return (
     <>
       <label className="block mb-2 text-sm font-medium text-gray-900">
@@ -47,7 +47,7 @@ export const PartInputsPesos = ({ fun, hdlChange, val, stt = false }) => {
   );
 };
 
-export const PartInputsPesos2 = ({ fun, hdlChange, val, stt = false }) => {
+export const PartInputsPesos2 = ({ fun, hdlChange, val }) => {
   return (
     <>
       <label className="block mb-2 text-sm font-medium text-gray-900">
@@ -84,7 +84,7 @@ export const PartInputsPesos2 = ({ fun, hdlChange, val, stt = false }) => {
   );
 };
 
-export const PartPesosDeSalida = ({ fun, hdlChange, val, stt = false }) => {
+export const PartPesosDeSalida = ({ fun, hdlChange, val }) => {
   return (
     <>
       <label className="block mb-2 text-sm font-medium text-gray-900">
@@ -109,19 +109,21 @@ export const PartPesosDeSalida = ({ fun, hdlChange, val, stt = false }) => {
 };
 
 export const TransladoNormal = ({bol, fill, hdl}) => {
+  const tipoOrigen = (bol?.Socios ==-998 || bol?.Socios ==-999) ? deptos : fill['Origen']
+  const tipoDestino = (bol?.Socios ==-998 || bol?.Socios ==-999) ? deptos : fill['Destino']
   return (
     <>
       <SelectFormBoletas
         classCss={classFormSelct}
         name={"Origen"}
-        data={fill["Origen"]}
+        data={tipoOrigen}
         fun={hdl}
         stt={bol.Proceso === "" ? true : false}
       />
       <SelectFormBoletas
         classCss={classFormSelct}
         name={"Destino"}
-        data={fill["Destino"]}
+        data={tipoDestino}
         fun={hdl}
         stt={bol.Proceso === "" ? true : false}
       />

@@ -1,5 +1,6 @@
 import { URLHOST } from "../constants/global";
 import Cookies from 'js-cookie'
+import { regexPlca } from "../constants/regex";
 
 export const getAllDataForSelect = async (tipo, placa, socio, empresa, motorista,fun) => {
   try {
@@ -117,23 +118,26 @@ export const getStatsBoletas = async (fun) => {
   }
 };
 
-export const getDataParaForm = async(setFormBoletas, data) => {
-  const response = await getDataBoletasPorID(data.Id)  
-  console.log(response)
-  setFormBoletas((prev)=>({
+export const getDataParaForm = async (setFormBoletas, data) => {
+  const response = await getDataBoletasPorID(data.Id);
+  const esClienteX = response.socio === "Cliente X";
+
+  setFormBoletas((prev) => ({
     ...prev,
-    Socios: response.idSocio,
-    Motoristas: response.idMotorista,
+    Socios: response.idSocio ?? (esClienteX ? -998 : -999),
+    Motoristas: response.idMotorista ?? response.motorista,
     Placa: response.placa,
-    Proceso: response.clienteBoleta.tipo,
-    Transportes: response.idEmpresa,
+    Proceso: response?.clienteBoleta?.tipo ?? (esClienteX ? 1 : 0),
+    Transportes: response.idEmpresa ?? response.empresa,
     Estado: 0,
     pesoIn: response.pesoInicial,
     pesoOut: 0,
-    idBoleta: data.Id, 
-    tipoSocio: response.clienteBoleta.tipo
-  }))
-}
+    idBoleta: data.Id,
+    tipoSocio: response?.clienteBoleta?.tipo,
+  }));
+};
+
+
 
 export const updateBoletaOut = async (boleta, id) => {
   try {
@@ -204,19 +208,27 @@ export const formaterData = (formBoletas) => {
 
 
 export const verificarDataNewPlaca = (funError, data, setMsg) => {
-  const {idCliente, idUsuario, idMotorista, pesoInicial, idPlaca, idEmpresa } = data 
-  console.log(data)
+  const {idCliente, idUsuario, idMotorista, idPlaca, idEmpresa } = data 
+
+  /* pesoInicial */
+
   if (!idCliente || !idUsuario || !idMotorista || !idPlaca || !idEmpresa) {
     funError(true)
     setMsg('Por favor, complete todos los campos antes de continuar.')
     return false
   }
 
-  if (pesoInicial <= 0 ) {
+  if (!regexPlca.test(idPlaca) && (idCliente ==-998 || idCliente ==-999)) {
+    funError(true)
+    setMsg('placa invalida. Formatos validos (particulares: 3 letras y 4 números | comerciales: 1 letra C, O o D + 6 números).')
+    return false
+  }
+  
+  /* if (pesoInicial <= 0 ) {
     funError(true)
     setMsg('Por favor, el peso no debe de ser 0.')
     return false
-  }
+  } */
 
   return true
 };
@@ -229,19 +241,16 @@ export const verificarDataCompleto = (funError, data, setMsg) => {
     idMotorista,
     idMovimiento,
     idOrigen,
-    idPlaca,
     idProducto,
     idTrasladoDestino,
     idTrasladoOrigen,
     manifiesto,
-    observaciones,
     ordenDeCompra,
-    ordenDeTransferencia,
-    pesoInicial,
-    pesoTeorico,
     proceso, 
     tipoSocio
   } = data;
+
+  /* idPlaca observaciones ordenDeTransferencia pesoInicial pesoTeorico*/
 
   console.log(data)
   
@@ -276,7 +285,7 @@ export const verificarDataCompleto = (funError, data, setMsg) => {
     return false
   }
 
-  if (proceso != tipoSocio){
+  if (tipoSocio && proceso != tipoSocio){
     setMsg('Socio no valido para este tipo de movimiento')
     funError(true)
     return false
