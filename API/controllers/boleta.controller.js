@@ -376,7 +376,7 @@ const postClientePlacaMoto = async (req, res) => {
 
 const postClientePlacaMotoComodin = async (req, res) => {
   try{
-    const { idCliente, idUsuario, idMotorista, pesoInicial, idPlaca, idEmpresa, } = req.body;
+    const { idCliente, idUsuario, idMotorista, pesoInicial, idPlaca, idEmpresa, socio } = req.body;
     
     const verificado = jwt.verify(idUsuario, process.env.SECRET_KEY);
     const despachador = await db.usuarios.findUnique({
@@ -390,14 +390,14 @@ const postClientePlacaMotoComodin = async (req, res) => {
         placa: idPlaca,
         empresa: idEmpresa,
         motorista: idMotorista,
-        socio: idCliente==-998 ? 'Cliente X' : 'Proveedor X',
+        socio: idCliente==-998 ? socio : socio,
         boletaType: 0,
         estado: 'Pendiente',
         idUsuario: parseFloat(despachador["id"]),
         usuario: despachador["usuarios"],
         fechaInicio: new Date(),
         pesoInicial: parseFloat(pesoInicial),
-        boletaType: 3
+        boletaType: idCliente == -998 ? 3 : 4
       }
     })
     res.status(201).send({msg: 'Boleta creada en estado pendiente', Bol: newBol})
@@ -664,10 +664,8 @@ const updateBoletaOutComdin = async(req, res) => {
         placa: idPlaca,
         empresa: idEmpresa,
         motorista: idMotorista,
-        socio: idCliente==-998 ? 'Cliente X' : 'Proveedor X',
         origen: !isTraslado ? origen : null ,
         destino: !isTraslado ? destino : null,
-        boletaType: 4,
         idOrigen: null,
         idDestino: null,
         manifiesto: parseInt(manifiesto),
