@@ -113,9 +113,9 @@ export const ModalPrevisual = ({ name, hdClose, data }) => {
         <hr className="text-gray-400 my-1" />
         <p className="text-gray-600">Peso neto: {data?.pesoNeto}</p>
         <hr className="text-gray-400 my-1" />
-        <p className="text-gray-600">Peso tolerancia: {data?.tolerancia ?  data?.tolerancia : 'Faltan datos'}</p>
+        <p className="text-gray-600">Peso tolerancia: {data?.tolerancia || data?.tolerancia==0 ?  data?.tolerancia : 'Faltan datos'}</p>
         <hr className="text-gray-400 my-1" />
-        <p className="text-gray-600">Peso desviacion: {data?.desviacion ?  data?.desviacion : 'Faltan datos'}</p>
+        <p className="text-gray-600">Peso desviacion: {data?.desviacion || data?.tolerancia==0 ?  data?.desviacion : 'Faltan datos'}</p>
         <hr className="text-gray-400 my-1" />
         <p className="text-gray-600">Estado: {data?.fueraTol ? <span className="text-red-800">Fuera de tolerancia</span> : <span className="text-green-800">Dentro de la tolerancia</span>}</p>
         <div className="mt-6 flex justify-center">

@@ -109,7 +109,10 @@ export const deptos = [
   { id: "Santa Bárbara", nombre: "Santa Bárbara" },
   { id: "Valle", nombre: "Valle" },
   { id: "Yoro", nombre: "Yoro" },
+  { id: "Estados Unidos", nombre: "Estados Unidos" },
+  { id: "Paraguay", nombre: "Paraguay" },
 ];
+
 
 export const tiposCamion = [
   { id: 0, tipo: "peso", nombre: "Camión liviano" },

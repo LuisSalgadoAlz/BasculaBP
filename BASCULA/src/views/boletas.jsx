@@ -85,8 +85,6 @@ const Boletas = () => {
         ...prev, ['Placa'] : "", ['Transportes'] : "Transportes X", ['Motoristas'] : "", ['Cliente'] : "", ['Proveedor'] : ""
       }))
     }
-
-    console.log(formBoletas)
   };
 
   const closeAllDataOfForm = () => {
@@ -168,9 +166,7 @@ const Boletas = () => {
       setModalEspecial(false)
       closeAllDataOfForm()
     }
-    console.log(allForm)
   }
-
 
   const fetchData = useCallback(() => {
     getAllDataForSelect('', plc, formBoletas.Socios, formBoletas.Transportes, formBoletas.Motoristas, setDataSelects);
