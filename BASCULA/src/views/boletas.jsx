@@ -4,7 +4,7 @@ import ViewBoletas from "../components/boletas/viewBoletas";
 import CardHeader from "../components/card-header";
 import { ModalBoletas, ModalNormal, ModalOut } from "../components/boletas/formBoletas";
 import { initialSateDataFormSelet, initialStateFormBoletas, initialStateStats } from "../constants/boletas";
-import { formaterData, getAllDataForSelect, postBoletasNormal, getDataBoletas, getStatsBoletas, formaterDataNewPlaca, verificarDataNewPlaca, getDataParaForm, updateBoletaOut, verificarDataCompleto } from "../hooks/formDataBoletas";
+import { formaterData, getAllDataForSelect, postBoletasNormal, getDataBoletas, getStatsBoletas, formaterDataNewPlaca, verificarDataNewPlaca, getDataParaForm, updateBoletaOut, verificarDataCompleto, postBoletasCasulla } from "../hooks/formDataBoletas";
 import { ModalErr, ModalSuccess } from "../components/alerts";
 
 const Boletas = () => {
@@ -50,6 +50,7 @@ const Boletas = () => {
     setOpenModalForm(false)
     setSuccess(false)
     setOutBol(false)
+    setModalEspecial(false)
   }
 
   const handleClik = () => {
@@ -62,6 +63,7 @@ const Boletas = () => {
 
   const handleCloseCompleto=() => {
     setOutBol(false)
+    setModalEspecial(false)
     setFormBoletas(initialStateFormBoletas)
     setDataSelects(initialSateDataFormSelet)
     getAllDataForSelect('', '', '', '', '',setDataSelects);
@@ -113,6 +115,7 @@ const Boletas = () => {
       await postBoletasNormal(response, setIsLoading)
       setSuccess(true)
       setMsg('agregar nueva boleta')
+      setOpenModalForm(false)
       closeAllDataOfForm()
     }
   }
@@ -135,6 +138,7 @@ const Boletas = () => {
       await updateBoletaOut(response, formBoletas.idBoleta, setIsLoading)
       setSuccess(true)
       setMsg('dar salida a boleta')
+      setOutBol(false)
       closeAllDataOfForm()    
     }
   }
@@ -145,15 +149,34 @@ const Boletas = () => {
    * ! Trabajando Aqui
    */
 
-  const handleShowModalEspcial = () => {
+  const handleShowModalEspcial = async() => {
     setModalEspecial(true)
+    setFormBoletas((prev)=>({
+      ...prev, ['Proceso']: 1, ['Movimiento'] : 6, ['Producto'] : 11
+    }))
+    await getAllDataForSelect(1, plc, formBoletas.Socios, formBoletas.Transportes, formBoletas.Motoristas, setDataSelects);
   }
+
+  const handleSubmitCasulla = async() => {
+    const response = formaterData(formBoletas)
+    const allForm = {...response, ['pesoInicial']: formBoletas?.pesoIn, ["Cliente"] : formBoletas?.Cliente}
+    const isCorrect = true
+    if (isCorrect) {
+      await postBoletasCasulla(allForm, setIsLoading)
+      setSuccess(true)
+      setMsg('agregar nueva boleta')
+      setModalEspecial(false)
+      closeAllDataOfForm()
+    }
+    console.log(allForm)
+  }
+
 
   const fetchData = useCallback(() => {
     getAllDataForSelect('', plc, formBoletas.Socios, formBoletas.Transportes, formBoletas.Motoristas, setDataSelects);
     getDataBoletas(setDataTable);
     getStatsBoletas(setStats);
-  }, [plc, formBoletas.Socios, formBoletas.Transportes, formBoletas.Motoristas]);
+  }, [plc, formBoletas.Socios, formBoletas.Transportes, formBoletas.Motoristas,]);
   
   useEffect(() => {
     fetchData()
@@ -193,6 +216,21 @@ const Boletas = () => {
     isLoading : isLoading,
   };
 
+  const propsModalCasulla = { 
+    hdlClose: handleCloseCompleto,
+    hdlChange: handleChange,
+    fillData: dataSelets,
+    typeBol: formBoletas?.Proceso,
+    typeStructure: formBoletas?.Estado,
+    formBol: setFormBoletas,
+    boletas: formBoletas,
+    hdlClean: limpiar,
+    hdlSubmit: handleSubmitCasulla,
+    move: move,
+    clean: newRender, 
+    isLoading : isLoading,
+  }
+
   return (
     <>
       <div className="flex justify-between w-full gap-5 max-sm:flex-col max-md:flex-col mb-4">
@@ -220,7 +258,7 @@ const Boletas = () => {
       {/* Modals de control de boletas */}
       {openModelForm && (<ModalNormal key={newRender} {...propsModalNormalNewPlacas}/>)}
       {outBol && (<ModalOut key={newRender} {...propsModalOutPlacas}/>)}
-      {modalEspecial && (<ModalBoletas {...propsModalOutPlacas}/>)}
+      {modalEspecial && (<ModalBoletas {...propsModalCasulla}/>)}
 
       {/* Area de modals de errores */}
       {err && <ModalErr name={msg} hdClose={()=>setErr(false)} />}

@@ -143,8 +143,6 @@ export const getDataParaForm = async (setFormBoletas, data) => {
   }));
 };
 
-
-
 export const updateBoletaOut = async (boleta, id, setIsLoading) => {
   try {
     setIsLoading(true)
@@ -166,6 +164,31 @@ export const updateBoletaOut = async (boleta, id, setIsLoading) => {
     if (response.ok) {
       return msg;
     }
+  } catch (error) {
+    console.error("Error al obtener los datos:", error);
+  } finally {
+    setIsLoading(false)
+  }
+};
+
+export const postBoletasCasulla = async (boleta, setIsLoading) => {
+  try {
+    setIsLoading(true)
+    const response = await fetch(`${URLHOST}boletas/`, {
+      method: "POST",
+      body: JSON.stringify(boleta),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: Cookies.get('token'),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API");
+    }
+
+    const data = await response.json();
+    console.log(data);
   } catch (error) {
     console.error("Error al obtener los datos:", error);
   } finally {
