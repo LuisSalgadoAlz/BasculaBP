@@ -172,7 +172,6 @@ const postBoletasNormal = async (req, res) => {
   try {
     const {
       idCliente,
-      boletaType,
       proceso,
       idOrigen,
       idDestino,
@@ -181,28 +180,28 @@ const postBoletasNormal = async (req, res) => {
       estado,
       idUsuario,
       idMotorista,
-      fechaInicio,
       pesoInicial,
       idPlaca,
       idEmpresa,
+      pesoFinal, 
       idMovimiento,
       idProducto,
       observaciones,
       ordenDeCompra,
-      idTrasladoOrigen,
-      idTrasladoDestino,
-      ordenDeTransferencia,
+      Cliente, 
     } = req.body;
 
     const verificado = jwt.verify(idUsuario, process.env.SECRET_KEY);
-
     const despachador = await db.usuarios.findUnique({
       where: {
         usuarios: verificado["usuarios"],
       },
     });
 
-    const placaData = await db.vehiculo.findFirst({
+    console.log(despachador['id'])
+
+    const isComodin =  idCliente ==-998;
+    const placaData = !isComodin && await db.vehiculo.findFirst({
       select: {
         id: true,
         placa: true,
@@ -215,80 +214,56 @@ const postBoletasNormal = async (req, res) => {
       },
     });
 
-    const empresa = await db.empresa.findUnique({
-      where: { id: parseInt(idEmpresa) },
-    });
-    const motorista = await db.motoristas.findUnique({
-      where: { id: parseInt(idMotorista) },
-    });
-    const socio = await db.socios.findUnique({
-      where: { id: parseInt(idCliente) },
-    });
     const producto = await db.producto.findUnique({
       where: { id: parseInt(idProducto) },
     });
     const move = await db.movimientos.findUnique({
       where: { id: parseInt(idMovimiento) },
     });
-
-    const isTraslado =
-      move.nombre == "Traslado Interno" || move.nombre == "Traslado Externo"
-        ? true
-        : false;
-
-    const origen =
-      !isTraslado &&
-      (await db.direcciones.findUnique({ where: { id: parseInt(idOrigen) } }));
-    const destino =
-      !isTraslado &&
-      (await db.direcciones.findUnique({ where: { id: parseInt(idDestino) } }));
-    const transladoOrigen =
-      isTraslado &&
-      (await db.translado.findUnique({
-        where: { id: parseInt(idTrasladoOrigen) },
-      }));
-    const transladoDestino =
-      isTraslado &&
-      (await db.translado.findUnique({
-        where: { id: parseInt(idTrasladoDestino) },
-      }));
+    
+    const socio = !isComodin && await db.socios.findUnique({  where: { id: parseInt(idCliente) },});
+    const motorista =!isComodin && await db.motoristas.findUnique({ where: { id: parseInt(idMotorista) },});
+    const empresa = !isComodin && await db.empresa.findUnique({where: { id: parseInt(idEmpresa) },}); 
+    const origen = !isComodin && (await db.direcciones.findUnique({ where: { id: parseInt(idOrigen) } }));
+    const destino = !isComodin && (await db.direcciones.findUnique({ where: { id: parseInt(idDestino) } }));
 
     const nuevaBoleta = await db.boleta.create({
       data: {
-        idSocio: parseInt(idCliente),
-        placa: placaData.placa,
-        empresa: empresa.nombre,
-        motorista: motorista.nombre,
-        socio: socio.nombre,
-        origen: origen.nombre,
-        destino: destino.nombre,
-        boletaType: parseInt(boletaType),
-        idOrigen: !isTraslado ? parseInt(idOrigen) : null,
-        idDestino: !isTraslado ? parseInt(idDestino) : null,
+        idSocio: !isComodin ? parseInt(idCliente): null,
+        pesoNeto: parseFloat(pesoFinal) - parseFloat(pesoInicial), 
+        pesoFinal: parseFloat(pesoFinal),
+        placa: !isComodin ? placaData.placa : idPlaca,
+        empresa: !isComodin ? empresa.nombre : idEmpresa,
+        motorista: !isComodin ? motorista.nombre : idMotorista,
+        socio: !isComodin ? socio.nombre : Cliente,
+        origen: !isComodin ? origen.nombre : idOrigen,
+        destino: !isComodin ? destino.nombre : idDestino,
+        boletaType: 1,
+        idOrigen: !isComodin ? parseInt(idOrigen) : null,
+        idDestino: !isComodin ? parseInt(idDestino) : null,
         manifiesto: parseInt(manifiesto),
         pesoTeorico: parseFloat(pesoTeorico),
         estado: estado,
         idUsuario: parseFloat(despachador["id"]),
         usuario: despachador["usuarios"],
         idMotorista: parseInt(idMotorista),
-        fechaInicio: fechaInicio,
+        fechaInicio: new Date(),
+        fechaFin: new Date(), 
         pesoInicial: parseFloat(pesoInicial),
-        idPlaca: placaData.id,
+        idPlaca: !isComodin ? placaData.id : null,
         idEmpresa: parseInt(idEmpresa),
         idMovimiento: parseInt(idMovimiento),
         movimiento: move.nombre,
         idProducto: parseInt(idProducto),
         producto: producto.nombre,
         observaciones,
-        idTrasladoOrigen: isTraslado ? parseInt(idTrasladoOrigen) : null,
-        idTrasladoDestino: isTraslado ? parseInt(idTrasladoDestino) : null,
-        trasladoOrigen: transladoOrigen.nombre,
-        trasladoDestino: transladoDestino.nombre,
+        idTrasladoOrigen: null,
+        idTrasladoDestino: null,
+        trasladoOrigen: null,
+        trasladoDestino: null,
         proceso,
         ordenDeCompra: parseInt(ordenDeCompra),
-        ordenDeTransferencia: isTraslado
-          ? parseInt(ordenDeTransferencia)
-          : null,
+        ordenDeTransferencia: null
       },
     });
 
@@ -722,5 +697,5 @@ module.exports = {
   getStatsBoletas, 
   getBoletaID, 
   updateBoleta, 
-  postBoleta
+  postBoleta, 
 };
