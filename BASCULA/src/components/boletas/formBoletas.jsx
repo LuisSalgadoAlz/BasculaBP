@@ -7,6 +7,11 @@ import { ModalPrevisual } from "../alerts";
 
 const formInputSelect = ['Transportes', 'Placa', 'Motoristas']
 
+/**
+ * ! Sin uso, por los momentos
+ * @param {*} param0 
+ * @returns 
+ */
 export const ModalBoletas = ({hdlClose, hdlChange, fillData, typeBol, typeStructure, formBol, boletas, hdlClean, hdlSubmit, move, clean}) => {
   const [peso, setPeso] = useState('00lb');
   const getPesoIn = () => {
@@ -111,7 +116,7 @@ export const ModalBoletas = ({hdlClose, hdlChange, fillData, typeBol, typeStruct
   );
 };
 
-export const ModalNormal= ({hdlClose, hdlChange, fillData, formBol, boletas, hdlClean, hdlSubmit, clean}) => {
+export const ModalNormal= ({hdlClose, hdlChange, fillData, formBol, boletas, hdlClean, hdlSubmit, clean, isLoading}) => {
   const [peso, setPeso] = useState('00lb');
   const getPesoIn = () => {
     formBol((prev)=> ({
@@ -153,6 +158,8 @@ export const ModalNormal= ({hdlClose, hdlChange, fillData, formBol, boletas, hdl
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-2 p-2 place-content-center">
           <SelectFormBoletas key={clean} classCss={classFormSelct} name={'Socios'} data={fillData['Clientes']} fun={hdlChange}/>
+          {boletas?.Socios==-998 && <InputsFormBoletas data={claseFormInputs} name={'Cliente'} fun={hdlChange}/>}
+          {boletas?.Socios==-999 && <InputsFormBoletas data={claseFormInputs} name={'Proveedor'} fun={hdlChange}/>}
           {formInputSelect.map((field) => (
             (boletas?.Socios !=-998 && boletas?.Socios !=-999) ? (<SelectFormBoletas key={field} classCss={classFormSelct} name={field} data={fillData[field]} fun={hdlChange}  /> )
             : (<InputsFormBoletas key={field} data={claseFormInputs} name={field} fun={hdlChange} val={field=='Transportes' ? 'Transportes X' : undefined} stt={field=='Transportes' ? true : false}/>) 
@@ -163,14 +170,14 @@ export const ModalNormal= ({hdlClose, hdlChange, fillData, formBol, boletas, hdl
         <hr className="text-gray-300 mt-1" />
 
         <div className="mt-3 px-3 grid grid-cols-3 gap-2 justify-between max-sm:grid-rows-3 max-sm:grid-cols-1">
-          <button onClick={hdlClean} className={buttonClean}>
+          <button onClick={hdlClean} className={buttonClean} disabled={isLoading} >
             Limpiar
           </button>
-          <button onClick={hdlClose} className={buttonCancel}>
+          <button onClick={hdlClose} className={buttonCancel} disabled={isLoading} >
             Cancelar
           </button>
-          <button onClick={hdlSubmit} className={buttonSave}>
-            Guardar
+          <button onClick={hdlSubmit} className={buttonSave} disabled={isLoading} >
+            {isLoading ? 'Guardando...' : 'Guardar'}
           </button>
         </div>
     </div>
@@ -178,7 +185,7 @@ export const ModalNormal= ({hdlClose, hdlChange, fillData, formBol, boletas, hdl
   );
 };
 
-export const ModalOut = ({hdlClose, hdlChange, fillData, typeBol, typeStructure, formBol, boletas, hdlSubmit, move, clean}) => {
+export const ModalOut = ({hdlClose, hdlChange, fillData, typeBol, typeStructure, formBol, boletas, hdlSubmit, move, clean, isLoading}) => {
   const [peso, setPeso] = useState('00lb');
   const [modal, setModal] = useState(false)
   const [dataPrev, setDataPrev] = useState()
@@ -200,6 +207,7 @@ export const ModalOut = ({hdlClose, hdlChange, fillData, typeBol, typeStructure,
       pesoNeto: Math.abs(pesoNeto),
       tolerancia: tolerancia,
       desviacion: desviacion,
+      pesoInicial: boletas?.pesoIn
     };
 
     data.fueraTol = desviacion > tolerancia
@@ -242,7 +250,8 @@ export const ModalOut = ({hdlClose, hdlChange, fillData, typeBol, typeStructure,
           <div className="grid grid-cols-1 gap-y-2 sm:grid-cols-2 ">
             <SelectFormBoletas classCss={classFormSelct} name={'Proceso'} data={fillData['Proceso']} fun={hdlChange} val={boletas?.Proceso} stt={typeStructure==1 ? true : false}/>
             <SelectFormBoletas key={clean} classCss={classFormSelct} name={'Socios'} val={boletas?.Socios} data={fillData['Clientes']} fun={hdlChange} stt={true} />
-
+            {boletas?.Socios==-998 && <InputsFormBoletas data={claseFormInputs} name={'Cliente'} fun={hdlChange} val={boletas?.valueSocio} stt={true}/>}
+            {boletas?.Socios==-999 && <InputsFormBoletas data={claseFormInputs} name={'Proveedor'} fun={hdlChange} val={boletas?.valueSocio}  stt={true}/>}
             {formInputSelect.map((field) => (boletas?.Socios !=-998 && boletas?.Socios !=-999) ? (
               <SelectFormBoletas key={field} classCss={classFormSelct} name={field} val={boletas?.[field]} data={fillData[field]} fun={hdlChange} stt={true}/>
               ) : (<InputsFormBoletas key={field} data={claseFormInputs} name={field} fun={hdlChange} val={boletas?.[field]} stt={true} /> )
@@ -272,11 +281,11 @@ export const ModalOut = ({hdlClose, hdlChange, fillData, typeBol, typeStructure,
         <hr className="text-gray-300 mt-1" />
 
         <div className="mt-3 px-3 grid grid-cols-2 gap-2 justify-between max-sm:grid-rows-3 max-sm:grid-cols-1">
-          <button onClick={hdlClose} className={buttonCancel}>
+          <button onClick={hdlClose} className={buttonCancel} disabled={isLoading}>
             Cancelar
           </button>
-          <button onClick={hdlSubmit} className={buttonSave}>
-            Guardar
+          <button onClick={hdlSubmit} className={buttonSave} disabled={isLoading}>
+            {isLoading ? 'Guardando...' : 'Guardar'}
           </button>
         </div>
     </div>

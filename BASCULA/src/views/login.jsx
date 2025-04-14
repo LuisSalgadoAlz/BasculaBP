@@ -7,7 +7,7 @@ import Cookies from 'js-cookie';
 
 const Login = () => {
   const navigate = useNavigate()
-
+  const [isLoading, setIsLoading] = useState(false)
   const [data, setData] = useState({
     usuarios: "",
     contrasena: "",
@@ -23,27 +23,34 @@ const Login = () => {
   };
 
   const verificarLog = async () => {
-    const token = await fetch(`${URLHOST}login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
-
-    const res = await token.json();
-
-    if (res.token) {
-      const expirationDate = new Date();
-      expirationDate.setMinutes(expirationDate.getMinutes() + 10); // Expira en 10 minutos
-      Cookies.set('token', res.token, { expires: expirationDate });
-      navigate('/dashboard')  
-    }
-
-    if (res.msg) {
-      setMsg(res.msg);
-      Cookies.remove('token')
-      console.log(res.msg);
+    try {
+      setIsLoading(true)
+      const token = await fetch(`${URLHOST}login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+  
+      const res = await token.json();
+  
+      if (res.token) {
+        const expirationDate = new Date();
+        expirationDate.setMinutes(expirationDate.getMinutes() + 10); // Expira en 10 minutos
+        Cookies.set('token', res.token, { expires: expirationDate });
+        navigate('/dashboard')  
+      }
+  
+      if (res.msg) {
+        setMsg(res.msg);
+        Cookies.remove('token')
+        console.log(res.msg);
+      }
+    }catch(err){
+      console.log(err)
+    } finally {
+      setIsLoading(false)
     }
   };
 
@@ -113,8 +120,9 @@ const Login = () => {
                 onClick={verificarLog}
                 type="submit"
                 className="text-white bg-[#955e37] hover:bg-[#b4927a] focus:ring-4 focus:outline-none font-medium rounded-lg text-sm px-5 py-2.5 text-center w-full"
+                disabled={isLoading}
               >
-                Iniciar Sessión
+                {isLoading ? 'Iniciando Sessión...' : 'Iniciar Sessión'}
               </button>
             </div>
             <div className="w-full border-amber-200">

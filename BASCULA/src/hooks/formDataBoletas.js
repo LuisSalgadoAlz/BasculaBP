@@ -24,8 +24,9 @@ export const getAllDataForSelect = async (tipo, placa, socio, empresa, motorista
   }
 };
 
-export const postBoletasNormal = async (boleta) => {
+export const postBoletasNormal = async (boleta, setIsLoading) => {
   try {
+    setIsLoading(true)
     const response = await fetch(`${URLHOST}boletas/newPlaca`, {
       method: "POST",
       body: JSON.stringify(boleta),
@@ -43,6 +44,8 @@ export const postBoletasNormal = async (boleta) => {
     console.log(data);
   } catch (error) {
     console.error("Error al obtener los datos:", error);
+  } finally {
+    setIsLoading(false)
   }
 };
 
@@ -83,12 +86,14 @@ export const getDataBoletasPorID = async (id) => {
     return data
   } catch (error) {
     console.error("Error al obtener los clientes:", error);
-  }
+  } 
 };
 
 export const formaterDataNewPlaca = (formBoletas) => {
+  const typeSocio = formBoletas?.Socios ==-998 ?  formBoletas?.Cliente : formBoletas?.Proveedor
   const allData = {
     idCliente : formBoletas?.Socios,
+    socio: typeSocio,    
     idUsuario: Cookies.get('token'),
     idMotorista: formBoletas?.Motoristas,
     pesoInicial: formBoletas?.pesoIn,
@@ -120,11 +125,12 @@ export const getStatsBoletas = async (fun) => {
 
 export const getDataParaForm = async (setFormBoletas, data) => {
   const response = await getDataBoletasPorID(data.Id);
-  const esClienteX = response.socio === "Cliente X";
-
+  const esClienteX = response.boletaType === 3;
+  console.log(response)
   setFormBoletas((prev) => ({
     ...prev,
     Socios: response.idSocio ?? (esClienteX ? -998 : -999),
+    valueSocio : response?.socio,
     Motoristas: response.idMotorista ?? response.motorista,
     Placa: response.placa,
     Proceso: response?.clienteBoleta?.tipo ?? (esClienteX ? 1 : 0),
@@ -139,8 +145,9 @@ export const getDataParaForm = async (setFormBoletas, data) => {
 
 
 
-export const updateBoletaOut = async (boleta, id) => {
+export const updateBoletaOut = async (boleta, id, setIsLoading) => {
   try {
+    setIsLoading(true)
     const response = await fetch(`${URLHOST}boletas/${id}`, {
       method: "PUT",
       body: JSON.stringify(boleta),
@@ -161,6 +168,8 @@ export const updateBoletaOut = async (boleta, id) => {
     }
   } catch (error) {
     console.error("Error al obtener los datos:", error);
+  } finally {
+    setIsLoading(false)
   }
 };
 
@@ -208,7 +217,7 @@ export const formaterData = (formBoletas) => {
 
 
 export const verificarDataNewPlaca = (funError, data, setMsg) => {
-  const {idCliente, idUsuario, idMotorista, idPlaca, idEmpresa } = data 
+  const {idCliente, idUsuario, idMotorista, idPlaca, idEmpresa, pesoInicial } = data 
 
   /* pesoInicial */
 
@@ -224,11 +233,11 @@ export const verificarDataNewPlaca = (funError, data, setMsg) => {
     return false
   }
   
-  /* if (pesoInicial <= 0 ) {
+/*   if (pesoInicial <= 0 ) {
     funError(true)
     setMsg('Por favor, el peso no debe de ser 0.')
     return false
-  } */
+  }  */
 
   return true
 };

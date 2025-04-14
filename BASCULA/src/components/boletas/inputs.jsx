@@ -165,7 +165,7 @@ export const TransladoExterno = ({bol, fill, hdl}) => {
       <SelectFormBoletas
         classCss={classFormSelct}
         name={"Traslado destino"}
-        data={fill["TransladosI"]}
+        data={fill["TransladosE"]}
         fun={hdl}
         stt={bol.Proceso === "" ? true : false}
       />

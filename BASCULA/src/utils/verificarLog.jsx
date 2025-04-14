@@ -1,11 +1,13 @@
 import { Navigate, Outlet, useNavigate } from "react-router";
 import Cuerpo from "../components/cuerpo";
 import Cookies from 'js-cookie';
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { ModalErr } from '../components/alerts'
 
 const VerificarLog = ({Children, redirectTo='/'}) => {
     const navigate = useNavigate()
+
+    const cuerpoMemo = useMemo(() => <Cuerpo><Outlet /></Cuerpo>, []);
 
     const sessionActive = () => {
         if (Cookies.get('token')) {
@@ -32,7 +34,7 @@ const VerificarLog = ({Children, redirectTo='/'}) => {
     if (!Cookies.get('token')){
         return <Navigate to={redirectTo} />
     }
-    return <Cuerpo><Outlet/></Cuerpo>;
+    return cuerpoMemo;
 }
  
 export default VerificarLog;

@@ -3,8 +3,8 @@ import { createRoot } from "react-dom/client";
 import { createBrowserRouter, Route, RouterProvider } from "react-router";
 import "./index.css";
 import NoFoundData from "./views/notFoundData";
+import VerificarLog from "./utils/verificarLog";
 const Login = lazy(()=>import('./views/login'));
-const VerificarLog = lazy(()=>import('./utils/verificarLog'))
 const Dashboard = lazy(()=>import('./views/dashboard'))
 const NotFoundPage = lazy(()=>import('./views/notFoundPage'))
 const Boletas = lazy(()=>import('./views/boletas')) 

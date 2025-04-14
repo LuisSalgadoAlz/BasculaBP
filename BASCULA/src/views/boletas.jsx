@@ -1,14 +1,18 @@
-import { useEffect, useState } from "react";
-import { ButtonAdd } from "../components/buttons";
+import { useCallback, useEffect, useState } from "react";
+import { ButtonAdd, ButtonAddBoleta } from "../components/buttons";
 import ViewBoletas from "../components/boletas/viewBoletas";
 import CardHeader from "../components/card-header";
-import { ModalNormal, ModalOut } from "../components/boletas/formBoletas";
+import { ModalBoletas, ModalNormal, ModalOut } from "../components/boletas/formBoletas";
 import { initialSateDataFormSelet, initialStateFormBoletas, initialStateStats } from "../constants/boletas";
 import { formaterData, getAllDataForSelect, postBoletasNormal, getDataBoletas, getStatsBoletas, formaterDataNewPlaca, verificarDataNewPlaca, getDataParaForm, updateBoletaOut, verificarDataCompleto } from "../hooks/formDataBoletas";
 import { ModalErr, ModalSuccess } from "../components/alerts";
 
 const Boletas = () => {
   const [openModelForm, setOpenModalForm] = useState(false);
+  /**
+   * Variables de control de feching
+   */
+  const [isLoading, setIsLoading] = useState(false)
   const [stats, setStats] = useState(initialStateStats)
   const [formBoletas, setFormBoletas] = useState(initialStateFormBoletas);
   const [dataSelets, setDataSelects] = useState(initialSateDataFormSelet);
@@ -16,15 +20,28 @@ const Boletas = () => {
   const [move, setMove] = useState('');
   const [newRender, setNewRender] = useState(0);
   const [dataTable, setDataTable] = useState()
-  const [err, setErr] = useState(false)
-  const [success, setSuccess] = useState()
-  const [msg, setMsg] = useState()
 
   /**
    * Variables para la segunda parte
    */
 
   const [outBol, setOutBol] = useState(false);
+
+
+  /**
+   * Variables tercera parte
+   */
+
+  const [modalEspecial, setModalEspecial] = useState(false)
+
+
+  /**
+   * Variables de alertas de exito y error
+   */
+
+  const [err, setErr] = useState(false)
+  const [success, setSuccess] = useState()
+  const [msg, setMsg] = useState()
 
   /**
    * Area de los modals
@@ -63,7 +80,7 @@ const Boletas = () => {
     if (name == "Estado" && value==1) setFormBoletas((prev) => ({...prev, ['Proceso'] : 1}))
     if (name == "Socios" && (value==-998 || value==-999)) {
       setFormBoletas((prev) => ({
-        ...prev, ['Placa'] : "", ['Transportes'] : "Transportes X", ['Motoristas'] : ""
+        ...prev, ['Placa'] : "", ['Transportes'] : "Transportes X", ['Motoristas'] : "", ['Cliente'] : "", ['Proveedor'] : ""
       }))
     }
 
@@ -93,7 +110,7 @@ const Boletas = () => {
     const response = formaterDataNewPlaca(formBoletas) 
     const isCorrect = verificarDataNewPlaca(setErr,response, setMsg) 
     if (isCorrect) {
-      await postBoletasNormal(response)
+      await postBoletasNormal(response, setIsLoading)
       setSuccess(true)
       setMsg('agregar nueva boleta')
       closeAllDataOfForm()
@@ -115,18 +132,32 @@ const Boletas = () => {
     const isCorrect = verificarDataCompleto(setErr, response, setMsg)
     console.log(response)
     if (isCorrect) {
-      await updateBoletaOut(response, formBoletas.idBoleta)
+      await updateBoletaOut(response, formBoletas.idBoleta, setIsLoading)
       setSuccess(true)
       setMsg('dar salida a boleta')
       closeAllDataOfForm()    
     }
   }
+
+
+  /**
+   * Todo: Funciones de la tercera parte 
+   * ! Trabajando Aqui
+   */
+
+  const handleShowModalEspcial = () => {
+    setModalEspecial(true)
+  }
+
+  const fetchData = useCallback(() => {
+    getAllDataForSelect('', plc, formBoletas.Socios, formBoletas.Transportes, formBoletas.Motoristas, setDataSelects);
+    getDataBoletas(setDataTable);
+    getStatsBoletas(setStats);
+  }, [plc, formBoletas.Socios, formBoletas.Transportes, formBoletas.Motoristas]);
   
   useEffect(() => {
-    getAllDataForSelect('', plc, formBoletas.Socios, formBoletas.Transportes, formBoletas.Motoristas,setDataSelects);
-    getDataBoletas(setDataTable)
-    getStatsBoletas(setStats)
-  }, [formBoletas.Socios, plc, formBoletas.Transportes, formBoletas.Motoristas, formBoletas]);
+    fetchData()
+  }, [fetchData]);
 
 
   /**
@@ -144,6 +175,7 @@ const Boletas = () => {
     hdlClean: limpiar,
     hdlSubmit: handleSubmitNewPlaca,
     clean: newRender,
+    isLoading: isLoading
   };
 
   const propsModalOutPlacas = {
@@ -157,7 +189,8 @@ const Boletas = () => {
     hdlClean: limpiar,
     hdlSubmit: handleCompleteOut,
     move: move,
-    clean: newRender
+    clean: newRender, 
+    isLoading : isLoading,
   };
 
   return (
@@ -171,7 +204,8 @@ const Boletas = () => {
           </h1>
         </div>
         <div className="parte-der flex items-center justify-center gap-3 max-sm:text-sm max-sm:flex-col">
-          <ButtonAdd name="Nueva boleta" fun={handleClik} />
+          <ButtonAdd className={'bg-amber-9001'} name="Boleta Especial" fun={handleShowModalEspcial} />
+          <ButtonAddBoleta name="Nueva boleta" fun={handleClik} />
         </div>
       </div>
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-3 mt-5">
@@ -186,6 +220,7 @@ const Boletas = () => {
       {/* Modals de control de boletas */}
       {openModelForm && (<ModalNormal key={newRender} {...propsModalNormalNewPlacas}/>)}
       {outBol && (<ModalOut key={newRender} {...propsModalOutPlacas}/>)}
+      {modalEspecial && (<ModalBoletas {...propsModalOutPlacas}/>)}
 
       {/* Area de modals de errores */}
       {err && <ModalErr name={msg} hdClose={()=>setErr(false)} />}
