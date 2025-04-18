@@ -1,15 +1,16 @@
 import { useState, useEffect } from "react";
 import SideBar from "../components/sideBar";
 import Header from "../components/header";
-import SideBarIcons from "../components/sideBarIcons";
+import Cookies from 'js-cookie'
 
 const Cuerpo = ({ children }) => {
-  const [sideBarShow, setSideBarShow] = useState(true);
+  const [sideBarShow, setSideBarShow] = useState(Cookies.get('sideBarShow')=='true')
   const [altura, setAltura] = useState(window.innerHeight.toString());
   const [anchura, setAnchura] = useState(window.innerWidth.toString());
 
   const handleShow = () => {
-    setSideBarShow(!sideBarShow);
+    setSideBarShow(!sideBarShow)
+    Cookies.set('sideBarShow', !sideBarShow);
   };
 
   useEffect(() => {
@@ -28,17 +29,10 @@ const Cuerpo = ({ children }) => {
   return (
     <>
       <main className="min-w-screen min-h-screen flex">
-        {/* Manejo de los sideBar con la altura de la ventana */}
-        {anchura < 950 ? (
-          <SideBarIcons altura={altura}  />
-        ) : altura > 750 ? (
-          sideBarShow ? (
-            <SideBar />
-          ) : (
-            <SideBarIcons altura={altura}/>
-          )
+        {anchura < 950 || altura <= 750 || !sideBarShow ? (
+          <SideBar modo="compacto" />
         ) : (
-          <SideBarIcons altura={altura}/>
+          <SideBar />
         )}
 
         {/* header */}

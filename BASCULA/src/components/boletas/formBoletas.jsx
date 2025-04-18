@@ -12,7 +12,7 @@ const formInputSelect = ['Transportes', 'Placa', 'Motoristas']
  * @param {*} param0 
  * @returns 
  */
-export const ModalBoletas = ({hdlClose, hdlChange, fillData, formBol, boletas, hdlSubmit, move, clean, isLoading}) => {
+export const ModalBoletas = ({hdlClose, hdlChange, fillData, formBol, boletas, hdlSubmit, clean, isLoading}) => {
   const [peso, setPeso] = useState('00lb');
   const newClient = fillData?.Clientes.filter(({id})=>id!=-999)
 
@@ -223,7 +223,7 @@ export const ModalOut = ({hdlClose, hdlChange, fillData, typeBol, typeStructure,
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 p-2 place-content-center">
-          <div className="grid grid-cols-1 gap-y-2 sm:grid-cols-2 ">
+          <div className="grid grid-cols-1 gap-y-2 sm:grid-cols-2">
             <SelectFormBoletas classCss={classFormSelct} name={'Proceso'} data={fillData['Proceso']} fun={hdlChange} val={boletas?.Proceso} stt={typeStructure==1 ? true : false}/>
             <SelectFormBoletas key={clean} classCss={classFormSelct} name={'Socios'} val={boletas?.Socios} data={fillData['Clientes']} fun={hdlChange} stt={true} />
             {boletas?.Socios==-998 && <InputsFormBoletas data={claseFormInputs} name={'Cliente'} fun={hdlChange} val={boletas?.valueSocio} stt={true}/>}
@@ -251,8 +251,8 @@ export const ModalOut = ({hdlClose, hdlChange, fillData, typeBol, typeStructure,
             {(move == 'Traslado Interno' || move == 'Traslado Externo') ? <InputsFormBoletas data={claseFormInputs} name={'Orden de Transferencia'} fun={hdlChange} /> : ''}
             <InputsFormBoletas data={claseFormInputs} name={'Observaciones'} fun={hdlChange} />
           </div>
-          <button onClick={hdlPrevisualizar} className={buttonCalcular}>Previsualizar</button>
         </div>
+        <button onClick={hdlPrevisualizar} className={buttonCalcular}>Previsualizar</button>
    
         <hr className="text-gray-300 mt-1" />
 

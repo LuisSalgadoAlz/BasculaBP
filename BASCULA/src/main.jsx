@@ -2,8 +2,8 @@ import { StrictMode, lazy, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import { createBrowserRouter, Route, RouterProvider } from "react-router";
 import "./index.css";
-import NoFoundData from "./views/notFoundData";
 import VerificarLog from "./utils/verificarLog";
+const NoFoundData = lazy(()=>import('./views/notFoundData'));
 const Login = lazy(()=>import('./views/login'));
 const Dashboard = lazy(()=>import('./views/dashboard'))
 const NotFoundPage = lazy(()=>import('./views/notFoundPage'))
