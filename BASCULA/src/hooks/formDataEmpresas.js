@@ -2,8 +2,9 @@ import { URLHOST } from "../constants/global";
 import { regexEmail, regexNombre, regexTelefono, regexPlca } from "../constants/regex";
 import Cookies from 'js-cookie'
 
-export const getEmpresas = async (fun, page, search, estado) => {
+export const getEmpresas = async (fun, page, search, estado, setIsloading) => {
   try {
+    setIsloading(true)
     const response = await fetch(`${URLHOST}empresas?page=${page}&search=${search}&estado=${estado}`, {
       method: "GET",
       headers: {
@@ -19,6 +20,8 @@ export const getEmpresas = async (fun, page, search, estado) => {
     fun(data);
   } catch (error) {
     console.error("Error al obtener los clientes:", error);
+  } finally {
+    setIsloading(false)
   }
 };
 
@@ -59,6 +62,7 @@ export const postEmpresas = async (empresa) => {
     }
 
     const data = await response.json();
+    console.log(data)
   } catch (error) {
     console.error("Error al obtener los datos:", error);
   }
@@ -128,8 +132,9 @@ export const updateEmpresas = async (empresa, id) => {
   }
 };
 
-export const getVehiculosPorEmpresas = async (fun, id)=>{
+export const getVehiculosPorEmpresas = async (fun, id, setIsloading)=>{
   try {
+    setIsloading(true)
       const response = await fetch(`${URLHOST}empresas/vehiculos/${id}`, {
         method: "GET",
         headers: {
@@ -145,6 +150,8 @@ export const getVehiculosPorEmpresas = async (fun, id)=>{
       fun(data);
     } catch (error) {
       console.error("Error al obtener los clientes:", error);
+    } finally {
+      setIsloading(false)
     }
 }
 
@@ -213,8 +220,9 @@ export const updateVehiculosPorEmpresas = async (vehiculo, idEmpresa) => {
   }
 };
 
-export const getMotoristasPorEmpresas = async (fun, id)=>{
+export const getMotoristasPorEmpresas = async (fun, id, setIsloading)=>{
   try {
+      setIsloading(true)
       const response = await fetch(`${URLHOST}empresas/motoristas/${id}`, {
         method: "GET",
         headers: {
@@ -230,6 +238,8 @@ export const getMotoristasPorEmpresas = async (fun, id)=>{
       fun(data);
     } catch (error) {
       console.error("Error al obtener los clientes:", error);
+    } finally {
+      setIsloading(false)
     }
 }
 
@@ -369,7 +379,7 @@ export const verificarDataDeMotoristas = (funError, data, setMsg) => {
  * @returns Bolean
  */
 export const verificarDataVehiculos = (funErr, data, setMsg) => {
-  const { placa, marca, modelo, pesoMaximo, tipo, estado } = data
+  const { placa, pesoMaximo, tipo, estado } = data
 
   /* Placas */
   if (!regexPlca.test(placa) || placa == "") {

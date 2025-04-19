@@ -3,7 +3,7 @@ import { ButtonAdd, Pagination } from "../buttons";
 import { TableEmpresas } from "./tables";
 import { getEmpresas, postEmpresas, getStatsEmpresas, verificarData } from "../../hooks/formDataEmpresas";
 import {ModalEmpresas} from "./modal";
-import { ModalErr, ModalSuccess, NoData } from '../alerts'
+import { ModalErr, ModalSuccess, NoData, Spinner } from '../alerts'
 
 const Search = ({ sts }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -17,7 +17,7 @@ const Search = ({ sts }) => {
   const [pagination, setPagination] = useState(1)
   const [search, setSearch] = useState('')
   const [estado, setEstado] = useState();
-
+  const [isLoad, setIsload] = useState(false)
   /**
    * Se limpia el formdata cuando le de cancelar
    */
@@ -109,7 +109,7 @@ const Search = ({ sts }) => {
   }
 
   const fetchData = useCallback(() => {
-    getEmpresas(setDatos, pagination, search, estado);
+    getEmpresas(setDatos, pagination, search, estado, setIsload);
     getStatsEmpresas(sts)
   }, [search, estado, pagination]);
 
@@ -131,7 +131,7 @@ const Search = ({ sts }) => {
         <ButtonAdd name="Agregar" fun={toggleModalOpen} />
       </div>
       <div className="mt-7 text-center">
-        {(!datos || datos.data.length ==0) ? <NoData /> : <TableEmpresas datos={datos.data} />}
+        { isLoad && !datos ? <Spinner /> : (!datos || datos.data.length ==0) ? <NoData /> : <TableEmpresas datos={datos.data} />}
         <hr className="text-gray-200 mt-7 mb-4"/>
         {datos && datos.pagination.totalPages > 1 && <Pagination pg={pagination} sp={setPagination} hp={handlePagination} dt={datos}/>}
       </div>

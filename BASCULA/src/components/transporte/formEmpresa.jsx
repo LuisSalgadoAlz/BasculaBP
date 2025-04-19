@@ -134,11 +134,10 @@ export const FormVehiculosEdit = ({ fun, data }) => {
             Tipo
           </label>
           <select name={"tipo"} className={claseFormInputs} onChange={fun} value={data && data.tipo}> 
-              <option value={-1} className="text-gray-400">Seleccione un tipo</option>
-              <option value={0}>Liviano</option>
-              <option value={1}>Mayoreo</option>
-              <option value={2}>Detalle</option>
-              <option value={3}>Importaciones</option>
+            <option value={-1} className="text-gray-400">Seleccione un tipo</option>
+            {tiposCamion.map((el)=>(
+              <option value={el.id}>{el.nombre}</option>
+            ))}
           </select>
         </div>
         <div className="mt-2">

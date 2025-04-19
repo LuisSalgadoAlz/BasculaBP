@@ -13,12 +13,12 @@ import {
   updateDireccionesPorID,
 } from "../../hooks/formClientes";
 import { TableDirecciones } from "./tableClientes";
-import { ModalSuccess, ModalErr, NoData } from "../alerts";
+import { ModalSuccess, ModalErr, NoData, Spinner } from "../alerts";
 import { ModalDirecciones, ModalDireccionesEdit } from "./modal";
 
 const EditClientes = () => {
   /* Estados / Datos del aplicativo */
-
+  const [isLoadDireccion, setIsLoadDireccion] = useState(false)
   const [success, setSuccess] = useState(false);
   const [errorModal, setErrorModal] = useState(false);
   const [msg, setMsg] = useState();
@@ -141,7 +141,7 @@ const EditClientes = () => {
   };
 
   const fetchData = useCallback(() => {
-    getDireccionesPorSocios(setDirecciones, id);
+    getDireccionesPorSocios(setDirecciones, id, setIsLoadDireccion);
     getClientesPorID(setSc, id);
   }, []);
 
@@ -262,7 +262,7 @@ const EditClientes = () => {
           </div>
         </div>
         <div className="gap-5 mt-7">
-          {!direcciones || direcciones.length == 0 ? (
+          {(isLoadDireccion && !direcciones) ? <Spinner /> : (!direcciones || direcciones.length == 0) ? (
             <NoData />
           ) : (
             <TableDirecciones datos={direcciones} fun={handleUpdateDireccion} />

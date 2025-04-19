@@ -13,6 +13,7 @@ const Boletas = () => {
    * Variables de control de feching
    */
   const [isLoading, setIsLoading] = useState(false)
+  const [isLoadTable, setSsLoadTable] = useState(false)
   const [stats, setStats] = useState(initialStateStats)
   const [formBoletas, setFormBoletas] = useState(initialStateFormBoletas);
   const [dataSelets, setDataSelects] = useState(initialSateDataFormSelet);
@@ -91,7 +92,7 @@ const Boletas = () => {
     setPlc('')
     setFormBoletas(initialStateFormBoletas)
     getAllDataForSelect('', '', '', '', '',setDataSelects);
-    getDataBoletas(setDataTable)
+    getDataBoletas(setDataTable, setSsLoadTable)
   }
   
   const limpiar = () => {
@@ -170,7 +171,7 @@ const Boletas = () => {
 
   const fetchData = useCallback(() => {
     getAllDataForSelect('', plc, formBoletas.Socios, formBoletas.Transportes, formBoletas.Motoristas, setDataSelects);
-    getDataBoletas(setDataTable);
+    getDataBoletas(setDataTable, setSsLoadTable);
     getStatsBoletas(setStats);
   }, [plc, formBoletas.Socios, formBoletas.Transportes, formBoletas.Motoristas,]);
   
@@ -248,7 +249,7 @@ const Boletas = () => {
         <CardHeader data={stats['pendientes']} name={"Total de salidas de material"} title={"Pendientes"}/>
       </div>
       <div className="mt-6 bg-white shadow rounded-xl px-6 py-7">
-        <ViewBoletas boletas={dataTable} sts={setStats} hdlOut={handleOutBol}/>
+        <ViewBoletas boletas={dataTable} sts={setStats} hdlOut={handleOutBol} isLoad={isLoadTable}/>
       </div>
 
       {/* Modals de control de boletas */}

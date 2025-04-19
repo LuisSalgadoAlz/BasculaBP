@@ -49,8 +49,9 @@ export const postBoletasNormal = async (boleta, setIsLoading) => {
   }
 };
 
-export const getDataBoletas = async (fun) => {
+export const getDataBoletas = async (fun, setIsLoading) => {
   try {
+    setIsLoading(true)
     const response = await fetch(`${URLHOST}boletas/data`, {
       method: "GET",
       headers: {
@@ -66,6 +67,8 @@ export const getDataBoletas = async (fun) => {
     fun(data);
   } catch (error) {
     console.error("Error al obtener los clientes:", error);
+  } finally {
+    setIsLoading(false)
   }
 };
 
@@ -240,7 +243,7 @@ export const formaterData = (formBoletas) => {
 
 
 export const verificarDataNewPlaca = (funError, data, setMsg) => {
-  const {idCliente, idUsuario, idMotorista, idPlaca, idEmpresa, pesoInicial } = data 
+  const {idCliente, idUsuario, idMotorista, idPlaca, idEmpresa } = data 
 
   /* pesoInicial */
 

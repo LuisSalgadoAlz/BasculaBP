@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { createBrowserRouter, Route, RouterProvider } from "react-router";
 import "./index.css";
 import VerificarLog from "./utils/verificarLog";
+import { Spinner } from "./components/alerts";
 const NoFoundData = lazy(()=>import('./views/notFoundData'));
 const Login = lazy(()=>import('./views/login'));
 const Dashboard = lazy(()=>import('./views/dashboard'))
@@ -54,7 +55,7 @@ const navRutas = createBrowserRouter([
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <Suspense fallback={<div className="fixed inset-0 z-50 flex items-center justify-center">Cargando...</div>}>
+    <Suspense fallback={<div className="fixed inset-0 z-50 flex items-center justify-center"><Spinner /></div>}>
       <RouterProvider router={navRutas} />
     </Suspense>
   </StrictMode>

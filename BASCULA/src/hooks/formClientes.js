@@ -10,8 +10,9 @@ import Cookies from 'js-cookie'
  * @param {*} tipo 
  * 
  */
-export const getClientes = async (fun, page, search, tipo, estado) => {
+export const getClientes = async (fun, page, search, tipo, estado, setIsLoading) => {
   try {
+    setIsLoading(true)
     const response = await fetch(`${URLHOST}socios?page=${page}&search=${search}&tipo=${tipo}&estado=${estado}`, {
       method: "GET",
       headers: {
@@ -27,6 +28,8 @@ export const getClientes = async (fun, page, search, tipo, estado) => {
     fun(data);
   } catch (error) {
     console.error("Error al obtener los clientes:", error);
+  } finally {
+    setIsLoading(false)
   }
 };
 
@@ -63,8 +66,9 @@ export const getClientesPorID = async (fun, id) => {
  * @param {*} id 
  */
 
-export const getDireccionesPorSocios = async (fun, id) => {
+export const getDireccionesPorSocios = async (fun, id, setIsLoading) => {
   try {
+    setIsLoading(true)
     const response = await fetch(`${URLHOST}socios/direcciones/${id}`, {
       method: "GET",
       headers: {
@@ -80,6 +84,8 @@ export const getDireccionesPorSocios = async (fun, id) => {
     fun(data);
   } catch (error) {
     console.error("Error al obtener los clientes:", error);
+  } finally {
+    setIsLoading(false)
   }
 };
 
@@ -259,7 +265,7 @@ export const updateDireccionesPorID = async (direccion) => {
 
 /* Expresiones regulares verificacion */
 
-export const verificarData = (funSuccess,funError, data, setMsg, id) => {
+export const verificarData = (funSuccess,funError, data, setMsg,) => {
   
   const { nombre, tipo, correo, telefono, estado} = data 
 

@@ -102,7 +102,7 @@ export const ModalVehiculoDuplicadoEdit = ({ name, hdClose, hdlSubmit }) => {
   );
 };
 
-export const ModalPrevisual = ({ name, hdClose, data }) => {
+export const ModalPrevisual = ({ hdClose, data }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-opa-50">
       <div className="bg-white p-6 rounded-2xl shadow-xl max-w-sm border border-gray-200">
@@ -140,6 +140,14 @@ export const NoData = () => {
   return (
     <div className="flex items-center justify-center py-32 px-4 max-sm:text-center">
       <span className="text-lg text-gray-500">No hay datos disponibles.</span>
+    </div>
+  );
+};
+
+export const Spinner = () => {
+  return (
+    <div className="flex justify-center items-center py-32">
+      <div className="h-12 w-12 animate-spin rounded-full border-4 border-solid border-gray-300 border-t-[#5A3F27]" />
     </div>
   );
 };

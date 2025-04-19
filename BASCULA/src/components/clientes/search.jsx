@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { ButtonAdd, Pagination } from "../buttons";
 import { TableComponent } from "./tableClientes";
-import { NoData } from "../alerts";
+import { NoData, Spinner } from "../alerts";
 import {
   getClientes,
   postEmpresas,
@@ -12,6 +12,7 @@ import { ModalClientes } from "./modal";
 import { ModalSuccess, ModalErr } from "../alerts";
 
 const Search = ({ sts }) => {
+  const [isLoadClientes, setIsloadClientes] = useState(false)
   const [pagination, setPagination] = useState(1)
   const [tipo, setTipo] = useState()
   const [estado, setEstado] = useState()
@@ -116,7 +117,7 @@ const Search = ({ sts }) => {
   }
 
   const fetchData = useCallback(() => {
-    getClientes(setDatos, pagination, search, tipo, estado);
+    getClientes(setDatos, pagination, search, tipo, estado, setIsloadClientes);
     getStatsSocios(sts);
   }, [pagination, search, tipo, estado]);
 
@@ -150,7 +151,7 @@ const Search = ({ sts }) => {
         <ButtonAdd name="Agregar" fun={toggleOpen} />
       </div>
       <div className="mt-7 text-center">
-        {!datos || datos.data.length == 0 ? (
+        {(isLoadClientes && !datos) ? <Spinner /> : (!datos || datos.data.length == 0)? (
           <NoData />
         ) : (
           <TableComponent datos={datos.data} />

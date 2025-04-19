@@ -7,7 +7,7 @@ import { getEmpresasPorId, getSociosParaSelect, updateEmpresas, verificarData, g
   verificarDataVehiculos, verificarListadoDeVehiculos, getMotoristasPorEmpresas, postMotoristasDeLaEmpresa, verificarDataDeMotoristas, updateMotoristasPorEmpresa
 } from "../../hooks/formDataEmpresas";
 import { SelectSociosEdit } from "../selects";
-import { ModalErr, ModalSuccess, ModalVehiculoDuplicado, ModalVehiculoDuplicadoEdit, NoData } from "../alerts";
+import { ModalErr, ModalSuccess, ModalVehiculoDuplicado, ModalVehiculoDuplicadoEdit, NoData, Spinner } from "../alerts";
 import { TableMotoristas, TableVehiculos } from "./tables";
 import { ModalMotoristas, ModalMotoristasEdit, ModalVehiculos, ModalVehiculosEdit } from "./modal";
 
@@ -26,6 +26,8 @@ const EditTransporte = () => {
   const [socios, setSocios] = useState();
   const [err, setErr] = useState();
   const [success, setSuccess] = useState();
+  const [isLoadMotorista, setIsloadMotorista] = useState(false)
+  const [isLoadVehiculos, setIsLoadVehiculos] = useState(false)
   const [msg, setMsg] = useState();
   const [vehiculos, setVehiculos] = useState();
   const [mdlVehiculos, setMdlVehiculos] = useState();
@@ -285,8 +287,8 @@ const EditTransporte = () => {
    */
 
   const fetchData = useCallback(() => {
-    getVehiculosPorEmpresas(setVehiculos, id);
-    getMotoristasPorEmpresas(setMotoristas, id)
+    getVehiculosPorEmpresas(setVehiculos, id, setIsLoadVehiculos);
+    getMotoristasPorEmpresas(setMotoristas, id, setIsloadMotorista)
     getEmpresasPorId(setEmpresa, id);
     getSociosParaSelect(setSocios);
   }, []);
@@ -420,7 +422,7 @@ const EditTransporte = () => {
           </div>
         </div>
         <div className="gap-5 mt-7">
-          {!vehiculos || vehiculos.length == [] ? (
+          {(isLoadVehiculos && !vehiculos) ? <Spinner /> : (!vehiculos || vehiculos.length == []) ? (
             <NoData />
           ) : (
             <TableVehiculos datos={vehiculos} fun={handleGetVehiculo} />
@@ -441,7 +443,7 @@ const EditTransporte = () => {
             <ButtonAdd name={"Agregar Motoristas"} fun={handleShowModalMotoristas}/>
           </div>
         </div>
-        <div className="gap-5 mt-7">{!motoristas || motoristas.length == [] ? <NoData /> : <TableMotoristas datos={motoristas} fun={handleGetMotoristasEdit} />}</div>
+        <div className="gap-5 mt-7">{(isLoadMotorista && !motoristas) ? <Spinner /> :(!motoristas || motoristas.length == []) ? <NoData /> : <TableMotoristas datos={motoristas} fun={handleGetMotoristasEdit} />}</div>
         <hr className="text-gray-400 mt-7" />
       </div>
 
