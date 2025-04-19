@@ -12,6 +12,7 @@ const tipodepeso = require("./routes/tipoDePeso.routes")
 const empresas = require("./routes/empresas.routes");
 const setupWebSocket = require("./sockets/websocketPeso");
 const boletas = require("./routes/boleta.routes");
+const path = require("path");
 
 
 const server = http.createServer(app);
@@ -22,14 +23,23 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
 
-app.use('/login/', logUser);
-app.use('/usuarios', router);
-app.use('/peso', basculaLive)
-app.use('/socios', socios)
-app.use('/motoristas', motoristas)
-app.use('/tipoDePeso', tipodepeso)
-app.use('/empresas', empresas)
-app.use('/boletas', boletas)
+app.use('/api/login/', logUser);
+app.use('/api/usuarios', router);
+app.use('/api/peso', basculaLive)
+app.use('/api/socios', socios)
+app.use('/api/motoristas', motoristas)
+app.use('/api/tipoDePeso', tipodepeso)
+app.use('/api/empresas', empresas)
+app.use('/api/boletas', boletas)
+
+const distPath = path.join(__dirname, "../bascula/dist");
+
+app.use(express.static(distPath));
+
+// Para que React maneje rutas tipo /boletas, /dashboard, etc.
+app.get("*", (req, res) => {
+  res.sendFile(path.join(distPath, "index.html"));
+});
 
 setupWebSocket(server);
 
