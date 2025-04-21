@@ -109,14 +109,14 @@ export const ModalPrevisual = ({ hdClose, data }) => {
         <h2 className="text-xl font-bold text-gray-800 mb-4">
           Boleta
         </h2>
-        <p className="text-gray-600">Peso Inicial: {data?.pesoInicial}</p>
+        <p className="text-gray-600">Peso Inicial: <span className="font-bold">{data?.pesoInicial} lb</span></p>
         <hr className="text-gray-400 my-1" />
-        <p className="text-gray-600">Peso neto: {data?.pesoNeto}</p>
+        <p className="text-gray-600">Peso neto: <span className="font-bold">{data?.pesoNeto} lb</span></p>
         <hr className="text-gray-400 my-1" />
-        <p className="text-gray-600">Peso tolerancia: {data?.tolerancia || data?.tolerancia==0 ?  data?.tolerancia : 'Faltan datos'}</p>
+        <p className="text-gray-600">Peso tolerancia: <span className="font-bold">± {data?.tolerancia || data?.tolerancia==0 ?  data?.tolerancia : 'Faltan datos'} lb</span></p>
         <hr className="text-gray-400 my-1" />
-        <p className="text-gray-600">Peso desviacion: {data?.desviacion || data?.tolerancia==0 ?  data?.desviacion : 'Faltan datos'}</p>
-        <hr className="text-gray-400 my-1" />
+        <p className="text-gray-600">Peso desviacion: <span className="font-bold">{data?.desviacion || data?.desviacion==0 ? data?.desviacion  : 'Faltan datos'} lb</span></p>
+        <hr className="text-gray-400 my-1" />   
         <p className="text-gray-600">Estado: {data?.fueraTol ? <span className="text-red-800">Fuera de tolerancia</span> : <span className="text-green-800">Dentro de la tolerancia</span>}</p>
         <div className="mt-6 flex justify-center">
           <button

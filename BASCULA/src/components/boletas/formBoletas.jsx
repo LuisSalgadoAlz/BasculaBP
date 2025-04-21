@@ -176,8 +176,8 @@ export const ModalOut = ({hdlClose, hdlChange, fillData, typeBol, typeStructure,
   const hdlPrevisualizar = () => {
     const pesoNeto = boletas?.pesoOut - boletas?.pesoIn;
     const tolerancia = boletas['Peso Teorico'] * 0.005;
-    const desviacion = Math.abs(Math.abs(pesoNeto) - boletas['Peso Teorico']);
-    
+    const desviacion = Math.abs(pesoNeto) - boletas['Peso Teorico'];
+    const absDesviacion = Math.abs(Math.abs(pesoNeto) - boletas['Peso Teorico']);
       
     const data = {
       pesoNeto: Math.abs(pesoNeto),
@@ -186,7 +186,7 @@ export const ModalOut = ({hdlClose, hdlChange, fillData, typeBol, typeStructure,
       pesoInicial: boletas?.pesoIn
     };
 
-    data.fueraTol = desviacion > tolerancia
+    data.fueraTol = absDesviacion > tolerancia
     setModal(true)
     setDataPrev(data)
   };

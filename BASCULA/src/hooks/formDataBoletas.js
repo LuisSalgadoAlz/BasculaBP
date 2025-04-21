@@ -209,8 +209,9 @@ export const postBoletasCasulla = async (boleta, setIsLoading) => {
 export const formaterData = (formBoletas) => {
   const pesoNeto = Math.abs(formBoletas?.pesoOut - formBoletas?.pesoIn);
   const tolerancia = formBoletas['Peso Teorico'] * 0.005;
-  const desviacion = Math.abs(Math.abs(pesoNeto) - formBoletas['Peso Teorico']);
-  const fueraTol = desviacion > tolerancia
+  const desviacion = Math.abs(pesoNeto) - formBoletas['Peso Teorico'];
+  const absDesviacion = Math.abs(Math.abs(pesoNeto) - formBoletas['Peso Teorico'])
+  const fueraTol = absDesviacion > tolerancia
 
   const allData = {
     idCliente : formBoletas?.Socios,
