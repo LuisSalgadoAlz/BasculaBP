@@ -1,80 +1,72 @@
 const fs = require('fs');
-const PDFDocument = require('pdfkit');
-const { print } = require('pdf-to-printer');
+const { exec } = require('child_process');
 
 const imprimirEpson = (req, res) => {
-  const filePath = 'boleta_epson.pdf';
-  const doc = new PDFDocument({size:'Letter', margins: 0});
+  const filePath = 'boleta_epson.txt';
   
-  doc.pipe(fs.createWriteStream(filePath));
+  // ESC @ - Initialize printer
+  // ESC ! - Select print mode
+  // ESC t - Select character code table
+  // ESC E - Bold on/off
+  // ESC - - Underline on/off
+  // LF - Line feed
 
-  // Configurar la tipografía a Courier (monoespaciada)
-  doc.font('Courier-Bold').fontSize(11);
+  const INIT = '\x1B@';              // Initialize printer
+  const BOLD_ON = '\x1B!\x08';       // Turn bold on
+  const BOLD_OFF = '\x1B!\x00';      // Turn bold off
+  const DOUBLE_WIDTH = '\x1B!\x20';  // Double width text
+  const DOUBLE_HEIGHT = '\x1B!\x10'; // Double height text
+  const DOUBLE_SIZE = '\x1B!\x30';   // Double width and height
+  const UNDERLINE = '\x1B-\x01';     // Turn underline on
+  const NO_UNDERLINE = '\x1B-\x00';  // Turn underline off
+  const CENTER = '\x1Ba\x01';        // Center alignment
+  const LEFT = '\x1Ba\x00';          // Left alignment
+  const RIGHT = '\x1Ba\x02';         // Right alignment
+  const FORM_FEED = '\x0C';          // Form feed - Eject page
+  const LINE = '________________________________________________________________________________'; // Separator line
 
-  doc.text('BAPROSA', { align: 'center' })
-    .moveDown(1)
-    .text('Boleta de Peso No. 01280', { align: 'center' })
-    .moveDown(2);
+  // Build the receipt content with improved formatting
+  const contenido = 
+    `${INIT}${CENTER}${DOUBLE_SIZE}BAPROSA${BOLD_OFF}${LEFT}
+${CENTER}${BOLD_ON}Boleta de Peso No. 01280${BOLD_OFF}${LEFT}
 
-  // Coordenadas base para las columnas
-  const leftX = 50;
-  const rightX = 370;
-  let y = doc.y;
+${BOLD_ON}Fecha         :${BOLD_OFF} 14 de Abril de 2025
+${BOLD_ON}Nombre        :${BOLD_OFF} Hermanitos Alvarez Carbajal   ${BOLD_ON}Transporte    :${BOLD_OFF} DIDERPROBA
+${BOLD_ON}Producto      :${BOLD_OFF} Migon                         ${BOLD_ON}Movimiento    :${BOLD_OFF} Flete de Venta
+${BOLD_ON}Placa         :${BOLD_OFF} C116807                       ${BOLD_ON}Tiempo Estadia:${BOLD_OFF} 01:45
+${BOLD_ON}Motorista     :${BOLD_OFF} HECTOR SALAZAR                ${BOLD_ON}Transportista :${BOLD_OFF} DIDERPROBA
+${BOLD_ON}Origen        :${BOLD_OFF} BAPROSA
+${BOLD_ON}Destino       :${BOLD_OFF} BAPROSA
 
-  doc.moveTo(36, y)        // punto inicial (x, y)
-  .lineTo(576, y)       // punto final (ancho página Letter - márgenes)
-  .stroke(); 
-  y += 10;
-  // Datos en dos columnas
-  const twoColumnRow = (leftText, rightText = '') => {
-    doc.text(leftText, leftX, y);
-    if (rightText) doc.text(rightText, rightX, y);
-    y += 15;
-  };
+${LINE}
 
-  twoColumnRow('Fecha         : 14 de Abril de 2025');
-  twoColumnRow('Nombre        : Hermanitos Alvarez Carbajal', 'Transporte    : DIDERPROBA');
-  twoColumnRow('Producto      : Migon', 'Movimiento    : Flete de Venta');
-  twoColumnRow('Placa         : C116807', 'Tiempo Estadía: 01:45');
-  twoColumnRow('Motorista     : HECTOR SALAZAR', 'Transportista : DIDERPROBA');
-  twoColumnRow('Origen        : BAPROSA');
-  twoColumnRow('Destino       : BAPROSA');
-  twoColumnRow('Peso Entrada  : 31,580', 'Peso Salida   : 81,660');
-  twoColumnRow('Peso Neto     : 50,080', 'Peso Teórico  : 50,000');
-  twoColumnRow('Desviación    : 80');
+${BOLD_ON}Peso Entrada  :${BOLD_OFF} 31,580 kg                     ${BOLD_ON}Peso Salida   :${BOLD_OFF} 81,660 kg
+${BOLD_ON}Peso Neto     :${BOLD_OFF} 50,080 kg                     ${BOLD_ON}Peso Teorico  :${BOLD_OFF} 50,000 kg
+${BOLD_ON}Desviacion    :${BOLD_OFF} 80 kg
 
-  y += 10;
+${LINE}
 
-  twoColumnRow('Pesador       : Luis Armando Salgado', 'Autorizado  : ');
+${BOLD_ON}Pesador       :${BOLD_OFF} Luis Armando Salgado          ${BOLD_ON}Autorizado    :${BOLD_OFF} ________________
 
-  y += 10;
-  doc.moveTo(36, y)        // punto inicial (x, y)
-     .lineTo(576, y)       // punto final (ancho página Letter - márgenes)
-     .stroke(); 
+${CENTER}www.baprosa.com${LEFT}
+${CENTER}Tel: (XXX) XXX-XXXX${LEFT}
 
-  doc.end();
-
-  const options = {
-    printer: 'BASCULA', // Asegúrate de que el nombre coincida con el que tienes configurado
-    silent: true,
-  };
+${LINE}
+${FORM_FEED}`;
   
+  fs.writeFileSync(filePath, contenido);
 
-
-  print(filePath, options).then(() => {
-      console.log('Impresión realizada con éxito');
-      // Luego de imprimir, enviar el archivo al navegador
-      res.download(filePath, 'boleta_impresa.pdf', (err) => {
-        if (err) {
-          console.error('Error al enviar el archivo:', err);
-          res.status(500).send('Error al enviar el archivo');
-        }
-      });
-    })
-  .catch((err) => {
-      console.error('Error de impresión:', err);
-      res.status(500).send('Error de impresión');
-  }); 
+  // Comando de impresión (Windows)
+  exec(`print /D:"\\\\localhost\\BASCULA" ${filePath}`, (err, stdout, stderr) => {
+    if (err) {
+      console.error('Error al imprimir:', err);
+      res.status(500).send('Error al imprimir');
+      return;
+    }
+    
+    console.log('Boleta impresa correctamente');
+    res.download(filePath, 'boleta_impresa.txt');
+  });
 };
 
 module.exports = imprimirEpson;
