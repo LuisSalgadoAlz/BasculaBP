@@ -108,7 +108,7 @@ const EditClientes = () => {
     const isValid = verificarDirecciones(setErrorModal, arr, setMsg);
     if (isValid) {
       await postDirecciones(arr);
-      getDireccionesPorSocios(setDirecciones, id);
+      getDireccionesPorSocios(setDirecciones, id, setIsLoadDireccion);
       setModalDirecciones(false);
       setMsg('agregar direccion')
       setSuccess(true)
@@ -122,7 +122,7 @@ const EditClientes = () => {
     console.log(isValid);
     if (isValid) {
       await updateDireccionesPorID(dataDireccion);
-      getDireccionesPorSocios(setDirecciones, id);
+      getDireccionesPorSocios(setDirecciones, id, setIsLoadDireccion);
       setModalDireccionesEdit(false);
       setMsg('modificar direccion')
       setSuccess(true)
