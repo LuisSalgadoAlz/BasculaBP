@@ -4,13 +4,6 @@ const { exec } = require('child_process');
 const imprimirEpson = (boleta) => {
   const filePath = 'boleta_epson.txt';
   
-  // ESC @ - Initialize printer
-  // ESC ! - Select print mode
-  // ESC t - Select character code table
-  // ESC E - Bold on/off
-  // ESC - - Underline on/off
-  // LF - Line feed
-
   const INIT = '\x1B@';              // Initialize printer
   const BOLD_ON = '\x1B!\x08';       // Turn bold on
   const BOLD_OFF = '\x1B!\x00';      // Turn bold off
@@ -27,12 +20,17 @@ const imprimirEpson = (boleta) => {
   const BOLD_CENTERED = CENTER + BOLD_ON;
   const LINE = '________________________________________________________________________________'; 
   
-  const PROCESO = boleta.proceso == 0 ? 'ENTRADA DE MATERIAL' : 'SALIDA DE MATERIAL'; 
+  /**
+   * ? Variables de la boleta
+   */
   const LABEL = boleta.proceso == 0 ? 'Proveedor     :' : 'Cliente       :';
   const LABELSINSPACE = boleta.proceso == 0 ? 'Entrada' : 'Salida';
   const TIEMPOPROCESO = boleta.fechaFin - boleta.fechaInicio;
   const TIEMPOESTADIA = new Date(TIEMPOPROCESO).toISOString().slice(11, 19);
 
+  const isTraslado = boleta.movimiento.includes('Traslado');
+  const origen = isTraslado ? boleta.trasladoOrigen : boleta.origen;
+  const destino = isTraslado ? boleta.trasladoDestino : boleta.destino;
 
   // Build the receipt content with improved formatting
   const contenido = `
@@ -43,8 +41,8 @@ ${BOLD_ON}Fecha         :${BOLD_OFF} ${new Date().toLocaleString('es-ES')}
 ${BOLD_ON}${LABEL}${BOLD_OFF} ${quitarAcentos(boleta.socio)}               
 ${BOLD_ON}Placa         :${BOLD_OFF} ${stringtruncado(boleta.placa, 27)}${BOLD_ON}Hora de Entrada      :${BOLD_OFF} ${boleta.fechaInicio.toLocaleTimeString()}
 ${BOLD_ON}Motorista     :${BOLD_OFF} ${stringtruncado(quitarAcentos(boleta.motorista), 27)}${BOLD_ON}Hora de Salida       :${BOLD_OFF} ${boleta.fechaFin.toLocaleTimeString()}
-${BOLD_ON}Origen        :${BOLD_OFF} ${quitarAcentos(boleta.origen)}       
-${BOLD_ON}Destino       :${BOLD_OFF} ${quitarAcentos(boleta.destino)}                       
+${BOLD_ON}Origen        :${BOLD_OFF} ${quitarAcentos(origen)}       
+${BOLD_ON}Destino       :${BOLD_OFF} ${quitarAcentos(destino)}                       
 ${BOLD_ON}Producto      :${BOLD_OFF} ${quitarAcentos(boleta.producto)}
 
 ${LINE}

@@ -321,11 +321,5 @@ export const verificarDataCompleto = (funError, data, setMsg) => {
     return false
   }
 
-  if (tipoSocio && proceso != tipoSocio){
-    setMsg('Socio no valido para este tipo de movimiento')
-    funError(true)
-    return false
-  }
-
   return true
 }
