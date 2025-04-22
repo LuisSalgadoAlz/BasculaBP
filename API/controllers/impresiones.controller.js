@@ -31,7 +31,11 @@ const imprimirEpson = (boleta) => {
   const isTraslado = boleta.movimiento.includes('Traslado');
   const origen = isTraslado ? boleta.trasladoOrigen : boleta.origen;
   const destino = isTraslado ? boleta.trasladoDestino : boleta.destino;
-
+  const fueraTol = boleta.estado === 'Completo(Fuera de tolerancia)';
+  const msg = fueraTol ? 'Fuera de Tolerancia' : '';
+  const colorMsg = `${BOLD_ON}${UNDERLINE}${msg}${NO_UNDERLINE}${BOLD_OFF}`;
+  
+  console.log('Boleta:', boleta);
   // Build the receipt content with improved formatting
   const contenido = `
 ${INIT}${BOLD_CENTERED_BIG}BAPROSA${BOLD_OFF}
@@ -49,7 +53,7 @@ ${LINE}
 
 ${BOLD_ON}Peso Tara     :${BOLD_OFF} ${stringtruncado(`${boleta.pesoInicial} lb`, 27)}${BOLD_ON}Peso Teorico  :${BOLD_OFF} ${boleta.pesoTeorico} lb
 ${BOLD_ON}Peso Bruto    :${BOLD_OFF} ${stringtruncado(`${boleta.pesoFinal} lb`, 27)}${BOLD_ON}Desviacion    :${BOLD_OFF} ${boleta.desviacion} lb
-${BOLD_ON}Peso Neto     :${BOLD_OFF} ${boleta.pesoNeto} lb                    
+${BOLD_ON}Peso Neto     :${BOLD_OFF} ${stringtruncado(`${boleta.pesoNeto} lb`, 27)}${colorMsg}                     
 
 ${LINE}
 
@@ -61,7 +65,7 @@ ${FORM_FEED}`;
   fs.writeFileSync(filePath, contenido);
 
   // Comando de impresión (Windows)
-  exec(`print /D:"\\\\localhost\\BASCULA" ${filePath}`, (err, stdout, stderr) => {
+  exec(`print /D:"\\\\localhost\\BASC" ${filePath}`, (err, stdout, stderr) => {
     if (err) {
       console.error('Error al imprimir:', err);
       return;

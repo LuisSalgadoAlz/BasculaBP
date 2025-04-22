@@ -672,6 +672,8 @@ const updateBoletaOutComdin = async(req, res) => {
       },
     });
 
+    imprimirEpson(nuevaBoleta);
+
     res
       .status(201)
       .json({ msg: "Boleta creado exitosamente" });
