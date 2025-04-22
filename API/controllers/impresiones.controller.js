@@ -1,7 +1,7 @@
 const fs = require('fs');
 const { exec } = require('child_process');
 
-const imprimirEpson = (req, res) => {
+const imprimirEpson = (boleta) => {
   const filePath = 'boleta_epson.txt';
   
   // ESC @ - Initialize printer
@@ -23,35 +23,41 @@ const imprimirEpson = (req, res) => {
   const LEFT = '\x1Ba\x00';          // Left alignment
   const RIGHT = '\x1Ba\x02';         // Right alignment
   const FORM_FEED = '\x0C';          // Form feed - Eject page
-  const LINE = '________________________________________________________________________________'; // Separator line
+  const BOLD_CENTERED_BIG = CENTER + BOLD_ON + DOUBLE_SIZE;
+  const BOLD_CENTERED = CENTER + BOLD_ON;
+  const LINE = '________________________________________________________________________________'; 
+  
+  const PROCESO = boleta.proceso == 0 ? 'ENTRADA DE MATERIAL' : 'SALIDA DE MATERIAL'; 
+  const LABEL = boleta.proceso == 0 ? 'Proveedor     :' : 'Cliente       :';
+  const LABELSINSPACE = boleta.proceso == 0 ? 'Entrada' : 'Salida';
+  const TIEMPOPROCESO = boleta.fechaFin - boleta.fechaInicio;
+  const TIEMPOESTADIA = new Date(TIEMPOPROCESO).toISOString().slice(11, 19);
+
 
   // Build the receipt content with improved formatting
-  const contenido = 
-    `${INIT}${CENTER}${DOUBLE_SIZE}BAPROSA${BOLD_OFF}${LEFT}
-${CENTER}${BOLD_ON}Boleta de Peso No. 01280${BOLD_OFF}${LEFT}
-
-${BOLD_ON}Fecha         :${BOLD_OFF} 14 de Abril de 2025
-${BOLD_ON}Nombre        :${BOLD_OFF} Hermanitos Alvarez Carbajal   ${BOLD_ON}Transporte    :${BOLD_OFF} DIDERPROBA
-${BOLD_ON}Producto      :${BOLD_OFF} Migon                         ${BOLD_ON}Movimiento    :${BOLD_OFF} Flete de Venta
-${BOLD_ON}Placa         :${BOLD_OFF} C116807                       ${BOLD_ON}Tiempo Estadia:${BOLD_OFF} 01:45
-${BOLD_ON}Motorista     :${BOLD_OFF} HECTOR SALAZAR                ${BOLD_ON}Transportista :${BOLD_OFF} DIDERPROBA
-${BOLD_ON}Origen        :${BOLD_OFF} BAPROSA
-${BOLD_ON}Destino       :${BOLD_OFF} BAPROSA
-
-${LINE}
-
-${BOLD_ON}Peso Entrada  :${BOLD_OFF} 31,580 kg                     ${BOLD_ON}Peso Salida   :${BOLD_OFF} 81,660 kg
-${BOLD_ON}Peso Neto     :${BOLD_OFF} 50,080 kg                     ${BOLD_ON}Peso Teorico  :${BOLD_OFF} 50,000 kg
-${BOLD_ON}Desviacion    :${BOLD_OFF} 80 kg
+  const contenido = `
+${INIT}${BOLD_CENTERED_BIG}BAPROSA${BOLD_OFF}
+${BOLD_CENTERED}Boleta de Peso No. ${boleta.id}${LEFT}
+${BOLD_CENTERED}Proceso: ${LABELSINSPACE} - ${quitarAcentos(boleta.movimiento)} / Duracion del Proceso: ${TIEMPOESTADIA}${LEFT}
+${BOLD_ON}Fecha         :${BOLD_OFF} ${new Date().toLocaleString('es-ES')}
+${BOLD_ON}${LABEL}${BOLD_OFF} ${quitarAcentos(boleta.socio)}               
+${BOLD_ON}Placa         :${BOLD_OFF} ${stringtruncado(boleta.placa, 27)}${BOLD_ON}Hora de Entrada      :${BOLD_OFF} ${boleta.fechaInicio.toLocaleTimeString()}
+${BOLD_ON}Motorista     :${BOLD_OFF} ${stringtruncado(quitarAcentos(boleta.motorista), 27)}${BOLD_ON}Hora de Salida       :${BOLD_OFF} ${boleta.fechaFin.toLocaleTimeString()}
+${BOLD_ON}Origen        :${BOLD_OFF} ${quitarAcentos(boleta.origen)}       
+${BOLD_ON}Destino       :${BOLD_OFF} ${quitarAcentos(boleta.destino)}                       
+${BOLD_ON}Producto      :${BOLD_OFF} ${quitarAcentos(boleta.producto)}
 
 ${LINE}
 
-${BOLD_ON}Pesador       :${BOLD_OFF} Luis Armando Salgado          ${BOLD_ON}Autorizado    :${BOLD_OFF} ________________
-
-${CENTER}www.baprosa.com${LEFT}
-${CENTER}Tel: (XXX) XXX-XXXX${LEFT}
+${BOLD_ON}Peso Tara     :${BOLD_OFF} ${stringtruncado(`${boleta.pesoInicial} lb`, 27)}${BOLD_ON}Peso Teorico  :${BOLD_OFF} ${boleta.pesoTeorico} lb
+${BOLD_ON}Peso Bruto    :${BOLD_OFF} ${stringtruncado(`${boleta.pesoFinal} lb`, 27)}${BOLD_ON}Desviacion    :${BOLD_OFF} ${boleta.desviacion} lb
+${BOLD_ON}Peso Neto     :${BOLD_OFF} ${boleta.pesoNeto} lb                    
 
 ${LINE}
+
+${BOLD_ON}Pesador       :${BOLD_OFF} ${stringtruncado(quitarAcentos(boleta.usuario), 27)}${BOLD_ON}Firma         :${BOLD_OFF} ________________
+${CENTER}www.baprosa.com
+${CENTER}Tel: (504) 2222-2222${LEFT}
 ${FORM_FEED}`;
   
   fs.writeFileSync(filePath, contenido);
@@ -60,13 +66,21 @@ ${FORM_FEED}`;
   exec(`print /D:"\\\\localhost\\BASCULA" ${filePath}`, (err, stdout, stderr) => {
     if (err) {
       console.error('Error al imprimir:', err);
-      res.status(500).send('Error al imprimir');
       return;
     }
     
     console.log('Boleta impresa correctamente');
-    res.download(filePath, 'boleta_impresa.txt');
   });
+};
+
+const stringtruncado = (str, len) => {
+  return str.length > len
+    ? String(str).substring(0, len).padEnd(len , ' ')
+    : String(str).padEnd(len, ' ');
+};
+
+const quitarAcentos = (str) => {
+  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 };
 
 module.exports = imprimirEpson;

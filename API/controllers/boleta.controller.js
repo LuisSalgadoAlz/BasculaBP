@@ -3,6 +3,7 @@ const dotenv = require("dotenv");
 const e = require("express");
 const db = new PrismaClient();
 const jwt = require("jsonwebtoken");
+const imprimirEpson = require("./impresiones.controller");
 
 const getAllData = async (req, res) => {
   try {
@@ -394,8 +395,7 @@ const postBoleta = async (req, res) => {
 const getStatsBoletas = async (req, res) => {
   try {
     const [entrada, salida, pendientes] = await Promise.all([
-      db.boleta.count({
-        where: { proceso: 0 },
+      db.boleta.count({ where: { proceso: 0,},
       }),
       db.boleta.count({
         where: { proceso: 1 },
@@ -568,10 +568,10 @@ const updateBoletaOut = async(req, res) => {
           : null,
       },
     });
-
+    imprimirEpson(nuevaBoleta);
     res
       .status(201)
-      .json({ msg: "Boleta creado exitosamente" });
+      .json({ msg: "Boleta creado exitosamente" , boleta: nuevaBoleta});
   } catch (error) {
     console.error(error);
     res.status(500).json({ msg: `Error al crear usuario: ${error.message}` });

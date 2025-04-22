@@ -13,7 +13,6 @@ const empresas = require("./routes/empresas.routes");
 const setupWebSocket = require("./sockets/websocketPeso");
 const boletas = require("./routes/boleta.routes");
 const path = require("path");
-const imprimir = require('./routes/impresiones.routes')
 
 const server = http.createServer(app);
 
@@ -31,7 +30,6 @@ app.use('/api/motoristas', motoristas)
 app.use('/api/tipoDePeso', tipodepeso)
 app.use('/api/empresas', empresas)
 app.use('/api/boletas', boletas)
-app.use('/api/imprimir', imprimir)
 
 const distPath = path.join(__dirname, "../bascula/dist");
 
