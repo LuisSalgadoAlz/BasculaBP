@@ -107,7 +107,6 @@ const actualizarImpresion = async (id) => {
         impreso : new Date()
       }
     })
-    res.status(201).json({ msg: "Boleta creado exitosamente"});
   }catch (err) {
     console.log(err)
   }

@@ -84,6 +84,7 @@ const getAllData = async (req, res) => {
           estado: true,
           rClientes: {
             is: {
+              estado: true,
               ...(socio ? { id: socio } : {}),
               ...(tipo == 0 || tipo == 1 ? { tipo: tipo } : {}),
             },
@@ -105,8 +106,10 @@ const getAllData = async (req, res) => {
         where: {
           estado: true,
           rEmpresaVehiculo: {
+            estado: true, 
             ...(empresa ? { id: empresa } : {}),
             rClientes: {
+              estado: true, 
               ...(socio ? { id: socio } : {}),
               ...(tipo == 0 || tipo == 1 ? { tipo: tipo } : {}),
             },
@@ -119,8 +122,10 @@ const getAllData = async (req, res) => {
         where: {
           estado: true,
           rEmpresaM: {
+            estado: true, 
             ...(empresa ? { id: empresa } : {}),
             rClientes: {
+              estado: true, 
               ...(socio ? { id: socio } : {}),
               ...(tipo == 0 || tipo == 1 ? { tipo: tipo } : {}),
             },
@@ -706,6 +711,11 @@ const getBoletasHistorial = async (req, res) => {
         placa: true,
         fechaInicio: true,
         proceso: true,
+      }, 
+      where: {
+        estado: {
+          not: 'Pendiente'
+        }
       }
     });
   
@@ -742,25 +752,6 @@ const getReimprimir = async (req, res) => {
 }
 
 
-/**
- * TODO: Esta consulta se hara en impriones 
- */
-
-const actualizarImpresion = async (id) => {
-  try{
-    const updateBoletaImpresion = await db.boleta.update({
-      where : {
-        id : parseInt(id)
-      }, 
-      data : {
-        impreso : new Date()
-      }
-    })
-    res.status(201).json({ msg: "Boleta creado exitosamente"});
-  }catch (err) {
-    console.log(err)
-  }
-}
 module.exports = {
   getAllData,
   postBoletasNormal,
