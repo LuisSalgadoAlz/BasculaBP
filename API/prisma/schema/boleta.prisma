@@ -22,7 +22,7 @@ model Boleta {
     movimiento String?
     manifiesto Int?
     estado String 
-    impreso Boolean?
+    impreso DateTime?
     idUsuario Int 
     usuario String
     idMotorista Int?

@@ -1,5 +1,7 @@
 const fs = require('fs');
 const { exec } = require('child_process');
+const { PrismaClient } = require("@prisma/client");
+const db = new PrismaClient();
 
 const imprimirEpson = (boleta) => {
   const filePath = 'boleta_epson.txt';
@@ -18,7 +20,7 @@ const imprimirEpson = (boleta) => {
   const FORM_FEED = '\x0C';          // Form feed - Eject page
   const BOLD_CENTERED_BIG = CENTER + BOLD_ON + DOUBLE_SIZE;
   const BOLD_CENTERED = CENTER + BOLD_ON;
-  const WARNING_ICON = '\x13'; // o por ejemplo '\x10' para ▲
+
   const LINE = '________________________________________________________________________________'; 
   
     // Comandos para marca de agua
@@ -39,35 +41,39 @@ const imprimirEpson = (boleta) => {
   const origen = isTraslado ? boleta.trasladoOrigen : boleta.origen;
   const destino = isTraslado ? boleta.trasladoDestino : boleta.destino;
   const fueraTol = boleta.estado === 'Completo(Fuera de tolerancia)';
-  const msg = fueraTol ? `${BOLD_CENTERED} ->  F U E R A  D E  T O L E R A N C I A  <- ` : '';
+  const msg = fueraTol ? `${BOLD_CENTERED} *****  F U E R A  D E  T O L E R A N C I A  ***** ${LEFT}` : '';
 
-  const WATERMARK_TEXT = "B A P R O S A   C O P I A";
+  /**
+   * Detecion de reimprisiones
+   */
+  const isOriginal = boleta.impreso == null
+  const WATERMARK_MSG = isOriginal ? "" : `${BOLD_CENTERED}***** C O P I A  |  C O P I A  |  C O P I A *****${LEFT}` ;
+  const LABEL_COPIA = isOriginal ? 
+  `${BOLD_ON}Fecha         :${BOLD_OFF} ${stringtruncado(new Date().toLocaleString('es-ES'), 27)}` 
+  : `${BOLD_ON}Reimpreso     :${BOLD_OFF} ${stringtruncado(new Date().toLocaleString('es-ES'), 27)}${BOLD_ON}Impreso         :${BOLD_OFF} ${boleta.impreso.toLocaleString('es-ES')}`
   
+
   const contenido = `
 ${INIT}${BOLD_CENTERED_BIG}BAPROSA${BOLD_OFF}
-${BOLD_CENTERED}Boleta de Peso No. ${boleta.id}${LEFT}
-${BOLD_CENTERED}Proceso: ${LABELSINSPACE} - ${quitarAcentos(boleta.movimiento)} / Duracion del Proceso: ${TIEMPOESTADIA}${LEFT}
-${BOLD_ON}Fecha         :${BOLD_OFF} ${new Date().toLocaleString('es-ES')}
+${BOLD_CENTERED}Boleta de Peso No. ${boleta.id}${LEFT}${BOLD_CENTERED}Proceso: ${LABELSINSPACE} - ${quitarAcentos(boleta.movimiento)} / Duracion del Proceso: ${TIEMPOESTADIA}${LEFT}
+${LABEL_COPIA}
 ${BOLD_ON}${LABEL}${BOLD_OFF} ${quitarAcentos(boleta.socio)}               
-${BOLD_ON}Placa         :${BOLD_OFF} ${stringtruncado(boleta.placa, 27)}${BOLD_ON}Hora de Entrada      :${BOLD_OFF} ${boleta.fechaInicio.toLocaleTimeString()}
-${BOLD_ON}Motorista     :${BOLD_OFF} ${stringtruncado(quitarAcentos(boleta.motorista), 27)}${BOLD_ON}Hora de Salida       :${BOLD_OFF} ${boleta.fechaFin.toLocaleTimeString()}
+${BOLD_ON}Placa         :${BOLD_OFF} ${stringtruncado(boleta.placa, 27)}${BOLD_ON}Hora de Entrada :${BOLD_OFF} ${boleta.fechaInicio.toLocaleTimeString()}
+${BOLD_ON}Motorista     :${BOLD_OFF} ${stringtruncado(quitarAcentos(boleta.motorista), 27)}${BOLD_ON}Hora de Salida  :${BOLD_OFF} ${boleta.fechaFin.toLocaleTimeString()}
 ${BOLD_ON}Transporte    :${BOLD_OFF} ${quitarAcentos(boleta.empresa)}
 ${BOLD_ON}Origen        :${BOLD_OFF} ${quitarAcentos(origen)}       
 ${BOLD_ON}Destino       :${BOLD_OFF} ${quitarAcentos(destino)}                       
 ${BOLD_ON}Producto      :${BOLD_OFF} ${quitarAcentos(boleta.producto)}
+${WATERMARK_MSG}${LINE}
 
-${LINE}
-
-${BOLD_ON}Peso Tara     :${BOLD_OFF} ${stringtruncado(`${boleta.pesoInicial} lb`, 27)}${BOLD_ON}Peso Teorico  :${BOLD_OFF} ${boleta.pesoTeorico} lb
-${BOLD_ON}Peso Bruto    :${BOLD_OFF} ${stringtruncado(`${boleta.pesoFinal} lb`, 27)}${BOLD_ON}Desviacion    :${BOLD_OFF} ${boleta.desviacion} lb
-${BOLD_ON}Peso Neto     :${BOLD_OFF} ${stringtruncado(`${boleta.pesoNeto} lb`, 27)}                    
-${msg}
-${LINE}
+${BOLD_ON}Peso Tara     :${BOLD_OFF} ${stringtruncado(`${boleta.pesoInicial} lb`, 27)}${BOLD_ON}Peso Teorico  :${BOLD_OFF} ${String(boleta.pesoTeorico).trim()} lb ${BOLD_ON}
+${BOLD_ON}Peso Bruto    :${BOLD_OFF} ${stringtruncado(`${boleta.pesoFinal} lb`, 27)}${BOLD_ON}Desviacion    :${BOLD_OFF} ${String(boleta.desviacion).trim()} lb ${BOLD_ON}
+${BOLD_ON}Peso Neto     :${BOLD_OFF} ${stringtruncado(`${String(boleta.pesoNeto).trim()} lb`, 27)} ${BOLD_ON}                  
+${msg}${LINE}
 
 ${BOLD_ON}Pesador       :${BOLD_OFF} ${stringtruncado(quitarAcentos(boleta.usuario), 27)}${BOLD_ON}Firma         :${BOLD_OFF} ________________
 
-${CENTER}www.baprosa.com
-${CENTER}Tel: (504) 2222-2222${LEFT}`;
+${CENTER} www.baprosa.com | (504) 2222-2222 ${LEFT}`;
   
   fs.writeFileSync(filePath, contenido);
 
@@ -77,7 +83,7 @@ ${CENTER}Tel: (504) 2222-2222${LEFT}`;
       return;
     }
     
-    console.log('Boleta impresa correctamente');
+    actualizarImpresion(boleta.id)
   });
 };
 
@@ -90,5 +96,21 @@ const stringtruncado = (str, len) => {
 const quitarAcentos = (str) => {
   return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 };
+
+const actualizarImpresion = async (id) => {
+  try{
+    const updateBoletaImpresion = await db.boleta.update({
+      where : {
+        id : parseInt(id)
+      }, 
+      data : {
+        impreso : new Date()
+      }
+    })
+    res.status(201).json({ msg: "Boleta creado exitosamente"});
+  }catch (err) {
+    console.log(err)
+  }
+}
 
 module.exports = imprimirEpson;

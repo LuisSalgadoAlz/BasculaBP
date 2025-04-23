@@ -692,6 +692,75 @@ const updateBoleta = async (req, res) => {
     return updateBoletaOut(req, res);
   }
 }
+
+const getBoletasHistorial = async (req, res) => {
+  try{
+    const data = await db.boleta.findMany({
+      select: {
+        id: true,
+        estado: true,
+        proceso: true,
+        empresa: true,
+        motorista: true,
+        socio: true,
+        placa: true,
+        fechaInicio: true,
+        proceso: true,
+      }
+    });
+  
+    const dataUTCHN = data.map((el) => ({
+      Id: el.id,
+      Placa: el.placa,
+      Cliente: el.socio,
+      Transporte: el.empresa,
+      Motorista: el.motorista,
+      Fecha: el.fechaInicio.toLocaleString(),
+    }));
+  
+    res.send(dataUTCHN);
+  } catch (err) {
+    res.status(500).send({msg: 'Error interno API'})
+  }
+}
+
+const getReimprimir = async (req, res) => {
+  try{
+    const id = req.params.id
+    const boleta = await  db.boleta.findUnique({
+      where: {
+        id: parseInt(id)
+      }
+    })
+
+    imprimirEpson(boleta)
+    res.send({msg:"Impresion correcta"})
+  } catch(err) {
+    console.log(err)
+  }
+
+}
+
+
+/**
+ * TODO: Esta consulta se hara en impriones 
+ */
+
+const actualizarImpresion = async (id) => {
+  try{
+    const updateBoletaImpresion = await db.boleta.update({
+      where : {
+        id : parseInt(id)
+      }, 
+      data : {
+        impreso : new Date()
+      }
+    })
+    res.status(201).json({ msg: "Boleta creado exitosamente"});
+  }catch (err) {
+    console.log(err)
+  }
+}
 module.exports = {
   getAllData,
   postBoletasNormal,
@@ -700,4 +769,6 @@ module.exports = {
   getBoletaID, 
   updateBoleta, 
   postBoleta, 
+  getBoletasHistorial, 
+  getReimprimir, 
 };
