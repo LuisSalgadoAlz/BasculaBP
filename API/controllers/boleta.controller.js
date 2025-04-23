@@ -283,6 +283,21 @@ const postBoletasNormal = async (req, res) => {
 };
 
 const getDataBoletas = async (req, res) => {
+  try{
+  const search  = req.query.search || '';
+  const searchDate = req.query.searchDate || '';
+  const page = parseInt(req.query.page) || 1 ;  
+  const limit = parseInt(req.query.limit) || 7;
+  const skip = (page - 1) * limit;  
+  
+console.log(searchDate)
+
+  const tzOffset = new Date().getTimezoneOffset() * 60000; // Diferencia con UTC en ms
+
+  const startOfDay = new Date(new Date(searchDate).setHours(0, 0, 0, 0) + tzOffset);
+  const endOfDay = new Date(new Date(searchDate).setHours(23, 59, 59, 999) + tzOffset);
+  
+
   const data = await db.boleta.findMany({
     select: {
       id: true,
@@ -293,12 +308,49 @@ const getDataBoletas = async (req, res) => {
       socio: true,
       placa: true,
       fechaInicio: true,
-      proceso: true,
     },
-    where: {
+    where: {  
       estado: "Pendiente",
+      ...(searchDate ? { fechaInicio: { gte: startOfDay, lte: endOfDay} } : {}  ),  
+      OR : [
+        {
+          placa:{contains: search}
+        }, 
+        {
+          empresa:{contains: search},
+        }, 
+        {
+          motorista:{contains: search},
+        }, 
+        {
+          socio:{contains: search},
+        }
+      ]
     },
+    skip: skip,
+    take: limit,
   });
+
+  const totalData = await db.boleta.count({
+    where: {  
+      estado: "Pendiente",
+      ...(searchDate ? { fechaInicio: { gte: startOfDay, lte: endOfDay} } : {}  ),
+      OR : [
+        {
+          placa:{contains: search}
+        }, 
+        {
+          empresa:{contains: search},
+        }, 
+        {
+          motorista:{contains: search},
+        }, 
+        {
+          socio:{contains: search},
+        }
+      ]
+    },
+  })
 
   const dataUTCHN = data.map((el) => ({
     Id: el.id,
@@ -309,7 +361,15 @@ const getDataBoletas = async (req, res) => {
     Fecha: el.fechaInicio.toLocaleString(),
   }));
 
-  res.send(dataUTCHN);
+  res.send({data: dataUTCHN, pagination: {
+    totalData,
+    totalPages: Math.ceil(totalData / limit),
+    currentPage: page,
+    limit,
+  }});
+  } catch(err) {
+    console.log(err)
+  }
 };
 
 const postClientePlacaMoto = async (req, res) => {

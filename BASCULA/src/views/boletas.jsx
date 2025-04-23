@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { use, useCallback, useEffect, useState } from "react";
 import { ButtonAdd, ButtonAddBoleta } from "../components/buttons";
 import ViewBoletas from "../components/boletas/viewBoletas";
 import CardHeader from "../components/card-header";
@@ -21,6 +21,9 @@ const Boletas = () => {
   const [move, setMove] = useState('');
   const [newRender, setNewRender] = useState(0);
   const [dataTable, setDataTable] = useState()
+  const [search, setSearch] = useState('')
+  const [searchDate, setSearchDate] = useState('')
+  const [pagination, setPagination] = useState(1)
 
   /**
    * Variables para la segunda parte
@@ -92,7 +95,7 @@ const Boletas = () => {
     setPlc('')
     setFormBoletas(initialStateFormBoletas)
     getAllDataForSelect('', '', '', '', '',setDataSelects);
-    getDataBoletas(setDataTable, setSsLoadTable)
+    getDataBoletas(setDataTable, setSsLoadTable, search, searchDate, pagination);
   }
   
   const limpiar = () => {
@@ -169,12 +172,34 @@ const Boletas = () => {
     }
   }
 
+  const handlePagination = (item) => {
+    if (pagination>0) {
+      const newRender = pagination+item
+      if(newRender==0) return
+      if(newRender>dataTable.pagination.totalPages) return
+      setPagination(newRender) 
+    }
+  } 
+
+  const handleResetPagination = () => {
+    setPagination(1)
+  }
+
+
   const fetchData = useCallback(() => {
     getAllDataForSelect('', plc, formBoletas.Socios, formBoletas.Transportes, formBoletas.Motoristas, setDataSelects);
-    getDataBoletas(setDataTable, setSsLoadTable);
+    getDataBoletas(setDataTable, setSsLoadTable, search, searchDate, pagination);
     getStatsBoletas(setStats);
-  }, [plc, formBoletas.Socios, formBoletas.Transportes, formBoletas.Motoristas,]);
+  }, [plc, formBoletas.Socios, formBoletas.Transportes, formBoletas.Motoristas]);
   
+  const fechDataSeaSearch = useCallback(() => {
+    getDataBoletas(setDataTable, setSsLoadTable, search, searchDate, pagination);
+  }, [search, searchDate, pagination])
+
+  useEffect(() => {
+    fechDataSeaSearch()
+  }, [fechDataSeaSearch]);
+
   useEffect(() => {
     fetchData()
   }, [fetchData]);
@@ -228,6 +253,18 @@ const Boletas = () => {
     isLoading : isLoading,
   }
 
+  const viewBoletasProps = {
+    boletas: dataTable,
+    sts: setStats,
+    hdlOut: handleOutBol,
+    isLoad: isLoadTable,
+    setSearch,
+    setSearchDate,
+    pagination,
+    setPagination,
+    handlePagination
+  };
+
   return (
     <>
       <div className="flex justify-between w-full gap-5 max-sm:flex-col max-md:flex-col mb-4">
@@ -249,7 +286,7 @@ const Boletas = () => {
         <CardHeader data={stats['pendientes']} name={"Total de salidas de material"} title={"Pendientes"}/>
       </div>
       <div className="mt-6 bg-white shadow rounded-xl px-6 py-7">
-        <ViewBoletas boletas={dataTable} sts={setStats} hdlOut={handleOutBol} isLoad={isLoadTable}/>
+        <ViewBoletas {...viewBoletasProps} />
       </div>
 
       {/* Modals de control de boletas */}

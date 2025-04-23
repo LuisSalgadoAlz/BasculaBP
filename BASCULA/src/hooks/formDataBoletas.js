@@ -49,10 +49,10 @@ export const postBoletasNormal = async (boleta, setIsLoading) => {
   }
 };
 
-export const getDataBoletas = async (fun, setIsLoading) => {
+export const getDataBoletas = async (fun, setIsLoading, search, searchDate, pagination) => {
   try {
     setIsLoading(true)
-    const response = await fetch(`${URLHOST}boletas/data`, {
+    const response = await fetch(`${URLHOST}boletas/data?search=${search}&searchDate=${searchDate}&page=${pagination}`, {
       method: "GET",
       headers: {
         Authorization: Cookies.get('token'),
