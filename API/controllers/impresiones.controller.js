@@ -18,8 +18,15 @@ const imprimirEpson = (boleta) => {
   const FORM_FEED = '\x0C';          // Form feed - Eject page
   const BOLD_CENTERED_BIG = CENTER + BOLD_ON + DOUBLE_SIZE;
   const BOLD_CENTERED = CENTER + BOLD_ON;
+  const WARNING_ICON = '\x13'; // o por ejemplo '\x10' para ▲
   const LINE = '________________________________________________________________________________'; 
   
+    // Comandos para marca de agua
+    const COLOR_LIGHT = '\x1Br\x01';   // Selecciona color más claro (reducción de intensidad)
+    const COLOR_NORMAL = '\x1Br\x00';  // Vuelve al color normal
+    const NORMAL_SIZE = '\x1B!\x00';    // Tamaño normal
+    const WATERMARK_FORMAT = CENTER + COLOR_LIGHT ; // Formato de marca de agua
+    const WATERMARK_RESET = NORMAL_SIZE + COLOR_NORMAL + LEFT 
   /**
    * ? Variables de la boleta
    */
@@ -32,11 +39,10 @@ const imprimirEpson = (boleta) => {
   const origen = isTraslado ? boleta.trasladoOrigen : boleta.origen;
   const destino = isTraslado ? boleta.trasladoDestino : boleta.destino;
   const fueraTol = boleta.estado === 'Completo(Fuera de tolerancia)';
-  const msg = fueraTol ? 'Fuera de Tolerancia' : '';
-  const colorMsg = `${BOLD_ON}${UNDERLINE}${msg}${NO_UNDERLINE}${BOLD_OFF}`;
+  const msg = fueraTol ? `${BOLD_CENTERED} ->  F U E R A  D E  T O L E R A N C I A  <- ` : '';
+
+  const WATERMARK_TEXT = "B A P R O S A   C O P I A";
   
-  console.log('Boleta:', boleta);
-  // Build the receipt content with improved formatting
   const contenido = `
 ${INIT}${BOLD_CENTERED_BIG}BAPROSA${BOLD_OFF}
 ${BOLD_CENTERED}Boleta de Peso No. ${boleta.id}${LEFT}
@@ -45,6 +51,7 @@ ${BOLD_ON}Fecha         :${BOLD_OFF} ${new Date().toLocaleString('es-ES')}
 ${BOLD_ON}${LABEL}${BOLD_OFF} ${quitarAcentos(boleta.socio)}               
 ${BOLD_ON}Placa         :${BOLD_OFF} ${stringtruncado(boleta.placa, 27)}${BOLD_ON}Hora de Entrada      :${BOLD_OFF} ${boleta.fechaInicio.toLocaleTimeString()}
 ${BOLD_ON}Motorista     :${BOLD_OFF} ${stringtruncado(quitarAcentos(boleta.motorista), 27)}${BOLD_ON}Hora de Salida       :${BOLD_OFF} ${boleta.fechaFin.toLocaleTimeString()}
+${BOLD_ON}Transporte    :${BOLD_OFF} ${quitarAcentos(boleta.empresa)}
 ${BOLD_ON}Origen        :${BOLD_OFF} ${quitarAcentos(origen)}       
 ${BOLD_ON}Destino       :${BOLD_OFF} ${quitarAcentos(destino)}                       
 ${BOLD_ON}Producto      :${BOLD_OFF} ${quitarAcentos(boleta.producto)}
@@ -53,19 +60,18 @@ ${LINE}
 
 ${BOLD_ON}Peso Tara     :${BOLD_OFF} ${stringtruncado(`${boleta.pesoInicial} lb`, 27)}${BOLD_ON}Peso Teorico  :${BOLD_OFF} ${boleta.pesoTeorico} lb
 ${BOLD_ON}Peso Bruto    :${BOLD_OFF} ${stringtruncado(`${boleta.pesoFinal} lb`, 27)}${BOLD_ON}Desviacion    :${BOLD_OFF} ${boleta.desviacion} lb
-${BOLD_ON}Peso Neto     :${BOLD_OFF} ${stringtruncado(`${boleta.pesoNeto} lb`, 27)}${colorMsg}                     
-
+${BOLD_ON}Peso Neto     :${BOLD_OFF} ${stringtruncado(`${boleta.pesoNeto} lb`, 27)}                    
+${msg}
 ${LINE}
 
 ${BOLD_ON}Pesador       :${BOLD_OFF} ${stringtruncado(quitarAcentos(boleta.usuario), 27)}${BOLD_ON}Firma         :${BOLD_OFF} ________________
+
 ${CENTER}www.baprosa.com
-${CENTER}Tel: (504) 2222-2222${LEFT}
-${FORM_FEED}`;
+${CENTER}Tel: (504) 2222-2222${LEFT}`;
   
   fs.writeFileSync(filePath, contenido);
 
-  // Comando de impresión (Windows)
-  exec(`print /D:"\\\\localhost\\BASC" ${filePath}`, (err, stdout, stderr) => {
+  exec(`print /D:"\\\\localhost\\BASCULA" ${filePath}`, (err, stdout, stderr) => {
     if (err) {
       console.error('Error al imprimir:', err);
       return;
