@@ -97,6 +97,7 @@ const Boletas = () => {
     setFormBoletas(initialStateFormBoletas)
     getAllDataForSelect('', '', '', '', '',setDataSelects);
     getDataBoletas(setDataTable, setSsLoadTable, search, searchDate, pagination);
+    getDataBoletasCompletadas(setDataTableCompletadas, setIsLoadCompletadas, search, searchDate, pagination)
   }
   
   const limpiar = () => {

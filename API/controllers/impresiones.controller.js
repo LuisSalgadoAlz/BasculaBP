@@ -35,7 +35,12 @@ const imprimirEpson = (boleta) => {
   const LABEL = boleta.proceso == 0 ? 'Proveedor     :' : 'Cliente       :';
   const LABELSINSPACE = boleta.proceso == 0 ? 'Entrada' : 'Salida';
   const TIEMPOPROCESO = boleta.fechaFin - boleta.fechaInicio;
-  const TIEMPOESTADIA = new Date(TIEMPOPROCESO).toISOString().slice(11, 19);
+  const totalSegundos = Math.floor(TIEMPOPROCESO / 1000);
+  const horas = Math.floor(totalSegundos / 3600);
+  const minutos = Math.floor((totalSegundos % 3600) / 60);
+  const segundos = totalSegundos % 60;
+  const TIEMPOESTADIA = `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
+
 
   const isTraslado = boleta.movimiento.includes('Traslado');
   const origen = isTraslado ? boleta.trasladoOrigen : boleta.origen;
@@ -77,14 +82,14 @@ ${CENTER} www.baprosa.com | (504) 2222-2222 ${LEFT}`;
   
   fs.writeFileSync(filePath, contenido);
 
-  exec(`print /D:"\\\\localhost\\BASCULA" ${filePath}`, (err, stdout, stderr) => {
+/*   exec(`print /D:"\\\\localhost\\BASCULA" ${filePath}`, (err, stdout, stderr) => {
     if (err) {
       console.error('Error al imprimir:', err);
       return;
     }
     
     actualizarImpresion(boleta.id)
-  });
+  }); */
 };
 
 const stringtruncado = (str, len) => {

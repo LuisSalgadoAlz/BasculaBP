@@ -273,6 +273,8 @@ const postBoletasNormal = async (req, res) => {
       },
     });
 
+    imprimirEpson(nuevaBoleta);
+
     res
       .status(201)
       .json({ msg: "Boleta creado exitosamente", boleta: nuevaBoleta });
@@ -535,11 +537,13 @@ const getBoletasCompletadasDiarias = async(req, res) => {
         proceso: true,
         empresa: true,
         motorista: true,
+        empresa: true,
         socio: true,
         placa: true,
         pesoNeto: true,
         desviacion: true, 
-        impreso: true
+        fechaFin: true, 
+        estado: true,
       },
       where: {  
         estado: {not: "Pendiente"},
@@ -589,10 +593,12 @@ const getBoletasCompletadasDiarias = async(req, res) => {
       Boleta: el.id, 
       Placa: el.placa,
       Cliente: el.socio,
+      Transporte: el.empresa,
       Proceso: el.proceso == 0 ? 'Entrada' : 'Salida',
       PesoNeto: el.pesoNeto, 
       Desviacion: el.desviacion, 
-      impreso: el.impreso,
+      estado: el.estado,
+      fehc: el.fechaFin.toLocaleString(),
     }));
   
     res.send({data: dataUTCHN, pagination: {
@@ -742,7 +748,7 @@ const updateBoletaOut = async(req, res) => {
           : null,
       },
     });
-    /* imprimirEpson(nuevaBoleta); */
+    imprimirEpson(nuevaBoleta);
     res
       .status(201)
       .json({ msg: "Boleta creado exitosamente" , boleta: nuevaBoleta});
@@ -846,7 +852,7 @@ const updateBoletaOutComdin = async(req, res) => {
       },
     });
 
-    /* imprimirEpson(nuevaBoleta); */
+    imprimirEpson(nuevaBoleta);
 
     res
       .status(201)
