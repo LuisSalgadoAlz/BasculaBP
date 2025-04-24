@@ -4,7 +4,7 @@ import ViewBoletas from "../components/boletas/viewBoletas";
 import CardHeader from "../components/card-header";
 import { ModalBoletas, ModalNormal, ModalOut } from "../components/boletas/formBoletas";
 import { initialSateDataFormSelet, initialStateFormBoletas, initialStateStats } from "../constants/boletas";
-import { formaterData, getAllDataForSelect, postBoletasNormal, getDataBoletas, getStatsBoletas, formaterDataNewPlaca, verificarDataNewPlaca, getDataParaForm, updateBoletaOut, verificarDataCompleto, postBoletasCasulla } from "../hooks/formDataBoletas";
+import { formaterData, getAllDataForSelect, postBoletasNormal, getDataBoletas, getStatsBoletas, formaterDataNewPlaca, verificarDataNewPlaca, getDataParaForm, updateBoletaOut, verificarDataCompleto, postBoletasCasulla, getDataBoletasCompletadas } from "../hooks/formDataBoletas";
 import { ModalErr, ModalSuccess } from "../components/alerts";
 
 const Boletas = () => {
@@ -21,10 +21,11 @@ const Boletas = () => {
   const [move, setMove] = useState('');
   const [newRender, setNewRender] = useState(0);
   const [dataTable, setDataTable] = useState()
+  const [dataTableCompletadas, setDataTableCompletadas] = useState()
   const [search, setSearch] = useState('')
   const [searchDate, setSearchDate] = useState('')
   const [pagination, setPagination] = useState(1)
-
+  const [isLoadCompletadas, setIsLoadCompletadas] = useState(false)
   /**
    * Variables para la segunda parte
    */
@@ -180,11 +181,14 @@ const Boletas = () => {
       setPagination(newRender) 
     }
   } 
-
-  const handleResetPagination = () => {
-    setPagination(1)
-  }
-
+  const handlePaginationCompletadas = (item) => {
+    if (pagination>0) {
+      const newRender = pagination+item
+      if(newRender==0) return
+      if(newRender>dataTableCompletadas.pagination.totalPages) return
+      setPagination(newRender) 
+    }
+  } 
 
   const fetchData = useCallback(() => {
     getAllDataForSelect('', plc, formBoletas.Socios, formBoletas.Transportes, formBoletas.Motoristas, setDataSelects);
@@ -194,6 +198,7 @@ const Boletas = () => {
   
   const fechDataSeaSearch = useCallback(() => {
     getDataBoletas(setDataTable, setSsLoadTable, search, searchDate, pagination);
+    getDataBoletasCompletadas(setDataTableCompletadas, setIsLoadCompletadas, search, searchDate, pagination)
   }, [search, searchDate, pagination])
 
   useEffect(() => {
@@ -258,11 +263,14 @@ const Boletas = () => {
     sts: setStats,
     hdlOut: handleOutBol,
     isLoad: isLoadTable,
+    isLoadCompletadas, 
     setSearch,
     setSearchDate,
     pagination,
     setPagination,
-    handlePagination
+    handlePagination,
+    completadas: dataTableCompletadas, 
+    handlePaginationCompletadas
   };
 
   return (

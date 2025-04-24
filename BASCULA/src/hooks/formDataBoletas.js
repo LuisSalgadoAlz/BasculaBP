@@ -72,6 +72,29 @@ export const getDataBoletas = async (fun, setIsLoading, search, searchDate, pagi
   }
 };
 
+export const getDataBoletasCompletadas = async (fun, setIsLoading, search, searchDate, pagination) => {
+  try {
+    setIsLoading(true)
+    const response = await fetch(`${URLHOST}boletas/data/completadas?search=${search}&searchDate=${searchDate}&page=${pagination}`, {
+      method: "GET",
+      headers: {
+        Authorization: Cookies.get('token'),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API");
+    }
+
+    const data = await response.json();
+    fun(data);
+  } catch (error) {
+    console.error("Error al obtener los clientes:", error);
+  } finally {
+    setIsLoading(false)
+  }
+};
+
 export const getDataBoletasPorID = async (id) => {
   try {
     const response = await fetch(`${URLHOST}boletas/boleta/${id}`, {
