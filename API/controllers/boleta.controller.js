@@ -686,26 +686,10 @@ const updateBoletaOut = async(req, res) => {
 
     
 
-    const origen =
-      !isTraslado &&
-      (await db.direcciones.findUnique({ where: { id: parseInt(idOrigen) } }));
-    const destino =
-      !isTraslado &&
-      (await db.direcciones.findUnique({ where: { id: parseInt(idDestino) } }));
-    const transladoOrigen =
-      isTraslado &&
-      (await db.translado.findUnique({
-        where: { id: parseInt(idTrasladoOrigen) },
-      }));
-    const transladoDestino =
-      isTraslado &&
-      (await db.translado.findUnique({
-        where: { id: parseInt(idTrasladoDestino) },
-      }));
-
-
-    
-    
+    const origen = (!isTraslado && proceso==0) && (await db.direcciones.findUnique({ where: { id: parseInt(idOrigen) } }));
+    const destino = (!isTraslado && proceso==1) && (await db.direcciones.findUnique({ where: { id: parseInt(idDestino) } }));
+    const transladoOrigen = isTraslado && (await db.translado.findUnique({ where: { id: parseInt(idTrasladoOrigen) },}));
+    const transladoDestino = isTraslado && (await db.translado.findUnique({   where: { id: parseInt(idTrasladoDestino) }, }));
 
     const nuevaBoleta = await db.boleta.update({
       where: {
@@ -717,11 +701,11 @@ const updateBoletaOut = async(req, res) => {
         empresa: empresa.nombre,
         motorista: motorista.nombre,
         socio: socio.nombre,
-        origen: origen.nombre,
-        destino: destino.nombre,
+        origen: !isTraslado ? (proceso==0 ? origen.nombre : 'Baprosa') : null,
+        destino: !isTraslado ? (proceso==1 ? destino.nombre : 'Baprosa') : null,
         boletaType: parseInt(boletaType),
-        idOrigen: !isTraslado ? parseInt(idOrigen) : null,
-        idDestino: !isTraslado ? parseInt(idDestino) : null,
+        idOrigen: !isTraslado ? proceso==0 ? parseInt(idOrigen) : null : null,
+        idDestino: !isTraslado ? proceso==1 ? parseInt(idDestino) : null : null,
         manifiesto: parseInt(manifiesto),
         pesoTeorico: parseFloat(pesoTeorico),
         estado: estado,
@@ -821,8 +805,8 @@ const updateBoletaOutComdin = async(req, res) => {
         placa: idPlaca,
         empresa: idEmpresa,
         motorista: idMotorista,
-        origen: !isTraslado ? origen : null ,
-        destino: !isTraslado ? destino : null,
+        origen: !isTraslado ? proceso == 0 ? origen : 'Baprosa' : null ,
+        destino: !isTraslado ? proceso == 1 ? destino : 'Baprosa' : null,
         idOrigen: null,
         idDestino: null,
         manifiesto: parseInt(manifiesto),

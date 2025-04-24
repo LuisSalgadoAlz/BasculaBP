@@ -152,14 +152,14 @@ export const getStatsBoletas = async (fun) => {
 export const getDataParaForm = async (setFormBoletas, data) => {
   const response = await getDataBoletasPorID(data.Id);
   const esClienteX = response.boletaType === 3;
-  console.log(response)
+
   setFormBoletas((prev) => ({
     ...prev,
     Socios: response.idSocio ?? (esClienteX ? -998 : -999),
     valueSocio : response?.socio,
     Motoristas: response.idMotorista ?? response.motorista,
     Placa: response.placa,
-    Proceso: response?.clienteBoleta?.tipo ?? (esClienteX ? 1 : 0),
+    Proceso: '',
     Transportes: response.idEmpresa ?? response.empresa,
     Estado: 0,
     pesoIn: response.pesoInicial,
@@ -314,7 +314,7 @@ export const verificarDataCompleto = (funError, data, setMsg) => {
   console.log(data)
   
   if (!idCliente || !idEmpresa || !idMotorista || !idMovimiento || !idProducto) {
-    setMsg('Por favor, ingresar todos los datos primer nivel')
+    setMsg('Por favor, ingresar todos los datos primer nivel: cliente, transporte, motorista, movimiento, producto')
     funError(true)
     return false
   }
@@ -333,13 +333,13 @@ export const verificarDataCompleto = (funError, data, setMsg) => {
   }
 
   if(proceso==0 && !ordenDeCompra){
-    setMsg('Por favor, ingresar todos los datos segundo nivel ')
+    setMsg('Por favor, ingresar todos los datos segundo nivel: orden de compra')
     funError(true)
     return false
   }
 
   if(proceso==1 && !manifiesto){
-    setMsg('Por favor, ingresar todos los datos tercer nivel')
+    setMsg('Por favor, ingresar todos los datos tercer nivel: proceso, manifiesto')
      funError(true)
     return false
   }

@@ -113,6 +113,10 @@ export const deptos = [
   { id: "Paraguay", nombre: "Paraguay" },
 ];
 
+export const direccionOrigenEmpresa = [
+  {id: 'Baprosa', nombre: 'Baprosa'}
+]
+
 
 export const tiposCamion = [
   { id: 0, tipo: "peso", nombre: "Camión liviano" },

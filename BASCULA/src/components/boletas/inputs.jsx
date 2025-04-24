@@ -1,4 +1,4 @@
-import { claseFormInputs, classFormSelct, deptos } from "../../constants/boletas";
+import { claseFormInputs, classFormSelct, deptos, direccionOrigenEmpresa } from "../../constants/boletas";
 import { PiGaugeThin } from "react-icons/pi";
 import SelectFormBoletas from "./select";
 
@@ -108,9 +108,10 @@ export const PartPesosDeSalida = ({ fun, hdlChange, val }) => {
   );
 };
 
-export const TransladoNormal = ({bol, fill, hdl}) => {
-  const tipoOrigen = (bol?.Socios ==-998 || bol?.Socios ==-999) ? deptos : fill['Origen']
-  const tipoDestino = (bol?.Socios ==-998 || bol?.Socios ==-999) ? deptos : fill['Destino']
+export const TransladoNormal = ({bol, fill, hdl, tipo}) => {
+  const tipoOrigen = (bol?.Socios ==-998 || bol?.Socios ==-999) ? deptos : tipo == 0 ? fill['Origen'] : direccionOrigenEmpresa
+  const tipoDestino = (bol?.Socios ==-998 || bol?.Socios ==-999) ? deptos : tipo == 1 ? fill['Destino'] : direccionOrigenEmpresa
+
   return (
     <>
       <SelectFormBoletas
@@ -118,14 +119,16 @@ export const TransladoNormal = ({bol, fill, hdl}) => {
         name={"Origen"}
         data={tipoOrigen}
         fun={hdl}
-        stt={bol.Proceso === "" ? true : false}
+        stt={bol.Proceso === "" || tipo===1 ? true : false}
+        {...tipo === 1 && { val: 'Baprosa' }}
       />
       <SelectFormBoletas
         classCss={classFormSelct}
         name={"Destino"}
         data={tipoDestino}
         fun={hdl}
-        stt={bol.Proceso === "" ? true : false}
+        stt={bol.Proceso === "" || tipo ===0 ? true : false}
+        {...tipo === 0 && { val: 'Baprosa' }}
       />
     </>
   );

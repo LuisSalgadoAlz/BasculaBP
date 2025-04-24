@@ -161,7 +161,22 @@ export const ModalNormal= ({hdlClose, hdlChange, fillData, formBol, boletas, hdl
   );
 };
 
-export const ModalOut = ({hdlClose, hdlChange, fillData, typeBol, typeStructure, formBol, boletas, hdlSubmit, move, clean, isLoading}) => {
+export const ModalOut = (props) => {
+  const {
+    hdlClose, 
+    hdlChange, 
+    fillData, 
+    typeBol, 
+    typeStructure, 
+    formBol, 
+    boletas, 
+    hdlSubmit, 
+    move, 
+    clean, 
+    isLoading, 
+    proceso
+  } = props;
+  
   const [peso, setPeso] = useState('00lb');
   const [modal, setModal] = useState(false)
   const [dataPrev, setDataPrev] = useState()
@@ -242,7 +257,7 @@ export const ModalOut = ({hdlClose, hdlChange, fillData, typeBol, typeStructure,
             ) : move == 'Traslado Externo' ? (
               <TransladoExterno bol={boletas} hdl={hdlChange} fill={fillData} />
             ) : (
-              <TransladoNormal bol={boletas} hdl={hdlChange} fill={fillData} />
+              <TransladoNormal bol={boletas} hdl={hdlChange} fill={fillData} tipo = {proceso} />
             )}
             <PartPesosDeSalida fun={getPesoOut} hdlChange={hdlChange} val={boletas} />
             <InputsFormBoletas data={claseFormInputs} name={'Peso Teorico'} fun={hdlChange} />

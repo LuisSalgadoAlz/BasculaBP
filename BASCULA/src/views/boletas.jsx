@@ -26,6 +26,7 @@ const Boletas = () => {
   const [searchDate, setSearchDate] = useState('')
   const [pagination, setPagination] = useState(1)
   const [isLoadCompletadas, setIsLoadCompletadas] = useState(false)
+  const [proceso, setProceso] = useState('')
   /**
    * Variables para la segunda parte
    */
@@ -56,6 +57,9 @@ const Boletas = () => {
     setSuccess(false)
     setOutBol(false)
     setModalEspecial(false)
+    setMove('')
+    setPlc('')
+    setProceso('')
   }
 
   const handleClik = () => {
@@ -72,16 +76,20 @@ const Boletas = () => {
     setFormBoletas(initialStateFormBoletas)
     setDataSelects(initialSateDataFormSelet)
     getAllDataForSelect('', '', '', '', '',setDataSelects);
+    setProceso('')
     setPlc('')
+    setMove('')
   }
 
   /**
    *  Controla todos los cambios hechos en el formulario de Boletas
+   * ! AQUI SE ESTA TRABAJANDO
    * @param {*} e 
    */
   const handleChange = (e) => {
     const { name, value, data } = e.target;
     setFormBoletas((prev) => ({...prev, [name]: value}));
+    if (name == "Proceso") {setProceso(value)}
     if (name == "Placa" && (formBoletas?.Socios ==-998 && formBoletas?.Socios ==-999)) setPlc(value);
     if (name == "Movimiento") setMove(data)
     if (name == "Estado" && value==1) setFormBoletas((prev) => ({...prev, ['Proceso'] : 1}))
@@ -90,10 +98,13 @@ const Boletas = () => {
         ...prev, ['Placa'] : "", ['Transportes'] : "Transportes X", ['Motoristas'] : "", ['Cliente'] : "", ['Proveedor'] : ""
       }))
     }
+    console.log(formBoletas)
   };
 
   const closeAllDataOfForm = () => {
     setPlc('')
+    setProceso('')
+    setMove('')
     setFormBoletas(initialStateFormBoletas)
     getAllDataForSelect('', '', '', '', '',setDataSelects);
     getDataBoletas(setDataTable, setSsLoadTable, search, searchDate, pagination);
@@ -242,6 +253,7 @@ const Boletas = () => {
     move: move,
     clean: newRender, 
     isLoading : isLoading,
+    proceso : proceso
   };
 
   const propsModalCasulla = { 
