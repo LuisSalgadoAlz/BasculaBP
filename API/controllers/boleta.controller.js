@@ -263,6 +263,8 @@ const postBoletasNormal = async (req, res) => {
         idProducto: parseInt(idProducto),
         producto: producto.nombre,
         observaciones,
+        pesoTeorico: 0, 
+        desviacion: 0,
         idTrasladoOrigen: null,
         idTrasladoDestino: null,
         trasladoOrigen: null,
@@ -274,7 +276,7 @@ const postBoletasNormal = async (req, res) => {
     });
 
     imprimirEpson(nuevaBoleta);
-
+ 
     res
       .status(201)
       .json({ msg: "Boleta creado exitosamente", boleta: nuevaBoleta });
