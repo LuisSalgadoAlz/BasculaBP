@@ -294,9 +294,6 @@ const getDataBoletas = async (req, res) => {
   const startOfDay = new Date(Date.UTC(year, month - 1, day, 0, 0, 0));
   const endOfDay = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
 
-
-  console.log(startOfDay.toLocaleDateString(), endOfDay.toLocaleDateString())  
-
   const data = await db.boleta.findMany({
     select: {
       id: true,
@@ -508,6 +505,105 @@ const getBoletaID =  async(req, res) => {
   }catch(err) {
     return res.status(401).send('Error en el api')
   }
+}
+
+const getBoletasCompletadasDiarias = async(req, res) => {
+  try{
+    const search  = req.query.search || '';
+    const searchDate = req.query.searchDate || '';
+    const page = parseInt(req.query.page) || 1 ;  
+    const limit = parseInt(req.query.limit) || 7;
+    const skip = (page - 1) * limit;  
+    
+    if (searchDate !== '') {
+      const [year, month, day] = searchDate.split('-').map(Number);
+      startOfDay = new Date(Date.UTC(year, month - 1, day, 0, 0, 0));
+      endOfDay = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
+    } else {
+      const now = new Date();
+      const year = now.getUTCFullYear();
+      const month = now.getUTCMonth();
+      const day = now.getUTCDate();
+      startOfDay = new Date(Date.UTC(year, month, day, 0, 0, 0));
+      endOfDay = new Date(Date.UTC(year, month, day, 23, 59, 59, 999));
+    }
+
+    const data = await db.boleta.findMany({
+      select: {
+        id: true,
+        estado: true,
+        proceso: true,
+        empresa: true,
+        motorista: true,
+        socio: true,
+        placa: true,
+        pesoNeto: true,
+        desviacion: true, 
+        impreso: true
+      },
+      where: {  
+        estado: {not: "Pendiente"},
+        fechaFin: { gte: startOfDay, lte: endOfDay },
+        OR : [
+          {
+            placa:{contains: search}
+          }, 
+          {
+            empresa:{contains: search},
+          }, 
+          {
+            motorista:{contains: search},
+          }, 
+          {
+            socio:{contains: search},
+          }
+        ]
+      },
+      skip: skip,
+      take: limit,
+    });
+  
+    const totalData = await db.boleta.count({
+      where: {  
+        estado: {not: "Pendiente"},
+        fechaFin: { gte: startOfDay, lte: endOfDay },
+        OR : [
+          {
+            placa:{contains: search}
+          }, 
+          {
+            empresa:{contains: search},
+          }, 
+          {
+            motorista:{contains: search},
+          }, 
+          {
+            socio:{contains: search},
+          }
+        ]
+      },
+    })
+  
+    const dataUTCHN = data.map((el) => ({
+      Id: el.id,
+      Boleta: el.id, 
+      Placa: el.placa,
+      Cliente: el.socio,
+      Proceso: el.proceso == 0 ? 'Entrada' : 'Salida',
+      PesoNeto: el.pesoNeto, 
+      Desviacion: el.desviacion, 
+      impreso: el.impreso,
+    }));
+  
+    res.send({data: dataUTCHN, pagination: {
+      totalData,
+      totalPages: Math.ceil(totalData / limit),
+      currentPage: page,
+      limit,
+    }});
+    } catch(err) {
+      console.log('Error en el api', err)
+    }
 }
 
 const updateBoletaOut = async(req, res) => {
@@ -835,4 +931,5 @@ module.exports = {
   postBoleta, 
   getBoletasHistorial, 
   getReimprimir, 
+  getBoletasCompletadasDiarias
 };
