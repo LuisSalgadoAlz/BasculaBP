@@ -3,8 +3,8 @@ import { IoExitOutline } from "react-icons/io5";
 export const TableBoletas = ({ datos = [{}], fun }) => {
     return (
       <>
-        <div className="relative overflow-x-auto">
-          <table className="w-full text-sm text-left rtl:text-right text-gray-700 dark:text-gray-400">
+        <div className="relative overflow-x-auto min-h-[400px]">
+          <table className="w-full text-sm text-left rtl:text-right text-gray-700 dark:text-gray-400 bg-amber-800">
             <thead className="text-xs text-gray-700 uppercase bg-[#FFFDF5]">
               <tr>
                 {Object.keys(datos[0]).map((el, keys) =>

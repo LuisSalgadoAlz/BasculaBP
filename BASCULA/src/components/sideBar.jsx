@@ -76,16 +76,24 @@ const SideBar = ({ modo = "extendido", altura = 500 }) => {
       {/* Rutas principales */}
       <div className="p-2">
         <ul className="flex w-full flex-col gap-1 px-2">
-          {RUTAS_PRINCIPALES.map((data, key) => (
+        {RUTAS_PRINCIPALES.map((data, key) => (
+          <div key={key} className="relative group w-full">
             <NavLink
-              key={key}
               to={data.path}
               className="flex items-center gap-x-3 rounded-md px-3 py-2 text-sm font-medium text-white"
             >
               <span className="text-lg">{data.icon}</span>
               {isExtendido && <span className="flex-1">{data.name}</span>}
             </NavLink>
-          ))}
+
+            {!isExtendido && (
+              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-6 hidden group-hover:block sidebar text-white text-xs px-8 py-2 rounded shadow-lg z-10 whitespace-nowrap">
+                {data.name}
+              </div>
+            )}
+          </div>
+        ))}
+
         </ul>
         <hr className="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700" />
       </div>
@@ -127,14 +135,20 @@ const SideBar = ({ modo = "extendido", altura = 500 }) => {
               </ul>
             </>
           ) : (
-            <NavLink
-              to="/informes"
-              className="flex items-center gap-x-3 rounded-md px-5 py-2 text-sm font-medium text-white "
-            >
-              <span className="text-lg text-center">
-                <BsFileBarGraph />
-              </span>
-            </NavLink>
+            <div className="relative group w-max">
+              <NavLink
+                to="/informes"
+                className="flex items-center gap-x-3 rounded-md px-5 py-2 text-sm font-medium text-white"
+              >
+                <span className="text-lg text-center">
+                  <BsFileBarGraph />
+                </span>
+              </NavLink>
+
+              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-6 hidden group-hover:block sidebar text-white text-xs px-8 py-2 rounded shadow-lg z-10 whitespace-nowrap">
+                Informes
+              </div>
+            </div>
           )}
         </ul>
       </div>
