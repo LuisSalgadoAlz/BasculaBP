@@ -318,18 +318,15 @@ const getMotoristaPorEmpresa = async (req, res) => {
 const postMotoristasDeLaEmpresa = async (req, res) => {
   try {
     const { nombre, telefono, correo, id } = req.body;
-    const exist = await db.motoristas.count({
-      where:{ 
-        correo : correo
-      }
-    })
+    console.log(correo)
+    const exist = correo.trim()!='' && await db.motoristas.count({where:{ correo : correo }})
 
     if (exist == 0) {
       const nuevoMotorista = await db.motoristas.create({
         data: {
           nombre, 
           telefono, 
-          correo, 
+          ...(correo.trim()!='' && { correo }), 
           estado :  true,
           idEmpresa: parseInt(id),
         },
@@ -346,9 +343,9 @@ const postMotoristasDeLaEmpresa = async (req, res) => {
 };
 
 const updateMotoristasPorID = async (req, res) => {
-  const { nombre, telefono, correo, id, estado } = req.body; // Crear el nuevo usuario
+  const { nombre, telefono, correo, id, estado } = req.body; 
   try {
-    const exist = await db.motoristas.count({
+    const exist = correo.trim()!='' && await db.motoristas.count({
       where: {
         correo : correo, 
         id : {not: parseInt(id)}
@@ -363,7 +360,7 @@ const updateMotoristasPorID = async (req, res) => {
         data: {
           nombre, 
           telefono, 
-          correo,
+          ...(correo.trim()!='' && { correo }),
           idEmpresa: parseInt(req.params.idEmpresa),
           estado: estado == 1 ? true : false,
         },
