@@ -281,8 +281,8 @@ const Boletas = () => {
         </div>
       </div>
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-3 mt-5">
-        <CardHeader data={stats['entrada']} name={"Total de entradas de material"} title={"Entradas"}/>
-        <CardHeader data={stats['salida']} name={"Total de salidas de material"} title={"Salidas"}/>
+        <CardHeader data={stats['entrada']} name={"Total de entradas de material"} title={"Entradas (Hoy)"}/>
+        <CardHeader data={stats['salida']} name={"Total de salidas de material"} title={"Salidas (Hoy)"}/>
         <CardHeader data={stats['pendientes']} name={"Total de salidas de material"} title={"Pendientes"}/>
       </div>
       <div className="mt-6 bg-white shadow rounded-xl px-6 py-7">

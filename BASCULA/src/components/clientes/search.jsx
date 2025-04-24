@@ -123,7 +123,6 @@ const Search = ({ sts }) => {
 
   useEffect(() => {
     fetchData();
-    console.log(datos)
   }, [fetchData]);
 
   return (

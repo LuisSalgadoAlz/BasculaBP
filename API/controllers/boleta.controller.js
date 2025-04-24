@@ -289,14 +289,13 @@ const getDataBoletas = async (req, res) => {
   const page = parseInt(req.query.page) || 1 ;  
   const limit = parseInt(req.query.limit) || 7;
   const skip = (page - 1) * limit;  
-  
-console.log(searchDate)
 
-  const tzOffset = new Date().getTimezoneOffset() * 60000; // Diferencia con UTC en ms
+  const [year, month, day] = searchDate.split('-').map(Number);
+  const startOfDay = new Date(Date.UTC(year, month - 1, day, 0, 0, 0));
+  const endOfDay = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
 
-  const startOfDay = new Date(new Date(searchDate).setHours(0, 0, 0, 0) + tzOffset);
-  const endOfDay = new Date(new Date(searchDate).setHours(23, 59, 59, 999) + tzOffset);
-  
+
+  console.log(startOfDay.toLocaleDateString(), endOfDay.toLocaleDateString())  
 
   const data = await db.boleta.findMany({
     select: {
@@ -458,12 +457,26 @@ const postBoleta = async (req, res) => {
 };
 
 const getStatsBoletas = async (req, res) => {
+  const now = new Date();
+  const year = now.getUTCFullYear();
+  const month = now.getUTCMonth(); // ya está en base 0
+  const day = now.getUTCDate();
+
+  const startOfDay = new Date(Date.UTC(year, month, day, 0, 0, 0));
+  const endOfDay = new Date(Date.UTC(year, month, day, 23, 59, 59, 999));
+  
   try {
     const [entrada, salida, pendientes] = await Promise.all([
-      db.boleta.count({ where: { proceso: 0,},
+      db.boleta.count({ where: { 
+        proceso: 0,
+        fechaFin: { gte: startOfDay, lte: endOfDay },
+      },
       }),
       db.boleta.count({
-        where: { proceso: 1 },
+        where: { 
+          proceso: 1, 
+          fechaFin: {gte: startOfDay, lte: endOfDay}
+        },
       }),
       db.boleta.count({
         where: { estado: "Pendiente" },
@@ -633,7 +646,7 @@ const updateBoletaOut = async(req, res) => {
           : null,
       },
     });
-    imprimirEpson(nuevaBoleta);
+    /* imprimirEpson(nuevaBoleta); */
     res
       .status(201)
       .json({ msg: "Boleta creado exitosamente" , boleta: nuevaBoleta});
@@ -737,7 +750,7 @@ const updateBoletaOutComdin = async(req, res) => {
       },
     });
 
-    imprimirEpson(nuevaBoleta);
+    /* imprimirEpson(nuevaBoleta); */
 
     res
       .status(201)
