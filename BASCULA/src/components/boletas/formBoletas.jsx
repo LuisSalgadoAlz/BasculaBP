@@ -7,6 +7,7 @@ import { ModalPrevisual } from "../alerts";
 import { motion } from "framer-motion";
 import { IoCloseSharp } from "react-icons/io5";
 import { ButtonPrint } from "../buttons";
+import { getPrintEpson } from "../../hooks/formDataBoletas";
 
 const formInputSelect = ['Transportes', 'Placa', 'Motoristas']
 
@@ -289,9 +290,18 @@ export const ModalOut = (props) => {
 
 export const VisualizarBoletas = (props) => {
   const { hdlClose, boletas } = props;
+  const [isLoadImpresion, setIsLoadImpresion] = useState(false)
   const opt = ['Entrada de material', 'Salida de material']
   const isNullData =  'Vacio'
   const pesoTolerado = boletas?.pesoTeorico * 0.005
+
+  const handlePrint = async() => {
+    const response = await getPrintEpson(boletas?.id, setIsLoadImpresion)
+    console.log('Imprimiendo...')
+    if(response?.msg) {
+      console.log('Impresion exitosa')
+    }
+  } 
 
   return (
     <div className="fixed inset-0 bg-opacity-50 z-50 min-h-screen overflow-auto ">
@@ -377,7 +387,7 @@ export const VisualizarBoletas = (props) => {
         {/* Impresiones */}
         <div className="flex items-center justify-end gap-2 mt-4">
           <button className={buttonClean}>Convertir a PDF</button>
-          <ButtonPrint name={'Imprimir'} fun={() => console.log('Imprimir')} />
+          <ButtonPrint name={'Imprimir'} fun={handlePrint} isLoad={isLoadImpresion}/>
         </div>
       </motion.div>
     </div>
