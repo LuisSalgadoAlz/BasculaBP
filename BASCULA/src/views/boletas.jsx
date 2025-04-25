@@ -6,6 +6,7 @@ import { ModalBoletas, ModalNormal, ModalOut } from "../components/boletas/formB
 import { initialSateDataFormSelet, initialStateFormBoletas, initialStateStats } from "../constants/boletas";
 import { formaterData, getAllDataForSelect, postBoletasNormal, getDataBoletas, getStatsBoletas, formaterDataNewPlaca, verificarDataNewPlaca, getDataParaForm, updateBoletaOut, verificarDataCompleto, postBoletasCasulla, getDataBoletasCompletadas } from "../hooks/formDataBoletas";
 import { ModalErr, ModalSuccess } from "../components/alerts";
+import { AnimatePresence } from "framer-motion";
 
 const Boletas = () => {
   const [openModelForm, setOpenModalForm] = useState(false);
@@ -89,8 +90,12 @@ const Boletas = () => {
   const handleChange = (e) => {
     const { name, value, data } = e.target;
     setFormBoletas((prev) => ({...prev, [name]: value}));
-    if (name == "Proceso") {setProceso(value)}
-    if (name == "Placa" && (formBoletas?.Socios ==-998 && formBoletas?.Socios ==-999)) setPlc(value);
+    if (name == "Proceso") {
+      setProceso(value)
+      if (value ==0 ) setFormBoletas((prev) => ({...prev, ['Orden de compra'] : '', Origen: ''}))
+      if (value ==1 ) setFormBoletas((prev) => ({...prev, ['Documento'] : '' , Destino: ''}))
+    }
+    if (name == "Placa" && (formBoletas?.Socios ==-998 || formBoletas?.Socios ==-999)) setPlc(value);
     if (name == "Movimiento") setMove(data)
     if (name == "Estado" && value==1) setFormBoletas((prev) => ({...prev, ['Proceso'] : 1}))
     if (name == "Socios" && (value==-998 || value==-999)) {
@@ -98,7 +103,6 @@ const Boletas = () => {
         ...prev, ['Placa'] : "", ['Transportes'] : "Transportes X", ['Motoristas'] : "", ['Cliente'] : "", ['Proveedor'] : ""
       }))
     }
-    console.log(formBoletas)
   };
 
   const closeAllDataOfForm = () => {
@@ -148,7 +152,6 @@ const Boletas = () => {
   const handleCompleteOut = async() => {
     const response = formaterData(formBoletas)
     const isCorrect = verificarDataCompleto(setErr, response, setMsg)
-    console.log(response)
     if (isCorrect) {
       await updateBoletaOut(response, formBoletas.idBoleta, setIsLoading)
       setSuccess(true)
@@ -169,6 +172,7 @@ const Boletas = () => {
     setFormBoletas((prev)=>({
       ...prev, ['Proceso']: 1, ['Movimiento'] : 6, ['Producto'] : 11
     }))
+    setProceso(1)
     await getAllDataForSelect(1, plc, formBoletas.Socios, formBoletas.Transportes, formBoletas.Motoristas, setDataSelects);
   }
 
@@ -202,24 +206,24 @@ const Boletas = () => {
     }
   } 
 
-  const fetchData = useCallback(() => {
-    getAllDataForSelect('', plc, formBoletas.Socios, formBoletas.Transportes, formBoletas.Motoristas, setDataSelects);
-    getDataBoletas(setDataTable, setSsLoadTable, search, searchDate, pagination);
-    getStatsBoletas(setStats);
-  }, [plc, formBoletas.Socios, formBoletas.Transportes, formBoletas.Motoristas]);
-  
-  const fechDataSeaSearch = useCallback(() => {
-    getDataBoletas(setDataTable, setSsLoadTable, search, searchDate, pagination);
-    getDataBoletasCompletadas(setDataTableCompletadas, setIsLoadCompletadas, search, searchDate, pagination)
-  }, [search, searchDate, pagination])
+    const fetchData = useCallback(() => {
+      getAllDataForSelect(modalEspecial ? 1 : '', plc, formBoletas.Socios, formBoletas.Transportes, formBoletas.Motoristas, setDataSelects);
+      getDataBoletas(setDataTable, setSsLoadTable, search, searchDate, pagination);
+      getStatsBoletas(setStats);
+    }, [plc, formBoletas.Socios, formBoletas.Transportes, formBoletas.Motoristas, modalEspecial]);
+    
+    const fechDataSeaSearch = useCallback(() => {
+      getDataBoletas(setDataTable, setSsLoadTable, search, searchDate, pagination);
+      getDataBoletasCompletadas(setDataTableCompletadas, setIsLoadCompletadas, search, searchDate, pagination)
+    }, [search, searchDate, pagination])
 
-  useEffect(() => {
-    fechDataSeaSearch()
-  }, [fechDataSeaSearch]);
+    useEffect(() => {
+      fechDataSeaSearch()
+    }, [fechDataSeaSearch]);
 
-  useEffect(() => {
-    fetchData()
-  }, [fetchData]);
+    useEffect(() => {
+      fetchData()
+    }, [fetchData]);
 
 
   /**
@@ -269,6 +273,7 @@ const Boletas = () => {
     move: move,
     clean: newRender, 
     isLoading : isLoading,
+    proceso : proceso,
   }
 
   const viewBoletasProps = {

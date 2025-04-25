@@ -118,9 +118,9 @@ export const TransladoNormal = ({bol, fill, hdl, tipo}) => {
         classCss={classFormSelct}
         name={"Origen"}
         data={tipoOrigen}
-        fun={hdl}
+        fun={hdl} 
         stt={bol.Proceso === "" || tipo===1 ? true : false}
-        {...tipo === 1 && { val: 'Baprosa' }}
+        {...tipo === 1 ? { val: 'Baprosa' } : {val: bol?.Origen}}
       />
       <SelectFormBoletas
         classCss={classFormSelct}
@@ -128,7 +128,7 @@ export const TransladoNormal = ({bol, fill, hdl, tipo}) => {
         data={tipoDestino}
         fun={hdl}
         stt={bol.Proceso === "" || tipo ===0 ? true : false}
-        {...tipo === 0 && { val: 'Baprosa' }}
+        {...tipo === 0 ? { val: 'Baprosa' } : {val: bol?.Destino}} 
       />
     </>
   );

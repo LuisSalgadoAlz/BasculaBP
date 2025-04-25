@@ -12,7 +12,7 @@ const formInputSelect = ['Transportes', 'Placa', 'Motoristas']
  * @param {*} param0 
  * @returns 
  */
-export const ModalBoletas = ({hdlClose, hdlChange, fillData, formBol, boletas, hdlSubmit, clean, isLoading}) => {
+export const ModalBoletas = ({hdlClose, hdlChange, fillData, formBol, boletas, hdlSubmit, clean, isLoading, proceso}) => {
   const [peso, setPeso] = useState('00lb');
   const newClient = fillData?.Clientes.filter(({id})=>id!=-999)
 
@@ -71,7 +71,7 @@ export const ModalBoletas = ({hdlClose, hdlChange, fillData, formBol, boletas, h
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 place-content-start">
             <SelectFormBoletas classCss={classFormSelct} name={'Movimiento'} data={fillData['FleteS']} fun={hdlChange} val={boletas?.Movimiento} stt={true}/>
-            <TransladoNormal bol={boletas} hdl={hdlChange} fill={fillData} />
+            <TransladoNormal bol={boletas} hdl={hdlChange} fill={fillData} tipo = {proceso}/>
             <PartInputsPesos2 fun={getPesoOut} hdlChange={hdlChange} val={boletas}/>
             <InputsFormBoletas data={claseFormInputs} name={'Observaciones'} fun={hdlChange} />
           </div>
@@ -261,7 +261,7 @@ export const ModalOut = (props) => {
             )}
             <PartPesosDeSalida fun={getPesoOut} hdlChange={hdlChange} val={boletas} />
             <InputsFormBoletas data={claseFormInputs} name={'Peso Teorico'} fun={hdlChange} />
-            {typeStructure == 0 ? typeBol==0 ? <InputsFormBoletas data={claseFormInputs} name={'Orden de compra'} fun={hdlChange} /> : <InputsFormBoletas data={claseFormInputs} name={'Documento'} fun={hdlChange} />:  ''}
+            {typeStructure == 0 ? typeBol==0 ? <InputsFormBoletas data={claseFormInputs} name={'Orden de compra'} fun={hdlChange} val={boletas['Orden de compra']} /> : <InputsFormBoletas data={claseFormInputs} name={'Documento'} val={boletas['Documento']} fun={hdlChange} />:  ''}
             {(move == 'Traslado Interno' || move == 'Traslado Externo') ? <InputsFormBoletas data={claseFormInputs} name={'Orden de Transferencia'} fun={hdlChange} /> : ''}
             <InputsFormBoletas data={claseFormInputs} name={'Observaciones'} fun={hdlChange} />
           </div>

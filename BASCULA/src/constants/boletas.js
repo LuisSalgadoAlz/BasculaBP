@@ -86,7 +86,9 @@ export const initialStateFormBoletas = {
   Estado: 0,
   pesoIn: 0,
   pesoOut: 0,
-  Socios: ""
+  Socios: "", 
+  'Orden de compra': "",
+  Documento: "", 
 };
 
 export const deptos = [
@@ -133,7 +135,23 @@ export const tiposCamion = [
   { id: 11, tipo: "uso", nombre: "Camión lowboy" }
 ];
 
-
+export const windowVariants = {
+  hidden: {
+    opacity: 0,
+    scale: 0.85,
+    transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] },
+  },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] },
+  },
+  exit: {
+    opacity: 0,
+    scale: 0.85,
+    transition: { duration: 0.2, ease: [0.4, 0, 0.2, 1] },
+  },
+};
 
 export const initialStateStats = {entrada: 0, salida: 0, pendientes: 0}
 

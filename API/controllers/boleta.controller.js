@@ -230,7 +230,6 @@ const postBoletasNormal = async (req, res) => {
     const socio = !isComodin && await db.socios.findUnique({  where: { id: parseInt(idCliente) },});
     const motorista =!isComodin && await db.motoristas.findUnique({ where: { id: parseInt(idMotorista) },});
     const empresa = !isComodin && await db.empresa.findUnique({where: { id: parseInt(idEmpresa) },}); 
-    const origen = !isComodin && (await db.direcciones.findUnique({ where: { id: parseInt(idOrigen) } }));
     const destino = !isComodin && (await db.direcciones.findUnique({ where: { id: parseInt(idDestino) } }));
 
     const nuevaBoleta = await db.boleta.create({
@@ -242,10 +241,10 @@ const postBoletasNormal = async (req, res) => {
         empresa: !isComodin ? empresa.nombre : idEmpresa,
         motorista: !isComodin ? motorista.nombre : idMotorista,
         socio: !isComodin ? socio.nombre : Cliente,
-        origen: !isComodin ? origen.nombre : idOrigen,
+        origen: 'Baprosa',
         destino: !isComodin ? destino.nombre : idDestino,
         boletaType: 1,
-        idOrigen: !isComodin ? parseInt(idOrigen) : null,
+        idOrigen: null,
         idDestino: !isComodin ? parseInt(idDestino) : null,
         manifiesto: parseInt(manifiesto),
         pesoTeorico: parseFloat(pesoTeorico),
@@ -592,11 +591,11 @@ const getBoletasCompletadasDiarias = async(req, res) => {
   
     const dataUTCHN = data.map((el) => ({
       Id: el.id,
-      Boleta: el.id, 
+      Boleta: el.id,
+      Proceso: el.proceso == 0 ? 'Entrada' : 'Salida', 
       Placa: el.placa,
       Cliente: el.socio,
       Transporte: el.empresa,
-      Proceso: el.proceso == 0 ? 'Entrada' : 'Salida',
       PesoNeto: el.pesoNeto, 
       Desviacion: el.desviacion, 
       estado: el.estado,
@@ -706,7 +705,7 @@ const updateBoletaOut = async(req, res) => {
         boletaType: parseInt(boletaType),
         idOrigen: !isTraslado ? proceso==0 ? parseInt(idOrigen) : null : null,
         idDestino: !isTraslado ? proceso==1 ? parseInt(idDestino) : null : null,
-        manifiesto: parseInt(manifiesto),
+        manifiesto: proceso == 1 ? parseInt(manifiesto) : null,
         pesoTeorico: parseFloat(pesoTeorico),
         estado: estado,
         idUsuario: parseFloat(despachador["id"]),
@@ -728,7 +727,7 @@ const updateBoletaOut = async(req, res) => {
         proceso,
         pesoNeto: parseFloat(pesoNeto), 
         desviacion: parseFloat(desviacion), 
-        ordenDeCompra: parseInt(ordenDeCompra),
+        ordenDeCompra: proceso == 0 ? parseInt(ordenDeCompra) : null,
         ordenDeTransferencia: isTraslado
           ? parseInt(ordenDeTransferencia)
           : null,
@@ -809,7 +808,7 @@ const updateBoletaOutComdin = async(req, res) => {
         destino: !isTraslado ? proceso == 1 ? destino : 'Baprosa' : null,
         idOrigen: null,
         idDestino: null,
-        manifiesto: parseInt(manifiesto),
+        manifiesto: proceso == 1 ? parseInt(manifiesto) : null,
         pesoTeorico: parseFloat(pesoTeorico),
         estado: estado,
         idUsuario: parseFloat(despachador["id"]),
@@ -831,7 +830,7 @@ const updateBoletaOutComdin = async(req, res) => {
         proceso,
         pesoNeto: parseFloat(pesoNeto), 
         desviacion: parseFloat(desviacion), 
-        ordenDeCompra: parseInt(ordenDeCompra),
+        ordenDeCompra: proceso == 0 ? parseInt(ordenDeCompra) : null,
         ordenDeTransferencia: isTraslado
           ? parseInt(ordenDeTransferencia)
           : null,

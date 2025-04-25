@@ -72,6 +72,7 @@ const ViewBoletas = (props) => {
           <TableBoletas
             datos={completadas.data}
             fun={(fila) => console.log(fila)}
+            tipo={1}
           />
           {completadas.pagination.totalPages > 1 && (
             <Pagination
