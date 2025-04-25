@@ -303,6 +303,23 @@ export const VisualizarBoletas = (props) => {
     }
   } 
 
+  const tiempoDeEstadia = () => {
+    const inicio = new Date(boletas?.fechaInicio);
+    const fin = new Date(boletas?.fechaFin);
+  
+    if (isNaN(inicio) || isNaN(fin)) return '00:00:00';
+  
+    const TIEMPOPROCESO = fin - inicio;
+    const totalSegundos = Math.floor(TIEMPOPROCESO / 1000);
+    const horas = Math.floor(totalSegundos / 3600);
+    const minutos = Math.floor((totalSegundos % 3600) / 60);
+    const segundos = totalSegundos % 60;
+  
+    return `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
+  };
+  
+
+
   return (
     <div className="fixed inset-0 bg-opacity-50 z-50 min-h-screen overflow-auto ">
       <motion.div
@@ -310,7 +327,7 @@ export const VisualizarBoletas = (props) => {
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.4, opacity: 0, y: 50 }}
         transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        className="bg-white w-full min-w-[100vw] min-h-[100vh] max-sm:overflow-auto max-sm:min-h-[0px] shadow-lg overflow-y-auto boletas border-8 border-white p-25 max-sm:p-10"
+        className="bg-white w-full min-w-[100vw] min-h-[100vh] max-sm:overflow-auto max-sm:min-h-[0px] shadow-lg overflow-y-auto boletas border-8 border-white p-20 max-sm:p-10"
       >
         <div className="mb-1 flex items-center justify-between gap-7">
           <div>
@@ -362,8 +379,11 @@ export const VisualizarBoletas = (props) => {
               <span className="text-md text-gray-700">Movimiento: {boletas?.movimiento ? boletas?.movimiento : isNullData}</span>
               <span className="text-md text-gray-700">Manifiesto: {boletas?.manifiesto ? boletas?.manifiesto: isNullData}</span>
               <span className="text-md text-gray-700">Orden de Compra: {boletas?.ordenDeCompra ? boletas?.ordenDeCompra:isNullData}</span>
-              <span className="text-md text-gray-700 mt-8">Observaciones: </span>  
-              <span className="text-md text-gray-700 border-2 border-gray-200 p-2">🔺{boletas?.observaciones ? boletas?.observaciones : isNullData}</span>
+              <hr className="text-gray-400 my-4"/>
+              <span className="text-md font-bold text-gray-700">Tiempos:</span>
+              <span className="text-md text-gray-700">Fecha Inicial: {boletas?.fechaInicio ? new Date(boletas?.fechaInicio).toLocaleString(): isNullData}</span>
+              <span className="text-md text-gray-700">Fecha Inicial: {boletas?.fechaInicio ? new Date(boletas?.fechaFin).toLocaleString(): isNullData}</span>
+              <span className="text-md text-gray-700">Duracion del proceso: {tiempoDeEstadia()}</span>
             </div>
           </div>
           <div className="p-4 border-2 border-gray-300 rounded-lg">
@@ -378,8 +398,10 @@ export const VisualizarBoletas = (props) => {
               <span className="text-md text-gray-700 flex justify-between"><span>Peso Teorico:</span><span>{boletas?.pesoTeorico ? boletas?.pesoTeorico: 0} lb</span></span>
               <hr className="text-gray-400" />
               <span className="text-md text-gray-700 flex justify-between"><span>Desviación:</span><span>{boletas?.desviacion ? boletas?.desviacion:0} lb</span></span>
-              <span className="text-md text-gray-700 flex justify-between"><span>Desviación:</span><span>{boletas?.desviacion ? boletas?.desviacion:0} lb</span></span>
-              <span className="text-md text-gray-700 flex justify-between mt-16"><span>(Nota Peso Tolerado)</span><span>± {pesoTolerado}</span></span>
+              <hr className="text-gray-400 my-2" />
+              <span className="text-md text-gray-700 flex justify-between"><span>(Nota Peso Tolerado)</span><span>± {pesoTolerado}</span></span>
+              <span className="text-md text-gray-700 mt-8">Observaciones: </span>  
+              <span className="text-md text-gray-700 border-2 border-gray-200 p-2">🔺{boletas?.observaciones ? boletas?.observaciones : isNullData}</span>
             </div>
           </div>
         </div>

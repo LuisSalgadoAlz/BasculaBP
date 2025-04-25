@@ -82,14 +82,14 @@ ${CENTER} www.baprosa.com | (504) 2222-2222 ${LEFT}`;
   
   fs.writeFileSync(filePath, contenido);
 
-/* exec(`print /D:"\\\\localhost\\BASCULA" ${filePath}`, (err, stdout, stderr) => {
+exec(`print /D:"\\\\localhost\\BASCULA" ${filePath}`, (err, stdout, stderr) => {
     if (err) {
       console.error('Error al imprimir:', err);
       return;
     }
     
     actualizarImpresion(boleta.id)
-  });  */
+  });
 };
 
 const stringtruncado = (str, len) => {
