@@ -2,9 +2,9 @@ import { use, useCallback, useEffect, useState } from "react";
 import { ButtonAdd, ButtonAddBoleta } from "../components/buttons";
 import ViewBoletas from "../components/boletas/viewBoletas";
 import CardHeader from "../components/card-header";
-import { ModalBoletas, ModalNormal, ModalOut } from "../components/boletas/formBoletas";
+import { ModalBoletas, ModalNormal, ModalOut, VisualizarBoletas } from "../components/boletas/formBoletas";
 import { initialSateDataFormSelet, initialStateFormBoletas, initialStateStats } from "../constants/boletas";
-import { formaterData, getAllDataForSelect, postBoletasNormal, getDataBoletas, getStatsBoletas, formaterDataNewPlaca, verificarDataNewPlaca, getDataParaForm, updateBoletaOut, verificarDataCompleto, postBoletasCasulla, getDataBoletasCompletadas } from "../hooks/formDataBoletas";
+import { formaterData, getAllDataForSelect, postBoletasNormal, getDataBoletas, getStatsBoletas, formaterDataNewPlaca, verificarDataNewPlaca, getDataParaForm, updateBoletaOut, verificarDataCompleto, postBoletasCasulla, getDataBoletasCompletadas, getDataBoletasPorID } from "../hooks/formDataBoletas";
 import { ModalErr, ModalSuccess } from "../components/alerts";
 import { AnimatePresence } from "framer-motion";
 
@@ -28,6 +28,8 @@ const Boletas = () => {
   const [pagination, setPagination] = useState(1)
   const [isLoadCompletadas, setIsLoadCompletadas] = useState(false)
   const [proceso, setProceso] = useState('')
+  const [details, setDetails] = useState(false)
+  const [dataDetails, setDataDetails] = useState()
   /**
    * Variables para la segunda parte
    */
@@ -206,24 +208,35 @@ const Boletas = () => {
     }
   } 
 
-    const fetchData = useCallback(() => {
-      getAllDataForSelect(modalEspecial ? 1 : '', plc, formBoletas.Socios, formBoletas.Transportes, formBoletas.Motoristas, setDataSelects);
-      getDataBoletas(setDataTable, setSsLoadTable, search, searchDate, pagination);
-      getStatsBoletas(setStats);
-    }, [plc, formBoletas.Socios, formBoletas.Transportes, formBoletas.Motoristas, modalEspecial]);
+  /* Area de los details */
+  const handleCloseDetails = () => { 
+    setDetails(false)
+  }
+
+  const handleOpenDetails = async (data) => {
+    setDetails(true)
+    const response = await getDataBoletasPorID(data?.Id)
+    setDataDetails(response)
+  }
+
+  const fetchData = useCallback(() => {
+    getAllDataForSelect(modalEspecial ? 1 : '', plc, formBoletas.Socios, formBoletas.Transportes, formBoletas.Motoristas, setDataSelects);
+    getDataBoletas(setDataTable, setSsLoadTable, search, searchDate, pagination);
+    getStatsBoletas(setStats);
+  }, [plc, formBoletas.Socios, formBoletas.Transportes, formBoletas.Motoristas, modalEspecial]);
     
-    const fechDataSeaSearch = useCallback(() => {
-      getDataBoletas(setDataTable, setSsLoadTable, search, searchDate, pagination);
-      getDataBoletasCompletadas(setDataTableCompletadas, setIsLoadCompletadas, search, searchDate, pagination)
-    }, [search, searchDate, pagination])
+  const fechDataSeaSearch = useCallback(() => {
+    getDataBoletas(setDataTable, setSsLoadTable, search, searchDate, pagination);
+    getDataBoletasCompletadas(setDataTableCompletadas, setIsLoadCompletadas, search, searchDate, pagination)
+  }, [search, searchDate, pagination])
 
-    useEffect(() => {
-      fechDataSeaSearch()
-    }, [fechDataSeaSearch]);
+  useEffect(() => {
+    fechDataSeaSearch()
+  }, [fechDataSeaSearch]);
 
-    useEffect(() => {
-      fetchData()
-    }, [fetchData]);
+  useEffect(() => {
+    fetchData()
+  }, [fetchData]);
 
 
   /**
@@ -288,7 +301,8 @@ const Boletas = () => {
     setPagination,
     handlePagination,
     completadas: dataTableCompletadas, 
-    handlePaginationCompletadas
+    handlePaginationCompletadas,
+    hdlOpenDetails: handleOpenDetails,
   };
 
   return (
@@ -323,6 +337,12 @@ const Boletas = () => {
       {/* Area de modals de errores */}
       {err && <ModalErr name={msg} hdClose={()=>setErr(false)} />}
       {success && <ModalSuccess name={msg} hdClose={handleCloseSuccess} />}
+
+
+      {/* Area para ver los detalles de las boletas completas */}
+      <AnimatePresence>
+        {details && (<VisualizarBoletas hdlClose={handleCloseDetails} boletas={dataDetails}/>)}
+      </AnimatePresence>
     </>
   );
 };

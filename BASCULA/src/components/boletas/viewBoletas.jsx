@@ -17,6 +17,7 @@ const ViewBoletas = (props) => {
     handlePagination,
     completadas,
     handlePaginationCompletadas,
+    hdlOpenDetails,
   } = props;
 
   const [modeViewComplete, setModeViewComplete] = useState(false);
@@ -71,7 +72,7 @@ const ViewBoletas = (props) => {
         <>
           <TableBoletas
             datos={completadas.data}
-            fun={(fila) => console.log(fila)}
+            fun={hdlOpenDetails}
             tipo={1}
           />
           {completadas.pagination.totalPages > 1 && (

@@ -599,7 +599,7 @@ const getBoletasCompletadasDiarias = async(req, res) => {
       PesoNeto: el.pesoNeto, 
       Desviacion: el.desviacion, 
       estado: el.estado,
-      fehc: el.fechaFin.toLocaleString(),
+      fecha: el.fechaFin.toLocaleString(),
     }));
   
     res.send({data: dataUTCHN, pagination: {

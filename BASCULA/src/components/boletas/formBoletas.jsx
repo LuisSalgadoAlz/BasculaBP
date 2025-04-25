@@ -4,11 +4,14 @@ import { InputsFormBoletas, PartInputsPesos, PartInputsPesos2, PartPesosDeSalida
 import { buttonCalcular, buttonCancel, buttonClean, buttonSave, claseFormInputs, classFormSelct, } from "../../constants/boletas";
 import { URLWEBSOCKET } from "../../constants/global";
 import { ModalPrevisual } from "../alerts";
+import { motion } from "framer-motion";
+import { IoCloseSharp } from "react-icons/io5";
+import { ButtonPrint } from "../buttons";
 
 const formInputSelect = ['Transportes', 'Placa', 'Motoristas']
 
 /**
- * ! Sin uso, por los momentos
+ * Todo: Boleta espcial de casulla
  * @param {*} param0 
  * @returns 
  */
@@ -280,6 +283,103 @@ export const ModalOut = (props) => {
         </div>
     </div>
     {modal && <ModalPrevisual name={'Previsualizacion'} data={dataPrev} hdClose={()=>setModal(false)} />}
+    </div>
+  );
+};
+
+export const VisualizarBoletas = (props) => {
+  const { hdlClose, boletas } = props;
+  const opt = ['Entrada de material', 'Salida de material']
+  const isNullData =  'Vacio'
+  const pesoTolerado = boletas?.pesoTeorico * 0.005
+
+  return (
+    <div className="fixed inset-0 bg-opacity-50 z-50 min-h-screen overflow-auto ">
+      <motion.div
+        initial={{ scale: 0.1, opacity: 0, y: 50 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.4, opacity: 0, y: 50 }}
+        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+        className="bg-white w-full min-w-[100vw] min-h-[100vh] max-sm:overflow-auto max-sm:min-h-[0px] shadow-lg overflow-y-auto boletas border-8 border-white p-25 max-sm:p-10"
+      >
+        <div className="mb-1 flex items-center justify-between gap-7">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800">Boleta - # {boletas?.id}</h2>
+            <p className="text-sm text-gray-500">Visualización general de la boleta</p>
+          </div>
+          <button className="text-4xl" onClick={hdlClose}><IoCloseSharp /></button>
+        </div>
+
+        <div className="my-2 p-2 bg-gray-100 rounded-lg border border-gray-300">
+          <div className="flex justify-between items-center">
+            <span className="text-lg font-bold text-gray-700 max-sm:text-sm">Creacion de la boleta: {boletas?.fechaFin ? new Date(boletas?.fechaFin).toLocaleString('es-ES'): 'Cargando...'}</span>
+          </div>
+        </div>
+
+        {/* Contenido */}
+        <div className=" grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 mt-5">
+          <div className="p-4 border-2 border-gray-300 rounded-lg">
+            <div className="flex flex-col gap-1">
+              <span className="text-md font-bold text-gray-700">Datos de la boleta:</span>
+              <hr className="text-gray-400 mb-4" />
+              <span className="text-md text-gray-700">Socio: {boletas?.socio ? boletas?.socio : 'Cargando...'}</span>
+              <span className="text-md text-gray-700">Transporte: {boletas?.empresa ? boletas?.empresa : 'Cargando...'}</span>
+              <span className="text-md text-gray-700">Placa: {boletas?.placa ? boletas?.placa: 'Cargando...'}</span>
+              <span className="text-md text-gray-700">Conductor: {boletas?.motorista? boletas?.motorista:'Cargando...'}</span>  
+            </div>
+
+            <div className="flex flex-col gap-1 mt-4">
+              <span className="text-md font-bold text-gray-700">Ruta:</span>
+              <hr className="text-gray-400 mb-4" />
+              <span className="text-md text-gray-700">Origen : {boletas?.origen ? boletas?.origen : isNullData}</span>
+              <span className="text-md text-gray-700">Destino: {boletas?.destino ? boletas?.destino : isNullData}</span>
+
+              <span className="text-md font-bold text-gray-700 mt-4">Traslado:</span>
+              <hr className="text-gray-400 mb-2" />
+              <span className="text-md text-gray-700">Origen : {boletas?.trasladoOrigen ? boletas?.trasladoOrigen : isNullData}</span>
+              <span className="text-md text-gray-700">Destino: {boletas?.trasladoDestino ? boletas?.trasladoDestino : isNullData}</span>
+              <span className="text-md text-gray-700">Orden de transferencia: {boletas?.ordenDeTransferencia ? boletas?.ordenDeTransferencia : isNullData}</span>
+
+            </div>
+          </div>
+         
+          <div className="p-4 border-2 border-gray-300 rounded-lg">
+            <div className="flex flex-col gap-1">
+              <span className="text-md font-bold text-gray-700">Datos de la boleta:</span>
+              <hr className="text-gray-400 mb-4" />
+              <span className="text-md text-gray-700 border-2 p-4 rounded-sm mb-4">{parseInt(boletas?.proceso)===0 || parseInt(boletas?.proceso)===1 ? opt[parseInt(boletas?.proceso)]  : isNullData}</span>
+              <span className="text-md text-gray-700">Producto: {boletas?.producto ? boletas?.producto : isNullData}</span>
+              <span className="text-md text-gray-700">Movimiento: {boletas?.movimiento ? boletas?.movimiento : isNullData}</span>
+              <span className="text-md text-gray-700">Manifiesto: {boletas?.manifiesto ? boletas?.manifiesto: isNullData}</span>
+              <span className="text-md text-gray-700">Orden de Compra: {boletas?.ordenDeCompra ? boletas?.ordenDeCompra:isNullData}</span>
+              <span className="text-md text-gray-700 mt-8">Observaciones: </span>  
+              <span className="text-md text-gray-700 border-2 border-gray-200 p-2">🔺{boletas?.observaciones ? boletas?.observaciones : isNullData}</span>
+            </div>
+          </div>
+          <div className="p-4 border-2 border-gray-300 rounded-lg">
+            <div className="flex flex-col gap-1">
+              <span className="text-md font-bold text-gray-700">Datos del Peso:</span>
+              <hr className="text-gray-400 mb-4" />
+              <span className="text-md text-gray-700 border-2 p-4 rounded-sm mb-4">{boletas?.estado}</span>
+              <span className="text-md text-gray-700 flex justify-between"><span>Peso Inicial:</span><span>{boletas?.pesoInicial ? boletas?.pesoInicial : 0} lb</span></span>
+              <span className="text-md text-gray-700 flex justify-between"><span>Peso Final:</span><span>{boletas?.pesoFinal ? boletas?.pesoFinal: 0} lb</span></span>
+              <hr className="text-gray-400"/>
+              <span className="text-md text-gray-700 flex justify-between"><span>Peso Neto:</span><span>{boletas?.pesoNeto ? boletas?.pesoNeto :0} lb</span></span>
+              <span className="text-md text-gray-700 flex justify-between"><span>Peso Teorico:</span><span>{boletas?.pesoTeorico ? boletas?.pesoTeorico: 0} lb</span></span>
+              <hr className="text-gray-400" />
+              <span className="text-md text-gray-700 flex justify-between"><span>Desviación:</span><span>{boletas?.desviacion ? boletas?.desviacion:0} lb</span></span>
+              <span className="text-md text-gray-700 flex justify-between"><span>Desviación:</span><span>{boletas?.desviacion ? boletas?.desviacion:0} lb</span></span>
+              <span className="text-md text-gray-700 flex justify-between mt-16"><span>(Nota Peso Tolerado)</span><span>± {pesoTolerado}</span></span>
+            </div>
+          </div>
+        </div>
+
+        {/* Impresiones */}
+        <div className="flex items-center justify-end gap-2 mt-4">
+          <button className={buttonClean}>Convertir a PDF</button>
+          <ButtonPrint name={'Imprimir'} fun={() => console.log('Imprimir')} />
+        </div>
+      </motion.div>
     </div>
   );
 };
