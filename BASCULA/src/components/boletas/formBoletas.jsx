@@ -390,7 +390,7 @@ export const VisualizarBoletas = (props) => {
             <div className="flex flex-col gap-1">
               <span className="text-md font-bold text-gray-700">Datos del Peso:</span>
               <hr className="text-gray-400 mb-4" />
-              <span className="text-md text-gray-700 border-2 p-4 rounded-sm mb-4">{boletas?.estado}</span>
+              {boletas?.estado =='Completado' ? <span className="text-md text-white border-2 p-4 bg-green-900 rounded-sm mb-4">{boletas?.estado}</span>:<span className="text-md text-white border-2 p-4 bg-red-900 rounded-sm mb-4">{boletas?.estado}</span>}
               <span className="text-md text-gray-700 flex justify-between"><span>Peso Inicial:</span><span>{boletas?.pesoInicial ? boletas?.pesoInicial : 0} lb</span></span>
               <span className="text-md text-gray-700 flex justify-between"><span>Peso Final:</span><span>{boletas?.pesoFinal ? boletas?.pesoFinal: 0} lb</span></span>
               <hr className="text-gray-400"/>
