@@ -399,7 +399,7 @@ export const VisualizarBoletas = (props) => {
               <hr className="text-gray-400" />
               <span className="text-md text-gray-700 flex justify-between"><span>Desviación:</span><span>{boletas?.desviacion ? boletas?.desviacion:0} lb</span></span>
               <hr className="text-gray-400 my-2" />
-              <span className="text-md text-gray-700 flex justify-between"><span>(Nota Peso Tolerado)</span><span>± {pesoTolerado}</span></span>
+              <span className="text-md text-gray-700 flex justify-between"><span>(Nota: Peso Tolerado)</span><span>± {pesoTolerado}</span></span>
               <span className="text-md text-gray-700 mt-8">Observaciones: </span>  
               <span className="text-md text-gray-700 border-2 border-gray-200 p-2">🔺{boletas?.observaciones ? boletas?.observaciones : isNullData}</span>
             </div>
