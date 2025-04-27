@@ -910,6 +910,40 @@ const getReimprimir = async (req, res) => {
 
 }
 
+/* Para el calentario */
+/**
+ * Primera parte fechas
+ */
+
+const getBoletasMes = async(req, res) => {
+  try{
+    const start = req.query.start || '';
+    const end = req.query.end || '';
+
+  const result = await db.$queryRaw`
+    SELECT CONVERT(DATE, fechaFin) as fecha, COUNT(*) as cantidad
+    FROM boleta
+    WHERE fechaFin >= ${start} AND fechaFin <= ${end}
+    GROUP BY CONVERT(DATE, fechaFin)
+    ORDER BY fecha
+  `;
+
+  const makeCalendar = result.map((item) => ({
+    title: `Boletas creadas: ${item.cantidad}`,
+    start: item.fecha,
+    allDay: true,
+    display: 'auto',
+    textColor: 'black',
+    backgroundColor: 'transparent', 
+    borderColor: 'transparent', // Cambiado a transparente
+  }));
+  
+    res.send(makeCalendar)
+  }catch(err) {
+    console.log(err)
+  }
+}
+
 
 module.exports = {
   getAllData,
@@ -921,5 +955,6 @@ module.exports = {
   postBoleta, 
   getBoletasHistorial, 
   getReimprimir, 
-  getBoletasCompletadasDiarias
+  getBoletasCompletadasDiarias, 
+  getBoletasMes
 };

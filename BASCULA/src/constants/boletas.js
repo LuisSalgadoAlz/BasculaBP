@@ -179,3 +179,24 @@ export const buttonCalcular = "w-full mt-2 py-2 bg-white text-gray-700 rounded-l
 export const isSelectedView = "p-2.5 text-sm font-medium text-white rounded-s-lg border border-gray-200 mt-2 sidebar transition-transform duration-300 ease-in-out hover:scale-[1.02]"
 
 export const noSelectectView = "p-2.5 text-sm font-medium text-gray-400 rounded-e-lg border border-gray-200 mt-2 bg-[#FDF5D4] transition-transform duration-300 ease-in-out hover:scale-[1.02]"
+
+
+
+/* Animaciones fullCalendar */
+
+  // Animaciones
+  export const calendarVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -20 }
+  };
+
+  export const expandedVariants = {
+    hidden: { opacity: 0, scale: 0.95 },
+    visible: { 
+      opacity: 1, 
+      scale: 1,
+      transition: { type: "spring", damping: 20, stiffness: 300 }
+    },
+    exit: { opacity: 0, scale: 0.95 }
+  };

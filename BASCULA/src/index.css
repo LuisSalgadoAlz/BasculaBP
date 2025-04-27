@@ -160,3 +160,33 @@ a.active {
 .bg-opa-50{
   background: rgba(0, 0, 0, 0.5);
 }
+
+
+.custom-day-cell {
+  background-color: white;
+  border-radius: 5px;
+  color: #333;
+  padding: 0;
+  cursor: pointer;
+}
+
+.custom-day-cell:hover {
+  background-color: hsl(var(--sidebar));
+  color: white!important; 
+}
+
+.custom-day-cell:hover div {
+  color: white!important;
+}
+.calendario button{
+  background-color: hsl(var(--sidebar))!important;
+  border-radius: 2px!important;
+  border: none!important;
+}
+
+.calendario button:focus, 
+.calendario button:active {
+  outline: none !important; /* Elimina el borde de enfoque */
+  box-shadow: none !important; /* Elimina cualquier sombra aplicada */
+}
+

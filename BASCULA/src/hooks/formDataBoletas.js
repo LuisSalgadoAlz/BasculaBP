@@ -248,6 +248,30 @@ export const getPrintEpson = async (id, setIsLoading) => {
 };
 
 /**
+ * Area para calendario
+ * Mes
+ */
+export const getBoletasMes = async (fun, start, end) => {
+  try {
+    const response = await fetch(`${URLHOST}boletas/calendario/mes?start=${start}&end=${end}`, {
+      method: "GET",
+      headers: {
+        Authorization: Cookies.get('token'),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API");
+    }
+
+    const data = await response.json();
+    fun(data)
+  } catch (error) {
+    console.error("Error al obtener los clientes:", error);
+  }
+};
+
+/**
  * ! Area de formateadores 
  * ! Parte delicada No tocar mucho
  * @param {*} formBoletas 
@@ -331,7 +355,6 @@ export const verificarDataCompleto = (funError, data, setMsg) => {
     manifiesto,
     ordenDeCompra,
     proceso, 
-    tipoSocio
   } = data;
 
   /* idPlaca observaciones ordenDeTransferencia pesoInicial pesoTeorico*/
