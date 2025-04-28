@@ -975,9 +975,30 @@ const getTimeLineForComponent = async(req, res) => {
       start_time: el.fechaInicio, 
       end_time: el.fechaFin
     }))
-    console.log(items)
+
     res.send({groups, items})
   }catch (err) {
+    console.log(err)
+  }
+}
+
+const updateCancelBoletas = async(req, res) => {
+  const { Id, Motivo } = req.body;
+  console.log(req.body)
+  try {
+    const updateBoleta = await db.boleta.update({
+      where: {
+        id: parseInt(Id)
+      },
+      data: {
+        boletaType: 5,
+        observaciones: Motivo,
+        fechaFin: new Date(),
+        estado: "Cancelada" 
+      },
+    })
+    res.send({msg: 'Cancelada correctamente', boletas: updateBoleta})
+  } catch(err) {
     console.log(err)
   }
 }
@@ -995,5 +1016,6 @@ module.exports = {
   getReimprimir, 
   getBoletasCompletadasDiarias, 
   getBoletasMes, 
-  getTimeLineForComponent
+  getTimeLineForComponent, 
+  updateCancelBoletas
 };
