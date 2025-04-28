@@ -4,6 +4,7 @@ import { createBrowserRouter, Route, RouterProvider } from "react-router";
 import "./index.css";
 import VerificarLog from "./utils/verificarLog";
 import { Spinner } from "./components/alerts";
+import ViewDisabled from "./views/viewDisabled";
 const CalendarioView = lazy(()=>import('./views/calendario'))
 const NoFoundData = lazy(()=>import('./views/notFoundData'));
 const Login = lazy(()=>import('./views/login'));
@@ -46,7 +47,19 @@ const navRutas = createBrowserRouter([
       },
       {
         path: "/informes",
-        element: <Informes />,
+        element: <ViewDisabled />,
+      },
+      {
+        path: "/informes/mensual",
+        element: <ViewDisabled />,
+      },
+      {
+        path: "/informes/diarios",
+        element: <ViewDisabled />,
+      },
+      {
+        path: "/informes/semanales",
+        element: <ViewDisabled />,
       },
       {
         path: "/socios/:id",

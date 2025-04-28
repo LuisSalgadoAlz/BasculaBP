@@ -188,17 +188,17 @@ const SideBar = ({ modo = "extendido", altura = 500 }) => {
       <div
         className={`${
           !isExtendido && altura <= 350 ? "block" : "absolute bottom-0"
-        } py-4 px-5`}
+        } py-4 px-4`}
       > 
-        <div className="w-full flex justify-center"><span className="text-white text-center">V. {VERSION}</span></div>
+        <div className="w-full flex justify-center"><span className="text-white text-center text-sm">V. {VERSION}</span></div>
         <hr className="h-px mb-4 mt-2 bg-gray-200 border-0 dark:bg-gray-700" />
-        <div className="px-2 w-full">
+        <div className="px-3 w-full">
           <button
             className="flex items-center justify-center text-white gap-3 hover:text-red-500"
             onClick={handleClose}
           >
             <span>
-              <PiSignOutFill className="text-lg" />
+              <PiSignOutFill className="text-xl" />
             </span>
             {isExtendido && (
               <span className="flex-1">Cerrar Sesión</span>
