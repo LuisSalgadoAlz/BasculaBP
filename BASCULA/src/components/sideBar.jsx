@@ -7,6 +7,7 @@ import { PiSignOutFill } from "react-icons/pi";
 import { IoCalendarOutline } from "react-icons/io5";
 
 import Cookies from "js-cookie";
+import { VERSION } from "../constants/global";
 
 const RUTAS_PRINCIPALES = [
   {
@@ -188,17 +189,19 @@ const SideBar = ({ modo = "extendido", altura = 500 }) => {
         className={`${
           !isExtendido && altura <= 350 ? "block" : "absolute bottom-0"
         } py-4 px-5`}
-      >
+      > 
+        <div className="w-full flex justify-center"><span className="text-white text-center">V. {VERSION}</span></div>
+        <hr className="h-px mb-4 mt-2 bg-gray-200 border-0 dark:bg-gray-700" />
         <div className="px-2 w-full">
           <button
-            className="flex items-center text-white gap-3 hover:text-red-500"
+            className="flex items-center justify-center text-white gap-3 hover:text-red-500"
             onClick={handleClose}
           >
             <span>
-              <PiSignOutFill className="text-xl" />
+              <PiSignOutFill className="text-lg" />
             </span>
             {isExtendido && (
-              <span className="font-normal text-base">Cerrar Sesión</span>
+              <span className="flex-1">Cerrar Sesión</span>
             )}
           </button>
         </div>
