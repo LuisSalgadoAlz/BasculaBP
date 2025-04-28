@@ -2,7 +2,7 @@ model Motoristas{
     id Int @id @default(autoincrement())
     nombre String
     telefono String?
-    correo String? @unique
+    correo String? 
     estado Boolean
     idEmpresa Int
 
