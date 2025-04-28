@@ -407,6 +407,7 @@ export const verificarDataCompleto = (funError, data, setMsg) => {
     manifiesto,
     ordenDeCompra,
     proceso, 
+    ordenDeTransferencia
   } = data;
 
   /* idPlaca observaciones ordenDeTransferencia pesoInicial pesoTeorico*/
@@ -441,6 +442,12 @@ export const verificarDataCompleto = (funError, data, setMsg) => {
   if(proceso==1 && !manifiesto){
     setMsg('Por favor, ingresar todos los datos tercer nivel: proceso, manifiesto')
      funError(true)
+    return false
+  }
+
+  if ((idMovimiento==11 || idMovimiento==10) && !ordenDeTransferencia) {
+    setMsg('Por favor, ingresar todos los datos cuarto nivel: orden de transferencia')
+    funError(true)
     return false
   }
 

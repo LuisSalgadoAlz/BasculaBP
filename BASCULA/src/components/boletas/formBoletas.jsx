@@ -434,8 +434,8 @@ export const CancelarBoleta = (props) => {
       <motion.div {...propsMotionHijo} className="bg-white min-w-[20vw] min-h-[20vh] max-w-[40vw] rounded-2xl max-sm:overflow-auto max-sm:min-h-[0px] shadow-lg overflow-y-auto boletas border-8 border-white px-10 py-5 max-sm:p-10">
         <div className="mb-1 flex justify-between gap-7">
           <div>
-            <h2 className="text-2xl font-bold text-black">Cancelar Boleta: #{boletas?.Id} / {boletas?.Placa}</h2>
-            <p className="text-sm text-black mt-2 font-extrabold">Advertencia: Estás a punto de cancelar una boleta de peso de carga. Esta acción es crítica y no se puede deshacer. </p>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Cancelar Boleta: #{boletas?.Id} / {boletas?.Placa}</h2>
+            <p className="text-sm text-gray-500">Advertencia: Estás a punto de cancelar una boleta de peso de carga. Esta acción es crítica y no se puede deshacer. </p>
           </div>
           <div className="items-start h-full">
             <button className="text-4xl" onClick={hdlClose}><IoCloseSharp /></button>
