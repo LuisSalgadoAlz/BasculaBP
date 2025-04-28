@@ -190,3 +190,59 @@ a.active {
   box-shadow: none !important; /* Elimina cualquier sombra aplicada */
 }
 
+/* Contenedor principal del timeline */
+.react-calendar-timeline {
+  background-color: white !important;
+  border-radius: 12px !important;
+}
+
+/* Header (fechas y barra superior) */
+.react-calendar-timeline .rct-header-root {
+  background-color: white !important;
+  border: 2px solid hsl(var(--sidebar)) !important;
+  font-weight: 600 !important;
+}
+
+/* Cada día/fecha en el header */
+.react-calendar-timeline .rct-dateHeader {
+  color: #4b5563 !important;
+  font-size: 14px !important;
+  padding: 5px 10px !important;
+  border: none!important;
+}
+
+/* Las filas (líneas de grupos o tracks) */
+.react-calendar-timeline .rct-rows {
+  background-color: #f1f5f9 !important;
+}
+
+/* Cada elemento/grupo */
+.react-calendar-timeline .rct-item {
+  background-color: hsl(var(--sidebar)) !important; /* azul */
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 2px !important;
+  padding: 4px 8px !important;
+  transition: background-color 0.3s ease !important;
+}
+
+/* Hover en los elementos */
+.react-calendar-timeline .rct-item:hover {
+  background-color: #2563eb !important;
+}
+
+/* Grupos (nombres a la izquierda) */
+.react-calendar-timeline .rct-sidebar-row {
+  font-weight: 400 !important;
+  color: #1f2937 !important;
+  padding: 8px 8px !important;
+}
+
+/* Línea de tiempo vertical */
+.react-calendar-timeline .rct-vertical-lines .rct-vertical-line {
+  border-left: 20px solid red !important;
+}
+
+.rct-scroll{
+  width: 100%!important;
+}

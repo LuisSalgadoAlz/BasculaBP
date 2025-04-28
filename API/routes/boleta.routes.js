@@ -10,7 +10,8 @@ const {
   getBoletasHistorial,
   getReimprimir,
   getBoletasCompletadasDiarias,
-  getBoletasMes
+  getBoletasMes,
+  getTimeLineForComponent
 } = require("../controllers/boleta.controller");
 const verificarToken = require("../middlewares/authJWT.js");
 
@@ -22,6 +23,7 @@ boletas.get("/boleta/:id", getBoletaID);
 boletas.get("/historial", getBoletasHistorial)
 boletas.get("/historial/:id", getReimprimir)
 boletas.get("/calendario/mes", getBoletasMes)
+boletas.get("/calendario/mes/detalles", getTimeLineForComponent)
 boletas.post("/", postBoletasNormal);
 boletas.post("/newPlaca", postBoleta);
 boletas.put("/:id", updateBoleta);

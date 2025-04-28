@@ -944,6 +944,44 @@ const getBoletasMes = async(req, res) => {
   }
 }
 
+const getTimeLineForComponent = async(req, res) => {
+  try{
+    const fecha = req.query.fecha || '';
+    const convertDate = fecha && new Date(fecha).toISOString()
+
+    // Sumamos 1 día
+    const fechaObj = new Date(convertDate);
+    const fechaMasUno = new Date(fechaObj);
+    fechaMasUno.setDate(fechaObj.getDate() + 1);
+  
+    // Ahora hacemos la consulta
+    const data = await db.boleta.findMany({
+      where: {
+        fechaInicio: {
+          gte: convertDate,                     // fecha inicial
+          lt: fechaMasUno.toISOString()   // fecha + 1 día
+        }
+      }
+    });
+    const groups = data.map((el)=>({
+      id: el.id, 
+      title: el.placa + '-' + el.socio
+    }))
+
+    const items = data.map((el)=>({
+      id: el.id, 
+      group:el.id, 
+      title:el.placa,
+      start_time: el.fechaInicio, 
+      end_time: el.fechaFin
+    }))
+    console.log(items)
+    res.send({groups, items})
+  }catch (err) {
+    console.log(err)
+  }
+}
+
 
 module.exports = {
   getAllData,
@@ -956,5 +994,6 @@ module.exports = {
   getBoletasHistorial, 
   getReimprimir, 
   getBoletasCompletadasDiarias, 
-  getBoletasMes
+  getBoletasMes, 
+  getTimeLineForComponent
 };

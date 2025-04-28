@@ -272,6 +272,30 @@ export const getBoletasMes = async (fun, start, end) => {
 };
 
 /**
+ * Area para calendario
+ * Mes
+ */
+export const getTimeLineDetails = async (fun, fecha,) => {
+  try {
+    const response = await fetch(`${URLHOST}boletas/calendario/mes/detalles?fecha=${fecha}`, {
+      method: "GET",
+      headers: {
+        Authorization: Cookies.get('token'),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API");
+    }
+
+    const data = await response.json();
+    fun(data)
+  } catch (error) {
+    console.error("Error al obtener los clientes:", error);
+  }
+};
+
+/**
  * ! Area de formateadores 
  * ! Parte delicada No tocar mucho
  * @param {*} formBoletas 

@@ -4,20 +4,28 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import esLocale from '@fullcalendar/core/locales/es';
-import { getBoletasMes } from "../../hooks/formDataBoletas";
+import { getBoletasMes, getTimeLineDetails } from "../../hooks/formDataBoletas";
 import { motion, AnimatePresence } from "framer-motion";
 import { calendarVariants, expandedVariants } from "../../constants/boletas";
+import Timeline from 'react-calendar-timeline';
+import 'react-calendar-timeline/style.css';
+import moment from 'moment';
+import 'moment/locale/es'; // Asegúrate de importar el idioma
+
+moment.locale('es'); // Establecer idioma a español
+
 
 export const Calendario = () => {
   const [dateBolCalendar, setDateBolCalendar] = useState();
   const [expandedDate, setExpandedDate] = useState(null);
   const [currentView, setCurrentView] = useState('dayGridMonth');
+  const [detailsDaySeletect, setDetailsSelect] = useState({groups:[], items:[]});
 
-  const handleEventClick = (info) => {
+  const handleEventClick = async(info) => {
     if (info.view.type === 'dayGridMonth') {
-      setExpandedDate(info.dateStr);
+      setExpandedDate(info.date);
       setCurrentView('timeGridDay');
-      console.log(info)
+      await getTimeLineDetails(setDetailsSelect, info.date)
     }
   };
 
@@ -39,7 +47,6 @@ export const Calendario = () => {
     setCurrentView('dayGridMonth');
     setExpandedDate(null);
   };
-
 
   return (
     <div className="p-6 relative min-h-[600px]">
@@ -101,29 +108,45 @@ export const Calendario = () => {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
             >
-              <FullCalendar
-                plugins={[timeGridPlugin]}
-                initialView="timeGridDay"
-                initialDate={expandedDate}
-                locale={esLocale}
-                timeZone="local"
-                headerToolbar={false}
-                height="auto"
-                contentHeight="auto"
-                events={dateBolCalendar?.filter(event => 
-                  event.start?.startsWith(expandedDate) || 
-                  event.start?.includes(expandedDate)
-                )}
-                eventContent={(arg) => (
-                  <div style={{ textAlign: 'center' }}>
-                    {arg.event.title}
-                  </div>
-                )}
+              <TimelineComponent 
+                groups={detailsDaySeletect ? detailsDaySeletect?.groups : []} 
+                items={detailsDaySeletect ? detailsDaySeletect?.items : []} 
+                defaultTime = {expandedDate}
               />
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
+  );
+};
+
+const TimelineComponent = ({groups, items, defaultTime}) => {
+
+  const end = new Date(defaultTime); // Tu fecha local GMT-6
+  // Sumamos 1 día
+  end.setDate(end.getDate() + 1); 
+
+  const reFactorItems = items.map((el) => ({
+    ...el,  start_time:new Date(new Date(el.start_time)), end_time:new Date(new Date(el.end_time))
+  }))
+
+  return (
+    <div>
+      <Timeline
+        groups={groups}
+        items={reFactorItems}
+        sidebarContent={null}
+        defaultTimeStart={new Date(defaultTime)}  // Comienza a las 00:00 horas del 1 de abril
+        defaultTimeEnd={new Date(end)}
+        maxTime={new Date(end)} 
+        minTime={new Date(defaultTime)}  // Termina a las 00:00 horas del 2 de abril
+        minZoom={60 * 60 * 1000}  // Mínimo zoom: 1 hora
+        maxZoom={24 * 60 * 60 * 1000}  // Máximo zoom: 24 horas
+        itemTouchSendsClick={false}
+        itemHeightRatio={0.75}
+        canMove={false}
+      />
     </div>
   );
 };
