@@ -930,7 +930,7 @@ const getBoletasMes = async(req, res) => {
 
   const makeCalendar = result.map((item) => ({
     title: `Boletas creadas: ${item.cantidad}`,
-    start: item.fecha,
+    start: new Date(new Date(item.fecha).getTime() + (new Date(item.fecha).getTimezoneOffset() * 60000)),
     allDay: true,
     display: 'auto',
     textColor: 'black',

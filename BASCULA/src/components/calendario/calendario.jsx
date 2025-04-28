@@ -21,11 +21,29 @@ export const Calendario = () => {
   const [currentView, setCurrentView] = useState('dayGridMonth');
   const [detailsDaySeletect, setDetailsSelect] = useState({groups:[], items:[]});
 
-  const handleEventClick = async(info) => {
-    if (info.view.type === 'dayGridMonth') {
-      setExpandedDate(info.date);
+  /**
+   * Clicks en el dia
+   * @param {} info 
+   */
+  const handleDayClick = async(info) => {
+    const {date, view:{type}} = info
+    if (type === 'dayGridMonth') {
+      setExpandedDate(date);
       setCurrentView('timeGridDay');
-      await getTimeLineDetails(setDetailsSelect, info.date)
+      await getTimeLineDetails(setDetailsSelect, date)
+    }
+  };
+
+ /**
+  * Clicks en el evento
+  * @param {*} info 
+  */
+  const handleEventClick = async(info) => {
+    const {event: {start}, view:{type}} = info
+    if (type === 'dayGridMonth') {
+      setExpandedDate(start);
+      setCurrentView('timeGridDay');
+      await getTimeLineDetails(setDetailsSelect, start)
     }
   };
 
@@ -33,6 +51,9 @@ export const Calendario = () => {
     const { currentStart, currentEnd, type } = info.view;
     if (type === 'dayGridMonth') {
       getBoletasMes(setDateBolCalendar, new Date(currentStart).toISOString(), new Date(currentEnd).toISOString());
+    }
+    if (type === 'timeGridDay'){
+      console.log(info)
     }
   };
 
@@ -67,12 +88,12 @@ export const Calendario = () => {
               locale={esLocale}
               timeZone="local"
               headerToolbar={{
-                left: 'prev,next today',
+                left: 'dayGridMonth',
                 center: 'title',
-                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                right: 'today prev,next'
               }}
               events={dateBolCalendar}
-              dateClick={handleEventClick}
+              dateClick={handleDayClick}
               eventClick={handleEventClick}
               datesSet={handleEventButtons}
               viewDidMount={handleViewChange}
