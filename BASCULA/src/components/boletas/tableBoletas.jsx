@@ -57,15 +57,22 @@ export const TableBoletas = ({ datos = [{}], fun, tipo = 0, funCancel }) => {
                             )
                           ) : key == 8 ? (
                             el == "Completo(Fuera de tolerancia)" ? (
-                              <span className="text-red-700 flex items-center gap-1">
-                                <IoWarningOutline />
-                                {"Fuera de tolerancia"}
+                              <span className="text-red-700 font-black flex items-center gap-1">
+                                <IoWarningOutline className="text-lg font-black"/>
+                                {"Desviada"}
                               </span>
                             ) : (
-                              <span className="text-green-700 flex items-center gap-1">
-                                <GoIssueClosed />
-                                {el}
-                              </span>
+                              el=="Cancelada" ? (
+                                <span className="text-yellow-800 font-black flex items-center gap-1">
+                                  <MdOutlineCancel className="text-lg font-black" />
+                                  {el}
+                                </span>
+                              ): (
+                                <span className="text-green-700 font-black flex items-center gap-1">
+                                  <GoIssueClosed className="text-lg font-black"/>
+                                  {el}
+                                </span>
+                              )
                             )
                           ) : (
                             el

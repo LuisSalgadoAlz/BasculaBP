@@ -390,7 +390,11 @@ export const VisualizarBoletas = (props) => {
             <div className="flex flex-col gap-1">
               <span className="text-md font-bold text-gray-700">Datos del Peso:</span>
               <hr className="text-gray-400 mb-4" />
-              {boletas?.estado =='Completado' ? <span className="text-md text-white border-2 p-4 bg-green-900 rounded-sm mb-4">{boletas?.estado}</span>:<span className="text-md text-white border-2 p-4 bg-red-900 rounded-sm mb-4">{boletas?.estado}</span>}
+
+              {boletas?.estado =='Completado' ? (
+                <span className="text-md text-white border-2 p-4 bg-green-900 rounded-sm mb-4">{boletas?.estado}</span>
+              ):(boletas?.estado=='Cancelada' ? (<span className="text-md text-white border-2 p-4 bg-yellow-900 rounded-sm mb-4">{boletas?.estado}</span>):(<span className="text-md text-white border-2 p-4 bg-red-900 rounded-sm mb-4">{boletas?.estado}</span>))}
+
               <span className="text-md text-gray-700 flex justify-between"><span>Peso Inicial:</span><span>{boletas?.pesoInicial ? boletas?.pesoInicial : 0} lb</span></span>
               <span className="text-md text-gray-700 flex justify-between"><span>Peso Final:</span><span>{boletas?.pesoFinal ? boletas?.pesoFinal: 0} lb</span></span>
               <hr className="text-gray-400"/>
@@ -427,13 +431,15 @@ export const CancelarBoleta = (props) => {
 
   return (
     <motion.div {...propsMotionPadre} className="fixed inset-0 flex items-center justify-center bg-opacity-50 z-40 min-h-screen overflow-auto bg-opa-50">
-      <motion.div {...propsMotionHijo} className="bg-white min-w-[20vw] min-h-[20vh] max-w-[40vw] max-sm:overflow-auto max-sm:min-h-[0px] shadow-lg overflow-y-auto boletas border-8 border-white px-10 py-5 max-sm:p-10">
-        <div className="mb-1 flex items-center justify-between gap-7">
+      <motion.div {...propsMotionHijo} className="bg-white min-w-[20vw] min-h-[20vh] max-w-[40vw] rounded-2xl max-sm:overflow-auto max-sm:min-h-[0px] shadow-lg overflow-y-auto boletas border-8 border-white px-10 py-5 max-sm:p-10">
+        <div className="mb-1 flex justify-between gap-7">
           <div>
-            <h2 className="text-2xl font-bold text-gray-800">Cancelar Boleta: #{boletas?.Id} / {boletas?.Placa}</h2>
+            <h2 className="text-2xl font-bold text-black">Cancelar Boleta: #{boletas?.Id} / {boletas?.Placa}</h2>
             <p className="text-sm text-black mt-2 font-extrabold">Advertencia: Estás a punto de cancelar una boleta de peso de carga. Esta acción es crítica y no se puede deshacer. </p>
           </div>
-          <button className="text-4xl" onClick={hdlClose}><IoCloseSharp /></button>
+          <div className="items-start h-full">
+            <button className="text-4xl" onClick={hdlClose}><IoCloseSharp /></button>
+          </div>
         </div>
         
         <div className="mt-4">

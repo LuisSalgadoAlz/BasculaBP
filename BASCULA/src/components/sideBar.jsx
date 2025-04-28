@@ -4,6 +4,8 @@ import { BsClipboard2Pulse, BsFileBarGraph } from "react-icons/bs";
 import { RiTruckLine } from "react-icons/ri";
 import { FiUsers } from "react-icons/fi";
 import { PiSignOutFill } from "react-icons/pi";
+import { IoCalendarOutline } from "react-icons/io5";
+
 import Cookies from "js-cookie";
 
 const RUTAS_PRINCIPALES = [
@@ -76,24 +78,24 @@ const SideBar = ({ modo = "extendido", altura = 500 }) => {
       {/* Rutas principales */}
       <div className="p-2">
         <ul className="flex w-full flex-col gap-1 px-2">
-        {RUTAS_PRINCIPALES.map((data, key) => (
-          <div key={key} className="relative group w-full">
-            <NavLink
-              to={data.path}
-              className="flex items-center gap-x-3 rounded-md px-3 py-2 text-sm font-medium text-white"
-            >
-              <span className="text-lg">{data.icon}</span>
-              {isExtendido && <span className="flex-1">{data.name}</span>}
-            </NavLink>
+          {isExtendido && <h1 className="px-3 text-sm text-gray-300">Bascula</h1>}
+          {RUTAS_PRINCIPALES.map((data, key) => (
+            <div key={key} className="relative group w-full">
+              <NavLink
+                to={data.path}
+                className="flex items-center gap-x-3 rounded-md px-3 py-2 text-sm font-medium text-white"
+              >
+                <span className="text-lg">{data.icon}</span>
+                {isExtendido && <span className="flex-1">{data.name}</span>}
+              </NavLink>
 
-            {!isExtendido && (
-              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-6 hidden group-hover:block sidebar text-white text-xs px-8 py-2 rounded shadow-lg z-10 whitespace-nowrap">
-                {data.name}
-              </div>
-            )}
-          </div>
-        ))}
-
+              {!isExtendido && (
+                <div className="absolute left-full top-1/2 -translate-y-1/2 ml-6 hidden group-hover:block sidebar text-white text-xs px-8 py-2 rounded shadow-lg z-10 whitespace-nowrap">
+                  {data.name}
+                </div>
+              )}
+            </div>
+          ))}
         </ul>
         <hr className="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700" />
       </div>
@@ -103,7 +105,18 @@ const SideBar = ({ modo = "extendido", altura = 500 }) => {
         <ul className="flex w-full flex-col gap-1 px-2">
           {isExtendido ? (
             <>
-              <h1 className="px-3 text-sm text-gray-300">Reportes</h1>
+            <h1 className="px-3 text-sm text-gray-300">Calendario</h1>
+              <NavLink
+                to="/calendario"
+                className="flex items-center gap-x-3 rounded-md px-3 py-2 text-sm font-medium text-white"
+              >
+                <span className="text-lg">
+                  <IoCalendarOutline />
+                </span>
+                <span className="flex-1">Calendario</span>
+              </NavLink>
+              <hr className="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700" />
+              <h1 className="px-3 text-sm text-gray-300 mt-2">Reportes</h1>
               <NavLink
                 to="/informes"
                 className="flex items-center gap-x-3 rounded-md px-3 py-2 text-sm font-medium text-white"
@@ -115,19 +128,19 @@ const SideBar = ({ modo = "extendido", altura = 500 }) => {
               </NavLink>
               <ul className="pl-5 border-l border-gray-500 ml-5">
                 <NavLink
-                  to="/informes"
+                  to="/informes/diarios"
                   className="flex items-center gap-x-1 rounded-md py-2 text-sm font-medium text-white"
                 >
                   <span className="flex-1">Informes Diarios</span>
                 </NavLink>
                 <NavLink
-                  to="/informes"
+                  to="/informes/semanales"
                   className="flex items-center gap-x-1 rounded-md py-2 text-sm font-medium text-white"
                 >
                   <span className="flex-1">Informes Semanal</span>
                 </NavLink>
                 <NavLink
-                  to="/informes"
+                  to="/informes/mensual"
                   className="flex items-center gap-x-1 rounded-md py-2 text-sm font-medium text-white"
                 >
                   <span className="flex-1">Informes Mensual</span>
@@ -135,20 +148,37 @@ const SideBar = ({ modo = "extendido", altura = 500 }) => {
               </ul>
             </>
           ) : (
-            <div className="relative group w-max">
-              <NavLink
-                to="/informes"
-                className="flex items-center gap-x-3 rounded-md px-5 py-2 text-sm font-medium text-white"
-              >
-                <span className="text-lg text-center">
-                  <BsFileBarGraph />
-                </span>
-              </NavLink>
+            <>
+              <div className="relative group w-max">
+                <NavLink
+                  to="/Calendario"
+                  className="flex items-center gap-x-3 rounded-md px-5 py-2 text-sm font-medium text-white"
+                >
+                  <span className="text-lg text-center">
+                    <IoCalendarOutline />
+                  </span>
+                </NavLink>
 
-              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-6 hidden group-hover:block sidebar text-white text-xs px-8 py-2 rounded shadow-lg z-10 whitespace-nowrap">
-                Informes
+                <div className="absolute left-full top-1/2 -translate-y-1/2 ml-6 hidden group-hover:block sidebar text-white text-xs px-8 py-2 rounded shadow-lg z-10 whitespace-nowrap">
+                  Calendario
+                </div>
               </div>
-            </div>
+              <hr className="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700" />
+              <div className="relative group w-max mt-2">
+                <NavLink
+                  to="/informes"
+                  className="flex items-center gap-x-3 rounded-md px-5 py-2 text-sm font-medium text-white"
+                >
+                  <span className="text-lg text-center">
+                    <BsFileBarGraph />
+                  </span>
+                </NavLink>
+
+                <div className="absolute left-full top-1/2 -translate-y-1/2 ml-6 hidden group-hover:block sidebar text-white text-xs px-8 py-2 rounded shadow-lg z-10 whitespace-nowrap">
+                  Informes
+                </div>
+              </div>
+            </>
           )}
         </ul>
       </div>
