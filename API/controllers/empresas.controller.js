@@ -318,7 +318,6 @@ const getMotoristaPorEmpresa = async (req, res) => {
 const postMotoristasDeLaEmpresa = async (req, res) => {
   try {
     const { nombre, telefono, correo, id } = req.body;
-    console.log(correo)
     const exist = correo.trim()!='' && await db.motoristas.count({where:{ correo : correo }})
 
     if (exist == 0) {
