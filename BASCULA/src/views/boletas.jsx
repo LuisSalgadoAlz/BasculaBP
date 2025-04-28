@@ -2,9 +2,9 @@ import { use, useCallback, useEffect, useState } from "react";
 import { ButtonAdd, ButtonAddBoleta } from "../components/buttons";
 import ViewBoletas from "../components/boletas/viewBoletas";
 import CardHeader from "../components/card-header";
-import { ModalBoletas, ModalNormal, ModalOut, VisualizarBoletas } from "../components/boletas/formBoletas";
+import { CancelarBoleta, ModalBoletas, ModalNormal, ModalOut, VisualizarBoletas } from "../components/boletas/formBoletas";
 import { initialSateDataFormSelet, initialStateFormBoletas, initialStateStats } from "../constants/boletas";
-import { formaterData, getAllDataForSelect, postBoletasNormal, getDataBoletas, getStatsBoletas, formaterDataNewPlaca, verificarDataNewPlaca, getDataParaForm, updateBoletaOut, verificarDataCompleto, postBoletasCasulla, getDataBoletasCompletadas, getDataBoletasPorID } from "../hooks/formDataBoletas";
+import { formaterData, getAllDataForSelect, postBoletasNormal, getDataBoletas, getStatsBoletas, formaterDataNewPlaca, verificarDataNewPlaca, getDataParaForm, updateBoletaOut, verificarDataCompleto, postBoletasCasulla, getDataBoletasCompletadas, getDataBoletasPorID, updateCancelBoletas } from "../hooks/formDataBoletas";
 import { ModalErr, ModalSuccess } from "../components/alerts";
 import { AnimatePresence } from "framer-motion";
 
@@ -35,8 +35,9 @@ const Boletas = () => {
    */
 
   const [outBol, setOutBol] = useState(false);
-
-
+  const [cancelBol, setCancelBol] = useState(false) 
+  const [idCancelBol, setIdCancelBol] = useState()
+  const [isLoadCancel, setIsLoadCancel] = useState()
   /**
    * Variables tercera parte
    */
@@ -219,6 +220,42 @@ const Boletas = () => {
     setDataDetails(response)
   }
 
+  /**
+   * TODO: Area para cancelar boletas
+   */
+
+  const handleCloseCancelModal = () => {
+    setCancelBol(false)
+    /* Aqui reiniciaremos el form */
+  }
+
+  const handleCancelBoleta = (info) => {
+    setCancelBol(true)
+    setIdCancelBol(info)
+    console.log(info)
+  }
+
+  const handleChangeCancelModal = (e) => {
+    const { name, value } = e.target
+
+    setIdCancelBol((prev)=>({
+      ...prev, [name] : value
+    }))
+  }
+
+  const handleSubmitCancelBol = async() => {
+    if (!idCancelBol.Motivo) {
+      setErr(true) 
+      setMsg('Debe de ingresar un motivo')
+      return
+    }
+    await updateCancelBoletas(idCancelBol, setIsLoadCancel)
+    setCancelBol(false)
+    setIdCancelBol('')
+    fetchData()
+    fechDataSeaSearch()
+  }
+  
   const fetchData = useCallback(() => {
     getAllDataForSelect(modalEspecial ? 1 : '', plc, formBoletas.Socios, formBoletas.Transportes, formBoletas.Motoristas, setDataSelects);
     getDataBoletas(setDataTable, setSsLoadTable, search, searchDate, pagination);
@@ -303,6 +340,7 @@ const Boletas = () => {
     completadas: dataTableCompletadas, 
     handlePaginationCompletadas,
     hdlOpenDetails: handleOpenDetails,
+    hdlCancel: handleCancelBoleta,
   };
 
   return (
@@ -342,6 +380,7 @@ const Boletas = () => {
       {/* Area para ver los detalles de las boletas completas */}
       <AnimatePresence>
         {details && (<VisualizarBoletas hdlClose={handleCloseDetails} boletas={dataDetails}/>)}
+        {cancelBol && (<CancelarBoleta boletas={idCancelBol} hdlClose={handleCloseCancelModal} hdlSubmitCancel={handleSubmitCancelBol} hdlChange={handleChangeCancelModal} isLoad={isLoadCancel}/>)}
       </AnimatePresence>
     </>
   );

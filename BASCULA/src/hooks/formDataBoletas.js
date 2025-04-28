@@ -247,6 +247,34 @@ export const getPrintEpson = async (id, setIsLoading) => {
   }
 };
 
+export const updateCancelBoletas = async (boleta, setIsLoading) => {
+  try {
+    setIsLoading(true)
+    const response = await fetch(`${URLHOST}boletas/cancelar/${boleta.Id}`, {
+      method: "PUT",
+      body: JSON.stringify(boleta),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: Cookies.get('token'),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API");
+    }
+
+    const msg = await response.json()
+
+    if (response.ok) {
+      return msg;
+    }
+  } catch (error) {
+    console.error("Error al obtener los datos:", error);
+  } finally {
+    setIsLoading(false)
+  }
+};
+
 /**
  * Area para calendario
  * Mes

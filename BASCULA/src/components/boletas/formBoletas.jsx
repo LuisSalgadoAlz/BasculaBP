@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import SelectFormBoletas from "./select";
 import { InputsFormBoletas, PartInputsPesos, PartInputsPesos2, PartPesosDeSalida, TransladoExterno, TransladoInterno, TransladoNormal } from "./inputs";
-import { buttonCalcular, buttonCancel, buttonClean, buttonSave, claseFormInputs, classFormSelct, } from "../../constants/boletas";
-import { URLWEBSOCKET } from "../../constants/global";
-import { ModalPrevisual } from "../alerts";
+import { buttonCalcular, buttonCancel, buttonClean, buttonDanger, buttonSave, claseFormInputs, classFormSelct, } from "../../constants/boletas";
+import { propsMotionHijo, propsMotionPadre, URLWEBSOCKET } from "../../constants/global";
+import { MiniSpinner, ModalPrevisual } from "../alerts";
 import { motion } from "framer-motion";
 import { IoCloseSharp } from "react-icons/io5";
 import { ButtonPrint } from "../buttons";
@@ -413,5 +413,37 @@ export const VisualizarBoletas = (props) => {
         </div>
       </motion.div>
     </div>
+  );
+};
+
+export const CancelarBoleta = (props) => {
+  const { 
+    boletas,
+    hdlClose, 
+    hdlSubmitCancel,
+    hdlChange,
+    isLoad
+  }  = props
+
+  return (
+    <motion.div {...propsMotionPadre} className="fixed inset-0 flex items-center justify-center bg-opacity-50 z-40 min-h-screen overflow-auto bg-opa-50">
+      <motion.div {...propsMotionHijo} className="bg-white min-w-[20vw] min-h-[20vh] max-w-[40vw] max-sm:overflow-auto max-sm:min-h-[0px] shadow-lg overflow-y-auto boletas border-8 border-white px-10 py-5 max-sm:p-10">
+        <div className="mb-1 flex items-center justify-between gap-7">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800">Cancelar Boleta: #{boletas?.Id} / {boletas?.Placa}</h2>
+            <p className="text-sm text-black mt-2 font-extrabold">Advertencia: Estás a punto de cancelar una boleta de peso de carga. Esta acción es crítica y no se puede deshacer. </p>
+          </div>
+          <button className="text-4xl" onClick={hdlClose}><IoCloseSharp /></button>
+        </div>
+        
+        <div className="mt-4">
+          <InputsFormBoletas data={claseFormInputs} name={'Motivo'} fun={hdlChange}/>
+        </div>
+
+        <div className="mt-4 flex justify-end">
+          <button disabled={isLoad} className={buttonDanger} onClick={hdlSubmitCancel}>{!isLoad ? <span>Cancelar Boleta</span> : <MiniSpinner />}</button>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 };

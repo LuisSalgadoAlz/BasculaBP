@@ -18,6 +18,7 @@ const ViewBoletas = (props) => {
     completadas,
     handlePaginationCompletadas,
     hdlOpenDetails,
+    hdlCancel
   } = props;
 
   const [modeViewComplete, setModeViewComplete] = useState(false);
@@ -50,7 +51,7 @@ const ViewBoletas = (props) => {
 
       return (
         <>
-          <TableBoletas datos={boletas.data} fun={hdlOut} />
+          <TableBoletas datos={boletas.data} fun={hdlOut} funCancel={hdlCancel}/>
           {boletas.pagination.totalPages > 1 && (
             <Pagination
               pg={pagination}

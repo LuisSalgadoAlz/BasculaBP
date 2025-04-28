@@ -40,3 +40,17 @@ export const Proceso = [
         nombre : 'Salida de material'
     },
 ]
+
+export const propsMotionPadre = {
+    initial : { scale: 1, opacity: 1, y: 0 },
+    animate : { scale: 1, opacity: 1, y: 0 },
+    exit : { scale: 1, opacity: 0, y: 0 },
+    transition : { duration: 0.7, ease: [0.22, 1, 0.36, 1] },
+}
+
+export const propsMotionHijo = {
+    initial:{ scale: 0.1, opacity: 0, y: 50 },
+    animate:{ scale: 1, opacity: 1, y: 0 },
+    exit:{ scale: 0.1, opacity: 0, y: 50 },
+    transition:{ duration: 0.7, ease: [0.22, 1, 0.36, 1] },
+}

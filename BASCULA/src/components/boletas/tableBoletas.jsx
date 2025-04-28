@@ -4,8 +4,9 @@ import { FaArrowUp } from "react-icons/fa6";
 import { FaArrowDown } from "react-icons/fa6";
 import { IoWarningOutline } from "react-icons/io5";
 import { GoIssueClosed } from "react-icons/go";
+import { MdOutlineCancel } from "react-icons/md";
 
-export const TableBoletas = ({ datos = [{}], fun, tipo = 0 }) => {
+export const TableBoletas = ({ datos = [{}], fun, tipo = 0, funCancel }) => {
   return (
     <>
       <div className="relative overflow-x-auto min-h-[400px]">
@@ -18,6 +19,11 @@ export const TableBoletas = ({ datos = [{}], fun, tipo = 0 }) => {
                     {el}
                   </th>
                 )
+              )}
+              {tipo == 0 && (
+                <th scope="col" className="px-6 py-3 text-center">
+                  Cancelar
+                </th>
               )}
               <th scope="col" className="px-6 py-3 text-center">
                 {tipo == 0 ? "Salida" : "Detalles"}
@@ -69,6 +75,18 @@ export const TableBoletas = ({ datos = [{}], fun, tipo = 0 }) => {
                         )}
                       </td>
                     )
+                )}
+                {tipo == 0 && (
+                  <td className="py-3 text-center">
+                    <button
+                      className="font-medium text-gray-800 hover:underline text-center"
+                      onClick={() => funCancel(fila)}
+                    >
+                      <span className="text-center">
+                        <MdOutlineCancel className="text-2xl" />
+                      </span>
+                    </button>
+                  </td>
                 )}
                 <td className="py-3 text-center">
                   <button
