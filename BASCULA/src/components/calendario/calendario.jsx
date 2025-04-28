@@ -100,7 +100,7 @@ export const Calendario = () => {
               height="550px"
               dayCellClassNames={() => ['custom-day-cell']}
               eventContent={(arg) => (
-                <div style={{ textAlign: 'center' }}>
+                <div style={{ textAlign: 'center',}}>
                   {arg.event.title}
                 </div>
               )}

@@ -246,3 +246,12 @@ a.active {
 .rct-scroll{
   width: 100%!important;
 }
+
+.fc-day-today div{
+  background-color: hsl(var(--sidebar))!important;
+  color: white!important; 
+}
+.fc-day-today:hover{
+  background-color: hsl(var(--sidebar))!important;
+  color: white!important; 
+}
