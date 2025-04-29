@@ -48,6 +48,13 @@ const imprimirEpson = (boleta) => {
   const fueraTol = boleta.estado === 'Completo(Fuera de tolerancia)';
   const msg = fueraTol ? `${BOLD_CENTERED} *****  F U E R A  D E  T O L E R A N C I A  ***** ${LEFT}` : '';
 
+
+  /**
+   * IDENTIFICADOR DE TARA Y PESO BRUTO
+   */
+  const TARA = boleta.proceso == 0 ? boleta.pesoFinal : boleta.pesoInicial
+  const PESOBRUTO = boleta.proceso == 0 ? boleta.pesoInicial : boleta.pesoFinal
+
   /**
    * Detecion de reimprisiones
    */
@@ -71,8 +78,8 @@ ${BOLD_ON}Destino       :${BOLD_OFF} ${quitarAcentos(destino)}
 ${BOLD_ON}Producto      :${BOLD_OFF} ${quitarAcentos(boleta.producto)}
 ${WATERMARK_MSG}${LINE}
 
-${BOLD_ON}Peso Tara     :${BOLD_OFF} ${stringtruncado(`${boleta.pesoInicial} lb`, 27)}${BOLD_ON}Peso Teorico  :${BOLD_OFF} ${String(boleta.pesoTeorico).trim()} lb ${BOLD_ON}
-${BOLD_ON}Peso Bruto    :${BOLD_OFF} ${stringtruncado(`${boleta.pesoFinal} lb`, 27)}${BOLD_ON}Desviacion    :${BOLD_OFF} ${String(boleta.desviacion).trim()} lb ${BOLD_ON}
+${BOLD_ON}Peso Tara     :${BOLD_OFF} ${stringtruncado(`${TARA} lb`, 27)}${BOLD_ON}Peso Teorico  :${BOLD_OFF} ${String(boleta.pesoTeorico).trim()} lb ${BOLD_ON}
+${BOLD_ON}Peso Bruto    :${BOLD_OFF} ${stringtruncado(`${PESOBRUTO} lb`, 27)}${BOLD_ON}Desviacion    :${BOLD_OFF} ${String(boleta.desviacion).trim()} lb ${BOLD_ON}
 ${BOLD_ON}Peso Neto     :${BOLD_OFF} ${stringtruncado(`${String(boleta.pesoNeto).trim()} lb`, 27)} ${BOLD_ON}                  
 ${msg}${LINE}
 

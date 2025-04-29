@@ -318,7 +318,8 @@ export const VisualizarBoletas = (props) => {
     return `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
   };
   
-
+  const TARA = boletas ? boletas?.proceso == 0 ? boletas?.pesoFinal : boletas?.pesoInicial : 0
+  const PESOBRUTO = boletas ? boletas?.proceso == 0 ? boletas?.pesoInicial : boletas?.pesoFinal : 0
 
   return (
     <div className="fixed inset-0 bg-opacity-50 z-50 min-h-screen overflow-auto ">
@@ -395,8 +396,8 @@ export const VisualizarBoletas = (props) => {
                 <span className="text-md text-white border-2 p-4 bg-green-900 rounded-sm mb-4">{boletas?.estado}</span>
               ):(boletas?.estado=='Cancelada' ? (<span className="text-md text-white border-2 p-4 bg-yellow-900 rounded-sm mb-4">{boletas?.estado}</span>):(<span className="text-md text-white border-2 p-4 bg-red-900 rounded-sm mb-4">{boletas?.estado}</span>))}
 
-              <span className="text-md text-gray-700 flex justify-between"><span>Peso Inicial:</span><span>{boletas?.pesoInicial ? boletas?.pesoInicial : 0} lb</span></span>
-              <span className="text-md text-gray-700 flex justify-between"><span>Peso Final:</span><span>{boletas?.pesoFinal ? boletas?.pesoFinal: 0} lb</span></span>
+              <span className="text-md text-gray-700 flex justify-between"><span>Peso Tara:</span><span>{TARA} lb</span></span>
+              <span className="text-md text-gray-700 flex justify-between"><span>Peso Bruto:</span><span>{PESOBRUTO} lb</span></span>
               <hr className="text-gray-400"/>
               <span className="text-md text-gray-700 flex justify-between"><span>Peso Neto:</span><span>{boletas?.pesoNeto ? boletas?.pesoNeto :0} lb</span></span>
               <span className="text-md text-gray-700 flex justify-between"><span>Peso Teorico:</span><span>{boletas?.pesoTeorico ? boletas?.pesoTeorico: 0} lb</span></span>
