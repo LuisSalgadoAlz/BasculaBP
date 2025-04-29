@@ -293,6 +293,7 @@ export const getBoletasMes = async (fun, start, end) => {
     }
 
     const data = await response.json();
+    console.log(data)
     fun(data)
   } catch (error) {
     console.error("Error al obtener los clientes:", error);

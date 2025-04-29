@@ -158,10 +158,10 @@ const TimelineComponent = ({groups, items, defaultTime}) => {
         groups={groups}
         items={reFactorItems}
         sidebarContent={null}
-        defaultTimeStart={new Date(defaultTime)}  // Comienza a las 00:00 horas del 1 de abril
+        defaultTimeStart={new Date(defaultTime)}  // Comienza a las 00:00 horas
         defaultTimeEnd={new Date(end)}
         maxTime={new Date(end)} 
-        minTime={new Date(defaultTime)}  // Termina a las 00:00 horas del 2 de abril
+        minTime={new Date(defaultTime)}  // Termina a las 00:00 
         minZoom={60 * 60 * 1000}  // Mínimo zoom: 1 hora
         maxZoom={24 * 60 * 60 * 1000}  // Máximo zoom: 24 horas
         itemTouchSendsClick={false}

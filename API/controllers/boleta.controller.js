@@ -920,24 +920,25 @@ const getBoletasMes = async(req, res) => {
     const start = req.query.start || '';
     const end = req.query.end || '';
 
-  const result = await db.$queryRaw`
-    SELECT CONVERT(DATE, fechaFin) as fecha, COUNT(*) as cantidad
+    const result = await db.$queryRaw`
+    SELECT  CONVERT(DATE, fechaInicio AT TIME ZONE 'UTC' AT TIME ZONE 'Central Standard Time') as fecha, COUNT(*) as cantidad
     FROM boleta
-    WHERE fechaFin >= ${start} AND fechaFin <= ${end}
-    GROUP BY CONVERT(DATE, fechaFin)
+    WHERE fechaInicio >= ${start} AND fechaInicio <= ${end}
+    GROUP BY CONVERT(DATE, fechaInicio AT TIME ZONE 'UTC' AT TIME ZONE 'Central Standard Time')
     ORDER BY fecha
   `;
-
+  
+  console.log(result)
   const makeCalendar = result.map((item) => ({
     title: `Boletas creadas: ${item.cantidad}`,
-    start: new Date(new Date(item.fecha).getTime() + (new Date(item.fecha).getTimezoneOffset() * 60000)),
+    start: item.fecha.toISOString().split('T')[0],  
     allDay: true,
     display: 'auto',
     textColor: 'black',
     backgroundColor: 'transparent', 
     borderColor: 'transparent', // Cambiado a transparente
   }));
-  
+
     res.send(makeCalendar)
   }catch(err) {
     console.log(err)
