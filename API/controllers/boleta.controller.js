@@ -519,15 +519,15 @@ const getBoletasCompletadasDiarias = async(req, res) => {
     
     if (searchDate !== '') {
       const [year, month, day] = searchDate.split('-').map(Number);
-      startOfDay = new Date(Date.UTC(year, month - 1, day, 0, 0, 0));
-      endOfDay = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
+      startOfDay = new Date(Date.UTC(year, month - 1, day, 6, 0, 0));
+      endOfDay = new Date(Date.UTC(year, month - 1, day+1, 5, 59, 59, 999));
     } else {
       const now = new Date();
       const year = now.getUTCFullYear();
       const month = now.getUTCMonth();
       const day = now.getUTCDate();
-      startOfDay = new Date(Date.UTC(year, month, day, 0, 0, 0));
-      endOfDay = new Date(Date.UTC(year, month, day, 23, 59, 59, 999));
+      startOfDay = new Date(Date.UTC(year, month, day, 6, 0, 0));
+      endOfDay = new Date(Date.UTC(year, month, day+1, 5, 59, 59, 999));
     }
 
     const data = await db.boleta.findMany({
@@ -928,7 +928,6 @@ const getBoletasMes = async(req, res) => {
     ORDER BY fecha
   `;
   
-  console.log(result)
   const makeCalendar = result.map((item) => ({
     title: `Boletas creadas: ${item.cantidad}`,
     start: item.fecha.toISOString().split('T')[0],  
