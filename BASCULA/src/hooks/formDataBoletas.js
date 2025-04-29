@@ -419,13 +419,13 @@ export const verificarDataCompleto = (funError, data, setMsg, pesoIn) => {
 
   /* idPlaca observaciones ordenDeTransferencia pesoInicial pesoTeorico*/
 
-  if(proceso == 0 && pesoIn<pesoFinal){
+  if(proceso == 0 && pesoIn<=pesoFinal){
     setMsg('Advertencia: peso inicial debe ser mayor al peso final)')
     funError(true)
     return false
   }
 
-  if(proceso == 1 && pesoIn>pesoFinal){
+  if(proceso == 1 && pesoIn>=pesoFinal){
     setMsg('Advertencia: peso final debe ser mayor al peso de inicial)')
     funError(true)
     return false
