@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -8,6 +8,7 @@ import { getBoletasMes, getTimeLineDetails } from "../../hooks/formDataBoletas";
 import { motion, AnimatePresence } from "framer-motion";
 import { calendarVariants, expandedVariants } from "../../constants/boletas";
 import Timeline from 'react-calendar-timeline';
+import {BigSpinner, NoData, Spinner} from '../alerts'
 import 'react-calendar-timeline/style.css';
 import moment from 'moment';
 import 'moment/locale/es'; // Asegúrate de importar el idioma
@@ -20,7 +21,8 @@ export const Calendario = () => {
   const [expandedDate, setExpandedDate] = useState(null);
   const [currentView, setCurrentView] = useState('dayGridMonth');
   const [detailsDaySeletect, setDetailsSelect] = useState({groups:[], items:[]});
-
+  const [isLoading, setIsloading]= useState(false)
+  const [isLoadData, setIsLoadData] = useState(false)
   /**
    * Clicks en el dia
    * @param {} info 
@@ -30,7 +32,10 @@ export const Calendario = () => {
     if (type === 'dayGridMonth') {
       setExpandedDate(date);
       setCurrentView('timeGridDay');
-      await getTimeLineDetails(setDetailsSelect, date)
+      setDetailsSelect({groups:[], items:[]})
+      await getTimeLineDetails(setDetailsSelect, date, setIsloading)
+      console.log(detailsDaySeletect)
+
     }
   };
 
@@ -43,17 +48,16 @@ export const Calendario = () => {
     if (type === 'dayGridMonth') {
       setExpandedDate(start);
       setCurrentView('timeGridDay');
-      await getTimeLineDetails(setDetailsSelect, start)
+      setDetailsSelect({groups:[], items:[]})
+      await getTimeLineDetails(setDetailsSelect, start, setIsloading)
+      console.log(detailsDaySeletect)
     }
   };
 
   const handleEventButtons = async(info) => {
     const { currentStart, currentEnd, type } = info.view;
     if (type === 'dayGridMonth') {
-      getBoletasMes(setDateBolCalendar, new Date(currentStart).toISOString(), new Date(currentEnd).toISOString());
-    }
-    if (type === 'timeGridDay'){
-      console.log(info)
+      getBoletasMes(setDateBolCalendar, new Date(currentStart).toISOString(), new Date(currentEnd).toISOString(), setIsLoadData);
     }
   };
 
@@ -71,6 +75,7 @@ export const Calendario = () => {
 
   return (
     <div className="p-6 relative min-h-[600px]">
+      {isLoadData && !dateBolCalendar && <BigSpinner />}
       <AnimatePresence mode="wait">
         {currentView !== 'timeGridDay' ? (
           <motion.div
@@ -80,7 +85,7 @@ export const Calendario = () => {
             exit="exit"
             variants={calendarVariants}
             transition={{ duration: 0.3 }}
-            className="h-full"
+            className={`h-full ${isLoadData && !dateBolCalendar ? 'hidden' : ''}`}
           >
             <FullCalendar
               plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
@@ -129,11 +134,19 @@ export const Calendario = () => {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
             >
-              <TimelineComponent 
-                groups={detailsDaySeletect ? detailsDaySeletect?.groups : []} 
-                items={detailsDaySeletect ? detailsDaySeletect?.items : []} 
-                defaultTime = {expandedDate}
-              />
+                {isLoading ? (
+                  <BigSpinner />
+                ) : !detailsDaySeletect || detailsDaySeletect.groups.length === 0 ? (
+                  <div className="min-h-[80vh] flex items-center justify-center">
+                    <NoData />
+                  </div>
+                ) : (
+                  <TimelineComponent 
+                    groups={detailsDaySeletect.groups} 
+                    items={detailsDaySeletect.items} 
+                    defaultTime={expandedDate}
+                  />
+                )}
             </motion.div>
           </motion.div>
         )}

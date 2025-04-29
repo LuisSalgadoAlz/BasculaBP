@@ -153,6 +153,16 @@ export const Spinner = () => {
 };
 
 
+
+export const BigSpinner = () => {
+  return (
+    <div className="flex justify-center items-center py-60">
+      <div className="h-12 w-12 animate-spin rounded-full border-4 border-solid border-gray-300 border-t-[#5A3F27]" />
+    </div>
+  );
+};
+
+
 export const MiniSpinner = () => { 
   return (
       <div className="h-4 w-4 animate-spin rounded-full border-4 border-solid border-gray-300 border-t-[#5A3F27]" />

@@ -279,8 +279,9 @@ export const updateCancelBoletas = async (boleta, setIsLoading) => {
  * Area para calendario
  * Mes
  */
-export const getBoletasMes = async (fun, start, end) => {
+export const getBoletasMes = async (fun, start, end, setIsLoading) => {
   try {
+    setIsLoading(true)
     const response = await fetch(`${URLHOST}boletas/calendario/mes?start=${start}&end=${end}`, {
       method: "GET",
       headers: {
@@ -293,10 +294,11 @@ export const getBoletasMes = async (fun, start, end) => {
     }
 
     const data = await response.json();
-    console.log(data)
     fun(data)
   } catch (error) {
     console.error("Error al obtener los clientes:", error);
+  } finally {
+    setIsLoading(false)
   }
 };
 
@@ -304,8 +306,9 @@ export const getBoletasMes = async (fun, start, end) => {
  * Area para calendario
  * Mes
  */
-export const getTimeLineDetails = async (fun, fecha,) => {
+export const getTimeLineDetails = async (fun, fecha,setIsLoading) => {
   try {
+    setIsLoading(true)
     const response = await fetch(`${URLHOST}boletas/calendario/mes/detalles?fecha=${fecha}`, {
       method: "GET",
       headers: {
@@ -321,6 +324,8 @@ export const getTimeLineDetails = async (fun, fecha,) => {
     fun(data)
   } catch (error) {
     console.error("Error al obtener los clientes:", error);
+  } finally{
+    setIsLoading(false)
   }
 };
 
