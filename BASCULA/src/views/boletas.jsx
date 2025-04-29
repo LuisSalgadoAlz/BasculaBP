@@ -154,7 +154,8 @@ const Boletas = () => {
 
   const handleCompleteOut = async() => {
     const response = formaterData(formBoletas)
-    const isCorrect = verificarDataCompleto(setErr, response, setMsg)
+    const isCorrect = verificarDataCompleto(setErr, response, setMsg, formBoletas?.pesoIn)
+    console.log(response)
     if (isCorrect) {
       await updateBoletaOut(response, formBoletas.idBoleta, setIsLoading)
       setSuccess(true)

@@ -374,7 +374,7 @@ export const formaterData = (formBoletas) => {
 
 
 export const verificarDataNewPlaca = (funError, data, setMsg) => {
-  const {idCliente, idUsuario, idMotorista, idPlaca, idEmpresa } = data 
+  const {idCliente, idUsuario, idMotorista, idPlaca, idEmpresa, pesoInicial } = data 
 
   /* pesoInicial */
 
@@ -390,16 +390,16 @@ export const verificarDataNewPlaca = (funError, data, setMsg) => {
     return false
   }
   
-/*   if (pesoInicial <= 0 ) {
+  if (pesoInicial <= 0 ) {
     funError(true)
-    setMsg('Por favor, el peso no debe de ser 0.')
+    setMsg('Por favor, el peso inicial no debe de ser menor o igual a 0')
     return false
-  }  */
+  }  
 
   return true
 };
 
-export const verificarDataCompleto = (funError, data, setMsg) => {
+export const verificarDataCompleto = (funError, data, setMsg, pesoIn) => {
   const {
     idCliente,
     idDestino,
@@ -413,12 +413,23 @@ export const verificarDataCompleto = (funError, data, setMsg) => {
     manifiesto,
     ordenDeCompra,
     proceso, 
-    ordenDeTransferencia
+    ordenDeTransferencia,
+    pesoFinal
   } = data;
 
   /* idPlaca observaciones ordenDeTransferencia pesoInicial pesoTeorico*/
 
-  console.log(data)
+  if(proceso == 0 && pesoIn<pesoFinal){
+    setMsg('Advertencia: peso inicial debe ser mayor al peso final)')
+    funError(true)
+    return false
+  }
+
+  if(proceso == 1 && pesoIn>pesoFinal){
+    setMsg('Advertencia: peso final debe ser mayor al peso de inicial)')
+    funError(true)
+    return false
+  }
   
   if (!idCliente || !idEmpresa || !idMotorista || !idMovimiento || !idProducto) {
     setMsg('Por favor, ingresar todos los datos primer nivel: cliente, transporte, motorista, movimiento, producto')
@@ -453,6 +464,12 @@ export const verificarDataCompleto = (funError, data, setMsg) => {
 
   if ((idMovimiento==11 || idMovimiento==10) && !ordenDeTransferencia) {
     setMsg('Por favor, ingresar todos los datos cuarto nivel: orden de transferencia')
+    funError(true)
+    return false
+  }
+
+  if (pesoFinal <= 0) {
+    setMsg('El peso final debe ser mayor que 0')
     funError(true)
     return false
   }
