@@ -1,7 +1,6 @@
 const fs = require('fs');
 const { exec } = require('child_process');
-const { PrismaClient } = require("@prisma/client");
-const db = new PrismaClient();
+const db = require('../lib/prisma')
 
 const imprimirEpson = (boleta) => {
   const filePath = 'boleta_epson.txt';

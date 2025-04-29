@@ -1,6 +1,5 @@
-const {PrismaClient} = require('@prisma/client')
+const db = require('../lib/prisma')
 const dotenv = require('dotenv')
-const db = new PrismaClient()
 
 /* Listar usuarios */
 const getMotoristasParaBoletas = async (req, res) => {   

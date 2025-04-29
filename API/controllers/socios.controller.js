@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
+const db = require('../lib/prisma')
 const dotenv = require("dotenv");
-const db = new PrismaClient();
 
 const getSocios = async (req, res) => {
   const page = parseInt(req.query.page) || 1 ;  

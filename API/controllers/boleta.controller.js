@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
+const db = require('../lib/prisma')
 const dotenv = require("dotenv");
-const db = new PrismaClient();
 const jwt = require("jsonwebtoken");
 const imprimirEpson = require("./impresiones.controller");
 
