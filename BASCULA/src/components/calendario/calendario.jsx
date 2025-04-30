@@ -166,7 +166,7 @@ const TimelineComponent = ({groups, items, defaultTime}) => {
   }))
 
   return (
-    <div>
+    <div className="border-gray-300 p-4 rounded-2xl">
       <Timeline
         groups={groups}
         items={reFactorItems}
@@ -180,6 +180,7 @@ const TimelineComponent = ({groups, items, defaultTime}) => {
         itemTouchSendsClick={false}
         itemHeightRatio={0.75}
         canMove={false}
+        lineHeight={50} 
       />
     </div>
   );
