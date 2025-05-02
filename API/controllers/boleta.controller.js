@@ -1,7 +1,7 @@
 const db = require('../lib/prisma')
 const dotenv = require("dotenv");
 const jwt = require("jsonwebtoken");
-const imprimirEpson = require("./impresiones.controller");
+const {imprimirEpson} = require("./impresiones.controller");
 
 const getAllData = async (req, res) => {
   try {

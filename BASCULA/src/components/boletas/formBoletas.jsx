@@ -2,12 +2,12 @@ import { useEffect, useState } from "react";
 import SelectFormBoletas from "./select";
 import { InputsFormBoletas, PartInputsPesos, PartInputsPesos2, PartPesosDeSalida, TransladoExterno, TransladoInterno, TransladoNormal } from "./inputs";
 import { buttonCalcular, buttonCancel, buttonClean, buttonDanger, buttonSave, claseFormInputs, classFormSelct, } from "../../constants/boletas";
-import { propsMotionHijo, propsMotionPadre, URLWEBSOCKET } from "../../constants/global";
+import { propsMotionHijo, propsMotionPadre, URLHOST, URLWEBSOCKET } from "../../constants/global";
 import { MiniSpinner, ModalPrevisual } from "../alerts";
 import { motion } from "framer-motion";
 import { IoCloseSharp } from "react-icons/io5";
 import { ButtonPrint } from "../buttons";
-import { getPrintEpson } from "../../hooks/formDataBoletas";
+import { getConvertPdf, getPrintEpson } from "../../hooks/formDataBoletas";
 
 const formInputSelect = ['Transportes', 'Placa', 'Motoristas']
 
@@ -295,6 +295,11 @@ export const VisualizarBoletas = (props) => {
   const isNullData =  'Vacio'
   const pesoTolerado = boletas?.pesoTeorico * 0.005
 
+  const handleConvertPdf = async() => {
+    const url = `http://192.9.100.56:3000/api/boletas/pdf/bol/${boletas?.id}`;
+    window.open(url, '_blank');
+  }
+
   const handlePrint = async() => {
     const response = await getPrintEpson(boletas?.id, setIsLoadImpresion)
     console.log('Imprimiendo...')
@@ -413,7 +418,7 @@ export const VisualizarBoletas = (props) => {
 
         {/* Impresiones */}
         <div className="flex items-center justify-end gap-2 mt-4">
-          <button className={buttonClean}>Convertir a PDF</button>
+          <button className={buttonClean} onClick={handleConvertPdf}>Convertir a PDF</button>
           <ButtonPrint name={'Imprimir'} fun={handlePrint} isLoad={isLoadImpresion}/>
         </div>
       </motion.div>

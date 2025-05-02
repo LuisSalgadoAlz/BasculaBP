@@ -14,6 +14,7 @@ const {
   getTimeLineForComponent,
   updateCancelBoletas
 } = require("../controllers/boleta.controller");
+const { imprimirPDF } = require("../controllers/impresiones.controller.js");
 const verificarToken = require("../middlewares/authJWT.js");
 
 boletas.get("/", getAllData);
@@ -25,6 +26,7 @@ boletas.get("/historial", getBoletasHistorial)
 boletas.get("/historial/:id", getReimprimir)
 boletas.get("/calendario/mes", getBoletasMes)
 boletas.get("/calendario/mes/detalles", getTimeLineForComponent)
+boletas.get("/pdf/bol/:id", imprimirPDF)
 boletas.post("/", postBoletasNormal);
 boletas.post("/newPlaca", postBoleta);
 boletas.put("/:id", updateBoleta);

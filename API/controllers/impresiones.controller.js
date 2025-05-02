@@ -1,6 +1,7 @@
 const fs = require('fs');
 const { exec } = require('child_process');
 const db = require('../lib/prisma')
+const PDFDocument = require('pdfkit');
 
 const imprimirEpson = (boleta) => {
   const filePath = 'boleta_epson.txt';
@@ -123,4 +124,111 @@ const actualizarImpresion = async (id) => {
   }
 }
 
-module.exports = imprimirEpson;
+function formatearHora(fecha) {
+  return new Date(fecha).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+const imprimirPDF = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const boleta = await db.boleta.findUnique({
+      where: { id: parseInt(id) }
+    });
+
+    const doc = new PDFDocument({ margin: 40 });
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'inline; filename=boleta.pdf');
+
+    doc.pipe(res);
+
+    const LINE = '___________________________________________________________________________________';
+    const LABEL = boleta.proceso === 0 ? 'Proveedor     :' : 'Cliente       :';
+    const LABELSINSPACE = boleta.proceso === 0 ? 'Entrada' : 'Salida';
+
+    const TIEMPOPROCESO = boleta.fechaFin - boleta.fechaInicio;
+    const totalSegundos = Math.floor(TIEMPOPROCESO / 1000);
+    const horas = Math.floor(totalSegundos / 3600);
+    const minutos = Math.floor((totalSegundos % 3600) / 60);
+    const segundos = totalSegundos % 60;
+    const TIEMPOESTADIA = `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
+
+    const isTraslado = boleta.movimiento.includes('Traslado');
+    const origen = isTraslado ? boleta.trasladoOrigen : boleta.origen;
+    const destino = isTraslado ? boleta.trasladoDestino : boleta.destino;
+    const fueraTol = boleta.estado === 'Completo(Fuera de tolerancia)';
+    const isOriginal = boleta.impreso == null;
+
+    const TARA = boleta.proceso === 0 ? boleta.pesoFinal : boleta.pesoInicial;
+    const PESOBRUTO = boleta.proceso === 0 ? boleta.pesoInicial : boleta.pesoFinal;
+
+    const fechaAhora = new Date().toLocaleString('es-ES');
+    const fechaImpreso = boleta.impreso ? boleta.impreso.toLocaleString('es-ES') : '';
+
+    // Encabezado
+    doc.fontSize(18).text('BAPROSA', { align: 'center' });
+    doc.fontSize(14).text(`Boleta de Peso No. ${boleta.id}`, { align: 'center' });
+    doc.fontSize(12).text(`Proceso: ${LABELSINSPACE} - ${quitarAcentos(boleta.movimiento)} / Duración del Proceso: ${TIEMPOESTADIA}`, { align: 'center' });
+
+    doc.moveDown();
+
+    doc.fontSize(10).text(isOriginal ?
+      `Fecha         : ${stringtruncado(fechaAhora, 27)}` :
+      `Reimpreso     : ${stringtruncado(fechaAhora, 27)}    Impreso: ${fechaImpreso}`);
+
+    doc.moveDown();
+
+    // Datos generales
+    doc.text(`${LABEL} ${quitarAcentos(boleta.socio)}`);
+    doc.text(`Placa         : ${stringtruncado(boleta.placa, 20)}`, { continued: true })
+       .text(`Hora de Entrada : ${formatearHora(boleta.fechaInicio)}`);
+    doc.text(`Motorista     : ${stringtruncado(quitarAcentos(boleta.motorista), 20)}`, { continued: true })
+       .text(`Hora de Salida  : ${formatearHora(boleta.fechaFin)}`);
+    doc.text(`Transporte    : ${quitarAcentos(boleta.empresa)}`);
+    doc.text(`Origen        : ${quitarAcentos(origen)}`);
+    doc.text(`Destino       : ${quitarAcentos(destino)}`);
+    doc.text(`Producto      : ${quitarAcentos(boleta.producto)}`);
+
+    doc.moveDown();
+
+    // Marca de copia
+    if (!isOriginal) {
+      doc.font('Helvetica-Bold').text('***** C O P I A  |  C O P I A  |  C O P I A *****', { align: 'center' });
+      doc.font('Helvetica');
+    }
+
+    doc.text(LINE);
+
+    // Pesos
+    doc.text(`Peso Tara     : ${TARA} lb`, { continued: true })
+       .text(`Peso Teórico  : ${boleta.pesoTeorico} lb`);
+    doc.text(`Peso Bruto    : ${PESOBRUTO} lb`, { continued: true })
+       .text(`Desviación    : ${boleta.desviacion} lb`);
+    doc.text(`Peso Neto     : ${boleta.pesoNeto} lb`);
+
+    // Marca de fuera de tolerancia
+    if (fueraTol) {
+      doc.moveDown().font('Helvetica-Bold')
+         .text('***** F U E R A  D E  T O L E R A N C I A *****', { align: 'center' });
+      doc.font('Helvetica');
+    }
+
+    doc.text(LINE);
+
+    // Firma
+    doc.text(`Pesador       : ${stringtruncado(quitarAcentos(boleta.usuario), 20)}`, { continued: true })
+       .text(`Firma         : ________________`);
+
+    doc.moveDown();
+    doc.fontSize(10).text('www.baprosa.com | (504) 2222-2222', { align: 'center' });
+
+    doc.end();
+  } catch (err) {
+    console.log(err);
+  }
+};
+module.exports = {
+  imprimirEpson, 
+  imprimirPDF
+};

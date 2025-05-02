@@ -247,6 +247,26 @@ export const getPrintEpson = async (id, setIsLoading) => {
   }
 };
 
+export const getConvertPdf = async (id) => {
+  try {
+    const response = await fetch(`${URLHOST}boletas/pdf/bol/${id}`, {
+      method: "GET",
+      headers: {
+        Authorization: Cookies.get('token'),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API");
+    }
+
+    const data = await response.json();
+    return data
+  } catch (error) {
+    console.error("Error al obtener los clientes:", error);
+  }
+};
+
 export const updateCancelBoletas = async (boleta, setIsLoading) => {
   try {
     setIsLoading(true)
