@@ -522,9 +522,9 @@ const getBoletasCompletadasDiarias = async(req, res) => {
       endOfDay = new Date(Date.UTC(year, month - 1, day+1, 5, 59, 59, 999));
     } else {
       const now = new Date();
-      const year = now.getUTCFullYear();
-      const month = now.getUTCMonth();
-      const day = now.getUTCDate();
+      const year = now.getFullYear();      // Año local
+      const month = now.getMonth();        // Mes local (0 = enero)
+      const day = now.getDate();           // Día local
       startOfDay = new Date(Date.UTC(year, month, day, 6, 0, 0));
       endOfDay = new Date(Date.UTC(year, month, day+1, 5, 59, 59, 999));
     }
