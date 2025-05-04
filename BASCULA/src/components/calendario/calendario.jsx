@@ -160,10 +160,10 @@ const TimelineComponent = ({groups, items, defaultTime}) => {
   const end = new Date(defaultTime); // Tu fecha local GMT-6
   // Sumamos 1 día
   end.setDate(end.getDate() + 1); 
-
+  console.log(items)
   const reFactorItems = items.map((el) => ({
-    ...el,  start_time:new Date(new Date(el.start_time)), end_time:new Date(new Date(el.end_time))
-  }))
+    ...el,  start_time:new Date(el.start_time), end_time: el.end_time ? new Date(el.end_time) : new Date(), isDefaultEndTime: !el.end_time
+  })) 
 
   return (
     <div className="border-gray-300 p-4 rounded-2xl">
@@ -181,7 +181,87 @@ const TimelineComponent = ({groups, items, defaultTime}) => {
         itemHeightRatio={0.75}
         canMove={false}
         lineHeight={50} 
+        itemRenderer={itemRenderer}
       />
+    </div>
+  );
+};
+
+ // Función para renderizar items personalizados
+ const itemRenderer = ({ item, itemContext, getItemProps }) => {
+  const backgroundColor = item.isDefaultEndTime ? "red" : "#4b2e1c";
+  
+  const itemProps = getItemProps({
+    style: {
+      backgroundColor,
+      color: "white",
+      borderRadius: "4px",
+      boxShadow: "0 1px 5px rgba(0, 0, 0, 0.15)",
+    }
+  });
+  
+  // Formatear las fechas para mostrarlas en el tooltip
+  const startTime = new Date(item.start_time);
+  
+  const formatTime = (date) => {
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+  };
+  
+  const tooltipText = `Placa ${item.title}, boleta ${item.id} - Inicio: ${formatTime(startTime)} - Estado:  NO FINALIZADA`;
+  
+  return (
+    <div {...itemProps}>
+      <div style={{ 
+        padding: "4px 8px",
+        height: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        position: "relative"
+      }}>
+        {/* Título principal del evento */}
+        <div style={{ fontWeight: "bold" }}>
+          {item.title}
+        </div>
+        
+        {/* Indicador para elementos sin fecha de fin */}
+        {item.isDefaultEndTime && (
+          <div style={{ 
+            fontSize: "10px", 
+            backgroundColor: "rgba(255, 255, 255, 0.3)",
+            padding: "1px 4px",
+            borderRadius: "2px",
+            marginLeft: "4px"
+          }}>
+            ∞
+          </div>
+        )}
+        
+        {/* Tooltip SOLO para elementos sin fecha de fin */}
+        {item.isDefaultEndTime && (
+          <div className="timeline-tooltip" style={{ 
+            position: "absolute",
+            top: "0",
+            left: "calc(100% + 1rem)", // 1rem de separación
+            backgroundColor: "red",
+            color: "white", 
+            padding: "2px 6px",
+            borderRadius: "3px",
+            fontSize: "11px",
+            whiteSpace: "nowrap",
+            zIndex: 1000,
+            boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+            pointerEvents: "none",
+            height: "100%",
+            display: "flex",
+            alignItems: "center"
+          }}>
+            {tooltipText}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

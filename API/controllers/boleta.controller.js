@@ -964,7 +964,7 @@ const getTimeLineForComponent = async(req, res) => {
     });
     const groups = data.map((el)=>({
       id: el.id, 
-      title: el.placa + '-' + el.socio
+      title: el.placa + '(#' + el.id +')'
     }))
 
     const items = data.map((el)=>({

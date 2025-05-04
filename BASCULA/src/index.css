@@ -218,8 +218,7 @@ a.active {
 
 /* Cada elemento/grupo */
 .react-calendar-timeline .rct-item {
-  background-color: hsl(var(--sidebar)) !important; /* azul */
-  color: #ffffff !important;
+  color: transparent !important;
   border: none !important;
   border-radius: 2px !important;
   padding: 4px 8px !important;
