@@ -136,16 +136,28 @@ const imprimirPDF = async (req, res) => {
       where: { id: parseInt(id) }
     });
 
-    const doc = new PDFDocument({ margin: 40 });
+    // Configuración del documento con mejor tamaño y márgenes
+    const doc = new PDFDocument({ 
+      size: 'LETTER', 
+      margin: 50,
+      bufferPages: true 
+    });
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', 'inline; filename=boleta.pdf');
 
     doc.pipe(res);
 
-    const LINE = '___________________________________________________________________________________';
-    const LABEL = boleta.proceso === 0 ? 'Proveedor     :' : 'Cliente       :';
+    // Definición de colores en blanco y negro
+    const black = '#000000';
+    const darkGray = '#333333';
+    const midGray = '#666666';
+    const lightGray = '#EEEEEE';
+    const white = '#FFFFFF';
+
+    // Variables para datos de la boleta
     const LABELSINSPACE = boleta.proceso === 0 ? 'Entrada' : 'Salida';
+    const LABEL = boleta.proceso === 0 ? 'Proveedor' : 'Cliente';
 
     const TIEMPOPROCESO = boleta.fechaFin - boleta.fechaInicio;
     const totalSegundos = Math.floor(TIEMPOPROCESO / 1000);
@@ -166,68 +178,248 @@ const imprimirPDF = async (req, res) => {
     const fechaAhora = new Date().toLocaleString('es-ES');
     const fechaImpreso = boleta.impreso ? boleta.impreso.toLocaleString('es-ES') : '';
 
-    // Encabezado
-    doc.fontSize(18).text('BAPROSA', { align: 'center' });
-    doc.fontSize(14).text(`Boleta de Peso No. ${boleta.id}`, { align: 'center' });
-    doc.fontSize(12).text(`Proceso: ${LABELSINSPACE} - ${quitarAcentos(boleta.movimiento)} / Duración del Proceso: ${TIEMPOESTADIA}`, { align: 'center' });
+    // Funciones auxiliares para el diseño
+    const drawBorder = (x, y, width, height) => {
+      doc.rect(x, y, width, height)
+         .lineWidth(0.5)
+         .stroke(midGray);
+    };
 
-    doc.moveDown();
+    const drawSection = (title, x, y, width, height) => {
+      // Barra de título en gris oscuro
+      doc.fillColor(darkGray)
+         .rect(x, y, width, 20)
+         .fill();
+      
+      // Texto del título en blanco
+      doc.fillColor(white)
+         .font('Helvetica-Bold')
+         .fontSize(10)
+         .text(title, x + 10, y + 6);
+      
+      // Cuerpo de la sección en gris claro
+      doc.fillColor(lightGray)
+         .rect(x, y + 20, width, height - 20)
+         .fill()
+         .fillColor(black);
+      
+      // Borde para toda la sección
+      drawBorder(x, y, width, height);
+    };
 
-    doc.fontSize(10).text(isOriginal ?
-      `Fecha         : ${stringtruncado(fechaAhora, 27)}` :
-      `Reimpreso     : ${stringtruncado(fechaAhora, 27)}    Impreso: ${fechaImpreso}`);
+    const createLabelValue = (label, value, x, y, labelWidth = 90) => {
+      doc.font('Helvetica-Bold')
+         .fontSize(9)
+         .fillColor(darkGray)
+         .text(label, x, y);
+      
+      doc.font('Helvetica')
+         .fontSize(9)
+         .fillColor(black)
+         .text(value || '', x + labelWidth, y, { width: 230 - labelWidth });
+    };
 
-    doc.moveDown();
+    const createDataBox = (title, value, x, y, width, height) => {
+      // Título del cuadro
+      doc.fillColor(black)
+         .font('Helvetica-Bold')
+         .fontSize(8)
+         .text(title, x-10, y - 15);
+      
+      // Cuadro de datos
+      doc.rect(x-10, y, width, height)
+         .fillAndStroke(lightGray, midGray);
+      
+      // Valor dentro del cuadro
+      doc.fillColor(black)
+         .font('Helvetica-Bold')
+         .fontSize(9)
+         .text(value || '0', x, y + height/2 - 6, { 
+           width: width - 10,
+           align: 'center'
+         });
+    };
 
-    // Datos generales
-    doc.text(`${LABEL} ${quitarAcentos(boleta.socio)}`);
-    doc.text(`Placa         : ${stringtruncado(boleta.placa, 20)}`, { continued: true })
-       .text(`Hora de Entrada : ${formatearHora(boleta.fechaInicio)}`);
-    doc.text(`Motorista     : ${stringtruncado(quitarAcentos(boleta.motorista), 20)}`, { continued: true })
-       .text(`Hora de Salida  : ${formatearHora(boleta.fechaFin)}`);
-    doc.text(`Transporte    : ${quitarAcentos(boleta.empresa)}`);
-    doc.text(`Origen        : ${quitarAcentos(origen)}`);
-    doc.text(`Destino       : ${quitarAcentos(destino)}`);
-    doc.text(`Producto      : ${quitarAcentos(boleta.producto)}`);
+    // ============ ENCABEZADO ============
+    // Borde del encabezado completo
+    drawBorder(50, 50, doc.page.width - 100, 60);
+    
+    // Logo y título
+    doc.image('logo.png', 60, 55, { width: 40 })
+       .fontSize(16)
+       .font('Helvetica-Bold')
+       .fillColor(black)
+       .text('BAPROSA', 110, 60);
+    
+    doc.fontSize(10)
+       .font('Helvetica')
+       .fillColor(midGray)
+       .text('Básculas y Procesos S.A.', 110, 80);
+    
+    // Información de boleta en la parte superior derecha
+    doc.font('Helvetica-Bold')
+       .fontSize(14)
+       .fillColor(black)
+       .text('BOLETA DE PESO', 380, 60, { width: 150, align: 'right' });
+    
+    doc.font('Helvetica-Bold')
+       .fontSize(12)
+       .fillColor(black)
+       .text(`N° ${boleta.id}`, 380, 80, { width: 150, align: 'right' });
 
-    doc.moveDown();
-
-    // Marca de copia
+    // Marca de copia u original
     if (!isOriginal) {
-      doc.font('Helvetica-Bold').text('***** C O P I A  |  C O P I A  |  C O P I A *****', { align: 'center' });
-      doc.font('Helvetica');
+      doc.font('Helvetica-Bold')
+         .fontSize(10)
+         .fillColor(black)
+         .text('COPIA', 50, 40);
+    } else {
+      doc.font('Helvetica-Bold')
+         .fontSize(10)
+         .fillColor(black)
+         .text('ORIGINAL', 75, 40);
     }
 
-    doc.text(LINE);
+    // Información de proceso (recuadro)
+    const infoBoxY = 120;
+    drawBorder(50, infoBoxY, doc.page.width - 100, 40);
+    
+    // Información del proceso (lado izquierdo)
+    doc.font('Helvetica-Bold')
+       .fontSize(10)
+       .fillColor(black)
+       .text(`Proceso: ${LABELSINSPACE} - ${quitarAcentos(boleta.movimiento)}`, 60, infoBoxY + 10);
+    
+    doc.font('Helvetica')
+       .fontSize(9)
+       .fillColor(midGray)
+       .text(`Fecha de impresión: ${stringtruncado(fechaAhora, 27)}`, 60, infoBoxY + 25);
+    
+    // Información del tiempo y reimpresión (lado derecho)
+    doc.font('Helvetica-Bold')
+       .fontSize(10)
+       .fillColor(black)
+       .text(`Tiempo de proceso: ${TIEMPOESTADIA}`, 380, infoBoxY + 10, { 
+         width: 150, 
+         align: 'right' 
+       });
+    
+    if (!isOriginal) {
+      doc.font('Helvetica')
+         .fontSize(9)
+         .fillColor(midGray)
+         .text(`Impresión original: ${fechaImpreso}`, 320, infoBoxY + 25, {
+           width: 210,
+           align: 'right'
+         });
+    }
 
-    // Pesos
-    doc.text(`Peso Tara     : ${TARA} lb`, { continued: true })
-       .text(`Peso Teórico  : ${boleta.pesoTeorico} lb`);
-    doc.text(`Peso Bruto    : ${PESOBRUTO} lb`, { continued: true })
-       .text(`Desviación    : ${boleta.desviacion} lb`);
-    doc.text(`Peso Neto     : ${boleta.pesoNeto} lb`);
-
-    // Marca de fuera de tolerancia
+    // ============ DATOS GENERALES ============
+    const contentY = 180;
+    
+    // Sección de datos generales
+    drawSection('DATOS GENERALES', 50, contentY, doc.page.width - 100, 100);
+    
+    // Primera columna
+    createLabelValue(`${LABEL}:`, quitarAcentos(boleta.socio), 60, contentY + 30);
+    createLabelValue('Placa:', stringtruncado(boleta.placa, 20), 60, contentY + 45);
+    createLabelValue('Motorista:', stringtruncado(quitarAcentos(boleta.motorista), 30), 60, contentY + 60);
+    createLabelValue('Transporte:', quitarAcentos(boleta.empresa), 60, contentY + 75);
+    
+    // Segunda columna
+    createLabelValue('Origen:', quitarAcentos(origen), 350, contentY + 30);
+    createLabelValue('Destino:', quitarAcentos(destino), 350, contentY + 45);
+    createLabelValue('Producto:', quitarAcentos(boleta.producto), 350, contentY + 60);
+    createLabelValue('Pesador:', stringtruncado(quitarAcentos(boleta.usuario), 30), 350, contentY + 75);
+    
+    // ============ REGISTRO DE TIEMPOS ============
+    const timeY = contentY + 120;
+    const boxWidth = (doc.page.width - 140) / 3;
+    const boxHeight = 40;
+    
+    // Sección de registro de tiempo
+    drawSection('REGISTRO DE TIEMPOS', 50, timeY, doc.page.width - 100, 100);
+    
+    createDataBox('HORA DE ENTRADA', boleta.fechaInicio.toLocaleString(), 70, timeY + 45, boxWidth, boxHeight);
+    createDataBox('HORA DE SALIDA', boleta.fechaFin.toLocaleString(), 80 + boxWidth, timeY + 45, boxWidth, boxHeight);
+    createDataBox('TIEMPO DE ESTADÍA', TIEMPOESTADIA, 90 + boxWidth * 2, timeY + 45, boxWidth, boxHeight);
+    
+    // ============ REGISTRO DE PESAJE ============
+    const weightY = timeY + 115;
+    drawSection('REGISTRO DE PESAJE', 50, weightY, doc.page.width - 100, 160);
+    
+    // Primera fila de pesos
+    createDataBox('PESO TARA (lb)', TARA, 70, weightY + 45, boxWidth, boxHeight);
+    createDataBox('PESO BRUTO (lb)', PESOBRUTO, 80 + boxWidth, weightY + 45, boxWidth, boxHeight);
+    createDataBox('PESO NETO (lb)', boleta.pesoNeto, 90 + boxWidth * 2, weightY + 45, boxWidth, boxHeight);
+    
+    // Segunda fila de pesos
+    createDataBox('PESO TEÓRICO (lb)', boleta.pesoTeorico, 70 + boxWidth/2, weightY + 110, boxWidth, boxHeight);
+    createDataBox('DESVIACIÓN (lb)', boleta.desviacion, 80 + boxWidth * 1.5, weightY + 110, boxWidth, boxHeight);
+    
+    // ============ ALERTA TOLERANCIA ============
     if (fueraTol) {
-      doc.moveDown().font('Helvetica-Bold')
-         .text('***** F U E R A  D E  T O L E R A N C I A *****', { align: 'center' });
-      doc.font('Helvetica');
+      const toleranceY = weightY + 130;
+      doc.rect(50, toleranceY, doc.page.width - 100, 30)
+         .fillAndStroke(darkGray, darkGray);
+      doc.fillColor(white)
+         .font('Helvetica-Bold')
+         .fontSize(14)
+         .text('FUERA DE TOLERANCIA', 0, toleranceY + 9, { align: 'center' });
+    }
+    
+    // ============ FIRMAS ============
+    const signY = weightY + (fueraTol ? 210 : 180);
+    
+    drawSection('AUTORIZACIONES', 50, signY, doc.page.width - 100, 70);
+    
+    // Líneas de firma
+    doc.strokeColor(midGray);
+    doc.lineWidth(0.5);
+    doc.moveTo(100, signY + 45).lineTo(250, signY + 45).stroke();
+    doc.font('Helvetica')
+       .fontSize(9)
+       .fillColor(midGray)
+       .text('Firma del Pesador', 140, signY + 50);
+    
+    doc.moveTo(350, signY + 45).lineTo(500, signY + 45).stroke();
+    doc.text('Firma de Conformidad', 380, signY + 50);
+    
+    // ============ PIE DE PÁGINA ============
+    // Finalizar el contenido principal antes de añadir el pie de página
+    doc.flushPages();
+    
+    // Ahora añadimos el pie de página
+    const pageHeight = doc.page.height;
+    
+    // Obtenemos el número total de páginas después de que todo el contenido se haya añadido
+    const range = doc.bufferedPageRange();
+    console.log(range)
+    // Para cada página, añadimos el pie de página
+    for (let i = 0; i < range.count; i++) {
+      doc.switchToPage(i);
+      // Barra inferior gris
+      doc.rect(40, pageHeight - 40, doc.page.width - 80, 30)
+         .fillAndStroke(darkGray, darkGray);
+      
+      doc.fillColor(white)
+         .font('Helvetica')
+         .fontSize(8)
+         .text('www.baprosa.com', 60, pageHeight - 30);
+      
+      doc.text('Tel: (504) 2222-2222', doc.page.width/2, pageHeight - 30, { align: 'center' });
+      
+      doc.font('Helvetica-Bold')
+         .text(`Página ${i + 1} de ${range.count}`, doc.page.width - 60, pageHeight - 30, { align: 'right' });
     }
 
-    doc.text(LINE);
-
-    // Firma
-    doc.text(`Pesador       : ${stringtruncado(quitarAcentos(boleta.usuario), 20)}`, { continued: true })
-       .text(`Firma         : ________________`);
-
-    doc.moveDown();
-    doc.fontSize(10).text('www.baprosa.com | (504) 2222-2222', { align: 'center' });
 
     doc.end();
   } catch (err) {
-    console.log(err);
+    console.error('Error generando PDF:', err);
+    res.status(500).send('Error al generar PDF');
   }
-};
+}; 
 module.exports = {
   imprimirEpson, 
   imprimirPDF

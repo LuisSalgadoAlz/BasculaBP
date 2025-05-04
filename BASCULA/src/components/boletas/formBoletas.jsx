@@ -296,7 +296,7 @@ export const VisualizarBoletas = (props) => {
   const pesoTolerado = boletas?.pesoTeorico * 0.005
 
   const handleConvertPdf = async() => {
-    const url = `http://192.9.100.56:3000/api/boletas/pdf/bol/${boletas?.id}`;
+    const url = `${URLHOST}boletas/pdf/bol/${boletas?.id}`;
     window.open(url, '_blank');
   }
 
