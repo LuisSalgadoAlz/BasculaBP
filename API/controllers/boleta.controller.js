@@ -920,10 +920,10 @@ const getBoletasMes = async(req, res) => {
     const end = req.query.end || '';
 
     const result = await db.$queryRaw`
-    SELECT  CONVERT(DATE, fechaInicio AT TIME ZONE 'UTC' AT TIME ZONE 'Central Standard Time') as fecha, COUNT(*) as cantidad
+    SELECT  CONVERT(DATE, fechaInicio AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') as fecha, COUNT(*) as cantidad
     FROM boleta
     WHERE fechaInicio >= ${start} AND fechaInicio <= ${end}
-    GROUP BY CONVERT(DATE, fechaInicio AT TIME ZONE 'UTC' AT TIME ZONE 'Central Standard Time')
+    GROUP BY CONVERT(DATE, fechaInicio AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time')
     ORDER BY fecha
   `;
   
