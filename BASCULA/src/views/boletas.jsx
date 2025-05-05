@@ -174,7 +174,7 @@ const Boletas = () => {
   const handleShowModalEspcial = async() => {
     setModalEspecial(true)
     setFormBoletas((prev)=>({
-      ...prev, ['Proceso']: 1, ['Movimiento'] : 6, ['Producto'] : 11
+      ...prev, ['Proceso']: 1, ['Movimiento'] : 1
     }))
     setProceso(1)
     await getAllDataForSelect(1, plc, formBoletas.Socios, formBoletas.Transportes, formBoletas.Motoristas, setDataSelects);
