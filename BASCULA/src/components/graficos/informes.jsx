@@ -85,7 +85,7 @@ const pesajesDiarios = [
 
 
 // Componente Card para encapsular secciones
-const Card = ({ children }) => (
+export const Card = ({ children }) => (
   <div className="bg-white rounded-xl shadow-sm overflow-hidden">
     <div className="p-5">
       {children}
@@ -94,7 +94,7 @@ const Card = ({ children }) => (
 );
 
 // Componente para mostrar estadísticas
-const StatCard = ({ title, value, change, icon, positive }) => (
+export const StatCard = ({ title, value, change, icon, positive }) => (
   <Card>
     <div className="flex flex-col">
       <div className="flex items-center justify-between mb-2">
@@ -113,7 +113,7 @@ const StatCard = ({ title, value, change, icon, positive }) => (
 );
 
 // Gráfico de área para mostrar los pesajes diarios
-const PesajesDiariosChart = () => (
+export const PesajesDiariosChart = () => (
   <Card>
     <div className="mb-4">
       <h3 className="text-lg font-semibold text-gray-800">Pesajes Diarios</h3>
@@ -191,7 +191,7 @@ const PesajesDiariosChart = () => (
 );
 
 // Gráfico de barras para mostrar pesajes por categoría
-const PesajesPorCategoriaChart = () => (
+export const PesajesPorCategoriaChart = () => (
   <Card>
     <div className="mb-4">
       <h3 className="text-lg font-semibold text-gray-800">Pesajes por Categoría</h3>
@@ -269,7 +269,7 @@ const PesajesPorCategoriaChart = () => (
 );
 
 // Gráfico de distribución por hora
-const DistribucionPorHoraChart = () => (
+export const DistribucionPorHoraChart = () => (
   <Card>
     <div className="mb-4">
       <h3 className="text-lg font-semibold text-gray-800">Distribución por Hora</h3>
@@ -319,7 +319,7 @@ const DistribucionPorHoraChart = () => (
 );
 
 // Gráfico de distribución por tipo
-const DistribucionPorTipoChart = () => (
+export const DistribucionPorTipoChart = () => (
   <Card>
     <div className="mb-4">
       <h3 className="text-lg font-semibold text-gray-800">Distribución por Tipo</h3>
@@ -365,7 +365,7 @@ const DistribucionPorTipoChart = () => (
 );
 
 // Selector de período
-const PeriodSelector = ({ selectedPeriod, onChange }) => {
+export const PeriodSelector = ({ selectedPeriod, onChange }) => {
   const periods = ['Hoy', 'Ayer', 'Esta semana', 'Este mes', 'Último mes', 'Personalizado'];
   
   return (
@@ -388,7 +388,7 @@ const PeriodSelector = ({ selectedPeriod, onChange }) => {
 };
 
 // Componente de filtros para el reporte
-const ReportFilters = () => {
+export const ReportFilters = () => {
   const [showFilters, setShowFilters] = useState(false);
   
   return (
@@ -464,7 +464,7 @@ const ReportFilters = () => {
 };
 
 // Componente para opciones de exportación
-const ExportOptions = () => {
+export const ExportOptions = () => {
   return (
     <Card>
       <div className="mb-4">
@@ -512,7 +512,7 @@ const ExportOptions = () => {
 };
 
 // Componente principal del Sistema de Reportes de Báscula
-const ReportesBascula = () => {
+export const ReportesBascula = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('Esta semana');
 
   return (
@@ -572,5 +572,3 @@ const ReportesBascula = () => {
     </div>
   );
 };
-
-export default ReportesBascula;

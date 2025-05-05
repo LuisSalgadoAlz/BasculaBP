@@ -47,7 +47,7 @@ const navRutas = createBrowserRouter([
       },
       {
         path: "/informes",
-        element: <ViewDisabled />,
+        element: <Informes />,
       },
       {
         path: "/informes/mensual",
