@@ -188,12 +188,11 @@ const TimelineComponent = ({groups, items, defaultTime}) => {
 };
 
  // Función para renderizar items personalizados
- const itemRenderer = ({ item, itemContext, getItemProps }) => {
-  const backgroundColor = item.isDefaultEndTime ? "red" : "#4b2e1c";
-  
+ const itemRenderer = ({ item, itemContext, getItemProps }) => { 
+
   const itemProps = getItemProps({
+    className: item.isDefaultEndTime ? "item-red transition-transform duration-300 ease-in-out hover:scale-105" : "item-normal transition-transform duration-300 ease-in-out hover:scale-105", 
     style: {
-      backgroundColor,
       color: "white",
       borderRadius: "4px",
       boxShadow: "0 1px 5px rgba(0, 0, 0, 0.15)",
@@ -211,8 +210,10 @@ const TimelineComponent = ({groups, items, defaultTime}) => {
   
   const tooltipText = `Placa ${item.title}, boleta ${item.id} - Inicio: ${formatTime(startTime)} - Estado:  NO FINALIZADA`;
   
+  const {key, ...restPropsItems} = itemProps
+
   return (
-    <div {...itemProps}>
+    <div key={key} {...restPropsItems} onClick={()=>console.log('Testing')}>
       <div style={{ 
         padding: "4px 8px",
         height: "100%",
@@ -225,19 +226,6 @@ const TimelineComponent = ({groups, items, defaultTime}) => {
         <div style={{ fontWeight: "bold" }}>
           {item.title}
         </div>
-        
-        {/* Indicador para elementos sin fecha de fin */}
-        {item.isDefaultEndTime && (
-          <div style={{ 
-            fontSize: "10px", 
-            backgroundColor: "rgba(255, 255, 255, 0.3)",
-            padding: "1px 4px",
-            borderRadius: "2px",
-            marginLeft: "4px"
-          }}>
-            ∞
-          </div>
-        )}
         
         {/* Tooltip SOLO para elementos sin fecha de fin */}
         {item.isDefaultEndTime && (

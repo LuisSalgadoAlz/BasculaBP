@@ -225,9 +225,12 @@ a.active {
   transition: background-color 0.3s ease !important;
 }
 
-/* Hover en los elementos */
-.react-calendar-timeline .rct-item:hover {
-  background-color: #2563eb !important;
+.item-normal{
+  background: #4b2e1c!important;
+}
+
+.item-red{
+  background: red!important;
 }
 
 /* Grupos (nombres a la izquierda) */
