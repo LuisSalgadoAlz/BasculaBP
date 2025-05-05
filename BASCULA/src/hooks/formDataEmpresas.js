@@ -315,13 +315,13 @@ export const verificarData = (funError, data, setMsg) => {
     return false
   }
 
-  if (!regexEmail.test(email) || email == "" ) {
+  if (!regexEmail.test(email) && email ) {
     funError(true)
     setMsg('correo permite letras, números, puntos, guiones. Además de ir acompañado de un @dominio.es / @dominio.com')
     return false
   }
 
-  if (!regexTelefono.test(telefono) || telefono==""){
+  if (!regexTelefono.test(telefono) && telefono){
     funError(true)
     setMsg('numero ingresado invalido o no ingresado (debe iniciar con 2 / 3 / 8 y 9) y tener 8 digitos. Ej: 22222222')
     return false
