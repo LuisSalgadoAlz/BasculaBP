@@ -3,7 +3,7 @@ model Socios{
     nombre String 
     tipo Int
     telefono String?
-    correo String? @unique
+    correo String?
     estado Boolean
 
     /* Relacion con boleta */
