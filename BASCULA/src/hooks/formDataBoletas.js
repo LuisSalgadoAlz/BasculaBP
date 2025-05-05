@@ -440,13 +440,13 @@ export const verificarDataCompleto = (funError, data, setMsg, pesoIn) => {
   /* idPlaca observaciones ordenDeTransferencia pesoInicial pesoTeorico*/
 
   if(proceso == 0 && pesoIn<=pesoFinal){
-    setMsg('Advertencia: peso inicial debe ser mayor al peso final)')
+    setMsg('Peso inicial debe ser mayor al peso final)')
     funError(true)
     return false
   }
 
   if(proceso == 1 && pesoIn>=pesoFinal){
-    setMsg('Advertencia: peso final debe ser mayor al peso de inicial)')
+    setMsg('Peso final debe ser mayor al peso de inicial)')
     funError(true)
     return false
   }
@@ -490,6 +490,41 @@ export const verificarDataCompleto = (funError, data, setMsg, pesoIn) => {
 
   if (pesoFinal <= 0) {
     setMsg('El peso final debe ser mayor que 0')
+    funError(true)
+    return false
+  }
+
+  return true
+}
+
+export const verificarDataCasulla = (funError, data, setMsg, pesoIn) => {
+  const {
+    idCliente,
+    idDestino,
+    idEmpresa,
+    idMotorista,
+    idProducto,
+    proceso, 
+    pesoFinal
+  } = data;
+
+  if(proceso == 1 && pesoIn>=pesoFinal){
+    setMsg('Peso final debe ser mayor al peso de inicial)')
+    funError(true)
+    return false
+  }
+  
+  if (!idCliente || !idEmpresa || !idMotorista || !idProducto || !idDestino) {
+    setMsg('Por favor, ingresar todos los datos primer nivel: cliente, transporte, motorista, movimiento, producto, destino')
+    funError(true)
+    return false
+  }
+
+  console.log(data)
+
+
+  if (pesoFinal <= 0 || pesoIn<= 0) {
+    setMsg('Los pesos deben ser diferente de 0')
     funError(true)
     return false
   }

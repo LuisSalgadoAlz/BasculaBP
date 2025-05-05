@@ -4,7 +4,7 @@ import ViewBoletas from "../components/boletas/viewBoletas";
 import CardHeader from "../components/card-header";
 import { CancelarBoleta, ModalBoletas, ModalNormal, ModalOut, VisualizarBoletas } from "../components/boletas/formBoletas";
 import { initialSateDataFormSelet, initialStateFormBoletas, initialStateStats } from "../constants/boletas";
-import { formaterData, getAllDataForSelect, postBoletasNormal, getDataBoletas, getStatsBoletas, formaterDataNewPlaca, verificarDataNewPlaca, getDataParaForm, updateBoletaOut, verificarDataCompleto, postBoletasCasulla, getDataBoletasCompletadas, getDataBoletasPorID, updateCancelBoletas } from "../hooks/formDataBoletas";
+import { formaterData, getAllDataForSelect, postBoletasNormal, getDataBoletas, getStatsBoletas, formaterDataNewPlaca, verificarDataNewPlaca, getDataParaForm, updateBoletaOut, verificarDataCompleto, postBoletasCasulla, getDataBoletasCompletadas, getDataBoletasPorID, updateCancelBoletas, verificarDataCasulla } from "../hooks/formDataBoletas";
 import { ModalErr, ModalSuccess } from "../components/alerts";
 import { AnimatePresence } from "framer-motion";
 
@@ -183,7 +183,7 @@ const Boletas = () => {
   const handleSubmitCasulla = async() => {
     const response = formaterData(formBoletas)
     const allForm = {...response, ['pesoInicial']: formBoletas?.pesoIn, ["Cliente"] : formBoletas?.Cliente}
-    const isCorrect = true
+    const isCorrect = verificarDataCasulla(setErr, response, setMsg, formBoletas?.pesoIn)
     if (isCorrect) {
       await postBoletasCasulla(allForm, setIsLoading)
       setSuccess(true)
