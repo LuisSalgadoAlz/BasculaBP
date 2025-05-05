@@ -206,7 +206,7 @@ const EditClientes = () => {
               className={claseFormInputs}
               placeholder={`Ingrese Email`}
               required
-              value={sc.correo}
+              value={sc.correo ? sc.correo : ''}
               onChange={handleChange}
             />
           </div>
@@ -220,7 +220,7 @@ const EditClientes = () => {
               className={claseFormInputs}
               placeholder={`Ingrese Número`}
               required
-              value={sc.telefono}
+              value={sc.telefono ? sc.telefono : ''}
               onChange={handleChange}
             />
           </div>

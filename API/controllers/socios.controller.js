@@ -95,19 +95,15 @@ const postSocios = async (req, res) => {
   try {
     const { nombre, tipo, telefono, correo } = req.body;
 
-    const exist = await db.socios.findUnique({
-      where: {
-        correo : correo
-      }
-    })
+    const exist = correo.trim()!='' && await db.socios.count({where: {correo : correo}})
     
-    if (!exist) {
+    if (exist==0) {
       const nuevoSocio = await db.socios.create({
         data: {
           nombre,
           tipo: parseInt(tipo),
-          telefono,
-          correo,
+          ...(telefono.trim()!='' && { telefono }),
+          ...(correo.trim()!='' && { correo }), 
           estado: true,
         },
       });
