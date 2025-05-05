@@ -296,6 +296,7 @@ export const VisualizarBoletas = (props) => {
   const pesoTolerado = boletas?.pesoTeorico * 0.005
 
   const handleConvertPdf = async() => {
+    console.log(boletas)
     const url = `${URLHOST}boletas/pdf/bol/${boletas?.id}`;
     window.open(url, '_blank');
   }
@@ -418,8 +419,12 @@ export const VisualizarBoletas = (props) => {
 
         {/* Impresiones */}
         <div className="flex items-center justify-end gap-2 mt-4">
-          <button className={buttonClean} onClick={handleConvertPdf}>Convertir a PDF</button>
-          <ButtonPrint name={'Imprimir'} fun={handlePrint} isLoad={isLoadImpresion}/>
+          {boletas?.estado !='Cancelada' && (
+            <>
+              <button className={buttonClean} onClick={handleConvertPdf}>Convertir a PDF</button>
+              <ButtonPrint name={'Imprimir'} fun={handlePrint} isLoad={isLoadImpresion}/>
+            </>
+          )} 
         </div>
       </motion.div>
     </div>

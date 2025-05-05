@@ -245,34 +245,34 @@ const imprimirPDF = async (req, res) => {
     drawBorder(50, 50, doc.page.width - 100, 60);
     
     // Logo y título
-    doc.image('logo.png', 60, 55, { width: 40 })
+    doc.image('logo.png', 60, 60, { width: 70 })
        .fontSize(16)
        .font('Helvetica-Bold')
        .fillColor(black)
-       .text('BAPROSA', 110, 60);
+       .text('BAPROSA', 150, 65);
     
     doc.fontSize(10)
        .font('Helvetica')
        .fillColor(midGray)
-       .text('Básculas y Procesos S.A.', 110, 80);
+       .text('Básculas y Procesos S.A.', 150, 85);
     
     // Información de boleta en la parte superior derecha
     doc.font('Helvetica-Bold')
        .fontSize(14)
        .fillColor(black)
-       .text('BOLETA DE PESO', 380, 60, { width: 150, align: 'right' });
+       .text('BOLETA DE PESO', 380, 65, { width: 150, align: 'right' });
     
     doc.font('Helvetica-Bold')
        .fontSize(12)
        .fillColor(black)
-       .text(`N° ${boleta.id}`, 380, 80, { width: 150, align: 'right' });
+       .text(`N° ${boleta.id}`, 380, 85, { width: 150, align: 'right' });
 
     // Marca de copia u original
     if (!isOriginal) {
       doc.font('Helvetica-Bold')
          .fontSize(10)
          .fillColor(black)
-         .text('COPIA', 50, 40);
+         .text('COPIA', 50,25);
     } else {
       doc.font('Helvetica-Bold')
          .fontSize(10)
@@ -359,7 +359,7 @@ const imprimirPDF = async (req, res) => {
     
     // ============ ALERTA TOLERANCIA ============
     if (fueraTol) {
-      const toleranceY = weightY + 130;
+      const toleranceY = weightY + 180;
       doc.rect(50, toleranceY, doc.page.width - 100, 30)
          .fillAndStroke(darkGray, darkGray);
       doc.fillColor(white)
@@ -369,7 +369,7 @@ const imprimirPDF = async (req, res) => {
     }
     
     // ============ FIRMAS ============
-    const signY = weightY + (fueraTol ? 210 : 180);
+    const signY = weightY + (fueraTol ? 230 : 180);
     
     drawSection('AUTORIZACIONES', 50, signY, doc.page.width - 100, 70);
     
