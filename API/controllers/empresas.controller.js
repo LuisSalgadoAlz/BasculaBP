@@ -343,12 +343,7 @@ const postMotoristasDeLaEmpresa = async (req, res) => {
 const updateMotoristasPorID = async (req, res) => {
   const { nombre, telefono, correo, id, estado } = req.body; 
   try {
-    const exist = correo!='' && await db.motoristas.count({
-      where: {
-        correo : correo, 
-        id : {not: parseInt(id)}
-      }
-    })
+    const exist = (correo!=null) && (correo.trim()!='') ? await db.motoristas.count({where: {correo : correo, id : {not: parseInt(id)}}}) : 0
 
     if (exist==0) {
       const updateMotorista = await db.motoristas.update({
@@ -358,7 +353,7 @@ const updateMotoristasPorID = async (req, res) => {
         data: {
           nombre,   
           telefono, 
-          ...(correo!='' && { correo }),
+          ...(correo!==null && (correo.trim()!='' && { correo })),
           idEmpresa: parseInt(req.params.idEmpresa),
           estado: estado == 1 ? true : false,
         },
