@@ -71,7 +71,7 @@ export const ModalBoletas = ({hdlClose, hdlChange, fillData, formBol, boletas, h
                 <InputsFormBoletas key={field} data={claseFormInputs} name={field} fun={hdlChange} val={boletas?.[field]} /> 
               )
             )}
-            <SelectFormBoletas classCss={classFormSelct} name={'Producto'} data={fillData['Producto']} val={boletas?.Producto} fun={hdlChange} stt={true}/>
+            <SelectFormBoletas classCss={classFormSelct} name={'Producto'} data={fillData['Producto']} fun={hdlChange}/>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 place-content-start">
             <SelectFormBoletas classCss={classFormSelct} name={'Movimiento'} data={fillData['FleteS']} fun={hdlChange} val={boletas?.Movimiento} stt={true}/>
