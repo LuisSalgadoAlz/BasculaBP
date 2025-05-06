@@ -358,17 +358,18 @@ export const getTimeLineDetails = async (fun, fecha,setIsLoading) => {
 
 export const formaterData = (formBoletas) => {
   const pesoNeto = Math.abs(formBoletas?.pesoOut - formBoletas?.pesoIn);
-  const tolerancia = formBoletas['Peso Teorico'] * 0.005;
-  const desviacion = Math.abs(pesoNeto) - formBoletas['Peso Teorico'];
-  const absDesviacion = Math.abs(Math.abs(pesoNeto) - formBoletas['Peso Teorico'])
-  const fueraTol = absDesviacion > tolerancia
+
+  const tolerancia = (formBoletas['Peso Teorico']) ? (formBoletas['Peso Teorico'] * 0.005) : 0;
+  const desviacion = (formBoletas['Peso Teorico']) ? (Math.abs(pesoNeto) - formBoletas['Peso Teorico']) : 0;
+  const absDesviacion = (formBoletas['Peso Teorico']) ? Math.abs(Math.abs(pesoNeto) - formBoletas['Peso Teorico']) : 0
+  const fueraTol = (formBoletas['Peso Teorico']) ? (absDesviacion > tolerancia) : false
 
   const allData = {
     idCliente : formBoletas?.Socios,
     boletaType: formBoletas?.Estado, 
-    manifiesto: formBoletas?.Documento,
-    ordenDeCompra : formBoletas['Orden de compra'], 
-    pesoTeorico: formBoletas['Peso Teorico'],
+    manifiesto: formBoletas?.Documento ? formBoletas?.Documento : 0,
+    ordenDeCompra : formBoletas['Orden de compra'] ? formBoletas['Orden de compra'] : 0, 
+    pesoTeorico: formBoletas['Peso Teorico'] ?formBoletas['Peso Teorico'] : 0,
     estado: fueraTol ? 'Completo(Fuera de tolerancia)' : 'Completado',
     idUsuario: Cookies.get('token'),
     idMotorista: formBoletas?.Motoristas,
