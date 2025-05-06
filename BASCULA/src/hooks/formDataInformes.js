@@ -1,10 +1,11 @@
 import { URLHOST } from "../constants/global";
 import Cookies from 'js-cookie'
 
-export const getHistorialBoletas = async (fun, setIsLoading) => {
+export const getHistorialBoletas = async (fun, formFiltros = {},setIsLoading) => {
+  console.log(formFiltros)
   try {
     setIsLoading(true)
-    const response = await fetch(`${URLHOST}boletas/historial`, {
+    const response = await fetch(`${URLHOST}boletas/historial?movimiento=${formFiltros?.movimiento}&producto=${formFiltros?.producto}`, {
       method: "GET",
       headers: {
         Authorization: Cookies.get('token'),
@@ -22,4 +23,24 @@ export const getHistorialBoletas = async (fun, setIsLoading) => {
   } finally {
     setIsLoading(false)
   }
+};
+
+export const getDataForSelect = async (fun) => {
+  try {
+    const response = await fetch(`${URLHOST}boletas/informes`, {
+      method: "GET",
+      headers: {
+        Authorization: Cookies.get('token'),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API");
+    }
+
+    const data = await response.json();
+    fun(data);
+  } catch (error) {
+    console.error("Error al obtener los clientes:", error);
+  } 
 };

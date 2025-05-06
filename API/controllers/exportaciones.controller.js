@@ -6,9 +6,16 @@ const db = new PrismaClient();
 
 const exportToExcel = async (req, res) => {
   try {
+    const dateIn = req.query.dateIn;
+    const dateOut = req.query.dateOut;
+    const producto = req.query.producto || null;
+    const movimiento = req.query.movimiento || null;
+
     const data = await db.boleta.findMany({
       where: {
-        AND: [{ estado: { not: 'Pendiente' } }, { estado: { not: 'Cancelada' } }]
+        AND: [{ estado: { not: 'Pendiente' } }, { estado: { not: 'Cancelada' } }], 
+        ...(movimiento ? {movimiento : movimiento} : {}), 
+        ...(producto ? {producto:producto} : {})
       }
     });
 

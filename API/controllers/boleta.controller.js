@@ -858,6 +858,16 @@ const updateBoleta = async (req, res) => {
 
 const getBoletasHistorial = async (req, res) => {
   try{
+    const movimiento = req.query.movimiento|| '';
+    const producto = req.query.producto || '';
+    const dateIn = req.query.dateIn || null;
+    const dateOut = req.query.dateOut || null;
+
+/*     const [year, month, day] = dateIn.split('-').map(Number);
+    const startOfDay = new Date(Date.UTC(year, month - 1, day, 6, 0, 0));
+    const [year2, month2, day2] = dateOut.split('-').map(Number);
+    const endOfDay = new Date(Date.UTC(year2, month2 - 1, day2, 6, 0, 0)); */
+
     const data = await db.boleta.findMany({
       select: {
         id: true,
@@ -865,6 +875,11 @@ const getBoletasHistorial = async (req, res) => {
         proceso: true,
         empresa: true,
         motorista: true,
+        movimiento:true, 
+        producto: true, 
+        pesoNeto:true, 
+        pesoTeorico: true, 
+        desviacion: true, 
         socio: true,
         placa: true,
         fechaInicio: true,
@@ -873,7 +888,9 @@ const getBoletasHistorial = async (req, res) => {
       where: {
         estado: {
           not: 'Pendiente'
-        }
+        }, 
+        ...(movimiento ? {movimiento : movimiento} : {}), 
+        ...(producto ? {producto:producto} : {})
       }
     });
   
@@ -883,11 +900,17 @@ const getBoletasHistorial = async (req, res) => {
       Cliente: el.socio,
       Transporte: el.empresa,
       Motorista: el.motorista,
+      Moviento: el.movimiento, 
+      Producto: el.producto, 
+      PesoNeto: el.pesoNeto, 
+      PesoTeorico: el.pesoTeorico, 
+      Desviacion: el.desviacion, 
       Fecha: el.fechaInicio.toLocaleString(),
     }));
   
     res.send(dataUTCHN);
   } catch (err) {
+    console.log(err)
     res.status(500).send({msg: 'Error interno API'})
   }
 }
@@ -1003,6 +1026,24 @@ const updateCancelBoletas = async(req, res) => {
 }
 
 
+/**
+ * Para reportes
+ */
+
+
+const getMovimientosYProductos = async(req,res)=> {
+  try{
+    const [movimiento, producto] = await Promise.all([
+      db.movimientos.findMany({select: { id: true, nombre: true },}), 
+      db.producto.findMany({select: { id: true, nombre: true },})
+    ])
+    
+    res.send({movimiento, producto})
+  } catch(err){
+    console.log(err)
+  }
+}
+
 module.exports = {
   getAllData,
   postBoletasNormal,
@@ -1016,5 +1057,6 @@ module.exports = {
   getBoletasCompletadasDiarias, 
   getBoletasMes, 
   getTimeLineForComponent, 
-  updateCancelBoletas
+  updateCancelBoletas, 
+  getMovimientosYProductos
 };

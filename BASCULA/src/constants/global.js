@@ -1,6 +1,6 @@
 export const URLHOST = 'http://192.9.100.56:3000/api/'
 export const URLWEBSOCKET = 'ws://192.9.100.56:3000'
-export const VERSION = '1.0.3'
+export const VERSION = '1.0.4'
 
 
 export const ESTADOS_BOLETAS = [

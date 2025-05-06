@@ -12,7 +12,8 @@ const {
   getBoletasCompletadasDiarias,
   getBoletasMes,
   getTimeLineForComponent,
-  updateCancelBoletas
+  updateCancelBoletas,
+  getMovimientosYProductos
 } = require("../controllers/boleta.controller");
 const { exportToExcel } = require("../controllers/exportaciones.controller.js");
 const { imprimirPDF } = require("../controllers/impresiones.controller.js");
@@ -29,6 +30,7 @@ boletas.get("/calendario/mes", getBoletasMes)
 boletas.get("/calendario/mes/detalles", getTimeLineForComponent)
 boletas.get("/pdf/bol/:id", imprimirPDF)
 boletas.get("/export/excel/", exportToExcel)
+boletas.get("/informes/", getMovimientosYProductos)
 boletas.post("/", postBoletasNormal);
 boletas.post("/newPlaca", postBoleta);
 boletas.put("/:id", updateBoleta);
