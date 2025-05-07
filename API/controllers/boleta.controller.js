@@ -1,7 +1,7 @@
-const db = require('../lib/prisma')
+const db = require("../lib/prisma");
 const dotenv = require("dotenv");
 const jwt = require("jsonwebtoken");
-const {imprimirEpson} = require("./impresiones.controller");
+const { imprimirEpson } = require("./impresiones.controller");
 
 const getAllData = async (req, res) => {
   try {
@@ -104,10 +104,10 @@ const getAllData = async (req, res) => {
         where: {
           estado: true,
           rEmpresaVehiculo: {
-            estado: true, 
+            estado: true,
             ...(empresa ? { id: empresa } : {}),
             rClientes: {
-              estado: true, 
+              estado: true,
               ...(socio ? { id: socio } : {}),
               ...(tipo == 0 || tipo == 1 ? { tipo: tipo } : {}),
             },
@@ -120,10 +120,10 @@ const getAllData = async (req, res) => {
         where: {
           estado: true,
           rEmpresaM: {
-            estado: true, 
+            estado: true,
             ...(empresa ? { id: empresa } : {}),
             rClientes: {
-              estado: true, 
+              estado: true,
               ...(socio ? { id: socio } : {}),
               ...(tipo == 0 || tipo == 1 ? { tipo: tipo } : {}),
             },
@@ -151,7 +151,10 @@ const getAllData = async (req, res) => {
       id: el.placa,
       nombre: el.placa,
     }));
-    Clientes.push({ id:-998, nombre: 'Cliente X'} , { id:-999, nombre: 'Proveedor X'})
+    Clientes.push(
+      { id: -998, nombre: "Cliente X" },
+      { id: -999, nombre: "Proveedor X" }
+    );
     const Flete = MovimientosE;
     const FleteS = MovimientosS;
     res.status(200).json({
@@ -187,12 +190,12 @@ const postBoletasNormal = async (req, res) => {
       pesoInicial,
       idPlaca,
       idEmpresa,
-      pesoFinal, 
+      pesoFinal,
       idMovimiento,
       idProducto,
       observaciones,
       ordenDeCompra,
-      Cliente, 
+      Cliente,
     } = req.body;
 
     const verificado = jwt.verify(idUsuario, process.env.SECRET_KEY);
@@ -202,21 +205,23 @@ const postBoletasNormal = async (req, res) => {
       },
     });
 
-    console.log(despachador['id'])
+    console.log(despachador["id"]);
 
-    const isComodin =  idCliente ==-998;
-    const placaData = !isComodin && await db.vehiculo.findFirst({
-      select: {
-        id: true,
-        placa: true,
-      },
-      where: {
-        placa: idPlaca,
-        rEmpresaVehiculo: {
-          id: idEmpresa,
+    const isComodin = idCliente == -998;
+    const placaData =
+      !isComodin &&
+      (await db.vehiculo.findFirst({
+        select: {
+          id: true,
+          placa: true,
         },
-      },
-    });
+        where: {
+          placa: idPlaca,
+          rEmpresaVehiculo: {
+            id: idEmpresa,
+          },
+        },
+      }));
 
     const producto = await db.producto.findUnique({
       where: { id: parseInt(idProducto) },
@@ -224,22 +229,32 @@ const postBoletasNormal = async (req, res) => {
     const move = await db.movimientos.findUnique({
       where: { id: parseInt(idMovimiento) },
     });
-    
-    const socio = !isComodin && await db.socios.findUnique({  where: { id: parseInt(idCliente) },});
-    const motorista =!isComodin && await db.motoristas.findUnique({ where: { id: parseInt(idMotorista) },});
-    const empresa = !isComodin && await db.empresa.findUnique({where: { id: parseInt(idEmpresa) },}); 
-    const destino = !isComodin && (await db.direcciones.findUnique({ where: { id: parseInt(idDestino) } }));
+
+    const socio =
+      !isComodin &&
+      (await db.socios.findUnique({ where: { id: parseInt(idCliente) } }));
+    const motorista =
+      !isComodin &&
+      (await db.motoristas.findUnique({
+        where: { id: parseInt(idMotorista) },
+      }));
+    const empresa =
+      !isComodin &&
+      (await db.empresa.findUnique({ where: { id: parseInt(idEmpresa) } }));
+    const destino =
+      !isComodin &&
+      (await db.direcciones.findUnique({ where: { id: parseInt(idDestino) } }));
 
     const nuevaBoleta = await db.boleta.create({
       data: {
-        idSocio: !isComodin ? parseInt(idCliente): null,
-        pesoNeto: parseFloat(pesoFinal) - parseFloat(pesoInicial), 
+        idSocio: !isComodin ? parseInt(idCliente) : null,
+        pesoNeto: parseFloat(pesoFinal) - parseFloat(pesoInicial),
         pesoFinal: parseFloat(pesoFinal),
         placa: !isComodin ? placaData.placa : idPlaca,
         empresa: !isComodin ? empresa.nombre : idEmpresa,
         motorista: !isComodin ? motorista.nombre : idMotorista,
         socio: !isComodin ? socio.nombre : Cliente,
-        origen: 'Baprosa',
+        origen: "Baprosa",
         destino: !isComodin ? destino.nombre : idDestino,
         boletaType: 1,
         idOrigen: null,
@@ -251,7 +266,7 @@ const postBoletasNormal = async (req, res) => {
         usuario: despachador["usuarios"],
         idMotorista: parseInt(idMotorista),
         fechaInicio: new Date(),
-        fechaFin: new Date(), 
+        fechaFin: new Date(),
         pesoInicial: parseFloat(pesoInicial),
         idPlaca: !isComodin ? placaData.id : null,
         idEmpresa: parseInt(idEmpresa),
@@ -260,7 +275,7 @@ const postBoletasNormal = async (req, res) => {
         idProducto: parseInt(idProducto),
         producto: producto.nombre,
         observaciones,
-        pesoTeorico: 0, 
+        pesoTeorico: 0,
         desviacion: 0,
         idTrasladoOrigen: null,
         idTrasladoDestino: null,
@@ -268,12 +283,12 @@ const postBoletasNormal = async (req, res) => {
         trasladoDestino: null,
         proceso,
         ordenDeCompra: parseInt(ordenDeCompra),
-        ordenDeTransferencia: null
+        ordenDeTransferencia: null,
       },
     });
 
     imprimirEpson(nuevaBoleta);
- 
+
     res
       .status(201)
       .json({ msg: "Boleta creado exitosamente", boleta: nuevaBoleta });
@@ -284,110 +299,130 @@ const postBoletasNormal = async (req, res) => {
 };
 
 const getDataBoletas = async (req, res) => {
-  try{
-  const search  = req.query.search || '';
-  const searchDate = req.query.searchDate || '';
-  const page = parseInt(req.query.page) || 1 ;  
-  const limit = parseInt(req.query.limit) || 7;
-  const skip = (page - 1) * limit;  
+  try {
+    const search = req.query.search || "";
+    const searchDate = req.query.searchDate || "";
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 7;
+    const skip = (page - 1) * limit;
 
-  const [year, month, day] = searchDate.split('-').map(Number);
-  const startOfDay = new Date(Date.UTC(year, month - 1, day, 0, 0, 0));
-  const endOfDay = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
+    const [year, month, day] = searchDate.split("-").map(Number);
+    const startOfDay = new Date(Date.UTC(year, month - 1, day, 0, 0, 0));
+    const endOfDay = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
 
-  const data = await db.boleta.findMany({
-    select: {
-      id: true,
-      estado: true,
-      proceso: true,
-      empresa: true,
-      motorista: true,
-      socio: true,
-      placa: true,
-      fechaInicio: true,
-    },
-    where: {  
-      estado: "Pendiente",
-      ...(searchDate ? { fechaInicio: { gte: startOfDay, lte: endOfDay} } : {}  ),  
-      OR : [
-        {
-          placa:{contains: search}
-        }, 
-        {
-          empresa:{contains: search},
-        }, 
-        {
-          motorista:{contains: search},
-        }, 
-        {
-          socio:{contains: search},
-        }
-      ]
-    },
-    skip: skip,
-    take: limit,
-  });
+    const data = await db.boleta.findMany({
+      select: {
+        id: true,
+        estado: true,
+        proceso: true,
+        empresa: true,
+        motorista: true,
+        socio: true,
+        placa: true,
+        fechaInicio: true,
+      },
+      where: {
+        estado: "Pendiente",
+        ...(searchDate
+          ? { fechaInicio: { gte: startOfDay, lte: endOfDay } }
+          : {}),
+        OR: [
+          {
+            placa: { contains: search },
+          },
+          {
+            empresa: { contains: search },
+          },
+          {
+            motorista: { contains: search },
+          },
+          {
+            socio: { contains: search },
+          },
+        ],
+      },
+      skip: skip,
+      take: limit,
+    });
 
-  const totalData = await db.boleta.count({
-    where: {  
-      estado: "Pendiente",
-      ...(searchDate ? { fechaInicio: { gte: startOfDay, lte: endOfDay} } : {}  ),
-      OR : [
-        {
-          placa:{contains: search}
-        }, 
-        {
-          empresa:{contains: search},
-        }, 
-        {
-          motorista:{contains: search},
-        }, 
-        {
-          socio:{contains: search},
-        }
-      ]
-    },
-  })
+    const totalData = await db.boleta.count({
+      where: {
+        estado: "Pendiente",
+        ...(searchDate
+          ? { fechaInicio: { gte: startOfDay, lte: endOfDay } }
+          : {}),
+        OR: [
+          {
+            placa: { contains: search },
+          },
+          {
+            empresa: { contains: search },
+          },
+          {
+            motorista: { contains: search },
+          },
+          {
+            socio: { contains: search },
+          },
+        ],
+      },
+    });
 
-  const dataUTCHN = data.map((el) => ({
-    Id: el.id,
-    Placa: el.placa,
-    Cliente: el.socio,
-    Transporte: el.empresa,
-    Motorista: el.motorista,
-    Fecha: el.fechaInicio.toLocaleString(),
-  }));
+    const dataUTCHN = data.map((el) => ({
+      Id: el.id,
+      Placa: el.placa,
+      Cliente: el.socio,
+      Transporte: el.empresa,
+      Motorista: el.motorista,
+      Fecha: el.fechaInicio.toLocaleString(),
+    }));
 
-  res.send({data: dataUTCHN, pagination: {
-    totalData,
-    totalPages: Math.ceil(totalData / limit),
-    currentPage: page,
-    limit,
-  }});
-  } catch(err) {
-    console.log(err)
+    res.send({
+      data: dataUTCHN,
+      pagination: {
+        totalData,
+        totalPages: Math.ceil(totalData / limit),
+        currentPage: page,
+        limit,
+      },
+    });
+  } catch (err) {
+    console.log(err);
   }
 };
 
 const postClientePlacaMoto = async (req, res) => {
-  try{
-    const { idCliente, idUsuario, idMotorista, pesoInicial, idPlaca, idEmpresa, } = req.body;
+  try {
+    const {
+      idCliente,
+      idUsuario,
+      idMotorista,
+      pesoInicial,
+      idPlaca,
+      idEmpresa,
+    } = req.body;
 
-    const empresa = await db.empresa.findUnique({where: { id: parseInt(idEmpresa) },});
-    const motorista = await db.motoristas.findUnique({where: { id: parseInt(idMotorista) }, });
-    const socio = await db.socios.findUnique({where: { id: parseInt(idCliente) }, });
-    const placaData = await db.vehiculo.findFirst({
-      select: { id: true, placa: true, },
-      where: { placa: idPlaca, rEmpresaVehiculo: { id: idEmpresa, },},
+    const empresa = await db.empresa.findUnique({
+      where: { id: parseInt(idEmpresa) },
     });
-    
+    const motorista = await db.motoristas.findUnique({
+      where: { id: parseInt(idMotorista) },
+    });
+    const socio = await db.socios.findUnique({
+      where: { id: parseInt(idCliente) },
+    });
+    const placaData = await db.vehiculo.findFirst({
+      select: { id: true, placa: true },
+      where: { placa: idPlaca, rEmpresaVehiculo: { id: idEmpresa } },
+    });
+
     const verificado = jwt.verify(idUsuario, process.env.SECRET_KEY);
     const despachador = await db.usuarios.findUnique({
       where: {
         usuarios: verificado["usuarios"],
       },
     });
-    
+
     const newBol = await db.boleta.create({
       data: {
         idSocio: parseInt(idCliente),
@@ -396,7 +431,7 @@ const postClientePlacaMoto = async (req, res) => {
         motorista: motorista.nombre,
         socio: socio.nombre,
         boletaType: 0,
-        estado: 'Pendiente',
+        estado: "Pendiente",
         idUsuario: parseFloat(despachador["id"]),
         usuario: despachador["usuarios"],
         idMotorista: parseInt(idMotorista),
@@ -404,43 +439,55 @@ const postClientePlacaMoto = async (req, res) => {
         pesoInicial: parseFloat(pesoInicial),
         idPlaca: placaData.id,
         idEmpresa: parseInt(idEmpresa),
-      }
-    })
-    res.status(201).send({msg: 'Boleta creada en estado pendiente', Bol: newBol})
-  }catch(err){
-    console.log(err)
+      },
+    });
+    res
+      .status(201)
+      .send({ msg: "Boleta creada en estado pendiente", Bol: newBol });
+  } catch (err) {
+    console.log(err);
   }
 };
 
 const postClientePlacaMotoComodin = async (req, res) => {
-  try{
-    const { idCliente, idUsuario, idMotorista, pesoInicial, idPlaca, idEmpresa, socio } = req.body;
-    
+  try {
+    const {
+      idCliente,
+      idUsuario,
+      idMotorista,
+      pesoInicial,
+      idPlaca,
+      idEmpresa,
+      socio,
+    } = req.body;
+
     const verificado = jwt.verify(idUsuario, process.env.SECRET_KEY);
     const despachador = await db.usuarios.findUnique({
       where: {
         usuarios: verificado["usuarios"],
       },
     });
-    
+
     const newBol = await db.boleta.create({
       data: {
         placa: idPlaca,
         empresa: idEmpresa,
         motorista: idMotorista,
-        socio: idCliente==-998 ? socio : socio,
+        socio: idCliente == -998 ? socio : socio,
         boletaType: 0,
-        estado: 'Pendiente',
+        estado: "Pendiente",
         idUsuario: parseFloat(despachador["id"]),
         usuario: despachador["usuarios"],
         fechaInicio: new Date(),
         pesoInicial: parseFloat(pesoInicial),
-        boletaType: idCliente == -998 ? 3 : 4
-      }
-    })
-    res.status(201).send({msg: 'Boleta creada en estado pendiente', Bol: newBol})
-  }catch(err){
-    console.log(err)
+        boletaType: idCliente == -998 ? 3 : 4,
+      },
+    });
+    res
+      .status(201)
+      .send({ msg: "Boleta creada en estado pendiente", Bol: newBol });
+  } catch (err) {
+    console.log(err);
   }
 };
 
@@ -462,18 +509,19 @@ const getStatsBoletas = async (req, res) => {
 
   const startOfDay = new Date(Date.UTC(year, month, day, 0, 0, 0));
   const endOfDay = new Date(Date.UTC(year, month, day, 23, 59, 59, 999));
-  
+
   try {
     const [entrada, salida, pendientes] = await Promise.all([
-      db.boleta.count({ where: { 
-        proceso: 0,
-        fechaFin: { gte: startOfDay, lte: endOfDay },
-      },
+      db.boleta.count({
+        where: {
+          proceso: 0,
+          fechaFin: { gte: startOfDay, lte: endOfDay },
+        },
       }),
       db.boleta.count({
-        where: { 
-          proceso: 1, 
-          fechaFin: {gte: startOfDay, lte: endOfDay}
+        where: {
+          proceso: 1,
+          fechaFin: { gte: startOfDay, lte: endOfDay },
         },
       }),
       db.boleta.count({
@@ -486,47 +534,46 @@ const getStatsBoletas = async (req, res) => {
   }
 };
 
-const getBoletaID =  async(req, res) => {
-  try{
+const getBoletaID = async (req, res) => {
+  try {
     const data = await db.boleta.findUnique({
       where: {
-        id: parseInt(req.params.id)
-      }, 
-      include : {
-        clienteBoleta : {
-          select : {
-            tipo : true,
-          }
-        }
-      }
-    })
+        id: parseInt(req.params.id),
+      },
+      include: {
+        clienteBoleta: {
+          select: {
+            tipo: true,
+          },
+        },
+      },
+    });
 
-    
-    return res.json(data)
-  }catch(err) {
-    return res.status(401).send('Error en el api')
+    return res.json(data);
+  } catch (err) {
+    return res.status(401).send("Error en el api");
   }
-}
+};
 
-const getBoletasCompletadasDiarias = async(req, res) => {
-  try{
-    const search  = req.query.search || '';
-    const searchDate = req.query.searchDate || '';
-    const page = parseInt(req.query.page) || 1 ;  
+const getBoletasCompletadasDiarias = async (req, res) => {
+  try {
+    const search = req.query.search || "";
+    const searchDate = req.query.searchDate || "";
+    const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 7;
-    const skip = (page - 1) * limit;  
-    
-    if (searchDate !== '') {
-      const [year, month, day] = searchDate.split('-').map(Number);
+    const skip = (page - 1) * limit;
+
+    if (searchDate !== "") {
+      const [year, month, day] = searchDate.split("-").map(Number);
       startOfDay = new Date(Date.UTC(year, month - 1, day, 6, 0, 0));
-      endOfDay = new Date(Date.UTC(year, month - 1, day+1, 5, 59, 59, 999));
+      endOfDay = new Date(Date.UTC(year, month - 1, day + 1, 5, 59, 59, 999));
     } else {
       const now = new Date();
-      const year = now.getFullYear();      // Año local
-      const month = now.getMonth();        // Mes local (0 = enero)
-      const day = now.getDate();           // Día local
+      const year = now.getFullYear(); // Año local
+      const month = now.getMonth(); // Mes local (0 = enero)
+      const day = now.getDate(); // Día local
       startOfDay = new Date(Date.UTC(year, month, day, 6, 0, 0));
-      endOfDay = new Date(Date.UTC(year, month, day+1, 5, 59, 59, 999));
+      endOfDay = new Date(Date.UTC(year, month, day + 1, 5, 59, 59, 999));
     }
 
     const data = await db.boleta.findMany({
@@ -540,78 +587,81 @@ const getBoletasCompletadasDiarias = async(req, res) => {
         socio: true,
         placa: true,
         pesoNeto: true,
-        desviacion: true, 
-        fechaFin: true, 
+        desviacion: true,
+        fechaFin: true,
         estado: true,
       },
-      where: {  
-        estado: {not: "Pendiente"},
+      where: {
+        estado: { not: "Pendiente" },
         fechaFin: { gte: startOfDay, lte: endOfDay },
-        OR : [
+        OR: [
           {
-            placa:{contains: search}
-          }, 
+            placa: { contains: search },
+          },
           {
-            empresa:{contains: search},
-          }, 
+            empresa: { contains: search },
+          },
           {
-            motorista:{contains: search},
-          }, 
+            motorista: { contains: search },
+          },
           {
-            socio:{contains: search},
-          }
-        ]
+            socio: { contains: search },
+          },
+        ],
       },
       skip: skip,
       take: limit,
     });
-  
+
     const totalData = await db.boleta.count({
-      where: {  
-        estado: {not: "Pendiente"},
+      where: {
+        estado: { not: "Pendiente" },
         fechaFin: { gte: startOfDay, lte: endOfDay },
-        OR : [
+        OR: [
           {
-            placa:{contains: search}
-          }, 
+            placa: { contains: search },
+          },
           {
-            empresa:{contains: search},
-          }, 
+            empresa: { contains: search },
+          },
           {
-            motorista:{contains: search},
-          }, 
+            motorista: { contains: search },
+          },
           {
-            socio:{contains: search},
-          }
-        ]
+            socio: { contains: search },
+          },
+        ],
       },
-    })
-  
+    });
+
     const dataUTCHN = data.map((el) => ({
       Id: el.id,
       Boleta: el.id,
-      Proceso: el.proceso == 0 ? 'Entrada' : 'Salida', 
+      Proceso: el.proceso == 0 ? "Entrada" : "Salida",
       Placa: el.placa,
       Cliente: el.socio,
       Transporte: el.empresa,
-      PesoNeto: el.pesoNeto, 
-      Desviacion: el.desviacion, 
+      PesoNeto: el.pesoNeto,
+      Desviacion: el.desviacion,
       estado: el.estado,
       fecha: el.fechaFin.toLocaleString(),
     }));
-  
-    res.send({data: dataUTCHN, pagination: {
-      totalData,
-      totalPages: Math.ceil(totalData / limit),
-      currentPage: page,
-      limit,
-    }});
-    } catch(err) {
-      console.log('Error en el api', err)
-    }
-}
 
-const updateBoletaOut = async(req, res) => {
+    res.send({
+      data: dataUTCHN,
+      pagination: {
+        totalData,
+        totalPages: Math.ceil(totalData / limit),
+        currentPage: page,
+        limit,
+      },
+    });
+  } catch (err) {
+    console.log("Error en el api", err);
+  }
+};
+
+const updateBoletaOut = async (req, res) => {
   try {
     const {
       idCliente,
@@ -634,13 +684,13 @@ const updateBoletaOut = async(req, res) => {
       idTrasladoOrigen,
       idTrasladoDestino,
       ordenDeTransferencia,
-      pesoNeto, 
-      pesoFinal, 
-      desviacion
+      pesoNeto,
+      pesoFinal,
+      desviacion,
     } = req.body;
 
     const verificado = jwt.verify(idUsuario, process.env.SECRET_KEY);
-    
+
     const despachador = await db.usuarios.findUnique({
       where: {
         usuarios: verificado["usuarios"],
@@ -681,28 +731,52 @@ const updateBoletaOut = async(req, res) => {
         ? true
         : false;
 
-    
-
-    const origen = (!isTraslado && proceso==0) && (await db.direcciones.findUnique({ where: { id: parseInt(idOrigen) } }));
-    const destino = (!isTraslado && proceso==1) && (await db.direcciones.findUnique({ where: { id: parseInt(idDestino) } }));
-    const transladoOrigen = isTraslado && (await db.translado.findUnique({ where: { id: parseInt(idTrasladoOrigen) },}));
-    const transladoDestino = isTraslado && (await db.translado.findUnique({   where: { id: parseInt(idTrasladoDestino) }, }));
+    const origen =
+      !isTraslado &&
+      proceso == 0 &&
+      (await db.direcciones.findUnique({ where: { id: parseInt(idOrigen) } }));
+    const destino =
+      !isTraslado &&
+      proceso == 1 &&
+      (await db.direcciones.findUnique({ where: { id: parseInt(idDestino) } }));
+    const transladoOrigen =
+      isTraslado &&
+      (await db.translado.findUnique({
+        where: { id: parseInt(idTrasladoOrigen) },
+      }));
+    const transladoDestino =
+      isTraslado &&
+      (await db.translado.findUnique({
+        where: { id: parseInt(idTrasladoDestino) },
+      }));
 
     const nuevaBoleta = await db.boleta.update({
       where: {
-        id : parseInt(req.params.id)
-      }, 
+        id: parseInt(req.params.id),
+      },
       data: {
         idSocio: parseInt(idCliente),
         placa: placaData.placa,
         empresa: empresa.nombre,
         motorista: motorista.nombre,
         socio: socio.nombre,
-        origen: !isTraslado ? (proceso==0 ? origen.nombre : 'Baprosa') : null,
-        destino: !isTraslado ? (proceso==1 ? destino.nombre : 'Baprosa') : null,
+        origen: !isTraslado ? (proceso == 0 ? origen.nombre : "Baprosa") : null,
+        destino: !isTraslado
+          ? proceso == 1
+            ? destino.nombre
+            : "Baprosa"
+          : null,
         boletaType: parseInt(boletaType),
-        idOrigen: !isTraslado ? proceso==0 ? parseInt(idOrigen) : null : null,
-        idDestino: !isTraslado ? proceso==1 ? parseInt(idDestino) : null : null,
+        idOrigen: !isTraslado
+          ? proceso == 0
+            ? parseInt(idOrigen)
+            : null
+          : null,
+        idDestino: !isTraslado
+          ? proceso == 1
+            ? parseInt(idDestino)
+            : null
+          : null,
         manifiesto: proceso == 1 ? parseInt(manifiesto) : null,
         pesoTeorico: parseFloat(pesoTeorico),
         estado: estado,
@@ -723,8 +797,8 @@ const updateBoletaOut = async(req, res) => {
         trasladoOrigen: transladoOrigen.nombre,
         trasladoDestino: transladoDestino.nombre,
         proceso,
-        pesoNeto: parseFloat(pesoNeto), 
-        desviacion: parseFloat(desviacion), 
+        pesoNeto: parseFloat(pesoNeto),
+        desviacion: parseFloat(desviacion),
         ordenDeCompra: proceso == 0 ? parseInt(ordenDeCompra) : null,
         ordenDeTransferencia: isTraslado
           ? parseInt(ordenDeTransferencia)
@@ -734,18 +808,18 @@ const updateBoletaOut = async(req, res) => {
     imprimirEpson(nuevaBoleta);
     res
       .status(201)
-      .json({ msg: "Boleta creado exitosamente" , boleta: nuevaBoleta});
+      .json({ msg: "Boleta creado exitosamente", boleta: nuevaBoleta });
   } catch (error) {
     console.error(error);
     res.status(500).json({ msg: `Error al crear usuario: ${error.message}` });
   }
-}
+};
 
-const updateBoletaOutComdin = async(req, res) => {
+const updateBoletaOutComdin = async (req, res) => {
   try {
     const {
       idCliente,
-      idPlaca, 
+      idPlaca,
       proceso,
       idOrigen,
       idDestino,
@@ -763,19 +837,18 @@ const updateBoletaOutComdin = async(req, res) => {
       idTrasladoOrigen,
       idTrasladoDestino,
       ordenDeTransferencia,
-      pesoNeto, 
-      pesoFinal, 
-      desviacion
+      pesoNeto,
+      pesoFinal,
+      desviacion,
     } = req.body;
 
     const verificado = jwt.verify(idUsuario, process.env.SECRET_KEY);
-    
+
     const despachador = await db.usuarios.findUnique({
       where: {
         usuarios: verificado["usuarios"],
       },
     });
-
 
     const producto = await db.producto.findUnique({
       where: { id: parseInt(idProducto) },
@@ -784,26 +857,34 @@ const updateBoletaOutComdin = async(req, res) => {
       where: { id: parseInt(idMovimiento) },
     });
 
-    const isTraslado = move.nombre == "Traslado Interno" || move.nombre == "Traslado Externo"  ? true  : false;
-
-    
+    const isTraslado =
+      move.nombre == "Traslado Interno" || move.nombre == "Traslado Externo"
+        ? true
+        : false;
 
     const origen = !isTraslado && idOrigen;
-    const destino =  !isTraslado && idDestino;
-    const transladoOrigen = isTraslado &&  (await db.translado.findUnique({where: { id: parseInt(idTrasladoOrigen) }, }));
-    const transladoDestino = isTraslado && (await db.translado.findUnique({ where: { id: parseInt(idTrasladoDestino) }, }));
-
+    const destino = !isTraslado && idDestino;
+    const transladoOrigen =
+      isTraslado &&
+      (await db.translado.findUnique({
+        where: { id: parseInt(idTrasladoOrigen) },
+      }));
+    const transladoDestino =
+      isTraslado &&
+      (await db.translado.findUnique({
+        where: { id: parseInt(idTrasladoDestino) },
+      }));
 
     const nuevaBoleta = await db.boleta.update({
       where: {
-        id : parseInt(req.params.id)
-      }, 
+        id: parseInt(req.params.id),
+      },
       data: {
         placa: idPlaca,
         empresa: idEmpresa,
         motorista: idMotorista,
-        origen: !isTraslado ? proceso == 0 ? origen : 'Baprosa' : null ,
-        destino: !isTraslado ? proceso == 1 ? destino : 'Baprosa' : null,
+        origen: !isTraslado ? (proceso == 0 ? origen : "Baprosa") : null,
+        destino: !isTraslado ? (proceso == 1 ? destino : "Baprosa") : null,
         idOrigen: null,
         idDestino: null,
         manifiesto: proceso == 1 ? parseInt(manifiesto) : null,
@@ -826,8 +907,8 @@ const updateBoletaOutComdin = async(req, res) => {
         trasladoOrigen: transladoOrigen.nombre,
         trasladoDestino: transladoDestino.nombre,
         proceso,
-        pesoNeto: parseFloat(pesoNeto), 
-        desviacion: parseFloat(desviacion), 
+        pesoNeto: parseFloat(pesoNeto),
+        desviacion: parseFloat(desviacion),
         ordenDeCompra: proceso == 0 ? parseInt(ordenDeCompra) : null,
         ordenDeTransferencia: isTraslado
           ? parseInt(ordenDeTransferencia)
@@ -837,14 +918,12 @@ const updateBoletaOutComdin = async(req, res) => {
 
     imprimirEpson(nuevaBoleta);
 
-    res
-      .status(201)
-      .json({ msg: "Boleta creado exitosamente" });
+    res.status(201).json({ msg: "Boleta creado exitosamente" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ msg: `Error al crear usuario: ${error.message}` });
   }
-}
+};
 
 const updateBoleta = async (req, res) => {
   const { idCliente } = req.body;
@@ -854,19 +933,76 @@ const updateBoleta = async (req, res) => {
   } else {
     return updateBoletaOut(req, res);
   }
-}
+};
 
 const getBoletasHistorial = async (req, res) => {
-  try{
-    const movimiento = req.query.movimiento|| '';
-    const producto = req.query.producto || '';
+  try {
+    const movimiento = req.query.movimiento || "";
+    const producto = req.query.producto || "";
     const dateIn = req.query.dateIn || null;
     const dateOut = req.query.dateOut || null;
+    const socios = req.query.socios || "";
 
-/*     const [year, month, day] = dateIn.split('-').map(Number);
-    const startOfDay = new Date(Date.UTC(year, month - 1, day, 6, 0, 0));
-    const [year2, month2, day2] = dateOut.split('-').map(Number);
-    const endOfDay = new Date(Date.UTC(year2, month2 - 1, day2, 6, 0, 0)); */
+    const [y1, m1, d1] = dateIn.split("-").map(Number);
+    const startOfDay = new Date(Date.UTC(y1, m1 - 1, d1, 6, 0, 0));
+    const [y2, m2, d2] = dateOut.split("-").map(Number);
+    const endOfDay = new Date(Date.UTC(y2, m2 - 1, d2 + 1, 6, 0, 0));
+
+    const [entrada, salida, canceladas, completas, desviadas] = await Promise.all([
+      db.boleta.count({
+        where: {
+          AND: [
+            { estado: { not: "Pendiente" } },
+            { estado: { not: "Cancelada" } },
+          ],
+          ...(socios ? {socio: socios} : {}),  
+          proceso: 0,
+          fechaFin: { gte: startOfDay, lte: endOfDay },
+          ...(movimiento ? { movimiento: movimiento } : {}),
+          ...(producto ? { producto: producto } : {}),
+        },
+      }),
+      db.boleta.count({
+        where: {
+          AND: [
+            { estado: { not: "Pendiente" } },
+            { estado: { not: "Cancelada" } },
+          ],
+          ...(socios ? {socio: socios} : {}),  
+          proceso: 1,
+          fechaFin: { gte: startOfDay, lte: endOfDay },
+          ...(movimiento ? { movimiento: movimiento } : {}),
+          ...(producto ? { producto: producto } : {}),
+        },
+      }),
+      db.boleta.count({
+        where: {
+          AND: [{ estado: { not: "Pendiente" } }, { estado: "Cancelada" }],
+          ...(socios ? {socio: socios} : {}), 
+          fechaFin: { gte: startOfDay, lte: endOfDay },
+          ...(movimiento ? { movimiento: movimiento } : {}),
+          ...(producto ? { producto: producto } : {}),
+        },
+      }),
+      db.boleta.count({
+        where: {
+          AND: [{ estado: { not: "Pendiente" } }, { estado: "Completado" }],
+          ...(socios ? {socio: socios} : {}), 
+          fechaFin: { gte: startOfDay, lte: endOfDay },
+          ...(movimiento ? { movimiento: movimiento } : {}),
+          ...(producto ? { producto: producto } : {}),
+        },
+      }),
+      db.boleta.count({
+        where: {
+          AND: [{ estado: { not: "Pendiente" } }, { estado: "Completo(Fuera de tolerancia)" }],
+          ...(socios ? {socio: socios} : {}),  
+          fechaFin: { gte: startOfDay, lte: endOfDay },
+          ...(movimiento ? { movimiento: movimiento } : {}),
+          ...(producto ? { producto: producto } : {}),
+        },
+      }),
+    ]);
 
     const data = await db.boleta.findMany({
       select: {
@@ -875,72 +1011,75 @@ const getBoletasHistorial = async (req, res) => {
         proceso: true,
         empresa: true,
         motorista: true,
-        movimiento:true, 
-        producto: true, 
-        pesoNeto:true, 
-        pesoTeorico: true, 
-        desviacion: true, 
+        movimiento: true,
+        producto: true,
+        pesoNeto: true,
+        pesoTeorico: true,
+        desviacion: true,
         socio: true,
         placa: true,
-        fechaInicio: true,
+        fechaFin: true,
+        estado: true, 
         proceso: true,
-      }, 
+      },
       where: {
+        ...(socios ? {socio: socios} : {}), 
+        fechaFin: { gte: startOfDay, lte: endOfDay },
         estado: {
-          not: 'Pendiente'
-        }, 
-        ...(movimiento ? {movimiento : movimiento} : {}), 
-        ...(producto ? {producto:producto} : {})
-      }
+          not: "Pendiente",
+        },
+        ...(movimiento ? { movimiento: movimiento } : {}),
+        ...(producto ? { producto: producto } : {}),
+      },
     });
-  
+
     const dataUTCHN = data.map((el) => ({
       Id: el.id,
       Placa: el.placa,
       Cliente: el.socio,
       Transporte: el.empresa,
       Motorista: el.motorista,
-      Moviento: el.movimiento, 
-      Producto: el.producto, 
-      PesoNeto: el.pesoNeto, 
-      PesoTeorico: el.pesoTeorico, 
-      Desviacion: el.desviacion, 
-      Fecha: el.fechaInicio.toLocaleString(),
+      Moviento: el.movimiento,
+      Producto: el.producto,
+      PesoNeto: el.pesoNeto,
+      PesoTeorico: el.pesoTeorico,
+      Desviacion: el.desviacion,
+      Estado: el.estado, 
+      Fecha: el.fechaFin.toLocaleString(),
     }));
-  
-    res.send(dataUTCHN);
+
+    res.send({ table: dataUTCHN, graphProcesos: [{entrada}, {salida}], graphEstados: [{canceladas}, {completas}, {desviadas}] });
   } catch (err) {
-    console.log(err)
-    res.status(500).send({msg: 'Error interno API'})
+    console.log(err);
+    res.status(500).send({ msg: "Error interno API" });
   }
-}
+};
 
 const getReimprimir = async (req, res) => {
-  try{
-    const id = req.params.id
-    const boleta = await  db.boleta.findUnique({
+  try {
+    const id = req.params.id;
+    const boleta = await db.boleta.findUnique({
       where: {
-        id: parseInt(id)
-      }
-    })
+        id: parseInt(id),
+      },
+    });
 
-    imprimirEpson(boleta)
-    res.send({msg:"Impresion correcta"})
-  } catch(err) {
-    console.log(err)
+    imprimirEpson(boleta);
+    res.send({ msg: "Impresion correcta" });
+  } catch (err) {
+    console.log(err);
   }
-
-}
+};
 
 /* Para el calentario */
 /**
  * Primera parte fechas
  */
 
-const getBoletasMes = async(req, res) => {
-  try{
-    const start = req.query.start || '';
-    const end = req.query.end || '';
+const getBoletasMes = async (req, res) => {
+  try {
+    const start = req.query.start || "";
+    const end = req.query.end || "";
 
     const result = await db.$queryRaw`
     SELECT  CONVERT(DATE, fechaInicio AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') as fecha, COUNT(*) as cantidad
@@ -949,114 +1088,116 @@ const getBoletasMes = async(req, res) => {
     GROUP BY CONVERT(DATE, fechaInicio AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time')
     ORDER BY fecha
   `;
-  
-  const makeCalendar = result.map((item) => ({
-    title: `Boletas creadas: ${item.cantidad}`,
-    start: item.fecha.toISOString().split('T')[0],  
-    allDay: true,
-    display: 'auto',
-    textColor: 'black',
-    backgroundColor: 'transparent', 
-    borderColor: 'transparent', // Cambiado a transparente
-  }));
 
-    res.send(makeCalendar)
-  }catch(err) {
-    console.log(err)
+    const makeCalendar = result.map((item) => ({
+      title: `Boletas creadas: ${item.cantidad}`,
+      start: item.fecha.toISOString().split("T")[0],
+      allDay: true,
+      display: "auto",
+      textColor: "black",
+      backgroundColor: "transparent",
+      borderColor: "transparent", // Cambiado a transparente
+    }));
+
+    res.send(makeCalendar);
+  } catch (err) {
+    console.log(err);
   }
-}
+};
 
-const getTimeLineForComponent = async(req, res) => {
-  try{
-    const fecha = req.query.fecha || '';
-    const convertDate = fecha && new Date(fecha).toISOString()
+const getTimeLineForComponent = async (req, res) => {
+  try {
+    const fecha = req.query.fecha || "";
+    const convertDate = fecha && new Date(fecha).toISOString();
 
     // Sumamos 1 día
     const fechaObj = new Date(convertDate);
     const fechaMasUno = new Date(fechaObj);
     fechaMasUno.setDate(fechaObj.getDate() + 1);
-  
+
     // Ahora hacemos la consulta
     const data = await db.boleta.findMany({
       where: {
         fechaInicio: {
-          gte: convertDate,                     // fecha inicial
-          lt: fechaMasUno.toISOString()   // fecha + 1 día
-        }
-      }
+          gte: convertDate, // fecha inicial
+          lt: fechaMasUno.toISOString(), // fecha + 1 día
+        },
+      },
     });
-    const groups = data.map((el)=>({
-      id: el.id, 
-      title: el.placa + '(#' + el.id +')'
-    }))
+    const groups = data.map((el) => ({
+      id: el.id,
+      title: el.placa + "(#" + el.id + ")",
+    }));
 
-    const items = data.map((el)=>({
-      id: el.id, 
-      group:el.id, 
-      title:el.placa,
-      start_time: el.fechaInicio, 
-      end_time: el.fechaFin
-    }))
+    const items = data.map((el) => ({
+      id: el.id,
+      group: el.id,
+      title: el.placa,
+      start_time: el.fechaInicio,
+      end_time: el.fechaFin,
+    }));
 
-    res.send({groups, items})
-  }catch (err) {
-    console.log(err)
+    res.send({ groups, items });
+  } catch (err) {
+    console.log(err);
   }
-}
+};
 
-const updateCancelBoletas = async(req, res) => {
+const updateCancelBoletas = async (req, res) => {
   const { Id, Motivo } = req.body;
-  console.log(req.body)
+  console.log(req.body);
   try {
     const updateBoleta = await db.boleta.update({
       where: {
-        id: parseInt(Id)
+        id: parseInt(Id),
       },
       data: {
         boletaType: 5,
         observaciones: Motivo,
         fechaFin: new Date(),
-        estado: "Cancelada" 
+        estado: "Cancelada",
       },
-    })
-    res.send({msg: 'Cancelada correctamente', boletas: updateBoleta})
-  } catch(err) {
-    console.log(err)
+    });
+    res.send({ msg: "Cancelada correctamente", boletas: updateBoleta });
+  } catch (err) {
+    console.log(err);
   }
-}
-
+};
 
 /**
  * Para reportes
  */
 
+const getMovimientosYProductos = async (req, res) => {
+  try {
+    const [movimiento, producto, socios] = await Promise.all([
+      db.movimientos.findMany({ select: { id: true, nombre: true } }),
+      db.producto.findMany({ select: { id: true, nombre: true } }),
+      db.boleta.findMany({ 
+        select: { socio: true }, 
+        distinct: ['socio']
+      })
+    ]);
 
-const getMovimientosYProductos = async(req,res)=> {
-  try{
-    const [movimiento, producto] = await Promise.all([
-      db.movimientos.findMany({select: { id: true, nombre: true },}), 
-      db.producto.findMany({select: { id: true, nombre: true },})
-    ])
-    
-    res.send({movimiento, producto})
-  } catch(err){
-    console.log(err)
+    res.send({ movimiento, producto, socios });
+  } catch (err) {
+    console.log(err);
   }
-}
+};
 
 module.exports = {
   getAllData,
   postBoletasNormal,
   getDataBoletas,
-  getStatsBoletas, 
-  getBoletaID, 
-  updateBoleta, 
-  postBoleta, 
-  getBoletasHistorial, 
-  getReimprimir, 
-  getBoletasCompletadasDiarias, 
-  getBoletasMes, 
-  getTimeLineForComponent, 
-  updateCancelBoletas, 
-  getMovimientosYProductos
+  getStatsBoletas,
+  getBoletaID,
+  updateBoleta,
+  postBoleta,
+  getBoletasHistorial,
+  getReimprimir,
+  getBoletasCompletadasDiarias,
+  getBoletasMes,
+  getTimeLineForComponent,
+  updateCancelBoletas,
+  getMovimientosYProductos,
 };

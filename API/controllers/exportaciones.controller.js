@@ -11,12 +11,20 @@ const exportToExcel = async (req, res) => {
     const producto = req.query.producto || null;
     const movimiento = req.query.movimiento || null;
 
+    const [y1, m1, d1] = dateIn.split("-").map(Number);
+    const startOfDay = new Date(Date.UTC(y1, m1 - 1, d1, 6, 0, 0));
+    const [y2, m2, d2] = dateOut.split("-").map(Number);
+    const endOfDay = new Date(Date.UTC(y2, m2 - 1, d2 + 1, 6, 0, 0));
+
     const data = await db.boleta.findMany({
       where: {
-        AND: [{ estado: { not: 'Pendiente' } }, { estado: { not: 'Cancelada' } }], 
-        ...(movimiento ? {movimiento : movimiento} : {}), 
-        ...(producto ? {producto:producto} : {})
-      }
+        fechaFin: { gte: startOfDay, lte: endOfDay },
+        estado: {
+          not: "Pendiente",
+        },
+        ...(movimiento ? { movimiento: movimiento } : {}),
+        ...(producto ? { producto: producto } : {}),
+      },
     });
 
     // Verificación de datos
