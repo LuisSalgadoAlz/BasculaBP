@@ -131,7 +131,7 @@ const Boletas = () => {
    * Todo: terminada Primera parte
    */
   const handleSubmitNewPlaca = async () => {
-    const response = formaterDataNewPlaca(formBoletas) 
+    const response = formaterDataNewPlaca(formBoletas)
     const isCorrect = verificarDataNewPlaca(setErr,response, setMsg) 
     if (isCorrect) {
       await postBoletasNormal(response, setIsLoading)
@@ -139,7 +139,7 @@ const Boletas = () => {
       setMsg('agregar nueva boleta')
       setOpenModalForm(false)
       closeAllDataOfForm()
-    }
+    } 
   }
 
   /**

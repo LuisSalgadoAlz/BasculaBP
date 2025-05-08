@@ -9,6 +9,8 @@ import { IoCloseSharp } from "react-icons/io5";
 import { ButtonPrint } from "../buttons";
 import { getConvertPdf, getPrintEpson } from "../../hooks/formDataBoletas";
 
+const clsColumn2 = 'grid grid-cols-1 md:grid-cols-2 gap-x-2 gap-y-4 p-2 place-content-center'
+const clsColumn1 = 'grid grid-cols-1 md:grid-cols-1 gap-x-2 gap-y-4 p-2 place-content-center'
 const formInputSelect = ['Transportes', 'Placa', 'Motoristas']
 
 /**
@@ -136,15 +138,30 @@ export const ModalNormal= ({hdlClose, hdlChange, fillData, formBol, boletas, hdl
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-2 p-2 place-content-center">
-          <SelectFormBoletas key={clean} classCss={classFormSelct} name={'Socios'} data={fillData['Clientes']} fun={hdlChange}/>
-          {boletas?.Socios==-998 && <InputsFormBoletas data={claseFormInputs} name={'Cliente'} fun={hdlChange}/>}
-          {boletas?.Socios==-999 && <InputsFormBoletas data={claseFormInputs} name={'Proveedor'} fun={hdlChange}/>}
-          {formInputSelect.map((field) => (
-            (boletas?.Socios !=-998 && boletas?.Socios !=-999) ? (<SelectFormBoletas key={field} classCss={classFormSelct} name={field} data={fillData[field]} fun={hdlChange}  /> )
-            : (<InputsFormBoletas key={field} data={claseFormInputs} name={field} fun={hdlChange} val={field=='Transportes' ? 'Transportes X' : undefined} stt={field=='Transportes' ? true : false}/>) 
-          ))}
-          <PartInputsPesos fun={getPesoIn} hdlChange={hdlChange} val={boletas}/>
+        <div className={boletas?.Proceso === 0 ? clsColumn2 : clsColumn1}>
+          <div>
+            <SelectFormBoletas classCss={classFormSelct} name={'Proceso'} data={fillData['Proceso']} fun={hdlChange}/>
+            <SelectFormBoletas key={clean} classCss={classFormSelct} name={'Socios'} data={fillData['Clientes']} fun={hdlChange}/>
+            {boletas?.Socios==-998 && <InputsFormBoletas data={claseFormInputs} name={'Cliente'} fun={hdlChange}/>}
+            {boletas?.Socios==-999 && <InputsFormBoletas data={claseFormInputs} name={'Proveedor'} fun={hdlChange}/>}
+            {formInputSelect.map((field) => (
+              (boletas?.Socios !=-998 && boletas?.Socios !=-999) ? (<SelectFormBoletas key={field} classCss={classFormSelct} name={field} data={fillData[field]} fun={hdlChange}  /> )
+              : (<InputsFormBoletas key={field} data={claseFormInputs} name={field} fun={hdlChange} val={field=='Transportes' ? 'Transportes X' : undefined} stt={field=='Transportes' ? true : false}/>) 
+            ))}          </div>
+          <div>
+            {boletas?.Proceso === 0 && (
+              <>
+                <SelectFormBoletas classCss={classFormSelct} name={'Movimiento'} data={(boletas.Proceso===0) ? fillData['Flete'] : fillData['FleteS']} fun={hdlChange} stt={(boletas.Proceso==='')? true : false}/>
+                <SelectFormBoletas classCss={classFormSelct} name={"Origen"} data={fillData['Origen']} fun={hdlChange} stt={boletas?.Socios!='' ? false: true}/>
+                <SelectFormBoletas classCss={classFormSelct} name={'Producto'} data={fillData['Producto']} fun={hdlChange}/>
+                <InputsFormBoletas data={claseFormInputs} name={'NSalida'} fun={hdlChange}/>
+                <InputsFormBoletas data={claseFormInputs} name={'NViajes'} fun={hdlChange}/>
+              </>
+            )}
+          </div>
+          <div className="col-span-2">
+            <PartInputsPesos fun={getPesoIn} hdlChange={hdlChange} val={boletas}/> 
+          </div>
         </div>
    
         <hr className="text-gray-300 mt-1" />

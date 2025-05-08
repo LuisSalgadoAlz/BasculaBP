@@ -118,6 +118,7 @@ export const getDataBoletasPorID = async (id) => {
 export const formaterDataNewPlaca = (formBoletas) => {
   const typeSocio = formBoletas?.Socios ==-998 ?  formBoletas?.Cliente : formBoletas?.Proveedor
   const allData = {
+    proceso: formBoletas?.Proceso, 
     idCliente : formBoletas?.Socios,
     socio: typeSocio,    
     idUsuario: Cookies.get('token'),
@@ -125,6 +126,13 @@ export const formaterDataNewPlaca = (formBoletas) => {
     pesoInicial: formBoletas?.pesoIn,
     idPlaca: formBoletas?.Placa,
     idEmpresa: formBoletas?.Transportes,
+    ...(formBoletas?.Proceso == 0 && {
+      Movimiento, 
+      idProducto: formBoletas?.Producto|| null, 
+      idOrigen: formBoletas?.Origen || null, 
+      NSalida: formBoletas?.NSalida || null, 
+      NViajes:  formBoletas.NViajes  || null
+    })
   }
   return allData
 }

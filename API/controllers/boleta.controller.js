@@ -411,12 +411,17 @@ const getDataBoletas = async (req, res) => {
 const postClientePlacaMoto = async (req, res) => {
   try {
     const {
+      proceso,
       idCliente,
       idUsuario,
       idMotorista,
       pesoInicial,
       idPlaca,
       idEmpresa,
+      idProducto, 
+      idOrigen, 
+      NSalida, 
+      NViajes, 
     } = req.body;
 
     const empresa = await db.empresa.findUnique({
@@ -432,6 +437,9 @@ const postClientePlacaMoto = async (req, res) => {
       select: { id: true, placa: true },
       where: { placa: idPlaca, rEmpresaVehiculo: { id: idEmpresa } },
     });
+
+    const producto = proceso === 0 && await db.producto.findUnique({where:{id:idProducto}})
+    const origen = proceso === 0 && await db.direcciones.findUnique({where: {id:idOrigen}})
 
     const verificado = jwt.verify(idUsuario, process.env.SECRET_KEY);
     const despachador = await db.usuarios.findUnique({
@@ -456,6 +464,15 @@ const postClientePlacaMoto = async (req, res) => {
         pesoInicial: parseFloat(pesoInicial),
         idPlaca: placaData.id,
         idEmpresa: parseInt(idEmpresa),
+        proceso, 
+        ...(proceso==0 && {
+          NSalida: parseInt(NSalida), 
+          Nviajes: parseInt(NViajes), 
+          idProducto, 
+          producto: producto.nombre, 
+          idOrigen, 
+          origen: origen.nombre, 
+        })
       },
     });
     res
