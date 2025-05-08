@@ -33,7 +33,7 @@ const exportToExcel = async (req, res) => {
 
     // Formateo de datos para el reporte
     const boletas = data.map((el) => ({
-      Boleta: el.id,
+      Boleta: el.numBoleta,
       Proceso: el.proceso == 0 ? 'Entrada' : 'Salida',
       Placa: el.placa,
       Cliente: el.socio,

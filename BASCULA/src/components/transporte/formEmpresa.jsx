@@ -87,7 +87,7 @@ export const FormVehiculos = ({ fun }) => {
           <select name={"tipo"} className={claseFormInputs} onChange={fun}> 
               <option value={-1} className="text-gray-400">Seleccione un tipo</option>
               {tiposCamion.map((el)=>(
-                <option value={el.id}>{el.nombre}</option>
+                <option key={el.id} value={el.id}>{el.nombre}</option>
               ))}
           </select>
         </div>
@@ -136,7 +136,7 @@ export const FormVehiculosEdit = ({ fun, data }) => {
           <select name={"tipo"} className={claseFormInputs} onChange={fun} value={data && data.tipo}> 
             <option value={-1} className="text-gray-400">Seleccione un tipo</option>
             {tiposCamion.map((el)=>(
-              <option value={el.id}>{el.nombre}</option>
+              <option key={el.id} value={el.id}>{el.nombre}</option>
             ))}
           </select>
         </div>

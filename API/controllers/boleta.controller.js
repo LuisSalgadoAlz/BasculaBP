@@ -518,15 +518,20 @@ const postBoleta = async (req, res) => {
   }
 };
 
+/**
+ * Fechas en UTC corregidas ultimo cambio aqui
+ * @param {*} req 
+ * @param {*} res 
+ */
 const getStatsBoletas = async (req, res) => {
   const now = new Date();
   const year = now.getUTCFullYear();
   const month = now.getUTCMonth(); // ya está en base 0
   const day = now.getUTCDate();
 
-  const startOfDay = new Date(Date.UTC(year, month, day, 0, 0, 0));
-  const endOfDay = new Date(Date.UTC(year, month, day, 23, 59, 59, 999));
-
+  const startOfDay = new Date(Date.UTC(year, month, day, 6, 0, 0));
+  const endOfDay = new Date(Date.UTC(year, month, day+1, 6, 0, 0, 0));
+  
   try {
     const [entrada, salida, pendientes] = await Promise.all([
       db.boleta.count({
@@ -979,6 +984,11 @@ const updateBoleta = async (req, res) => {
   }
 };
 
+/**
+ * Aqui tambien se cambio
+ * @param {*} req 
+ * @param {*} res 
+ */
 const getBoletasHistorial = async (req, res) => {
   try {
     const movimiento = req.query.movimiento || "";
@@ -1051,6 +1061,7 @@ const getBoletasHistorial = async (req, res) => {
     const data = await db.boleta.findMany({
       select: {
         id: true,
+        numBoleta: true, 
         estado: true,
         proceso: true,
         empresa: true,
@@ -1078,7 +1089,7 @@ const getBoletasHistorial = async (req, res) => {
     });
 
     const dataUTCHN = data.map((el) => ({
-      Id: el.id,
+      Boleta: el.numBoleta,
       Placa: el.placa,
       Cliente: el.socio,
       Transporte: el.empresa,
