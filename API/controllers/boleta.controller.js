@@ -3,6 +3,15 @@ const dotenv = require("dotenv");
 const jwt = require("jsonwebtoken");
 const { imprimirEpson } = require("./impresiones.controller");
 
+const generarNumBoleta = async () => {
+  const ultimo = await db.boleta.findFirst({
+    orderBy: { numBoleta: 'desc' },
+    select: { numBoleta: true },
+  });
+
+  return (ultimo?.numBoleta || 0) + 1;
+};
+
 const getAllData = async (req, res) => {
   try {
     /* 0 Proveedor 1 Cliente */
@@ -175,6 +184,11 @@ const getAllData = async (req, res) => {
   }
 };
 
+/**
+ * Aqui tambien se coloco el generador de numeros de boleta
+ * @param {*} req 
+ * @param {*} res 
+ */
 const postBoletasNormal = async (req, res) => {
   try {
     const {
@@ -245,9 +259,12 @@ const postBoletasNormal = async (req, res) => {
       !isComodin &&
       (await db.direcciones.findUnique({ where: { id: parseInt(idDestino) } }));
 
+    const numBoleta = await generarNumBoleta();  
+
     const nuevaBoleta = await db.boleta.create({
       data: {
         idSocio: !isComodin ? parseInt(idCliente) : null,
+        numBoleta, 
         pesoNeto: parseFloat(pesoFinal) - parseFloat(pesoInicial),
         pesoFinal: parseFloat(pesoFinal),
         placa: !isComodin ? placaData.placa : idPlaca,
@@ -555,6 +572,11 @@ const getBoletaID = async (req, res) => {
   }
 };
 
+/**
+ * Aqui ya se modifico
+ * @param {*} req 
+ * @param {*} res 
+ */
 const getBoletasCompletadasDiarias = async (req, res) => {
   try {
     const search = req.query.search || "";
@@ -579,6 +601,7 @@ const getBoletasCompletadasDiarias = async (req, res) => {
     const data = await db.boleta.findMany({
       select: {
         id: true,
+        numBoleta: true, 
         estado: true,
         proceso: true,
         empresa: true,
@@ -609,6 +632,9 @@ const getBoletasCompletadasDiarias = async (req, res) => {
           },
         ],
       },
+      orderBy:{
+        numBoleta:'desc'
+      }, 
       skip: skip,
       take: limit,
     });
@@ -636,7 +662,7 @@ const getBoletasCompletadasDiarias = async (req, res) => {
 
     const dataUTCHN = data.map((el) => ({
       Id: el.id,
-      Boleta: el.id,
+      Boleta: el.numBoleta,
       Proceso: el.proceso == 0 ? "Entrada" : "Salida",
       Placa: el.placa,
       Cliente: el.socio,
@@ -660,6 +686,12 @@ const getBoletasCompletadasDiarias = async (req, res) => {
     console.log("Error en el api", err);
   }
 };
+
+/**
+ *  Aqui se puso el generador (updateBoletaOut)
+ * @param {*} req 
+ * @param {*} res 
+ */
 
 const updateBoletaOut = async (req, res) => {
   try {
@@ -750,12 +782,15 @@ const updateBoletaOut = async (req, res) => {
         where: { id: parseInt(idTrasladoDestino) },
       }));
 
+    const numBoleta = await generarNumBoleta();
+
     const nuevaBoleta = await db.boleta.update({
       where: {
         id: parseInt(req.params.id),
       },
       data: {
         idSocio: parseInt(idCliente),
+        numBoleta, 
         placa: placaData.placa,
         empresa: empresa.nombre,
         motorista: motorista.nombre,
@@ -814,6 +849,12 @@ const updateBoletaOut = async (req, res) => {
     res.status(500).json({ msg: `Error al crear usuario: ${error.message}` });
   }
 };
+
+/**
+ * Aqui tambien se coloco el generador (updateBoletaOutComdin)
+ * @param {*} req 
+ * @param {*} res 
+ */
 
 const updateBoletaOutComdin = async (req, res) => {
   try {
@@ -875,12 +916,15 @@ const updateBoletaOutComdin = async (req, res) => {
         where: { id: parseInt(idTrasladoDestino) },
       }));
 
+    const numBoleta = await generarNumBoleta();
+
     const nuevaBoleta = await db.boleta.update({
       where: {
         id: parseInt(req.params.id),
       },
       data: {
         placa: idPlaca,
+        numBoleta, 
         empresa: idEmpresa,
         motorista: idMotorista,
         origen: !isTraslado ? (proceso == 0 ? origen : "Baprosa") : null,
@@ -1143,16 +1187,23 @@ const getTimeLineForComponent = async (req, res) => {
   }
 };
 
+/**
+ * Aqui tambien se colcoco
+ * @param {*} req 
+ * @param {*} res 
+ */
 const updateCancelBoletas = async (req, res) => {
   const { Id, Motivo } = req.body;
   console.log(req.body);
   try {
+    const numBoleta = await generarNumBoleta();
     const updateBoleta = await db.boleta.update({
       where: {
         id: parseInt(Id),
       },
       data: {
         boletaType: 5,
+        numBoleta, 
         observaciones: Motivo,
         fechaFin: new Date(),
         estado: "Cancelada",

@@ -1,4 +1,4 @@
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ModalErr, NoData, Spinner } from "../components/alerts";
 import TableHistorial from "../components/historial/tables";
 import {
@@ -17,7 +17,7 @@ const Informes = () => {
   const [formFiltros, setFormFiltros] = useState({
     movimiento: "",
     producto: "",
-    socio:""
+    socio: ""
   });
   const [showFilters, setShowFilters] = useState(false);
   const [err, setErr] = useState(false);
@@ -77,74 +77,117 @@ const Informes = () => {
   const propsTable = { datos: data?.table, imprimirCopia: handlePrint };
   const propsGraficosProceso = {
     data: data?.graphProcesos,
-    title: "Distribucion de Procesos",
+    title: "Distribución de Procesos",
     subtitle:
-      "Distribucion por porcentaje de entradas, salidas y boletas canceladas",
+      "Distribución por porcentaje de entradas, salidas y boletas canceladas",
   };
   const propsGraficosTipoDeBoleta = {
     data: data?.graphEstados,
-    title: "Distribucion por Tipo De Boleta",
+    title: "Distribución por Tipo De Boleta",
     subtitle:
-      "Distribucion por porcentaje de boleta especial, comodin y boleta normal",
+      "Distribución por porcentaje de boleta especial, comodín y boleta normal",
   };
 
   return (
-    <>
-      <div className="flex justify-between w-full gap-5">
-        <div className="parte-izq">
-          <h1 className="text-3xl font-bold titulo">Reportes de boletas</h1>
-          <h1 className="text-gray-600">
-            {" "}
+    <div className="">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+        <div className="mb-4 md:mb-0">
+          <h1 className="text-3xl font-bold titulo">Reportes de Boletas</h1>
+          <p className="text-gray-600 mt-1">
             Gestiona los informes generados en el sistema.
-          </h1>
+          </p>
         </div>
       </div>
-      <div
-        className={`mt-6 bg-white shadow rounded-lg px-6 py-7 border border-gray-300`}
-      >
-        <div className="filtros grid grid-rows-1 grid-cols-5 grid-flow-col gap-2 max-md:grid-rows-2 max-md:grid-cols-2 max-sm:grid-rows-2 max-sm:grid-cols-1 mb-4">
-          <input
-            className="p-2.5 text-sm font-medium text-gray-600  rounded-lg border border-gray-200 col-span-full"
-            type="text"
-            placeholder="Buscar boletas por ID, placas o motorista..."
-          />
-          <ButtonAdd name="Exportar PDF" />
-          <ButtonAdd name="Exportar EXCEL" fun={handleExportToExcel}/>
+
+      <div className="bg-white shadow-lg rounded-lg border border-gray-200 overflow-hidden">
+        {/* Cabecera y acciones principales */}
+        <div className="p-6 bg-gray-50 border-b border-gray-200">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div className="md:col-span-3">
+              <div className="relative">
+                <input
+                  className="w-full p-3 pl-10 text-sm bg-white border  rounded-lg"
+                  type="text"
+                  placeholder="Buscar boletas por ID, placas o motorista..."
+                />
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <ButtonAdd name="Exportar PDF" className="w-full justify-center" />
+            <ButtonAdd name="Exportar EXCEL" fun={handleExportToExcel} className="w-full justify-center" />
+          </div>
         </div>
-        <div className="p-2">
+
+        {/* Filtros */}
+        <div className="p-6 border-b border-gray-200">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-sm font-semibold text-gray-600">
+            <h3 className="text-lg font-semibold text-gray-700">
               Filtros de Reporte
             </h3>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+              className="flex items-center px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors duration-200"
             >
-              {showFilters ? "Ocultar filtros" : "Mostrar filtros"}
+              <span>{showFilters ? "Ocultar filtros" : "Mostrar filtros"}</span>
+              <svg 
+                className={`w-5 h-5 ml-2 transition-transform duration-200 ${showFilters ? 'rotate-180' : ''}`} 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24" 
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
             </button>
           </div>
 
-          {showFilters && <FiltrosReporteria {...propsFiltros} />}
+          {showFilters && (
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <FiltrosReporteria {...propsFiltros} />
+            </div>
+          )}
         </div>
-        <div className="mt-4">
+
+        {/* Contenido principal */}
+        <div className="p-6">
           {isLoad && !data ? (
-            <Spinner />
-          ) : !data || data.table.length == 0 ? (
-            <NoData />
+            <div className="flex justify-center py-12">
+              <Spinner />
+            </div>
+          ) : !data || data.table.length === 0 ? (
+            <div className="py-12">
+              <NoData />
+            </div>
           ) : (
             <>
-              <div className="grid grid-cols-2">
-                <DistribucionPorTipoChart {...propsGraficosProceso} />
-                <DistribucionPorTipoChart {...propsGraficosTipoDeBoleta} />
+              {/* Gráficos */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+                  <DistribucionPorTipoChart {...propsGraficosProceso} />
+                </div>
+                <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+                  <DistribucionPorTipoChart {...propsGraficosTipoDeBoleta} />
+                </div>
               </div>
-              <hr className="mt-10 mb-4 text-gray-400" />
-              <TableHistorial {...propsTable} />
+              
+              {/* Tabla de datos */}
+              <div className="mt-6">
+                <h3 className="text-xl font-semibold text-gray-800 mb-4">Historial de Boletas</h3>
+                <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+                  <TableHistorial {...propsTable} />
+                </div>
+              </div>
             </>
           )}
         </div>
       </div>
+      
       {err && <ModalErr {...propsModalErr} />}
-    </>
+    </div>
   );
 };
 

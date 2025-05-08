@@ -67,7 +67,7 @@ const imprimirEpson = (boleta) => {
 
   const contenido = `
 ${INIT}${BOLD_CENTERED_BIG}BAPROSA${BOLD_OFF}
-${BOLD_CENTERED}Boleta de Peso No. ${boleta.id}${LEFT}${BOLD_CENTERED}Proceso: ${LABELSINSPACE} - ${quitarAcentos(boleta.movimiento)} / Duracion del Proceso: ${TIEMPOESTADIA}${LEFT}
+${BOLD_CENTERED}Boleta de Peso No. ${boleta.numBoleta}${LEFT}${BOLD_CENTERED}Proceso: ${LABELSINSPACE} - ${quitarAcentos(boleta.movimiento)} / Duracion del Proceso: ${TIEMPOESTADIA}${LEFT}
 ${LABEL_COPIA}
 ${BOLD_ON}${LABEL}${BOLD_OFF} ${quitarAcentos(boleta.socio)}               
 ${BOLD_ON}Placa         :${BOLD_OFF} ${stringtruncado(boleta.placa, 27)}${BOLD_ON}Hora de Entrada :${BOLD_OFF} ${boleta.fechaInicio.toLocaleTimeString()}
@@ -265,7 +265,7 @@ const imprimirPDF = async (req, res) => {
     doc.font('Helvetica-Bold')
        .fontSize(12)
        .fillColor(black)
-       .text(`N° ${boleta.id}`, 380, 85, { width: 150, align: 'right' });
+       .text(`N° ${boleta.numBoleta}`, 380, 85, { width: 150, align: 'right' });
 
     // Marca de copia u original
     if (!isOriginal) {
