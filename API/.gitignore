@@ -8,3 +8,5 @@ node_modules
 ./api/prisma/migrations
 
 boleta_epson.txt
+
+#VERSION ANTES DE LOS CAMBIOS EN BOLETA
