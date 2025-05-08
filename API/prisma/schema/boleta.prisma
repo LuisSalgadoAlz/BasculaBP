@@ -36,6 +36,8 @@ model Boleta {
     observaciones String? @db.VarChar(255)
     pesoInicial Float
     pesoFinal Float?
+    NSalida Int?
+    Nviajes Int?
     fechaInicio DateTime
     fechaFin DateTime?
 
