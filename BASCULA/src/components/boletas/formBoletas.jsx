@@ -13,6 +13,22 @@ const clsColumn2 = 'grid grid-cols-1 md:grid-cols-2 gap-x-2 gap-y-4 p-2 place-co
 const clsColumn1 = 'grid grid-cols-1 md:grid-cols-1 gap-x-2 gap-y-4 p-2 place-content-center'
 const formInputSelect = ['Transportes', 'Placa', 'Motoristas']
 
+const AcordeonSeccion = ({ titulo, children }) => {
+  const [abierto, setAbierto] = useState(false);
+  return (
+    <div className="border rounded-xl mb-4">
+      <button
+        onClick={() => setAbierto(!abierto)}
+        className="w-full flex justify-between items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-t-xl"
+      >
+        <span className="font-semibold text-gray-700">{titulo}</span>
+        <span>{abierto ? "▲" : "▼"}</span>
+      </button>
+      {abierto && <div className="p-4 bg-white border-t">{children}</div>}
+    </div>
+  );
+};
+
 /**
  * Todo: Boleta espcial de casulla
  * @param {*} param0 
@@ -98,89 +114,98 @@ export const ModalBoletas = ({hdlClose, hdlChange, fillData, formBol, boletas, h
   );
 };
 
-export const ModalNormal= ({hdlClose, hdlChange, fillData, formBol, boletas, hdlClean, hdlSubmit, clean, isLoading}) => {
+export const ModalNormal = ({ hdlClose, hdlChange, fillData, formBol, boletas, hdlClean, hdlSubmit, clean, isLoading }) => {
   const [peso, setPeso] = useState('00lb');
+
   const getPesoIn = () => {
-    formBol((prev)=> ({
-      ...prev, 
-      'pesoIn' : parseInt(peso.replaceAll('lb', '')), 
-    }))
-  }
+    formBol((prev) => ({
+      ...prev,
+      'pesoIn': parseInt(peso.replaceAll('lb', '')),
+    }));
+  };
 
   useEffect(() => {
-    const socket = new WebSocket(URLWEBSOCKET); 
+    const socket = new WebSocket(URLWEBSOCKET);
     socket.onmessage = (event) => {
-      const newPeso = event.data;
-      setPeso(newPeso); 
+      setPeso(event.data);
     };
-
-    socket.onerror = () => {
-      setPeso('No conectada')
-    }
-
-    return () => {
-      socket.close();
-    };
-  }, []);  
+    socket.onerror = () => setPeso('No conectada');
+    return () => socket.close();
+  }, []);
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4 sm:p-6 min-h-screen bg-opa-50">
-      <div className="bg-white w-full max-w-xl rounded-2xl p-2 shadow-lg sm:w-[90%] md:w-[80%] lg:w-[60%] max-h-[95vh] overflow-y-auto boletas border-8 border-white">
-        <div className="mb-1">
-          <h2 className="text-2xl font-bold text-gray-800">Boletas</h2>
-          <p className="text-sm text-gray-500">Creación de entrada y salida de material del {new Date().toLocaleDateString()}</p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opa-50 p-4">
+      <div className="bg-white w-full max-w-lg rounded-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto border border-gray-300 space-y-5">
+        
+        {/* Encabezado */}
+        <div>
+          <h2 className="text-2xl font-semibold text-gray-800">Boletas</h2>
+          <p className="text-sm text-gray-500">Entrada/Salida de material del {new Date().toLocaleDateString()}</p>
         </div>
 
-        <div className="my-2 p-2 bg-gray-100 rounded-lg border border-gray-300">
-          <div className="flex justify-between items-center">
-            <span className="text-lg font-bold text-gray-900 max-sm:text-sm">Peso en tiempo real báscula:</span>
-            <span className="text-lg font-bold text-gray-900 max-sm:text-sm">{peso}</span>
+        {/* Peso en tiempo real */}
+        <div className="p-3 bg-gray-100 rounded-lg border text-base font-medium text-gray-700 flex justify-between">
+          <span>Peso en tiempo real báscula:</span>
+          <span className="font-bold text-gray-900">{peso}</span>
+        </div>
+
+        {/* Formulario principal */}
+        <div className={`${boletas?.Proceso === 0 ? clsColumn2 : clsColumn1} gap-4`}>
+          {/* Select Proceso */}
+          <div className="col-span-2">
+            <SelectFormBoletas classCss={classFormSelct} name="Proceso" data={fillData['Proceso']} fun={hdlChange} />
           </div>
-        </div>
 
-        <div className={boletas?.Proceso === 0 ? clsColumn2 : clsColumn1}>
-          <div>
-            <SelectFormBoletas classCss={classFormSelct} name={'Proceso'} data={fillData['Proceso']} fun={hdlChange}/>
-            <SelectFormBoletas key={clean} classCss={classFormSelct} name={'Socios'} data={fillData['Clientes']} fun={hdlChange}/>
-            {boletas?.Socios==-998 && <InputsFormBoletas data={claseFormInputs} name={'Cliente'} fun={hdlChange}/>}
-            {boletas?.Socios==-999 && <InputsFormBoletas data={claseFormInputs} name={'Proveedor'} fun={hdlChange}/>}
-            {formInputSelect.map((field) => (
-              (boletas?.Socios !=-998 && boletas?.Socios !=-999) ? (<SelectFormBoletas key={field} classCss={classFormSelct} name={field} data={fillData[field]} fun={hdlChange}  /> )
-              : (<InputsFormBoletas key={field} data={claseFormInputs} name={field} fun={hdlChange} val={field=='Transportes' ? 'Transportes X' : undefined} stt={field=='Transportes' ? true : false}/>) 
-            ))}          </div>
-          <div>
-            {boletas?.Proceso === 0 && (
-              <>
-                <SelectFormBoletas classCss={classFormSelct} name={'Movimiento'} data={(boletas.Proceso===0) ? fillData['Flete'] : fillData['FleteS']} fun={hdlChange} stt={(boletas.Proceso==='')? true : false}/>
-                <SelectFormBoletas classCss={classFormSelct} name={"Origen"} data={fillData['Origen']} fun={hdlChange} stt={boletas?.Socios!='' ? false: true}/>
-                <SelectFormBoletas classCss={classFormSelct} name={'Producto'} data={fillData['Producto']} fun={hdlChange}/>
-                <InputsFormBoletas data={claseFormInputs} name={'NSalida'} fun={hdlChange}/>
-                <InputsFormBoletas data={claseFormInputs} name={'NViajes'} fun={hdlChange}/>
-              </>
+          {/* Cliente / Proveedor / Socios */}
+          <div className="space-y-3">
+            <SelectFormBoletas key={clean} classCss={classFormSelct} name="Socios" data={fillData['Clientes']} fun={hdlChange} />
+
+            {boletas?.Socios === -998 && ( <InputsFormBoletas data={claseFormInputs} name="Cliente" fun={hdlChange} /> )}
+            {boletas?.Socios === -999 && (<InputsFormBoletas data={claseFormInputs} name="Proveedor" fun={hdlChange} /> )}
+
+            {formInputSelect.map((field) => boletas?.Socios !== -998 && boletas?.Socios !== -999 ? (
+                <SelectFormBoletas key={field} classCss={classFormSelct} name={field} data={fillData[field]} fun={hdlChange} />
+              ) : (
+                <InputsFormBoletas key={field} data={claseFormInputs} name={field} fun={hdlChange} val={field === 'Transportes' ? 'Transportes X' : undefined} stt={field === 'Transportes'} />
+              )
             )}
           </div>
+          {/* Extra inputs si Proceso === 0 */}
+          {boletas?.Proceso === 0 && (
+            <div className="space-y-3">
+              <SelectFormBoletas classCss={classFormSelct} name="Movimiento" data={fillData['Flete']} fun={hdlChange} />
+              <SelectFormBoletas classCss={classFormSelct} name="Origen" data={fillData['Origen']} fun={hdlChange} stt={!boletas?.Socios} />
+              <SelectFormBoletas classCss={classFormSelct} name="Producto" data={fillData['Producto']} fun={hdlChange} />
+              <div className="grid grid-cols-2 gap-3 mt-5">
+                <div>
+                  <label htmlFor="NSalida" className="block text-sm text-gray-600"># Salida</label>
+                  <input name="NSalida" onChange={hdlChange} className={claseFormInputs} />
+                </div>
+                <div>
+                  <label htmlFor="NViajes" className="block text-sm text-gray-600"># Viaje</label>
+                  <input name="NViajes" onChange={hdlChange} className={claseFormInputs} />
+                </div>
+              </div>
+            </div>
+          )}
           <div className="col-span-2">
-            <PartInputsPesos fun={getPesoIn} hdlChange={hdlChange} val={boletas}/> 
+            <PartInputsPesos fun={getPesoIn} hdlChange={hdlChange} val={boletas} />
           </div>
         </div>
-   
-        <hr className="text-gray-300 mt-1" />
 
-        <div className="mt-3 px-3 grid grid-cols-3 gap-2 justify-between max-sm:grid-rows-3 max-sm:grid-cols-1">
-          <button onClick={hdlClean} className={buttonClean} disabled={isLoading} >
-            Limpiar
-          </button>
-          <button onClick={hdlClose} className={buttonCancel} disabled={isLoading} >
-            Cancelar
-          </button>
-          <button onClick={hdlSubmit} className={buttonSave} disabled={isLoading} >
+        {/* Botones */}
+        <div className="grid grid-cols-3 gap-3 text-sm">
+          <button onClick={hdlClean} className={buttonClean} disabled={isLoading}>Limpiar</button>
+          <button onClick={hdlClose} className={buttonCancel} disabled={isLoading}>Cancelar</button>
+          <button onClick={hdlSubmit} className={buttonSave} disabled={isLoading}>
             {isLoading ? 'Guardando...' : 'Guardar'}
           </button>
         </div>
-    </div>
+      </div>
     </div>
   );
 };
+
 
 export const ModalOut = (props) => {
   const {
