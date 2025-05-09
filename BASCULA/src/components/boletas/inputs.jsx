@@ -142,6 +142,7 @@ export const TransladoInterno = ({bol, fill, hdl}) => {
         name={"Traslado origen"}
         data={fill["TransladosI"]}
         fun={hdl}
+        {...bol['Traslado origen'] ? {val:bol['Traslado origen']} : {}}
         stt={bol.Proceso === "" ? true : false}
       />
       <SelectFormBoletas

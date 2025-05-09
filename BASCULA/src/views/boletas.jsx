@@ -149,7 +149,7 @@ const Boletas = () => {
 
   const handleOutBol = (data) => {
     setOutBol(true)
-    getDataParaForm(setFormBoletas, data) 
+    getDataParaForm(setFormBoletas, data, setMove) 
   }
 
   const handleCompleteOut = async() => {

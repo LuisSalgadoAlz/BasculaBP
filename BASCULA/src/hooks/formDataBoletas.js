@@ -164,9 +164,10 @@ export const getStatsBoletas = async (fun) => {
   }
 };
 
-export const getDataParaForm = async (setFormBoletas, data) => {
+export const getDataParaForm = async (setFormBoletas, data, setMove) => {
   const response = await getDataBoletasPorID(data.Id);
   const esClienteX = response.boletaType === 3;
+  setMove(response?.movimiento)
   console.log(response)
   setFormBoletas((prev) => ({
     ...prev,
@@ -177,6 +178,8 @@ export const getDataParaForm = async (setFormBoletas, data) => {
     Proceso: response.proceso,
     Producto: response.idProducto,
     Movimiento: response.idMovimiento,
+    Origen: response.idOrigen, 
+    'Traslado Origen' : response.idTrasladoOrigen,
     Transportes: response.idEmpresa ?? response.empresa,
     Estado: 0,
     pesoIn: response.pesoInicial,

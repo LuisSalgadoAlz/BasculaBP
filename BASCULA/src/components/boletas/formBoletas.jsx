@@ -329,7 +329,7 @@ export const ModalOut = (props) => {
             ) : move == 'Traslado Externo' ? (
               <TransladoExterno bol={boletas} hdl={hdlChange} fill={fillData} />
             ) : (
-              <TransladoNormal bol={boletas} hdl={hdlChange} fill={fillData} tipo = {proceso} />
+              <TransladoNormal bol={boletas} hdl={hdlChange} fill={fillData} tipo = {boletas?.Proceso} />
             )}
             <PartPesosDeSalida fun={getPesoOut} hdlChange={hdlChange} val={boletas} />
             <InputsFormBoletas data={claseFormInputs} name={'Peso Teorico'} fun={hdlChange} />
