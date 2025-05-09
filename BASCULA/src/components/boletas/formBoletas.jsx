@@ -98,6 +98,11 @@ export const ModalBoletas = ({hdlClose, hdlChange, fillData, formBol, boletas, h
   );
 };
 
+/**
+ * !Importante seguir probando se realizaron cambios, en la estructura
+ * @param {*} param0 
+ * @returns 
+ */
 export const ModalNormal = ({ hdlClose, hdlChange, fillData, formBol, boletas, hdlClean, hdlSubmit, clean, isLoading }) => {
   const [peso, setPeso] = useState('00lb');
   const [itemSelect, setItemSelect] = useState(false)
@@ -151,13 +156,13 @@ export const ModalNormal = ({ hdlClose, hdlChange, fillData, formBol, boletas, h
               <>
                 <div className="grid grid-cols-2 space-y-1">
                   <SelectFormBoletas key={clean} classCss={classFormSelct} name="Socios" data={fillData['Clientes']} fun={hdlChange} val={boletas?.Socios} stt={boletas?.Proceso!==''? false: true}/>
-                  {boletas?.Socios === -998 && ( <InputsFormBoletas data={claseFormInputs} name="Cliente" fun={hdlChange} /> )}
-                  {boletas?.Socios === -999 && (<InputsFormBoletas data={claseFormInputs} name="Proveedor" fun={hdlChange} /> )}
+                  {boletas?.Socios === -998 && ( <InputsFormBoletas data={claseFormInputs} name="Cliente" fun={hdlChange} val={boletas?.Cliente}/> )}
+                  {boletas?.Socios === -999 && (<InputsFormBoletas data={claseFormInputs} name="Proveedor" fun={hdlChange} val={boletas?.Proveedor}/> )}
 
                   {formInputSelect.map((field) => boletas?.Socios !== -998 && boletas?.Socios !== -999 ? (
                       <SelectFormBoletas key={field} classCss={classFormSelct} name={field} data={fillData[field]} fun={hdlChange} val={boletas[field]} stt={boletas?.Proceso!==''? false: true}/>
                     ) : (
-                      <InputsFormBoletas key={field} data={claseFormInputs} name={field} fun={hdlChange} val={field === 'Transportes' ? 'Transportes X' : undefined} stt={field === 'Transportes'} />
+                      <InputsFormBoletas key={field} data={claseFormInputs} name={field} fun={hdlChange} val={field === 'Transportes' ? 'Transportes X' : boletas[field]} stt={field === 'Transportes'} />
                     )
                   )}
                   <PartInputsPesos fun={getPesoIn} hdlChange={hdlChange} val={boletas} />
@@ -223,6 +228,11 @@ export const ModalNormal = ({ hdlClose, hdlChange, fillData, formBol, boletas, h
 };
 
 
+/**
+ * TODO: Actualmente se esta trabaajando aqui
+ * @param {*} props 
+ * @returns 
+ */
 export const ModalOut = (props) => {
   const {
     hdlClose, 
@@ -301,8 +311,8 @@ export const ModalOut = (props) => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 p-2 place-content-center">
           <div className="grid grid-cols-1 gap-y-2 sm:grid-cols-2">
-            <SelectFormBoletas classCss={classFormSelct} name={'Proceso'} data={fillData['Proceso']} fun={hdlChange}/>
-            <SelectFormBoletas classCss={classFormSelct} name={'Producto'} data={fillData['Producto']} fun={hdlChange}/>
+            <SelectFormBoletas classCss={classFormSelct} name={'Proceso'} data={fillData['Proceso']} fun={hdlChange} val={boletas?.Proceso}/>
+            <SelectFormBoletas classCss={classFormSelct} name={'Producto'} data={fillData['Producto']} fun={hdlChange} val={boletas?.Producto}/>
             <SelectFormBoletas key={clean} classCss={classFormSelct} name={'Socios'} val={boletas?.Socios} data={fillData['Clientes']} fun={hdlChange} stt={true} />
             {boletas?.Socios==-998 && <InputsFormBoletas data={claseFormInputs} name={'Cliente'} fun={hdlChange} val={boletas?.valueSocio} stt={true}/>}
             {boletas?.Socios==-999 && <InputsFormBoletas data={claseFormInputs} name={'Proveedor'} fun={hdlChange} val={boletas?.valueSocio}  stt={true}/>}
@@ -312,7 +322,7 @@ export const ModalOut = (props) => {
             )}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 place-content-start">
-            <SelectFormBoletas classCss={classFormSelct} name={'Movimiento'} data={(boletas.Proceso===0) ? fillData['Flete'] : fillData['FleteS']} fun={hdlChange} stt={(boletas.Proceso==='')? true : false}/>
+            <SelectFormBoletas classCss={classFormSelct} name={'Movimiento'} val={boletas?.Movimiento} data={(boletas.Proceso===0) ? fillData['Flete'] : fillData['FleteS']} fun={hdlChange} stt={(boletas.Proceso==='')? true : false}/>
             
             {move == 'Traslado Interno' ? (
               <TransladoInterno bol={boletas} hdl={hdlChange} fill={fillData} />

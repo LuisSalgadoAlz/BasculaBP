@@ -337,6 +337,7 @@ const getDataBoletas = async (req, res) => {
         socio: true,
         placa: true,
         fechaInicio: true,
+        proceso: true
       },
       where: {
         estado: "Pendiente",
@@ -387,6 +388,7 @@ const getDataBoletas = async (req, res) => {
 
     const dataUTCHN = data.map((el) => ({
       Id: el.id,
+      Proceso: el.proceso === 0 ? 'Entrada': 'Salida', 
       Placa: el.placa,
       Cliente: el.socio,
       Transporte: el.empresa,
@@ -408,6 +410,11 @@ const getDataBoletas = async (req, res) => {
   }
 };
 
+/**
+ * !Imporante, falta probar
+ * @param {*} req 
+ * @param {*} res 
+ */
 const postClientePlacaMoto = async (req, res) => {
   try {
     const {
@@ -473,11 +480,11 @@ const postClientePlacaMoto = async (req, res) => {
           idProducto, 
           idMovimiento, 
           producto: producto.nombre, 
-          ...(idMovimiento==10 || idMovimiento==11 && {
+          ...((idMovimiento==10 || idMovimiento==11) && {
             idTrasladoOrigen, 
             trasladoOrigen: trasladoOrigen.nombre,
           }), 
-          ...(idMovimiento!=10 && idMovimiento!=11 && {
+          ...((idMovimiento!=10 && idMovimiento!=11) && {
             idOrigen, 
             origen: origen.nombre,
           }), 
@@ -496,6 +503,11 @@ const postClientePlacaMoto = async (req, res) => {
   }
 };
 
+/**
+ * !Importante falta probar
+ * @param {*} req 
+ * @param {*} res 
+ */
 const postClientePlacaMotoComodin = async (req, res) => {
   try {
     const {
@@ -515,7 +527,6 @@ const postClientePlacaMotoComodin = async (req, res) => {
       proceso
     } = req.body;
 
-    console.log(idOrigen)
     const verificado = jwt.verify(idUsuario, process.env.SECRET_KEY);
     const despachador = await db.usuarios.findUnique({
       where: {
@@ -529,6 +540,7 @@ const postClientePlacaMotoComodin = async (req, res) => {
     const newBol = await db.boleta.create({
       data: {
         placa: idPlaca,
+        proceso,  
         empresa: idEmpresa,
         motorista: idMotorista,
         socio: idCliente == -998 ? socio : socio,
@@ -544,11 +556,11 @@ const postClientePlacaMotoComodin = async (req, res) => {
           idProducto, 
           idMovimiento, 
           producto: producto.nombre, 
-          ...(idMovimiento==10 || idMovimiento==11 && {
+          ...((idMovimiento==10 || idMovimiento==11) && {
             idTrasladoOrigen, 
             trasladoOrigen: trasladoOrigen.nombre,
           }), 
-          ...(idMovimiento!=10 && idMovimiento!=11 && {
+          ...((idMovimiento!=10 && idMovimiento!=11) && {
             origen: idOrigen,
           }), 
           ...(idProducto === 19 && {
