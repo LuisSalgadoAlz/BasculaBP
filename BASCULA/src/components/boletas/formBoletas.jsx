@@ -1,33 +1,17 @@
 import { useEffect, useState } from "react";
 import SelectFormBoletas from "./select";
 import { InputsFormBoletas, PartInputsPesos, PartInputsPesos2, PartPesosDeSalida, TransladoExterno, TransladoInterno, TransladoNormal } from "./inputs";
-import { buttonCalcular, buttonCancel, buttonClean, buttonDanger, buttonSave, claseFormInputs, classFormSelct, } from "../../constants/boletas";
+import { buttonCalcular, buttonCancel, buttonClean, buttonDanger, buttonSave, claseFormInputs, classFormSelct, deptos, direccionOrigenEmpresa, } from "../../constants/boletas";
 import { propsMotionHijo, propsMotionPadre, URLHOST, URLWEBSOCKET } from "../../constants/global";
 import { MiniSpinner, ModalPrevisual } from "../alerts";
 import { motion } from "framer-motion";
 import { IoCloseSharp } from "react-icons/io5";
 import { ButtonPrint } from "../buttons";
 import { getConvertPdf, getPrintEpson } from "../../hooks/formDataBoletas";
+import { CiLock } from "react-icons/ci";
+import { CiUnlock } from "react-icons/ci";
 
-const clsColumn2 = 'grid grid-cols-1 md:grid-cols-2 gap-x-2 gap-y-4 p-2 place-content-center'
-const clsColumn1 = 'grid grid-cols-1 md:grid-cols-1 gap-x-2 gap-y-4 p-2 place-content-center'
 const formInputSelect = ['Transportes', 'Placa', 'Motoristas']
-
-const AcordeonSeccion = ({ titulo, children }) => {
-  const [abierto, setAbierto] = useState(false);
-  return (
-    <div className="border rounded-xl mb-4">
-      <button
-        onClick={() => setAbierto(!abierto)}
-        className="w-full flex justify-between items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-t-xl"
-      >
-        <span className="font-semibold text-gray-700">{titulo}</span>
-        <span>{abierto ? "▲" : "▼"}</span>
-      </button>
-      {abierto && <div className="p-4 bg-white border-t">{children}</div>}
-    </div>
-  );
-};
 
 /**
  * Todo: Boleta espcial de casulla
@@ -116,7 +100,7 @@ export const ModalBoletas = ({hdlClose, hdlChange, fillData, formBol, boletas, h
 
 export const ModalNormal = ({ hdlClose, hdlChange, fillData, formBol, boletas, hdlClean, hdlSubmit, clean, isLoading }) => {
   const [peso, setPeso] = useState('00lb');
-
+  const [itemSelect, setItemSelect] = useState(false)
   const getPesoIn = () => {
     formBol((prev) => ({
       ...prev,
@@ -133,9 +117,13 @@ export const ModalNormal = ({ hdlClose, hdlChange, fillData, formBol, boletas, h
     return () => socket.close();
   }, []);
 
+  const tipoDeSocioOrigen = () => {
+    return (boletas?.Socios ==-998 || boletas?.Socios ==-999) ? deptos : fillData['Origen']
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opa-50 p-4">
-      <div className="bg-white w-full max-w-lg rounded-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto border border-gray-300 space-y-5">
+      <div className="bg-white w-full max-w-lg rounded-2xl p-4 shadow-2xl max-h-[95vh] overflow-y-auto border border-gray-300 space-y-1">
         
         {/* Encabezado */}
         <div>
@@ -150,51 +138,79 @@ export const ModalNormal = ({ hdlClose, hdlChange, fillData, formBol, boletas, h
         </div>
 
         {/* Formulario principal */}
-        <div className={`${boletas?.Proceso === 0 ? clsColumn2 : clsColumn1} gap-4`}>
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-x-2 gap-y-4 place-content-center'>
           {/* Select Proceso */}
           <div className="col-span-2">
             <SelectFormBoletas classCss={classFormSelct} name="Proceso" data={fillData['Proceso']} fun={hdlChange} />
           </div>
 
           {/* Cliente / Proveedor / Socios */}
-          <div className="space-y-3">
-            <SelectFormBoletas key={clean} classCss={classFormSelct} name="Socios" data={fillData['Clientes']} fun={hdlChange} />
+          <div className="col-span-2 space-y-3 border-2 border-gray-200 rounded-md w-full p-1">
+            <button className="p-2 bg-gray-200 rounded-sm w-full flex items-center gap-2" onClick={()=>setItemSelect(false)}><span className="text-sm">Informacion Socio</span></button>
+            {(!itemSelect || boletas?.Proceso===1) && (
+              <>
+                <div className="grid grid-cols-2 space-y-1">
+                  <SelectFormBoletas key={clean} classCss={classFormSelct} name="Socios" data={fillData['Clientes']} fun={hdlChange} val={boletas?.Socios} stt={boletas?.Proceso!==''? false: true}/>
+                  {boletas?.Socios === -998 && ( <InputsFormBoletas data={claseFormInputs} name="Cliente" fun={hdlChange} /> )}
+                  {boletas?.Socios === -999 && (<InputsFormBoletas data={claseFormInputs} name="Proveedor" fun={hdlChange} /> )}
 
-            {boletas?.Socios === -998 && ( <InputsFormBoletas data={claseFormInputs} name="Cliente" fun={hdlChange} /> )}
-            {boletas?.Socios === -999 && (<InputsFormBoletas data={claseFormInputs} name="Proveedor" fun={hdlChange} /> )}
-
-            {formInputSelect.map((field) => boletas?.Socios !== -998 && boletas?.Socios !== -999 ? (
-                <SelectFormBoletas key={field} classCss={classFormSelct} name={field} data={fillData[field]} fun={hdlChange} />
-              ) : (
-                <InputsFormBoletas key={field} data={claseFormInputs} name={field} fun={hdlChange} val={field === 'Transportes' ? 'Transportes X' : undefined} stt={field === 'Transportes'} />
-              )
+                  {formInputSelect.map((field) => boletas?.Socios !== -998 && boletas?.Socios !== -999 ? (
+                      <SelectFormBoletas key={field} classCss={classFormSelct} name={field} data={fillData[field]} fun={hdlChange} val={boletas[field]} stt={boletas?.Proceso!==''? false: true}/>
+                    ) : (
+                      <InputsFormBoletas key={field} data={claseFormInputs} name={field} fun={hdlChange} val={field === 'Transportes' ? 'Transportes X' : undefined} stt={field === 'Transportes'} />
+                    )
+                  )}
+                  <PartInputsPesos fun={getPesoIn} hdlChange={hdlChange} val={boletas} />
+                </div>
+              </>
             )}
           </div>
           {/* Extra inputs si Proceso === 0 */}
-          {boletas?.Proceso === 0 && (
-            <div className="space-y-3">
-              <SelectFormBoletas classCss={classFormSelct} name="Movimiento" data={fillData['Flete']} fun={hdlChange} />
-              <SelectFormBoletas classCss={classFormSelct} name="Origen" data={fillData['Origen']} fun={hdlChange} stt={!boletas?.Socios} />
-              <SelectFormBoletas classCss={classFormSelct} name="Producto" data={fillData['Producto']} fun={hdlChange} />
-              <div className="grid grid-cols-2 gap-3 mt-5">
-                <div>
-                  <label htmlFor="NSalida" className="block text-sm text-gray-600"># Salida</label>
-                  <input name="NSalida" onChange={hdlChange} className={claseFormInputs} />
+          <div className="col-span-2 space-y-3 border-2 border-gray-200 rounded-md w-full p-1">
+            <button className="p-2 bg-gray-200 rounded-sm w-full flex items-center gap-2" 
+              onClick={()=>setItemSelect(true)} disabled={boletas?.Proceso===0 ? false: true}>
+              {boletas?.Proceso===0 ? <CiUnlock className="text-green-600" /> : <CiLock className="text-red-600"/>}
+              <span className="text-sm">Detalles Entradas{boletas?.Proceso===0 && <span className="text-black font-bold">: Campos Obligatorios</span>} </span>
+            </button>
+
+            {itemSelect && boletas?.Proceso===0 &&(
+              <>
+                <div className="grid grid-cols-2 space-y-1">
+                  <SelectFormBoletas classCss={classFormSelct} name="Movimiento" data={fillData['Flete']} fun={hdlChange} val={boletas?.Movimiento}/>
+
+                  {(boletas?.Movimiento === 10 || boletas?.Movimiento===11) ? (
+                    <SelectFormBoletas classCss={classFormSelct} name="Traslado Origen" data={boletas?.Movimiento===10 ? fillData['TransladosI'] : fillData['TransladosE']} fun={hdlChange} val={boletas['Traslado Origen']}/>
+                  ) : ( 
+                    <SelectFormBoletas classCss={classFormSelct} name="Origen" data={tipoDeSocioOrigen()} fun={hdlChange} val={boletas?.Origen}/>
+                  )}
+                  <SelectFormBoletas classCss={classFormSelct} name="Producto" data={fillData['Producto']} fun={hdlChange} val={boletas?.Producto}/>
                 </div>
-                <div>
-                  <label htmlFor="NViajes" className="block text-sm text-gray-600"># Viaje</label>
-                  <input name="NViajes" onChange={hdlChange} className={claseFormInputs} />
-                </div>
-              </div>
-            </div>
-          )}
-          <div className="col-span-2">
-            <PartInputsPesos fun={getPesoIn} hdlChange={hdlChange} val={boletas} />
+                {
+                  /**
+                   * !Imporatnte: esto se debera de cambiar a algo mas sustancial, que sea migratorio
+                   */
+                }
+                {boletas?.Producto ===19 &&(
+                  <>
+                    <div className="grid grid-cols-2 gap-3 mt-2 mb-4">
+                      <div>
+                        <label htmlFor="NSalida" className="block text-sm text-gray-600"># Salida</label>
+                        <input name="NSalida" onChange={hdlChange} className={claseFormInputs} value={boletas?.NSalida} />
+                      </div>
+                      <div>
+                        <label htmlFor="NViajes" className="block text-sm text-gray-600"># Viaje</label>
+                        <input name="NViajes" onChange={hdlChange} className={claseFormInputs} value={boletas?.NViajes}/>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </>
+            )}
           </div>
         </div>
 
         {/* Botones */}
-        <div className="grid grid-cols-3 gap-3 text-sm">
+        <div className="grid grid-cols-3 gap-3 text-sm mt-4">
           <button onClick={hdlClean} className={buttonClean} disabled={isLoading}>Limpiar</button>
           <button onClick={hdlClose} className={buttonCancel} disabled={isLoading}>Cancelar</button>
           <button onClick={hdlSubmit} className={buttonSave} disabled={isLoading}>

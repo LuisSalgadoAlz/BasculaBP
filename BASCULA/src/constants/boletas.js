@@ -89,6 +89,8 @@ export const initialStateFormBoletas = {
   Socios: "", 
   'Orden de compra': "",
   Documento: "", 
+  NViajes: "", 
+  NSalida:""
 };
 
 export const deptos = [

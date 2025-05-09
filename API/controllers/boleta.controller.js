@@ -422,6 +422,8 @@ const postClientePlacaMoto = async (req, res) => {
       idOrigen, 
       NSalida, 
       NViajes, 
+      idMovimiento, 
+      idTrasladoOrigen
     } = req.body;
 
     const empresa = await db.empresa.findUnique({
@@ -437,10 +439,11 @@ const postClientePlacaMoto = async (req, res) => {
       select: { id: true, placa: true },
       where: { placa: idPlaca, rEmpresaVehiculo: { id: idEmpresa } },
     });
-
+    
     const producto = proceso === 0 && await db.producto.findUnique({where:{id:idProducto}})
-    const origen = proceso === 0 && await db.direcciones.findUnique({where: {id:idOrigen}})
-
+    const origen = (proceso === 0 && (idMovimiento!=10 && idMovimiento!=11)) && await db.direcciones.findUnique({where: {id:idOrigen}})
+    const movimiento = proceso===0 && await db.movimientos.findUnique({where: {id: idMovimiento}})
+    const trasladoOrigen = (proceso === 0 &&(idMovimiento==10||idMovimiento==11)) && await db.translado.findUnique({where: {id: idTrasladoOrigen}})
     const verificado = jwt.verify(idUsuario, process.env.SECRET_KEY);
     const despachador = await db.usuarios.findUnique({
       where: {
@@ -465,13 +468,23 @@ const postClientePlacaMoto = async (req, res) => {
         idPlaca: placaData.id,
         idEmpresa: parseInt(idEmpresa),
         proceso, 
-        ...(proceso==0 && {
-          NSalida: parseInt(NSalida), 
-          Nviajes: parseInt(NViajes), 
+        ...(proceso==0 && { 
+          movimiento: movimiento.nombre, 
           idProducto, 
+          idMovimiento, 
           producto: producto.nombre, 
-          idOrigen, 
-          origen: origen.nombre, 
+          ...(idMovimiento==10 || idMovimiento==11 && {
+            idTrasladoOrigen, 
+            trasladoOrigen: trasladoOrigen.nombre,
+          }), 
+          ...(idMovimiento!=10 && idMovimiento!=11 && {
+            idOrigen, 
+            origen: origen.nombre,
+          }), 
+          ...(idProducto === 19 && {
+            Nviajes: parseInt(NViajes), 
+            NSalida: parseInt(NSalida), 
+          }),
         })
       },
     });
@@ -493,15 +506,26 @@ const postClientePlacaMotoComodin = async (req, res) => {
       idPlaca,
       idEmpresa,
       socio,
+      idProducto, 
+      idOrigen, 
+      NSalida, 
+      NViajes, 
+      idMovimiento, 
+      idTrasladoOrigen, 
+      proceso
     } = req.body;
 
+    console.log(idOrigen)
     const verificado = jwt.verify(idUsuario, process.env.SECRET_KEY);
     const despachador = await db.usuarios.findUnique({
       where: {
         usuarios: verificado["usuarios"],
       },
     });
-
+    console.log(idTrasladoOrigen)
+    const producto = proceso === 0 && await db.producto.findUnique({where:{id:idProducto}})
+    const movimiento = proceso===0 && await db.movimientos.findUnique({where: {id: idMovimiento}})
+    const trasladoOrigen = (proceso === 0 && (idMovimiento==10||idMovimiento==11)) && await db.translado.findUnique({where: {id: idTrasladoOrigen}})
     const newBol = await db.boleta.create({
       data: {
         placa: idPlaca,
@@ -515,6 +539,23 @@ const postClientePlacaMotoComodin = async (req, res) => {
         fechaInicio: new Date(),
         pesoInicial: parseFloat(pesoInicial),
         boletaType: idCliente == -998 ? 3 : 4,
+        ...(proceso==0 && { 
+          movimiento: movimiento.nombre, 
+          idProducto, 
+          idMovimiento, 
+          producto: producto.nombre, 
+          ...(idMovimiento==10 || idMovimiento==11 && {
+            idTrasladoOrigen, 
+            trasladoOrigen: trasladoOrigen.nombre,
+          }), 
+          ...(idMovimiento!=10 && idMovimiento!=11 && {
+            origen: idOrigen,
+          }), 
+          ...(idProducto === 19 && {
+            Nviajes: parseInt(NViajes), 
+            NSalida: parseInt(NSalida), 
+          }),
+        })
       },
     });
     res
