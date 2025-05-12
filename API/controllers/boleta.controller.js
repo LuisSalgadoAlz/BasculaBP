@@ -2,6 +2,8 @@ const db = require("../lib/prisma");
 const dotenv = require("dotenv");
 const jwt = require("jsonwebtoken");
 const { imprimirEpson } = require("./impresiones.controller");
+const enviarCorreo = require("../utils/enviarCorreo");
+const alertaDesviacion = require("../utils/cuerposCorreo");
 
 const generarNumBoleta = async () => {
   const ultimo = await db.boleta.findFirst({
@@ -915,6 +917,14 @@ const updateBoletaOut = async (req, res) => {
           : null,
       },
     });
+      
+
+      if (nuevaBoleta.desviacion > 200 || nuevaBoleta.estado=='Completo(Fuera de tolerancia)') {
+        const stmpMail = alertaDesviacion(nuevaBoleta, despachador, enviarCorreo)
+        console.log(stmpMail)
+      }
+
+
     imprimirEpson(nuevaBoleta);
     res
       .status(201)
