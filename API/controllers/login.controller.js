@@ -26,7 +26,8 @@ const loginUsers = async (req, res) => {
                 // Si las contras son iguales, se crea el token con la "secret key"
                 const token = jwt.sign({usuarios: usuario.usuarios}, process.env.SECRET_KEY)  
                 return res.json({
-                    token: token
+                    token: token, 
+                    type: usuario.tipo
                 })
             }
             return res.status(401).json({msg: 'Credenciales incorrectas'})

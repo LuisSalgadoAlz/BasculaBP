@@ -4,10 +4,11 @@ import Cookies from 'js-cookie';
 import { useEffect, useMemo } from "react";
 import { ModalErr } from '../components/alerts'
 
-const VerificarLog = ({Children, redirectTo='/'}) => {
+const VerificarLog = ({Children, redirectTo='/', userType}) => {
     const navigate = useNavigate()
 
     const cuerpoMemo = useMemo(() => <Cuerpo><Outlet /></Cuerpo>, []);
+    const cuerpoAdmin = useMemo(()=> <Outlet />, [])
 
     const sessionActive = () => {
         if (Cookies.get('token')) {
@@ -17,6 +18,7 @@ const VerificarLog = ({Children, redirectTo='/'}) => {
              */
             expirationDate.setMinutes(expirationDate.getMinutes() + 30);
             Cookies.set('token', Cookies.get('token'), { expires: expirationDate });
+            Cookies.set('type', Cookies.get('type'), { expires: expirationDate });
             return
         }
         <ModalErr name={'Session Expiro!'} />
@@ -31,10 +33,12 @@ const VerificarLog = ({Children, redirectTo='/'}) => {
         };
       }, []);
 
-    if (!Cookies.get('token')){
+    if (!Cookies.get('token') || Cookies.get('type')!=userType){
         return <Navigate to={redirectTo} />
     }
-    return cuerpoMemo;
+
+    if (Cookies.get('type') == 'ADMIN') return cuerpoAdmin;
+    if (Cookies.get('type') == 'USER') return cuerpoMemo;
 }
  
 export default VerificarLog;
