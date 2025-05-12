@@ -37,7 +37,7 @@ const Login = () => {
   
       if (res.token) {
         const expirationDate = new Date();
-        expirationDate.setMinutes(expirationDate.getMinutes() + 10); // Expira en 10 minutos
+        expirationDate.setMinutes(expirationDate.getMinutes() + 30); // Expira en 30 minutos
         Cookies.set('token', res.token, { expires: expirationDate });
         navigate('/dashboard')  
       }

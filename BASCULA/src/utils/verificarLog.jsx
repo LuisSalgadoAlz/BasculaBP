@@ -15,7 +15,7 @@ const VerificarLog = ({Children, redirectTo='/'}) => {
             /**
              * ? Tiempo de expiracion de 10 minutos 
              */
-            expirationDate.setMinutes(expirationDate.getMinutes() + 10);
+            expirationDate.setMinutes(expirationDate.getMinutes() + 30);
             Cookies.set('token', Cookies.get('token'), { expires: expirationDate });
             return
         }
