@@ -87,4 +87,9 @@ async function getSpaceForTable(req, res) {
   } 
 }
 
-module.exports = { getPM2Metrics, getSpaceForTable };
+const getLogs = async (req, res) => {   
+    const data = await db.logs.findMany()
+    res.json(data)
+}
+
+module.exports = { getPM2Metrics, getSpaceForTable, getLogs };

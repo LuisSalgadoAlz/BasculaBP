@@ -5,6 +5,7 @@ import "./index.css";
 import VerificarLog from "./utils/verificarLog";
 import { Spinner } from "./components/alerts";
 import ViewDisabled from "./views/viewDisabled";
+const Logs = lazy(()=>import('./views/admin/logs'))
 const DashboardAdmin = lazy(()=>import('./views/admin/dashboard'))
 const CalendarioView = lazy(()=>import('./views/calendario'))
 const NoFoundData = lazy(()=>import('./views/notFoundData'));
@@ -29,6 +30,10 @@ const navRutas = createBrowserRouter([
       {
         path: '/admin/dashboard',
         element: <DashboardAdmin />
+      }, 
+      {
+        path: '/admin/logs',
+        element: <Logs />
       }, 
     ]
   },

@@ -10,71 +10,7 @@ const DashboardAdmin = () => {
     const [isLoadTable, setIsLoadTable] = useState(false)
 
   // Estado para los datos de tablas
-  const [tables, setTables] = useState([
-    {
-      id: 1,
-      name: "Empresas",
-      rows: 4,
-      reserved: "72 KB",
-      data: "8 KB",
-      index_size: "8 KB",
-      unused: "56 KB",
-    },
-    {
-      id: 2,
-      name: "Movimientos",
-      rows: 12,
-      reserved: "72 KB",
-      data: "8 KB",
-      index_size: "8 KB",
-      unused: "56 KB",
-    },
-    {
-      id: 3,
-      name: "Producto",
-      rows: 25,
-      reserved: "72 KB",
-      data: "8 KB",
-      index_size: "8 KB",
-      unused: "56 KB",
-    },
-    {
-      id: 4,
-      name: "Rol",
-      rows: 6,
-      reserved: "72 KB",
-      data: "8 KB",
-      index_size: "8 KB",
-      unused: "56 KB",
-    },
-    {
-      id: 5,
-      name: "Traslado",
-      rows: 12,
-      reserved: "72 KB",
-      data: "8 KB",
-      index_size: "8 KB",
-      unused: "56 KB",
-    },
-    {
-      id: 6,
-      name: "Usuario",
-      rows: 2,
-      reserved: "144 KB",
-      data: "8 KB",
-      index_size: "8 KB",
-      unused: "128 KB",
-    },
-    {
-      id: 7,
-      name: "Vehiculo",
-      rows: 5,
-      reserved: "72 KB",
-      data: "8 KB",
-      index_size: "8 KB",
-      unused: "56 KB",
-    },
-  ]);
+  const [tables, setTables] = useState();
 
   // Estado para métricas del sistema
   const [metrics, setMetrics] = useState();

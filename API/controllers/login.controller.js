@@ -2,6 +2,7 @@ const db = require('../lib/prisma')
 const dotenv = require('dotenv')
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const setLogger = require('../utils/logger');
 
 /* Funcion para utilizar en el login a futuro mas el access w token */
 const loginUsers = async (req, res) => {
@@ -24,7 +25,8 @@ const loginUsers = async (req, res) => {
             const match = await bcrypt.compare(contrasena, usuario.contrasena)
             if(match){
                 // Si las contras son iguales, se crea el token con la "secret key"
-                const token = jwt.sign({usuarios: usuario.usuarios}, process.env.SECRET_KEY)  
+                const token = jwt.sign({usuarios: usuario.usuarios}, process.env.SECRET_KEY)
+                setLogger(usuario.name, 'Login', 'Inicio session', req, '')  
                 return res.json({
                     token: token, 
                     type: usuario.tipo
