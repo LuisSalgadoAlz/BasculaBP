@@ -179,7 +179,7 @@ export const getDataParaForm = async (setFormBoletas, data, setMove) => {
     Producto: response.idProducto,
     Movimiento: response.idMovimiento,
     Origen: response.idOrigen, 
-    'Traslado Origen' : response.idTrasladoOrigen,
+    'Traslado origen' : response.idTrasladoOrigen,
     Transportes: response.idEmpresa ?? response.empresa,
     Estado: 0,
     pesoIn: response.pesoInicial,
