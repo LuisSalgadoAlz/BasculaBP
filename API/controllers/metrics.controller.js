@@ -89,7 +89,10 @@ async function getSpaceForTable(req, res) {
 
 const getLogs = async (req, res) => {   
     const data = await db.logs.findMany()
-    res.json(data)
+    const refactor = data.map((item) => ({
+      ...item, Fecha: new Date(item.Fecha).toLocaleString()
+    }))
+    res.json(refactor)
 }
 
 module.exports = { getPM2Metrics, getSpaceForTable, getLogs };

@@ -26,7 +26,9 @@ const loginUsers = async (req, res) => {
             if(match){
                 // Si las contras son iguales, se crea el token con la "secret key"
                 const token = jwt.sign({usuarios: usuario.usuarios}, process.env.SECRET_KEY)
-                setLogger(usuario.name, 'Login', 'Inicio session', req, '')  
+
+                setLogger(usuario.name, 'LOGIN', 'INICIAR SESSION', req, '')  
+                
                 return res.json({
                     token: token, 
                     type: usuario.tipo

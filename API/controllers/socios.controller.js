@@ -1,5 +1,6 @@
 const db = require('../lib/prisma')
 const dotenv = require("dotenv");
+const setLogger = require('../utils/logger');
 
 const getSocios = async (req, res) => {
   const page = parseInt(req.query.page) || 1 ;  
@@ -107,7 +108,14 @@ const postSocios = async (req, res) => {
           estado: true,
         },
       });
-  
+      
+      /**
+       * Logger del sistema
+       */
+      const token = req.header('Authorization');
+      console.log(token)
+      setLogger('ADMINISTRADOR', 'SOCIOS', 'CREAR SOCIO', req, nuevoSocio.id)  
+
       return res.status(201).json({ msg: "Socio creado exitosamente", socio: nuevoSocio });
     }
     return res.status(201).json({msgErr:'Correo ya existe en otro socio'})

@@ -1,16 +1,24 @@
 const db = require("../lib/prisma");
+const UAParser = require('ua-parser-js');
 
 const setLogger = async (usuario, tabla, Evento, req, navegador='Chrome', Clave=null) => {
     try {
+        const parser = new UAParser();
         const Ip = req.headers['x-forwarded-for'] || req.ip || req.connection.remoteAddress;
-        const navegador = req.headers['user-agent']
+        parser.setUA(req.headers['user-agent']);
+        const result = parser.getResult();
+        const navegador = result.browser.name;
         const Fecha = new Date()
+
+        /**
+         * Se crea el log
+         */
+        
         const data = await db.logs.create({
             data: {
                 usuario, tabla, Evento,Fecha,Ip,navegador, Clave
             }
         })
-        console.log(data)
     } catch (err){
         console.log('Error al ingresar el log', err)
     }
