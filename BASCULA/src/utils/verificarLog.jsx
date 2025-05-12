@@ -1,5 +1,5 @@
 import { Navigate, Outlet, useNavigate } from "react-router";
-import Cuerpo from "../components/cuerpo";
+import {Cuerpo, CuerpoAdmin} from "../components/cuerpo";
 import Cookies from 'js-cookie';
 import { useEffect, useMemo } from "react";
 import { ModalErr } from '../components/alerts'
@@ -8,7 +8,7 @@ const VerificarLog = ({Children, redirectTo='/', userType}) => {
     const navigate = useNavigate()
 
     const cuerpoMemo = useMemo(() => <Cuerpo><Outlet /></Cuerpo>, []);
-    const cuerpoAdmin = useMemo(()=> <Outlet />, [])
+    const cuerpoAdmin = useMemo(()=> <CuerpoAdmin><Outlet /></CuerpoAdmin>, [])
 
     const sessionActive = () => {
         if (Cookies.get('token')) {

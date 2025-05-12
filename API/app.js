@@ -10,6 +10,7 @@ const socios = require("./routes/socios.routes");
 const motoristas = require("./routes/motorista.routes")
 const tipodepeso = require("./routes/tipoDePeso.routes")
 const empresas = require("./routes/empresas.routes");
+const admin = require('./routes/admin.routes')
 const setupWebSocket = require("./sockets/websocketPeso");
 const boletas = require("./routes/boleta.routes");
 const path = require("path");
@@ -30,6 +31,7 @@ app.use('/api/motoristas', motoristas)
 app.use('/api/tipoDePeso', tipodepeso)
 app.use('/api/empresas', empresas)
 app.use('/api/boletas', boletas)
+app.use('/api/admin', admin)
 
 const distPath = path.join(__dirname, "../bascula/dist");
 
