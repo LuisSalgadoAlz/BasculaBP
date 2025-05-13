@@ -3,56 +3,62 @@ const dotenv = require("dotenv");
 const setLogger = require('../utils/logger');
 
 const getSocios = async (req, res) => {
-  const page = parseInt(req.query.page) || 1 ;  
-  const limit = parseInt(req.query.limit) || 7;  
-  const tipo = parseInt(req.query.tipo);
-  const estado = req.query.estado;
-  const skip = (page - 1) * limit;  
+  try{
+    const page = parseInt(req.query.page) || 1 ;  
+    const limit = parseInt(req.query.limit) || 7;  
+    const tipo = parseInt(req.query.tipo);
+    const estado = req.query.estado;
+    const skip = (page - 1) * limit;  
 
-  const search = req.query.search || ''; 
+    const search = req.query.search || ''; 
 
-  const data = await db.socios.findMany({
-    where: {
-      nombre: {
-        contains: search,  // Búsqueda parcial
+    const data = await db.socios.findMany({
+      where: {
+        nombre: {
+          contains: search,  // Búsqueda parcial
+        },
+        ...((tipo==0 || tipo ==1) ? { tipo: tipo } : {}), 
+        ...(estado =='activa' ? {estado : true} : estado =='inactiva' ? {estado : false} : {})
       },
-      ...((tipo==0 || tipo ==1) ? { tipo: tipo } : {}), 
-      ...(estado =='activa' ? {estado : true} : estado =='inactiva' ? {estado : false} : {})
-    },
-    skip: skip,
-    take: limit,
-  });
-  
-  const totalSocios = await db.socios.count({
-    where: {
-      nombre: {
-        contains: search,  
-      }, 
-      ...((tipo==0 || tipo ==1) ? { tipo: tipo } : {}), 
-      ...(estado =='activa' ? {estado : true} : estado =='inactiva' ? {estado : false} : {})
-    }
-  });
+      skip: skip,
+      take: limit,
+    });
+    
+    const totalSocios = await db.socios.count({
+      where: {
+        nombre: {
+          contains: search,  
+        }, 
+        ...((tipo==0 || tipo ==1) ? { tipo: tipo } : {}), 
+        ...(estado =='activa' ? {estado : true} : estado =='inactiva' ? {estado : false} : {})
+      }
+    });
 
-  const totalPages = Math.ceil(totalSocios / limit);
+    const totalPages = Math.ceil(totalSocios / limit);
 
-  const clenData = data.map((el) => ({
-    id: el.id,
-    Nombre: el.nombre,
-    Tipo: el.tipo == 0 ? "Proveedor" : "Cliente",
-    Telefono: el.telefono,
-    Correo: el.correo,
-    Estado: el.estado,
-  }));
-  
-  res.json({
-    data: clenData,
-    pagination: {
-      totalSocios,
-      totalPages,
-      currentPage: page,
-      limit,
-    },
-  });
+    const clenData = data.map((el) => ({
+      id: el.id,
+      Nombre: el.nombre,
+      Tipo: el.tipo == 0 ? "Proveedor" : "Cliente",
+      Telefono: el.telefono,
+      Correo: el.correo,
+      Estado: el.estado,
+    }));
+    
+    res.json({
+      data: clenData,
+      pagination: {
+        totalSocios,
+        totalPages,
+        currentPage: page,
+        limit,
+      },
+    });
+  } catch (err) {
+    console.log(err)
+    setLogger('SOCIOS', 'ERROR OBTENER SOCIOS', req, null, 3)  
+    return res.status(500).json({ message: "Error en el servidor" });
+  }
 };
 
 const getSocioPorID = async (req, res) => {
@@ -68,6 +74,7 @@ const getSocioPorID = async (req, res) => {
     return res.status(200).json(socio);
   } catch (error) {
     console.error(error);
+    setLogger('SOCIOS', 'ERROR OBTENER SOCIO', req, null, 3)  
     return res.status(500).json({ message: "Error en el servidor" });
   }
 };
@@ -86,12 +93,19 @@ const getStats = async (req, res) => {
     res.json({ totalSocios, totalProveedores, totalClientes, ActivosProveedores, ActivosClientes, totales });
   } catch (error) {
     console.error(error);
+    setLogger('SOCIOS', 'ERROR OBTENER ESTADISTICAS', req, null, 3)  
     res
       .status(500)
       .json({ message: "Error al obtener las estadísticas de socios" });
   }
 };
 
+/**
+ * Logger establecido
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 const postSocios = async (req, res) => {
   try {
     const { nombre, tipo, telefono, correo } = req.body;
@@ -112,15 +126,14 @@ const postSocios = async (req, res) => {
       /**
        * Logger del sistema
        */
-      const token = req.header('Authorization');
-      console.log(token)
-      setLogger('ADMINISTRADOR', 'SOCIOS', 'CREAR SOCIO', req, nuevoSocio.id)  
+      setLogger('SOCIOS', 'CREAR SOCIO', req, null, 1, nuevoSocio.id)  
 
       return res.status(201).json({ msg: "Socio creado exitosamente", socio: nuevoSocio });
     }
+    setLogger('SOCIOS', 'AGREGAR: SOCIO DUPLICADO', req, null, 2) 
     return res.status(201).json({msgErr:'Correo ya existe en otro socio'})
   } catch (error) {
-    console.error(error);
+    setLogger('SOCIOS', 'ERROR CREAR SOCIO', req, null, 3)  
     res.status(500).json({ msg: `Error al crear usuario: ${error.message}` });
   }
 };
@@ -155,10 +168,20 @@ const updateSocios = async (req, res) => {
               : false,
         },
       });
+
+      /**
+       * Logger del sistema
+       */
+      setLogger('SOCIOS', 'MODIFICAR SOCIO', req, null, 1, upSocios.id)  
+
       return res.status(200).send({msg:'Proceso Exitoso'});
     } 
+    
+    setLogger('SOCIOS', 'MODIFICAR: SOCIO DUPLICADO', req, null, 2) 
+
     return res.status(200).send({msgErr: 'correo ya existe en otro socio'});
   } catch (error) {
+    setLogger('SOCIOS', 'ERROR MODIFICAR SOCIO', req, null, 3) 
     res.status(401).send(`error ${error}`);
   }
 };
@@ -192,6 +215,7 @@ const getDireccionesPorSocios = async (req, res) => {
     return res.status(200).json(dataClean);
   } catch (error) {
     console.error(error);
+    setLogger('DIRECCION', 'ERROR OBTENER DIRECCION SOCIO', req, null, 3) 
     return res.status(500).json({ message: "Error en el servidor" });
   }
 };
@@ -210,11 +234,13 @@ const postDirecciones = async (req, res) => {
       },
     });
 
+    setLogger('DIRECCION', 'AGREGAR DIRECCION', req, null, 1, nuevaDireccion.id)  
+
     res
       .status(201)
       .json({ msg: "Direccion creado exitosamente", direcciones: nuevaDireccion });
   } catch (error) {
-    console.error(error);
+    setLogger('DIRECCION', 'ERROR AGREGAR DIRECCION', req, null, 3)  
     res.status(500).json({ msg: `Error al crear direccion: ${error.message}` });
   }
 };
@@ -234,6 +260,7 @@ const getDireccionesPorID = async (req, res) => {
     return res.status(200).json(direccion);
   } catch (error) {
     console.error(error);
+    setLogger('DIRECCION', 'ERROR OBTENER DIRECCION POR ID', req, null, 3) 
     return res.status(500).json({ message: "Error en el servidor" });
   }
 };
@@ -258,8 +285,12 @@ const putDireccionesPorID = async (req, res) => {
             : false,
       },
     });
+
+    setLogger('DIRECCION', 'MODIFICAR DIRECCION', req, null, 1, upDirecciones.id)  
+
     res.status(200).send("proceso exitoso");
   } catch (error) {
+    setLogger('DIRECCION', 'ERROR MODIFICAR DIRECCION', req, null, 3)  
     res.status(401).send(`error ${error}`);
   }
 };
