@@ -1,5 +1,6 @@
 const db = require('../lib/prisma')
 const dotenv = require("dotenv");
+const {setLogger} = require('../utils/logger');
 
 const getSociosParaSelect = async (req, res) => {
   try {
@@ -10,6 +11,7 @@ const getSociosParaSelect = async (req, res) => {
     });
     res.json(data);
   } catch (err) {
+    setLogger('SOCIOS', 'OBTENER SOCIOS PARA SELECT', req, null, 3)  
     console.log(err);
   }
 };
@@ -79,6 +81,7 @@ const getEmpresas = async (req, res) => {
       },
     });
   } catch (err) {
+    setLogger('EMPRESAS', 'OBTENER EMPRESAS', req, null, 3)  
     console.log(err);
   }
 };
@@ -93,6 +96,8 @@ const getStats = async (req, res) => {
     res.json({ totalEmpresas, totalActivas });
   } catch (error) {
     console.error(error);
+    setLogger('EMPRESAS', 'OBTENER ESTADISTICAS', req, null, 3)  
+
     res
       .status(500)
       .json({ message: "Error al obtener las estadísticas de empresas" });
@@ -115,12 +120,17 @@ const postEmpresas = async (req, res) => {
       },
     });
 
-    // Responder con el usuario creado
+    /**
+     * Logger del sistema
+     */
+
+    setLogger('EMPRESAS', 'CREAR EMPRESA', req, null, 1, nuevaEmpresa.id)  
+
     res
       .status(201)
       .json({ msg: "Usuario creado exitosamente", usuario: nuevaEmpresa });
   } catch (error) {
-    console.error(error);
+    setLogger('EMPRESAS', 'ERROR CREAR EMPRESA', req, null, 3)  
     res.status(500).json({ msg: `Error al crear usuario: ${error.message}` });
   }
 };
@@ -135,6 +145,7 @@ const getEmpresaPorId = async (req, res) => {
     
     return res.json(esData);
   } catch (err) {
+    setLogger('EMPRESAS', 'OBTENER EMPRESAS POR ID', req, null, 3)  
     console.log(err);
   }
 };
@@ -160,8 +171,12 @@ const updateEmpresasPorId = async (req, res) => {
         idSocios: parseInt(idSocios),
       },
     });
+
+    setLogger('EMPRESAS', 'MODIFICAR EMPRESA', req, null, 1, updateEmpresas.id)  
+
     res.status(200).send("proceso exitoso");
   } catch (error) {
+    setLogger('EMPRESAS', 'ERROR MODIFICAR EMPRESA', req, null, 3)  
     res.status(401).send(`error ${error}`);
   }
 };
@@ -193,6 +208,7 @@ const getVehiculosPorEmpresa = async (req, res) => {
     return res.status(200).json(dataClean);
   } catch (err) {
     console.error(err);
+    setLogger('VEHICULOS', 'OBTENER VEHICULOS DE EMPRESA', req, null, 3)  
     return res.status(500).json({ message: "Error en el servidor" });
   }
 };
@@ -212,11 +228,13 @@ const postVehiculosDeEmpresa = async (req, res) => {
       },
     });
 
+    setLogger('VEHICULOS', 'CREAR VEHICULO', req, null, 1, nuevoVehiculo.id)  
+
     return res
       .status(201)
       .json({ msg: "Vehiculo creado exitosamente", vehiculo: nuevoVehiculo });
   } catch (error) {
-    console.error(error);
+    setLogger('VEHICULOS', 'ERROR CREAR VEHICULO', req, null, 3)  
     res.status(500).json({ msg: `Error al crear vehiculo: ${error.message}` });
   }
 };
@@ -256,6 +274,7 @@ const getVehiculosPorID = async (req, res) => {
       .json({ msgList: listadoDeNombres, existHere: extState });
   } catch (err) {
     console.error(err);
+    setLogger('EMPRESAS', 'OBTENER VEHICULOS DE EMPRESA POR ID', req, null, 3)  
     return res.status(500).json({ message: "Error en el servidor" });
   }
 };
@@ -277,9 +296,12 @@ const updateVehiculosPorID = async (req, res) => {
         idEmpresa: parseInt(req.params.idEmpresa),
       },
     });
+    
+    setLogger('VEHICULOS', 'MODIFICAR VEHICULO', req, null, 1, updateVehiculos.id)  
+
     res.status(200).send("proceso exitoso");
   } catch (error) {
-    console.log(error);
+    setLogger('VEHICULOS', 'ERROR MODIFICAR VEHICULO', req, null, 3)  
     res.status(401).send(`error ${error}`);
   }
 };
@@ -310,6 +332,7 @@ const getMotoristaPorEmpresa = async (req, res) => {
     return res.status(200).json(dataClean);
   } catch (err) {
     console.error(err);
+    setLogger('MOTORISTAS', 'OBTENER MOTORISTAS DE EMPRESA', req, null, 3)  
     return res.status(500).json({ message: "Error en el servidor" });
   }
 };
@@ -329,10 +352,13 @@ const postMotoristasDeLaEmpresa = async (req, res) => {
           idEmpresa: parseInt(id),
         },
       });
-  
+
+      setLogger('MOTORISTAS', 'AGREGAR MOTORISTAS', req, null, 1, nuevoMotorista.id)  
+
       return res.status(201).json({ msg: "Motorista creado exitosamente", motorista: nuevoMotorista });
     }
 
+    setLogger('MOTORISTAS', 'ADVERTENCIA CORREO DUPLICADO', req, null, 2)  
     return res.status(201).send({msgErr: 'Correo duplicado'})
   } catch (error) {
     console.error(error);
@@ -358,8 +384,13 @@ const updateMotoristasPorID = async (req, res) => {
           estado: estado == 1 ? true : false,
         },
       });
+      
+      setLogger('MOTORISTAS', 'MODIFICAR MOTORISTAS', req, null, 1, updateMotorista.id)  
+
       return res.status(201).send({msg: "Proceso exitoso"});
     }
+  
+    setLogger('MOTORISTAS', 'ADVERTENCIA CORREO DUPLICADO', req, null, 2)  
     return res.status(201).send({msgErr: "Correo ya existe en otro motorista, ingrese otro"})
   } catch (error) {
     console.log(error);
