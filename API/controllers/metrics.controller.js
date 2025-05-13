@@ -2,6 +2,8 @@ const pm2 = require("pm2");
 const os = require("os");
 const db = require("../lib/prisma");
 
+const typesOfLogs = ['Vacio', 'COMPLETO', 'ADVERTENCIA', 'ERROR']
+
 function obtenerCapacidadSistema() {
   const cpus = os.cpus();
 
@@ -88,9 +90,12 @@ async function getSpaceForTable(req, res) {
 }
 
 const getLogs = async (req, res) => {   
-    const data = await db.logs.findMany()
+    const data = await db.logs.findMany({ orderBy: { id: 'desc' }
+    })
     const refactor = data.map((item) => ({
-      ...item, Fecha: new Date(item.Fecha).toLocaleString()
+      ...item, 
+      Fecha: new Date(item.Fecha).toLocaleString(), 
+      categoria: typesOfLogs[item.categoria]
     }))
     res.json(refactor)
 }
