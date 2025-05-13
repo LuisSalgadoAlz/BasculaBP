@@ -1,3 +1,8 @@
+const ALERTS_COLORS = {
+  COMPLETO : 'bg-white', 
+  ADVERTENCIA: 'bg-yellow-200', 
+  ERROR: 'bg-red-200'
+}
 export const TablesBD = ({ datos = [{}], fun }) => {
   const handleGetInfo = (data) => {
     navigate(`./${data.id}`);
@@ -18,7 +23,7 @@ export const TablesBD = ({ datos = [{}], fun }) => {
           </thead>
           <tbody>
             {datos.map((fila, index) => (
-              <tr key={index} className="bg-white border-b border-gray-200 hover:bg-[#FDF5D4]">
+              <tr key={index} className={`${fila.categoria && ALERTS_COLORS[fila?.categoria]} border-b border-gray-200 hover:bg-[#FDF5D4] rounded-2xl`}>
                 {Object.values(fila).map((el, key) => (
                   <td
                     key={key}
