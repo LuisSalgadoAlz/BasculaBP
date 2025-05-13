@@ -37,7 +37,7 @@ const DashboardAdmin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       {/* Header */}
       <div className="flex justify-between w-full gap-5 max-sm:flex-col max-md:flex-col mb-4">
         <div className="parte-izq">
@@ -61,17 +61,17 @@ const DashboardAdmin = () => {
         </div>
       </div>
 
-      <div className="px-4 mt-8">
+      <div className="mt-6 shadow-md rounded-2xl">
         {/* System Metrics */}
         <div className="mb-8">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold flex items-center text-gray-800">
-              <CiServer className="mr-2 text-blue-600" size={24} />
+            <h2 className="text-xl font-semibold flex items-center text-gray-600">
+              <CiServer className="mr-2" size={24} />
               Estado del API
             </h2>
             <span className="text-sm font-medium text-gray-500 flex items-center">
               <span className="mr-2">Última actualización:</span>
-              <span className="bg-gray-100 py-1 px-3 rounded-full">
+              <span className="py-1 px-3 rounded-full">
                 {lastUpdate}
               </span>
             </span>
@@ -169,8 +169,8 @@ const DashboardAdmin = () => {
         {/* Database Tables */}
         <div className="mb-8">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold flex items-center text-gray-800">
-              <CiDatabase className="mr-2 text-blue-600" size={24} />
+            <h2 className="text-xl font-semibold flex items-center text-gray-600">
+              <CiDatabase className="mr-2" size={24} />
               Tablas de Base de Datos
             </h2>
             {isLoadTable && (
@@ -180,7 +180,7 @@ const DashboardAdmin = () => {
             )}
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden p-6">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden p-10">
             {tables ? (
               <TablesBD datos={tables} />
             ) : (

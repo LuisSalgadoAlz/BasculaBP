@@ -20,7 +20,7 @@ const FilterControls = ({ onFilterChange }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 mb-6 border border-gray-200">
+    <div className="bg-white rounded-lg shadow-md p-6 mb-3 border border-gray-200">
       <div className="flex flex-col space-y-6">
         <div className="flex justify-between items-center">
           <h3 className="text-lg font-semibold text-gray-800">Filtros</h3>
@@ -173,18 +173,20 @@ const Logs = () => {
   };
 
   return (
-    <div className="bg-gray-50 min-h-screen p-6">
+    <div className="min-h-screen">
       <div className="mx-auto">
         {/* Encabezado */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Registros: Logs</h1>
-          <p className="text-gray-600">
-            Sistema avanzado de monitoreo de los logs de usuarios de la Báscula
-          </p>
+        <div className="flex justify-between w-full gap-5 max-sm:flex-col max-md:flex-col mb-4">
+          <div className="parte-izq">
+            <h1 className="text-3xl font-bold titulo">Registros: Logs</h1>
+            <h1 className="text-gray-600 max-sm:text-sm">
+              {" "}
+              Sistema de monitoreo de los logs de usuarios de la Báscula
+            </h1>
+          </div>
         </div>
-
         {/* Tarjetas de estadísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-3">
           <StatCard 
             icon={<FiCalendar size={24} className="text-white" />}
             title="Logs (Hoy)" 
