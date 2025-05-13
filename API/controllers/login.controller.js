@@ -2,7 +2,7 @@ const db = require('../lib/prisma')
 const dotenv = require('dotenv')
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const setLogger = require('../utils/logger');
+const {setLogger} = require('../utils/logger');
 
 /* Funcion para utilizar en el login a futuro mas el access w token */
 const loginUsers = async (req, res) => {
