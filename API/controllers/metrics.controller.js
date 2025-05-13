@@ -90,7 +90,16 @@ async function getSpaceForTable(req, res) {
 }
 
 const getLogs = async (req, res) => {   
-    const data = await db.logs.findMany({ orderBy: { id: 'desc' }
+    const cat = parseInt(req.query.cat) || '';
+    const user = req.query.user || '';
+    const search = req.query.search || '';
+    const data = await db.logs.findMany({ 
+      where: {
+        Evento: {contains: search },
+        ...(cat ? {categoria: cat} : {}),
+        ...(user ? {usuario : user} : {}), 
+      },
+      orderBy: { id: 'desc' }
     })
     const refactor = data.map((item) => ({
       ...item, 
@@ -100,4 +109,41 @@ const getLogs = async (req, res) => {
     res.json(refactor)
 }
 
-module.exports = { getPM2Metrics, getSpaceForTable, getLogs };
+
+const getStatsForLogs = async(req, res) => {
+  try{
+    const [logs, completos, advertencia, errores] = await Promise.all([
+      db.logs.count(),
+      db.logs.count({where:{
+        categoria: 1
+      }}), 
+      db.logs.count({where:{
+        categoria: 2
+      }}),
+      db.logs.count({where:{
+        categoria: 3
+      }}),  
+    ])
+
+    res.json({logs, completos, advertencia, errores})
+  } catch (err) {
+    console.log(err)
+    res.status(500).send({msg: "Error en el Servidor"})
+  }
+}
+
+const getUsuariosForSelect = async(req, res) => {
+  try{
+    const data = await db.logs.findMany({
+      select:{
+        usuario: true, 
+      }, 
+      distinct: ['usuario']
+    })
+    res.json(data)
+  }catch (err) {
+    console.log(err)
+  }
+}
+
+module.exports = { getPM2Metrics, getSpaceForTable, getLogs, getStatsForLogs, getUsuariosForSelect };
