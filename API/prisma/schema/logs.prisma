@@ -1,3 +1,7 @@
+/*
+* Categorias
+* 1: Completado, 2: Advertencia, 3: Error Critico en el API
+*/
 model Logs {
     id Int @id @default(autoincrement())
     usuario String
@@ -6,5 +10,6 @@ model Logs {
     Fecha DateTime
     Ip String?
     navegador String?
+    categoria Int?
     Clave Int?
 }

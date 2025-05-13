@@ -1,6 +1,6 @@
 const db = require('../lib/prisma')
 const dotenv = require("dotenv");
-const setLogger = require('../utils/logger');
+const {setLogger} = require('../utils/logger');
 
 const getSocios = async (req, res) => {
   try{
