@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const { imprimirEpson } = require("./impresiones.controller");
 const enviarCorreo = require("../utils/enviarCorreo");
 const alertaDesviacion = require("../utils/cuerposCorreo");
+const {setLogger} = require('../utils/logger');
 
 const generarNumBoleta = async () => {
   const ultimo = await db.boleta.findFirst({
@@ -14,6 +15,11 @@ const generarNumBoleta = async () => {
   return (ultimo?.numBoleta || 0) + 1;
 };
 
+/**
+ * Se grego los loggeres
+ * @param {*} req 
+ * @param {*} res 
+ */
 const getAllData = async (req, res) => {
   try {
     /* 0 Proveedor 1 Cliente */
@@ -182,12 +188,14 @@ const getAllData = async (req, res) => {
       TransladosE,
     });
   } catch (err) {
+    setLogger('BOLETA', 'OBTENER DATOS PARA SELECTS', req, null, 3)  
     console.log(err);
   }
 };
 
 /**
  * Aqui tambien se coloco el generador de numeros de boleta
+ * Ademas del logger
  * @param {*} req 
  * @param {*} res 
  */
@@ -220,8 +228,6 @@ const postBoletasNormal = async (req, res) => {
         usuarios: verificado["usuarios"],
       },
     });
-
-    console.log(despachador["id"]);
 
     const isComodin = idCliente == -998;
     const placaData =
@@ -306,6 +312,8 @@ const postBoletasNormal = async (req, res) => {
       },
     });
 
+    setLogger('BOLETA', 'AGREGAR BOLETA CASULLA', req, null, 1, nuevaBoleta.id)  
+
     imprimirEpson(nuevaBoleta);
 
     res
@@ -313,6 +321,7 @@ const postBoletasNormal = async (req, res) => {
       .json({ msg: "Boleta creado exitosamente", boleta: nuevaBoleta });
   } catch (error) {
     console.error(error);
+    setLogger('BOLETA', 'AGREGAR BOLETA CASULLA', req, null, 3)  
     res.status(500).json({ msg: `Error al crear usuario: ${error.message}` });
   }
 };
@@ -408,6 +417,7 @@ const getDataBoletas = async (req, res) => {
       },
     });
   } catch (err) {
+    setLogger('BOLETA', 'OBTENER BOLETAS PENDIENTES', req, null, 3)  
     console.log(err);
   }
 };
@@ -497,10 +507,14 @@ const postClientePlacaMoto = async (req, res) => {
         })
       },
     });
+
+    setLogger('BOLETA', 'AGREGAR BOLETA (ENTRADA DE DATOS)', req, null, 1, newBol.id)  
+
     res
       .status(201)
       .send({ msg: "Boleta creada en estado pendiente", Bol: newBol });
   } catch (err) {
+    setLogger('BOLETA', 'AGREGAR BOLETA (ENTRADA DE DATOS)', req, null, 3)  
     console.log(err);
   }
 };
@@ -572,10 +586,16 @@ const postClientePlacaMotoComodin = async (req, res) => {
         })
       },
     });
+
+    console.log(newBol)
+
+    setLogger('BOLETA', 'AGREGAR BOLETA (ENTRADA DE DATOS | COMODIN)', req, null, 1, newBol.id)  
+
     res
       .status(201)
       .send({ msg: "Boleta creada en estado pendiente", Bol: newBol });
   } catch (err) {
+    setLogger('BOLETA', 'AGREGAR BOLETA (ENTRADA DE DATOS | COMODIN)', req, null, 3)  
     console.log(err);
   }
 };
@@ -624,6 +644,7 @@ const getStatsBoletas = async (req, res) => {
     ]);
     res.status(201).send({ entrada, salida, pendientes });
   } catch (err) {
+    setLogger('BOLETA', 'OBTENER ESTADISTICAS DE BOLETA', req, null, 3)  
     res.status(501).send({ msg: "Error en el server" });
   }
 };
@@ -645,6 +666,7 @@ const getBoletaID = async (req, res) => {
 
     return res.json(data);
   } catch (err) {
+    setLogger('BOLETA', 'OBTENER DATOS DE UNA BOLETA', req, null, 3)  
     return res.status(401).send("Error en el api");
   }
 };
@@ -760,6 +782,7 @@ const getBoletasCompletadasDiarias = async (req, res) => {
       },
     });
   } catch (err) {
+    setLogger('BOLETA', 'OBTENER BOLETAS COMPLETADAS POR FECHA', req, null, 3)  
     console.log("Error en el api", err);
   }
 };
@@ -919,10 +942,12 @@ const updateBoletaOut = async (req, res) => {
     });
       
 
-      if (nuevaBoleta.desviacion > 200 || nuevaBoleta.estado=='Completo(Fuera de tolerancia)') {
-        const stmpMail = alertaDesviacion(nuevaBoleta, despachador, enviarCorreo)
-        console.log(stmpMail)
-      }
+    if (nuevaBoleta.desviacion > 200 || nuevaBoleta.estado=='Completo(Fuera de tolerancia)') {
+      const stmpMail = alertaDesviacion(nuevaBoleta, despachador, enviarCorreo)
+      console.log(stmpMail)
+    }
+    
+    setLogger('BOLETA', 'MODIFICAR BOLETA (SALIDA DE BOLETA)', req, null, 1, nuevaBoleta.id)  
 
 
     imprimirEpson(nuevaBoleta);
@@ -930,13 +955,14 @@ const updateBoletaOut = async (req, res) => {
       .status(201)
       .json({ msg: "Boleta creado exitosamente", boleta: nuevaBoleta });
   } catch (error) {
-    console.error(error);
+    setLogger('BOLETA', 'MODIFICAR BOLETA (SALIDA DE BOLETA)', req, null, 3)  
     res.status(500).json({ msg: `Error al crear usuario: ${error.message}` });
   }
 };
 
 /**
  * Aqui tambien se coloco el generador (updateBoletaOutComdin)
+ * Se agrego logger
  * @param {*} req 
  * @param {*} res 
  */
@@ -1045,11 +1071,14 @@ const updateBoletaOutComdin = async (req, res) => {
       },
     });
 
+    setLogger('BOLETA', 'MODIFICAR BOLETA (SALIDA DE BOLETA | COMODIN)', req, null, 1, nuevaBoleta.id)  
+
+
     imprimirEpson(nuevaBoleta);
 
     res.status(201).json({ msg: "Boleta creado exitosamente" });
   } catch (error) {
-    console.error(error);
+    setLogger('BOLETA', 'MODIFICAR BOLETA (SALIDA DE BOLETA | COMODIN)', req, null, 3)  
     res.status(500).json({ msg: `Error al crear usuario: ${error.message}` });
   }
 };
@@ -1186,10 +1215,17 @@ const getBoletasHistorial = async (req, res) => {
     res.send({ table: dataUTCHN, graphProcesos: [{entrada}, {salida}], graphEstados: [{canceladas}, {completas}, {desviadas}] });
   } catch (err) {
     console.log(err);
+    setLogger('BOLETA', 'OBTENER BOLETAS EN EL REPORTE', req, null, 3)  
     res.status(500).send({ msg: "Error interno API" });
   }
 };
 
+/**
+ * ! Importante esta funcion no se le puso logger 
+ * ! Hasta que venga la impresora
+ * @param {*} req 
+ * @param {*} res 
+ */
 const getReimprimir = async (req, res) => {
   try {
     const id = req.params.id;
@@ -1207,6 +1243,7 @@ const getReimprimir = async (req, res) => {
 };
 
 /* Para el calentario */
+
 /**
  * Primera parte fechas
  */
@@ -1236,6 +1273,7 @@ const getBoletasMes = async (req, res) => {
 
     res.send(makeCalendar);
   } catch (err) {
+    setLogger('BOLETA', 'OBTENER ESTADISTICAS DE CANTIDAD DE BOLETAS POR MES', req, null, 3)  
     console.log(err);
   }
 };
@@ -1261,7 +1299,7 @@ const getTimeLineForComponent = async (req, res) => {
     });
     const groups = data.map((el) => ({
       id: el.id,
-      title: el.placa + "(#" + el.id + ")",
+      title: el.placa + (el.numBoleta ? "(#" + el.numBoleta  + ")" : ''),
     }));
 
     const items = data.map((el) => ({
@@ -1274,12 +1312,13 @@ const getTimeLineForComponent = async (req, res) => {
 
     res.send({ groups, items });
   } catch (err) {
+    setLogger('BOLETA', 'OBTENER ESTADISTICAS DE CANTIDAD DE BOLETAS POR MES', req, null, 3)  
     console.log(err);
   }
 };
 
 /**
- * Aqui tambien se colcoco
+ * Aqui tambien se colcoco el looger
  * @param {*} req 
  * @param {*} res 
  */
@@ -1300,6 +1339,9 @@ const updateCancelBoletas = async (req, res) => {
         estado: "Cancelada",
       },
     });
+        
+    setLogger('BOLETA', 'CANCELAR BOLETA', req, null, 1, updateBoleta.id)  
+
     res.send({ msg: "Cancelada correctamente", boletas: updateBoleta });
   } catch (err) {
     console.log(err);
@@ -1323,6 +1365,7 @@ const getMovimientosYProductos = async (req, res) => {
 
     res.send({ movimiento, producto, socios });
   } catch (err) {
+    setLogger('BOLETA', 'OBTENER DATOS PARA FILTROS DE REPORTES', req, null, 3)  
     console.log(err);
   }
 };
