@@ -5,6 +5,7 @@ import "./index.css";
 import VerificarLog from "./utils/verificarLog";
 import { Spinner } from "./components/alerts";
 import ViewDisabled from "./views/viewDisabled";
+const Users = lazy(()=>import('./views/admin/users'))
 const Logs = lazy(()=>import('./views/admin/logs'))
 const DashboardAdmin = lazy(()=>import('./views/admin/dashboard'))
 const CalendarioView = lazy(()=>import('./views/calendario'))
@@ -25,11 +26,15 @@ const navRutas = createBrowserRouter([
     errorElement: <NotFoundPage />,
   },
   {
-    element: <VerificarLog userType='ADMIN' />,
+    element: <VerificarLog userType='ADMINISTRADOR' />,
     children: [
       {
         path: '/admin/dashboard',
         element: <DashboardAdmin />
+      },
+      {
+        path: '/admin/usuarios',
+        element: <Users />
       }, 
       {
         path: '/admin/logs',
@@ -38,7 +43,7 @@ const navRutas = createBrowserRouter([
     ]
   },
   {
-    element: <VerificarLog userType='CONTA' />,
+    element: <VerificarLog userType='CONTABILIDAD' />,
     children: [
       {
         path: '/contabilidad/dashboard',
@@ -47,7 +52,7 @@ const navRutas = createBrowserRouter([
     ]
   },
   {
-    element: <VerificarLog userType='USER' />,
+    element: <VerificarLog userType='BASCULA' />,
     children: [
       {
         path: "/Dashboard",

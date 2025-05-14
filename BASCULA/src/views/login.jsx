@@ -35,7 +35,7 @@ const Login = () => {
   
       const res = await token.json();
   
-      if (res.token && res.type=='USER') {
+      if (res.token && res.type=='BASCULA') {
         const expirationDate = new Date();
         expirationDate.setMinutes(expirationDate.getMinutes() + 30); // Expira en 30 minutos
         Cookies.set('token', res.token, { expires: expirationDate });
@@ -43,7 +43,7 @@ const Login = () => {
         navigate('/dashboard')  
       }
 
-      if (res.token && res.type=='ADMIN') {
+      if (res.token && res.type=='ADMINISTRADOR') {
         const expirationDate = new Date();
         expirationDate.setMinutes(expirationDate.getMinutes() + 30); // Expira en 30 minutos
         Cookies.set('token', res.token, { expires: expirationDate });

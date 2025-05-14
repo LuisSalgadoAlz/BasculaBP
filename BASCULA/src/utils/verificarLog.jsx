@@ -37,8 +37,8 @@ const VerificarLog = ({Children, redirectTo='/', userType}) => {
         return <Navigate to={redirectTo} />
     }
 
-    if (Cookies.get('type') == 'ADMIN') return cuerpoAdmin;
-    if (Cookies.get('type') == 'USER') return cuerpoMemo;
+    if (Cookies.get('type') == 'ADMINISTRADOR') return cuerpoAdmin;
+    if (Cookies.get('type') == 'BASCULA') return cuerpoMemo;
 }
  
 export default VerificarLog;

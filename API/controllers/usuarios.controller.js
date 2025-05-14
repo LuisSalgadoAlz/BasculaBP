@@ -27,7 +27,7 @@ const postUsuarios = async (req, res) => {
         // Verifica si el usuario ya existe
         const usuarioExistente = await bucarUsuario(usuarios);
         if (usuarioExistente) {
-            return res.status(400).json({ msg: 'El usuario ya existe' });
+            return res.status(201).json({ msgErr: 'El usuario ya existe' });
         }
 
         // Hashea la contra
@@ -45,10 +45,10 @@ const postUsuarios = async (req, res) => {
         });
 
         // Responder con el usuario creado
-        res.status(201).json({ msg: 'Usuario creado exitosamente', usuario: nuevoUsuario });
+        res.status(201).json({ msg: 'Usuario creado exitosamente'});
     } catch (error) {
         console.error(error);
-        res.status(500).json({ msg: `Error al crear usuario: ${error.message}` });
+        res.status(500).json({ msgErr: `Error al crear usuario: ${error.message}` });
     }
 };
 
