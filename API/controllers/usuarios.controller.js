@@ -5,8 +5,15 @@ const jwt = require('jsonwebtoken');
 
 /* Listar usuarios */
 const getUsuarios = async (req, res) => {   
-    const data = await db.usuarios.findMany()
-    res.json(data)
+    try{
+        const data = await db.usuarios.findMany()
+        const refactorData = data.map((item)=>({
+            ...item, estado: item.estado ? 'Activo' : 'Inactivo'
+        }))
+        res.json(refactorData)
+    } catch(err) {
+        console.log(err)
+    }
 }
  
 // Para verificar si el usuario ya existe metodo post y put
@@ -40,7 +47,8 @@ const postUsuarios = async (req, res) => {
                 usuarios,
                 email,
                 tipo,
-                contrasena: hashedPassword
+                contrasena: hashedPassword, 
+                estado: true, 
             }
         });
 
@@ -54,30 +62,35 @@ const postUsuarios = async (req, res) => {
 
 /* Modificar usuarios */
 const updateUsuarios = async (req, res) => {
-    const {name, email, tipo, contrasena, usuarios} = req.body
+    try {
+        const {name, email, tipo, contrasena, usuarios, estado} = req.body
     
-    // Verifica si el usuario que quiere modicar ya exista
-    const usuarioExistente = await bucarUsuario(usuarios)
-    if(usuarioExistente){
-        return res.status(400).json({msg: 'El usuario ya existe'})
-    } 
+        // Verifica si el usuario que quiere modicar ya exista
+        const usuarioExistente = await bucarUsuario(usuarios)
+        if(usuarioExistente){
+            return res.status(400).json({msgErr: 'El usuario ya existe'})
+        } 
 
-    // Hashea la contra
-    const hasshedPassword = await bcrypt.hash(contrasena, 10)
+        // Hashea la contra
+        const hasshedPassword = await bcrypt.hash(contrasena, 10)
 
-    const udUsuarios = await db.usuarios.update({
-        where: {
-            id: parseInt(req.params.id) 
-        },
-        data: {
-            name: name,
-            usuarios: usuarios,
-            email: email,
-            tipo: tipo,
-            contrasena: hasshedPassword
-        }
-    })
-    res.status(200).send("proceso exitoso");
+        const udUsuarios = await db.usuarios.update({
+            where: {
+                id: parseInt(req.params.id) 
+            },
+            data: {
+                name: name,
+                usuarios: usuarios,
+                email: email,
+                tipo: tipo,
+                contrasena: hasshedPassword, 
+                estado: estado,
+            }
+        })
+        res.status(200).send("proceso exitoso");
+    } catch {
+        res.status(400).send("Error interno en el API");
+    }
 }
 
 module.exports = {

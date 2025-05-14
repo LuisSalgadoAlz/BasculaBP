@@ -2,6 +2,7 @@ import {URLHOST} from '../../constants/global'
 import Cookies from 'js-cookie'
 
 const typesOfUsers = ['VACIO','BASCULA', 'CONTABILIDAD', 'TOLVA', 'ADMINISTRADOR']
+const typesOfState = [0,true, false]
 
 export const getMetrics = async (fun, setIsLoading) => {
   try {
@@ -173,4 +174,18 @@ export const postUsers = async (formUsers) => {
   } catch (error) {
     console.error("Error al obtener los datos:", error);
   }
+}
+
+export const updateUsers = async (formUsers) => {
+  const updateUser = { 
+    name: formUsers?.Nombre, 
+    usuarios: formUsers?.Usuario, 
+    email: formUsers?.Gmail, 
+    tipo: typesOfUsers[formUsers?.Tipo], 
+    ...(formUsers?.nuevaContraseña ? {contrasena: formUsers?.Contraseña} : {}), 
+    estado: typesOfState[formUsers?.Estado]
+  }
+
+  return updateUser;
+  
 }

@@ -8,11 +8,22 @@ import {
   FiFilter,
   FiRefreshCw,
 } from "react-icons/fi";
-import { getUsers, postUsers } from "../../hooks/admin/formDataAdmin";
+import { getUsers, postUsers, updateUsers } from "../../hooks/admin/formDataAdmin";
 import { TableUsers } from "../../components/admin/tables";
 import { BigSpinner, ModalErr, ModalSuccess } from "../../components/alerts";
-import { ModalAgregarUsuarios } from "../../components/admin/modal";
+import { ModalAgregarUsuarios, ModalEditUsuarios } from "../../components/admin/modal";
 
+const typesOfUsers = {
+  BASCULA : 1, 
+  CONTABILIDAD: 2, 
+  TOLVA: 3, 
+  ADMINISTRADOR: 4, 
+}
+
+const typesOfState = {
+  Activo: 1, 
+  Inactivo: 2
+}
 
 const StatCard = ({ icon, title, value, color }) => {
   return (
@@ -30,7 +41,7 @@ const StatCard = ({ icon, title, value, color }) => {
 
 const Users = () => {
   const initialSate = { categoria: "", user: "", search: "", date: "" };
-  const initialForm = {Nombre:'', Usuario:'', Gmail:'', Tipo: '', Contraseña:''}
+  const initialForm = {Nombre:'', Usuario:'', Gmail:'', Tipo: '', Contraseña:'', Estado:''}
   const [userTable, setUserTable] = useState();
   const [isLoading, setIsLoading] = useState(false);
   const [modalUser, setModalUser] = useState(false)
@@ -40,6 +51,7 @@ const Users = () => {
   const [success, setSuccess] = useState(false)
   const [err, setErr] = useState(false)
   const [msg, setMsg] = useState(false)
+  const [modalEditUser, setModalEditUser] = useState(false)
 
   const handlePagination = (item) => {
     if (pagination > 0) {
@@ -66,10 +78,15 @@ const Users = () => {
 
   const handleResetFilters = () => setFilters(initialSate);
 
-  const hdlClose = () => setModalUser(false)
+  const hdlClose = () => {
+    setModalUser(false)
+    setModalEditUser(false)
+    setFormUsers(initialForm)
+  }
   
   const hdlCancel = () => {
     setModalUser(false)
+    setModalEditUser(false)
     setFormUsers(initialForm)
   }
 
@@ -93,6 +110,25 @@ const Users = () => {
     setFormUsers(initialForm)
     setSuccess(false)
   }
+
+  const handleGetUser = (item) => {
+    setModalEditUser(true)
+    setFormUsers({
+      Nombre:item.name, 
+      Usuario:item.usuarios, 
+      Gmail:item.email, 
+      Tipo: typesOfUsers[item.tipo], 
+      Estado:typesOfState[item.estado]
+    })
+    console.log(item)
+  }
+
+  const handleUpdateUser = async() => {
+    const response = await updateUsers(formUsers)
+    console.log(response)
+  }
+
+  const propsModalEdit = { hdlClose, handleChange, formUsers, hdlCancel, handleUpdateUser}
   const propsModalErr = {name: msg, hdClose: handleCloseErr}
   const propsModalSucces = {name: msg, hdClose: handleCloseSucces}
   const propsModalUsuarios = { hdlClose, handleChange, formUsers, hdlCancel, hdlSaveUser}
@@ -112,39 +148,12 @@ const Users = () => {
         </div>
 
         {/* Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-3">
-          <StatCard
-            icon={<CiUser size={24} className="text-white" />}
-            title="Usuarios"
-            value={12}
-            color="bg-blue-500"
-          />
-          <StatCard
-            icon={
-              <MdOutlineAdminPanelSettings size={24} className="text-white" />
-            }
-            title="Administradores"
-            value={12}
-            color="bg-amber-500"
-          />
-          <StatCard
-            icon={<MdOutlineScale size={24} className="text-white" />}
-            title="Bascula"
-            value={12}
-            color="bg-amber-500"
-          />
-          <StatCard
-            icon={<FaTruckRampBox size={24} className="text-white" />}
-            title="Tolva"
-            value={12}
-            color="bg-amber-500"
-          />
-          <StatCard
-            icon={<MdAttachMoney size={24} className="text-white" />}
-            title="Contabilidad"
-            value={12}
-            color="bg-amber-500"
-          />
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mb-3 auto-cols-auto">
+          <StatCard icon={<CiUser size={24} className="text-white" />} title="Usuarios" value={12} color="bg-blue-500"/>
+          <StatCard icon={<MdOutlineAdminPanelSettings size={24} className="text-white" />} title="Administradores" value={12} color="bg-amber-500"/>
+          <StatCard icon={<MdOutlineScale size={24} className="text-white" />} title="Bascula" value={12} color="bg-amber-500" />
+          <StatCard icon={<FaTruckRampBox size={24} className="text-white" />} title="Tolva" value={12} color="bg-amber-500" />
+          <StatCard icon={<MdAttachMoney size={24} className="text-white" />} title="Contabilidad" value={12} color="bg-amber-500" />
         </div>
 
         {/* Filtros */}
@@ -216,12 +225,13 @@ const Users = () => {
                 Agregar Usuario
               </button>
             </div>
-            {isLoading ? <BigSpinner /> :  <TableUsers datos={userTable}/>}
+            {isLoading ? <BigSpinner /> :  <TableUsers datos={userTable} fun={handleGetUser}/>}
         </div>
       </div>
       {modalUser && <ModalAgregarUsuarios {...propsModalUsuarios}/>}
       {err && <ModalErr {...propsModalErr} />}
       {success && <ModalSuccess {...propsModalSucces}/>}
+      {modalEditUser && <ModalEditUsuarios {...propsModalEdit}/>}
     </>
   );
 };

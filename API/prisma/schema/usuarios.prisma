@@ -5,7 +5,7 @@ model Usuarios {
     email String? 
     tipo String
     contrasena String
-
+    estado Boolean?
     /* Relaciones con la boletas vendria siendo de una a muchas un usuario puede tener muchas boletas pero una
     boleta solo puede tener un usuario */
     
