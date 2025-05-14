@@ -2,6 +2,7 @@ const fs = require('fs');
 const { exec } = require('child_process');
 const db = require('../lib/prisma')
 const PDFDocument = require('pdfkit');
+const qrcode = require('qrcode');
 
 const imprimirEpson = (boleta) => {
   const filePath = 'boleta_epson.txt';
@@ -385,6 +386,14 @@ const imprimirPDF = async (req, res) => {
     doc.moveTo(350, signY + 45).lineTo(500, signY + 45).stroke();
     doc.text('Firma de Conformidad', 380, signY + 50);
     
+        
+    try{
+      const url = `http://192.9.100.56:3000/api/boletas/pdf/bol/${boleta.id}`;
+      const qrCodeImage = await qrcode.toDataURL(url);
+      doc.image(qrCodeImage, 270, signY + 130, { width: 70 });
+    }catch(err) {
+      console.log(err)
+    }
     // ============ PIE DE PÁGINA ============
     // Finalizar el contenido principal antes de añadir el pie de página
     doc.flushPages();
@@ -394,7 +403,7 @@ const imprimirPDF = async (req, res) => {
     
     // Obtenemos el número total de páginas después de que todo el contenido se haya añadido
     const range = doc.bufferedPageRange();
-    console.log(range)
+    
     // Para cada página, añadimos el pie de página
     for (let i = 0; i < range.count; i++) {
       doc.switchToPage(i);
