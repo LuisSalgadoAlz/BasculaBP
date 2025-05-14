@@ -3,6 +3,7 @@ import { TablesBD } from "../../components/admin/tables";
 import { getLogs, getStatsOfLogs, getUserForSelect } from "../../hooks/admin/formDataAdmin";
 import { BigSpinner, NoData } from "../../components/alerts";
 import { FiSearch, FiCalendar, FiFilter, FiDownload, FiRefreshCw, FiAlertCircle, FiAlertTriangle, FiClock, FiUsers } from "react-icons/fi";
+import { Pagination } from "../../components/buttons";
 
 // Componente de filtrado
 const FilterControls = ({ onFilterChange, usersForSelects }) => {
@@ -124,29 +125,50 @@ const StatCard = ({ icon, title, value, color }) => {
 };
 
 const Logs = () => {
+  const initialSate = {categoria:'', user:'', search:'', date:''}
   const [tableLogs, setTablesLogs] = useState();
   const [usersForSelect, setUsersForSelect] = useState()
   const [isLoadStats, setIsloadStats] = useState(false)
   const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState({ logs: 0, completos: 0, advertencia: 0, errores: 0, });
-  const [filters, setFilters] = useState({categoria:'', user:''})
+  const [filters, setFilters] = useState(initialSate)
+  const [pagination, setPagination] = useState(1)
+  
+  const handlePagination = (item) => {
+    if (pagination>0) {
+      const newRender = pagination+item
+      if(newRender==0) return
+      if(newRender>tableLogs.pagination.totalPages) return
+      setPagination(newRender) 
+    }
+  } 
+
+  const handleResetPagination = () => {
+    setPagination(1)
+  }
 
   useEffect(() => {
-    getLogs(setTablesLogs, setIsLoading, '', '', '');
+    getLogs(setTablesLogs, setIsLoading, '', '', '', pagination, '');
     getStatsOfLogs(setStats, setIsloadStats)
     getUserForSelect(setUsersForSelect)
   }, []);
 
   useEffect(() => {
-    getLogs(setTablesLogs, setIsLoading, filters?.categoria, filters?.user, filters?.search);
-  }, [filters?.categoria, filters?.user, filters?.search]);
+    getLogs(setTablesLogs, setIsLoading, filters?.categoria, filters?.user, filters?.search, pagination, filters?.date);
+  }, [filters?.categoria, filters?.user, filters?.search, pagination, filters?.date],);
 
   const handleChange = (e) => {
     const {name, value} = e.target
     setFilters((prev)=>({
       ...prev, [name] : value,
     }))
+    handleResetPagination()
   }
+
+  const handleResetFilters =  () =>{
+    setFilters(initialSate)
+  }
+
 
   return (
     <div className="min-h-screen">
@@ -165,25 +187,25 @@ const Logs = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-3">
           <StatCard 
             icon={<FiCalendar size={24} className="text-white" />}
-            title="Logs (Hoy)" 
+            title="Logs" 
             value={stats.logs} 
             color="bg-blue-500"
           />
           <StatCard 
             icon={<FiClock size={24} className="text-white" />}
-            title="Completados (Hoy)" 
+            title="Completados" 
             value={stats.completos} 
             color="bg-amber-500"
           />
           <StatCard 
             icon={<FiAlertTriangle size={24} className="text-white" />}
-            title="Advertencias (Hoy)" 
+            title="Advertencias" 
             value={stats.advertencia} 
             color="bg-yellow-500"
           />
           <StatCard 
             icon={<FiAlertCircle size={24} className="text-white" />}
-            title="Errores (Hoy)" 
+            title="Errores" 
             value={stats.errores} 
             color="bg-red-500"
           />
@@ -196,7 +218,7 @@ const Logs = () => {
               <h3 className="text-lg font-semibold text-gray-800">Filtros</h3>
               <button 
                 className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
-                onClick={() => onFilterChange({ dateRange: "today", status: "all", user: "", search: "" })}
+                onClick={handleResetFilters}
               >
                 <FiRefreshCw size={16} className="mr-1" />
                 <span className="text-sm">Restablecer</span>
@@ -215,6 +237,7 @@ const Logs = () => {
                   placeholder="Buscar..."
                   name="search"
                   onChange={handleChange}
+                  value={filters?.search}
                 />
               </div>
 
@@ -227,8 +250,9 @@ const Logs = () => {
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5"
                   name="user" 
                   onChange={handleChange}
+                  value={filters?.user}
                 >
-                  <option value="all">Todos los usuarios</option>
+                  <option value={''}>Todos los usuarios</option>
                   {usersForSelect?.map((item, index) => (
                     <option key={index} value={item.usuario}>
                       {item.usuario}
@@ -244,8 +268,11 @@ const Logs = () => {
                 </div>
                 <select
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5"
-                  onChange={(e) => handleChange("dateRange", e.target.value)}
+                  onChange={handleChange}
+                  name="date"
+                  value={filters?.date}
                 >
+                  <option value={''}>Seleccione una fecha</option>
                   <option value="today">Hoy</option>
                   <option value="yesterday">Ayer</option>
                   <option value="last7days">Últimos 7 días</option>
@@ -262,8 +289,9 @@ const Logs = () => {
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5"
                   onChange={handleChange}
                   name="categoria"
+                  value={filters?.categoria}
                 >
-                  <option value="all">Todos los estados</option>
+                  <option value={''}>Todos los estados</option>
                   <option value={1}>Completos</option>
                   <option value={2}>Advertencia</option>
                   <option value={3}>Errores</option>
@@ -283,18 +311,21 @@ const Logs = () => {
             </button>
           </div>
           
-          <div className="p-6">
+          <div className="p-6 max-h-[400px!important] overflow-auto body-components">
             {(isLoading && !tableLogs) ? (
               <div className="flex justify-center py-12">
                 <BigSpinner />
               </div>
-            ) : (!tableLogs || tableLogs.length === 0) ? (
+            ) : (!tableLogs || tableLogs?.data.length === 0) ? (
               <div className="py-12">
                 <NoData />
               </div>
             ) : (
-              <TablesBD datos={tableLogs} />
+              <TablesBD datos={tableLogs?.data} />
             )}
+          </div>
+          <div className="p-4 border-t-2 border-gray-300">
+            {tableLogs && tableLogs.pagination.totalPages > 1 && <Pagination pg={pagination} sp={setPagination} hp={handlePagination} dt={tableLogs}/>}
           </div>
         </div>
       </div>

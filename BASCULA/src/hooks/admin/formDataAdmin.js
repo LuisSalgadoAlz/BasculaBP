@@ -49,10 +49,10 @@ export const getSpaceForTable = async (fun, setIsLoading) => {
 };
 
 
-export const getLogs = async (fun, setIsLoading, categoria, user, search) => {
+export const getLogs = async (fun, setIsLoading, categoria, user, search, pagination, date) => {
   try {
     setIsLoading(true)
-    const response = await fetch(`${URLHOST}admin/logs?cat=${categoria}&user=${user}&search=${search}`, {
+    const response = await fetch(`${URLHOST}admin/logs?cat=${categoria}&user=${user}&search=${search}&page=${pagination}&date=${date}`, {
       method: "GET",
       headers: {
         Authorization: Cookies.get('token'),

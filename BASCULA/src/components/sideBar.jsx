@@ -5,6 +5,7 @@ import { RiTruckLine } from "react-icons/ri";
 import { FiUsers } from "react-icons/fi";
 import { PiSignOutFill } from "react-icons/pi";
 import { IoCalendarOutline } from "react-icons/io5";
+import { AiOutlineFileExclamation } from "react-icons/ai";
 
 import Cookies from "js-cookie";
 import { VERSION } from "../constants/global";
@@ -115,7 +116,7 @@ export const SideBar = ({ modo = "extendido", altura = 500 }) => {
       </div>
 
       {/* Reportes */}
-      <div className="pb-2">
+      <div className={isExtendido ? `pb-2 px-2` : 'pb-2'}>
         <ul className="flex w-full flex-col gap-1 px-2">
           {isExtendido ? (
             <>
@@ -294,7 +295,7 @@ export const SideBarAdmin = ({ modo = "extendido", altura = 500 }) => {
       </div>
 
       {/* Reportes */}
-      <div className="pb-2">
+      <div className={isExtendido ? `pb-2 px-2` : 'pb-2'}>
         <ul className="flex w-full flex-col gap-1 px-2">
           {isExtendido ? (
             <>
@@ -304,7 +305,7 @@ export const SideBarAdmin = ({ modo = "extendido", altura = 500 }) => {
                 className="flex items-center gap-x-3 rounded-md px-3 py-2 text-sm font-medium text-white"
               >
                 <span className="text-lg">
-                  <IoCalendarOutline />
+                  <AiOutlineFileExclamation />
                 </span>
                 <span className="flex-1">Registros</span>
               </NavLink>
@@ -318,7 +319,7 @@ export const SideBarAdmin = ({ modo = "extendido", altura = 500 }) => {
                   className="flex items-center gap-x-3 rounded-md px-5 py-2 text-sm font-medium text-white"
                 >
                   <span className="text-lg text-center">
-                    <IoCalendarOutline />
+                    <AiOutlineFileExclamation />
                   </span>
                 </NavLink>
 

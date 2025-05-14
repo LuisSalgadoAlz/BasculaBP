@@ -90,24 +90,78 @@ async function getSpaceForTable(req, res) {
 }
 
 const getLogs = async (req, res) => {   
-    const cat = parseInt(req.query.cat) || '';
-    const user = req.query.user || '';
-    const search = req.query.search || '';
-    const data = await db.logs.findMany({ 
-      where: {
-        Evento: {contains: search },
-        ...(cat ? {categoria: cat} : {}),
-        ...(user ? {usuario : user} : {}), 
-      },
-      orderBy: { id: 'desc' }
-    })
-    const refactor = data.map((item) => ({
-      ...item, 
-      Fecha: new Date(item.Fecha).toLocaleString(), 
-      categoria: typesOfLogs[item.categoria]
-    }))
-    res.json(refactor)
+  const cat = parseInt(req.query.cat) || '';
+  const user = req.query.user || '';
+  const search = req.query.search || '';
+  const date = req.query.date || '';
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 15;
+  const skip = (page - 1) * limit;
+
+  // Filtro de fecha
+  let dateFilter = {};
+  const now = new Date();
+
+  switch (date) {
+    case 'today':
+      dateFilter = {
+        gte: new Date(now.getFullYear(), now.getMonth(), now.getDate()),
+        lt: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1),
+      };
+      break;
+    case 'yesterday':
+      dateFilter = {
+        gte: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1),
+        lt: new Date(now.getFullYear(), now.getMonth(), now.getDate()),
+      };
+      break;
+    case 'last7days':
+      dateFilter = {
+        gte: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
+      };
+      break;
+    case 'last30days':
+      dateFilter = {
+        gte: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000),
+      };
+      break;
+  }
+
+  const where = {
+    ...(search ? { Evento: { contains: search } } : {}),
+    ...(cat ? { categoria: cat } : {}),
+    ...(user ? { usuario: user } : {}),
+    ...(date ? { Fecha: dateFilter } : {}),
+  };
+
+  const data = await db.logs.findMany({ 
+    where,
+    orderBy: { id: 'desc' }, 
+    skip,
+    take: limit,
+  });
+
+  const totalData = await db.logs.count({ 
+    where,
+  });
+
+  const refactor = data.map((item) => ({
+    ...item, 
+    Fecha: new Date(item.Fecha).toLocaleString(), 
+    categoria: typesOfLogs[item.categoria]
+  }));
+  
+  res.send({
+    data: refactor,
+    pagination: {
+      totalData,
+      totalPages: Math.ceil(totalData / limit),
+      currentPage: page,
+      limit,
+    },
+  });
 }
+
 
 
 const getStatsForLogs = async(req, res) => {
