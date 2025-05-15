@@ -4,7 +4,7 @@ import ViewBoletas from "../components/boletas/viewBoletas";
 import CardHeader from "../components/card-header";
 import { CancelarBoleta, ModalBoletas, ModalNormal, ModalOut, VisualizarBoletas } from "../components/boletas/formBoletas";
 import { initialSateDataFormSelet, initialStateFormBoletas, initialStateStats } from "../constants/boletas";
-import { formaterData, getAllDataForSelect, postBoletasNormal, getDataBoletas, getStatsBoletas, formaterDataNewPlaca, verificarDataNewPlaca, getDataParaForm, updateBoletaOut, verificarDataCompleto, postBoletasCasulla, getDataBoletasCompletadas, getDataBoletasPorID, updateCancelBoletas, verificarDataCasulla } from "../hooks/formDataBoletas";
+import { formaterData, getAllDataForSelect, postBoletasNormal, getDataBoletas, getStatsBoletas, formaterDataNewPlaca, verificarDataNewPlaca, getDataParaForm, updateBoletaOut, verificarDataCompleto, postBoletasCasulla, getDataBoletasCompletadas, getDataBoletasPorID, updateCancelBoletas, verificarDataCasulla, getToleranciaValue } from "../hooks/formDataBoletas";
 import { ModalErr, ModalSuccess } from "../components/alerts";
 import { AnimatePresence } from "framer-motion";
 
@@ -132,7 +132,7 @@ const Boletas = () => {
    */
   const handleSubmitNewPlaca = async () => {
     const response = formaterDataNewPlaca(formBoletas)
-    const isCorrect = true /*verificarDataNewPlaca(setErr,response, setMsg)*/
+    const isCorrect = verificarDataNewPlaca(setErr,response, setMsg)
     if (isCorrect) {
       await postBoletasNormal(response, setIsLoading)
       setSuccess(true)
@@ -153,8 +153,9 @@ const Boletas = () => {
   }
 
   const handleCompleteOut = async() => {
-    const response = formaterData(formBoletas)
-    const isCorrect = true /* verificarDataCompleto(setErr, response, setMsg, formBoletas?.pesoIn) */
+    const {valor} = await getToleranciaValue()
+    const response = formaterData(formBoletas, valor)
+    const isCorrect = verificarDataCompleto(setErr, response, setMsg, formBoletas?.pesoIn)
     console.log(response)
     if (isCorrect) {
       await updateBoletaOut(response, formBoletas.idBoleta, setIsLoading)
