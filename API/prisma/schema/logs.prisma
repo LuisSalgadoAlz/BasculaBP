@@ -13,3 +13,10 @@ model Logs {
     categoria Int?
     Clave Int?
 }
+
+model Config {
+    id Int @id @default(autoincrement())
+    clave String
+    valor Float
+    descripcion String?
+}
