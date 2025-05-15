@@ -8,7 +8,7 @@ import SelectFormBoletas from "../boletas/select";
 const classPadre =
   "fixed inset-0 flex items-center justify-center bg-opacity-50 z-40 min-h-screen overflow-auto bg-opa-50";
 const classHijo =
-  "bg-white min-w-[20vw] min-h-[20vh] max-w-[40vw] max-h-[95vh] rounded-2xl max-sm:overflow-auto max-sm:min-h-[0px] shadow-lg overflow-y-auto boletas border-8 border-white px-10 py-5 max-sm:p-10";
+  "bg-white min-h-[20vh] max-w-[90vw] md:max-w-[30vw] max-h-[95vh] rounded-2xl max-sm:overflow-auto max-sm:min-h-[0px] shadow-lg overflow-y-auto boletas border-8 border-white px-10 py-5 max-sm:p-10";
 
 const opt = [
     {id:1, nombre:'BASCULA'},
