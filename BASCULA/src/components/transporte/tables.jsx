@@ -49,7 +49,7 @@ export const TableEmpresas = ({ datos = [{}] }) => {
                             </h1>
                           )
                         ) : (
-                          el
+                          el || (<span className="text-gray-400 italic text-xs">No disponible</span>)
                         )}
                       </td>
                     )
@@ -125,7 +125,7 @@ export const TableVehiculos = ({ datos = [{}], fun }) => {
                             </h1>
                           )
                         ) : (
-                          el
+                          el ||  (<span className="text-gray-400 italic text-xs">No disponible</span>)
                         )}
                       </td>
                     )
@@ -187,7 +187,7 @@ export const TableMotoristas = ({ datos = [{}], fun }) => {
                 {Object.values(fila).map(
                   (el, key) => key != 0 && (
                       <td key={key} className="px-6 py-3 text-gray-700">
-                        {key == 0 ? "" : el}
+                        {key == 0 ? "" : el || (<span className="text-gray-400 italic text-xs">No disponible</span>)}
                       </td>
                     )
                   )

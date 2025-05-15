@@ -49,7 +49,7 @@ export const TableComponent = ({ datos = [{}], fun }) => {
                             </h1>
                           )
                         ) : (
-                          el
+                          el || (<span className="text-gray-400 italic text-xs">No disponible</span>) 
                         )}
                       </td>
                     )
@@ -105,7 +105,7 @@ export const TableDirecciones = ({ datos = [{}], fun }) => {
                         {key == 0
                           ? ""
                           : key != 2
-                          ? el
+                          ? el || (<span className="text-gray-400 italic text-xs">No disponible</span>)
                           : el == 0
                           ? "Origen"
                           : el == 1
