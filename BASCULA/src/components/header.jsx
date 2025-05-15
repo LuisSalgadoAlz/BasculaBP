@@ -1,9 +1,9 @@
 import { BiDockLeft } from "react-icons/bi";  
 import { RxHamburgerMenu } from "react-icons/rx";
-import { SideBarCel } from "./sideBarCel";
+import { SideBarCel, SideBarCelAdmin } from "./sideBarCel";
 import { useState } from "react";
 
-const Header = ({ title, fun }) => {
+const Header = ({ title, fun, type }) => {
   const [show, setShow] =useState(false)
   const handleClose = () => setShow(!show)
   return (
@@ -29,7 +29,8 @@ const Header = ({ title, fun }) => {
           </h1>
         </div>
       </div>
-      {show && <SideBarCel hdlClose={handleClose} />}
+      {(show && type=='BASCULA') &&  <SideBarCel hdlClose={handleClose} />}
+      {(show && type=='ADMINISTRADOR') &&  <SideBarCelAdmin hdlClose={handleClose} />}
     </>
   );
 };

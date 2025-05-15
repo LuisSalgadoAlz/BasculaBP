@@ -37,7 +37,7 @@ export const Cuerpo = ({ children }) => {
 
         {/* header */}
         <div className="w-full max-h-screen flex flex-col overflow-hidden">
-          <Header title="Sistema de Gestión de Báscula" fun={handleShow} />
+          <Header title="Sistema de Gestión de Báscula" fun={handleShow} type={'BASCULA'}/>
           <div className="flex-1 overflow-x-hidden body-components">
             <div className="mx-9 my-7">{children}</div>
           </div>
@@ -81,7 +81,7 @@ export const CuerpoAdmin = ({ children }) => {
 
         {/* header */}
         <div className="w-full max-h-screen flex flex-col overflow-hidden">
-          <Header title="Administración - Sistema Báscula" fun={handleShow} />
+          <Header title="Administración - Sistema Báscula" fun={handleShow} type={'ADMINISTRADOR'}/>
           <div className="flex-1 overflow-x-hidden body-components">
             <div className="mx-9 my-7">{children}</div>
           </div>
