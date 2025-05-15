@@ -883,6 +883,8 @@ const updateBoletaOut = async (req, res) => {
       }));
 
     const numBoleta = await generarNumBoleta();
+    
+    const porTolerancia = await toleranciaPermititda()
 
     const nuevaBoleta = await db.boleta.update({
       where: {
@@ -934,6 +936,7 @@ const updateBoletaOut = async (req, res) => {
         proceso,
         pesoNeto: parseFloat(pesoNeto),
         desviacion: parseFloat(desviacion),
+        porTolerancia,
         ordenDeCompra: proceso == 0 ? parseInt(ordenDeCompra) : null,
         ordenDeTransferencia: isTraslado
           ? parseInt(ordenDeTransferencia)
@@ -1029,6 +1032,8 @@ const updateBoletaOutComdin = async (req, res) => {
 
     const numBoleta = await generarNumBoleta();
 
+    const porTolerancia = await toleranciaPermititda();
+
     const nuevaBoleta = await db.boleta.update({
       where: {
         id: parseInt(req.params.id),
@@ -1064,6 +1069,7 @@ const updateBoletaOutComdin = async (req, res) => {
         proceso,
         pesoNeto: parseFloat(pesoNeto),
         desviacion: parseFloat(desviacion),
+        porTolerancia, 
         ordenDeCompra: proceso == 0 ? parseInt(ordenDeCompra) : null,
         ordenDeTransferencia: isTraslado
           ? parseInt(ordenDeTransferencia)
@@ -1370,6 +1376,24 @@ const getMovimientosYProductos = async (req, res) => {
   }
 };
 
+const toleranciaPermititda = async() => {
+  try{
+    const {valor} = await db.config.findUnique({where:{id:1}})
+    return valor
+  }catch(err) {
+    console.log(err)
+  }
+}
+
+const getConfigTolerancia = async(req, res) => {
+  try{
+    const tolerancia = await db.config.findUnique({where:{id:1}})
+    res.status(200).send(tolerancia)
+  }catch(err) {
+    console.log(err)
+  }
+}
+
 module.exports = {
   getAllData,
   postBoletasNormal,
@@ -1385,4 +1409,5 @@ module.exports = {
   getTimeLineForComponent,
   updateCancelBoletas,
   getMovimientosYProductos,
+  getConfigTolerancia, 
 };
