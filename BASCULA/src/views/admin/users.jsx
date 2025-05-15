@@ -107,6 +107,7 @@ const Users = () => {
 
   const handleCloseSucces = () => {
     setModalUser(false)
+    setModalEditUser(false)
     setFormUsers(initialForm)
     setSuccess(false)
   }
@@ -118,14 +119,22 @@ const Users = () => {
       Usuario:item.usuarios, 
       Gmail:item.email, 
       Tipo: typesOfUsers[item.tipo], 
-      Estado:typesOfState[item.estado]
+      Estado:typesOfState[item.estado],
+      Id: item.id, 
     })
-    console.log(item)
   }
 
   const handleUpdateUser = async() => {
     const response = await updateUsers(formUsers)
-    console.log(response)
+    if (response.msgErr){
+      setMsg(response.msgErr)
+      setErr(true)
+      return
+    }
+
+    setMsg(response.msg)
+    getUsers(setUserTable, setIsLoading)
+    setSuccess(true)
   }
 
   const propsModalEdit = { hdlClose, handleChange, formUsers, hdlCancel, handleUpdateUser}

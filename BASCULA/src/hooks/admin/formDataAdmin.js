@@ -182,10 +182,30 @@ export const updateUsers = async (formUsers) => {
     usuarios: formUsers?.Usuario, 
     email: formUsers?.Gmail, 
     tipo: typesOfUsers[formUsers?.Tipo], 
-    ...(formUsers?.nuevaContraseña ? {contrasena: formUsers?.Contraseña} : {}), 
+    ...(formUsers?.nuevaContraseña ? {contrasena: formUsers?.nuevaContraseña} : {}), 
     estado: typesOfState[formUsers?.Estado]
   }
 
-  return updateUser;
+  try {
+    const response = await fetch(`${URLHOST}usuarios/${formUsers?.Id}`, {
+      method: "PUT",
+      body: JSON.stringify(updateUser),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: Cookies.get('token'),
+      },
+    });
   
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API");
+    }
+  
+    const msg = await response.json()
+  
+    if (response.ok) {
+      return msg;
+    }
+  } catch (error) {
+    console.error("Error al obtener los datos:", error);
+  }
 }

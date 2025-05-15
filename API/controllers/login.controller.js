@@ -21,22 +21,24 @@ const loginUsers = async (req, res) => {
         })
 
         // Verifica si el usuario existe, y si existe verifica si la contraseña es correcta
-        if(usuario && usuario.estado==true){
-            const match = await bcrypt.compare(contrasena, usuario.contrasena)
-            if(match){
-                // Si las contras son iguales, se crea el token con la "secret key"
-                const token = jwt.sign({usuarios: usuario.usuarios}, process.env.SECRET_KEY)
+        if(usuario){
+            if (usuario.estado==true) {
+                const match = await bcrypt.compare(contrasena, usuario.contrasena)
+                if(match){
+                    // Si las contras son iguales, se crea el token con la "secret key"
+                    const token = jwt.sign({usuarios: usuario.usuarios}, process.env.SECRET_KEY)
 
-                setLogger('LOGIN', 'INICIAR SESSION', req, usuario)  
-                
-                return res.json({
-                    token: token, 
-                    type: usuario.tipo
-                })
+                    setLogger('LOGIN', 'INICIAR SESSION', req, usuario)  
+                    
+                    return res.json({
+                        token: token, 
+                        type: usuario.tipo
+                    })
+                }
+                return res.status(401).json({msg: 'Credenciales incorrectas'})
             }
-            return res.status(401).json({msg: 'Credenciales incorrectas'})
+            return res.status(404).json({msg:'Usuario desactivado, comunicarse con IT'})
         }
-        if(usuario.estado==false) return res.status(404).json({msg:'Usuario desactivado, comunicarse con IT'})
         res.status(404).json({msg: 'Credenciales incorrectas'})
     }catch(error){
         console.error(error)

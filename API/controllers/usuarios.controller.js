@@ -66,13 +66,14 @@ const updateUsuarios = async (req, res) => {
         const {name, email, tipo, contrasena, usuarios, estado} = req.body
     
         // Verifica si el usuario que quiere modicar ya exista
-        const usuarioExistente = await bucarUsuario(usuarios)
-        if(usuarioExistente){
-            return res.status(400).json({msgErr: 'El usuario ya existe'})
+        const usuarioExistente = await db.usuarios.findUnique({where: {usuarios:usuarios}})
+ 
+        if(usuarioExistente && usuarioExistente.id!=req.params.id){
+            return res.status(201).json({msgErr: 'El usuario ya existe'})
         } 
 
         // Hashea la contra
-        const hasshedPassword = await bcrypt.hash(contrasena, 10)
+        const hasshedPassword = contrasena && await bcrypt.hash(contrasena, 10)
 
         const udUsuarios = await db.usuarios.update({
             where: {
@@ -83,13 +84,13 @@ const updateUsuarios = async (req, res) => {
                 usuarios: usuarios,
                 email: email,
                 tipo: tipo,
-                contrasena: hasshedPassword, 
+                ...(contrasena ? {contrasena: hasshedPassword} : {}), 
                 estado: estado,
             }
         })
-        res.status(200).send("proceso exitoso");
+        res.status(200).send({msg: 'Se actualizo el usuario'});
     } catch {
-        res.status(400).send("Error interno en el API");
+        res.status(401).send({msgErr: "Error interno en el API"});
     }
 }
 
