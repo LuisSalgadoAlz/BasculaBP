@@ -141,14 +141,13 @@ const postSocios = async (req, res) => {
 const updateSocios = async (req, res) => {
   const { nombre, tipo, telefono, correo, estado } = req.body;
   try {
-    const count = await db.socios.count({
-      where: {
-        correo: correo,
-        id: {
-          not: parseInt(req.params.id)
-        }
+    const where = {
+      correo: correo,
+      id: {
+        not: parseInt(req.params.id)
       }
-    })
+    }
+    const count = correo ?  await db.socios.count({ where }) : 0;
 
     if (count==0) {
       const upSocios = await db.socios.update({
