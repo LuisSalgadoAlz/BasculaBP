@@ -53,7 +53,7 @@ export const ModalAgregarUsuarios = (props) => {
             <InputsFormBoletas data={claseFormInputs} name={"Usuario"} fun={handleChange} val={formUsers?.Usuario} />
             <SelectFormBoletas classCss={classFormSelct} name="Tipo" data={opt} fun={handleChange} val={formUsers?.Tipo}/>
             <InputsFormBoletas data={claseFormInputs} name={"Gmail"} fun={handleChange} val={formUsers?.Gmail} />
-            <label className="block mb-2 text-sm font-medium text-gray-900 ">Ingrese una nueva contraseña</label>
+            <label className="block mb-2 text-sm font-medium text-gray-900 ">Contraseña</label>
             <input
               type="password"
               id={'Contraseña'}

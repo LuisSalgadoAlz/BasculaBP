@@ -3,14 +3,45 @@ const dotenv = require('dotenv')
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
+const typesOfUsers = ['VACIO','ADMINISTRADOR', 'BASCULA', 'TOLVA', 'CONTABILIDAD']
+const typesOfState = ['VACIO', true, false]
+
 /* Listar usuarios */
 const getUsuarios = async (req, res) => {   
     try{
-        const data = await db.usuarios.findMany()
+        const search = req.query.search || '';
+        const tipo = req.query.tipo || '';
+        const estado = req.query.estado || '';
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 8;
+        const skip = (page - 1) * limit;
+
+        const where = {
+            ...(search ? {name: {contains: search}}: {}), 
+            ...(tipo ? {tipo:typesOfUsers[tipo]} : {}), 
+            ...(estado ? {estado : typesOfState[estado]} : {})
+        }
+        
+        const data = await db.usuarios.findMany({
+            where, 
+            skip,
+            take: limit,
+        })
+
+        const totalData = await db.usuarios.count({ where })
+
         const refactorData = data.map((item)=>({
             ...item, estado: item.estado ? 'Activo' : 'Inactivo'
         }))
-        res.json(refactorData)
+        res.json({
+            data: refactorData,
+            pagination: {
+                totalData,
+                totalPages: Math.ceil(totalData / limit),
+                currentPage: page,
+                limit,
+            },
+        })
     } catch(err) {
         console.log(err)
     }
@@ -94,6 +125,23 @@ const updateUsuarios = async (req, res) => {
     }
 }
 
+const getStatsUser = async(req, res) => {
+    try{
+        const [total, admins, bascula, tolva, contabilidad] = await Promise.all([
+            db.usuarios.count(), 
+            db.usuarios.count({where: {tipo: 'ADMINISTRADOR'}}),
+            db.usuarios.count({where: {tipo: 'BASCULA'}}),
+            db.usuarios.count({where: {tipo: 'TOLVA'}}),
+            db.usuarios.count({where: {tipo: 'CONTABILIDAD'}}),
+        ])
+
+        res.status(201).send({total, admins, bascula, tolva, contabilidad})
+    }catch(err) {
+        console.log(err)
+        res.status(401).send({msg:'Error interno en el API'})
+    }
+}
+
 module.exports = {
-    getUsuarios, postUsuarios, updateUsuarios
+    getUsuarios, postUsuarios, updateUsuarios, getStatsUser
 }

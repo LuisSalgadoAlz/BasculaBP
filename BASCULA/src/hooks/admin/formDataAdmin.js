@@ -1,5 +1,6 @@
 import {URLHOST} from '../../constants/global'
 import Cookies from 'js-cookie'
+import { regexEmail } from '../../constants/regex';
 
 const typesOfUsers = ['VACIO','BASCULA', 'CONTABILIDAD', 'TOLVA', 'ADMINISTRADOR']
 const typesOfState = [0,true, false]
@@ -118,10 +119,10 @@ export const getUserForSelect = async (fun) => {
   }
 };
 
-export const getUsers = async (fun, setIsLoading) => {
+export const getUsers = async (fun, setIsLoading, search, tipo, estado, page) => {
   try {
     setIsLoading(true)
-    const response = await fetch(`${URLHOST}usuarios/`, {
+    const response = await fetch(`${URLHOST}usuarios?search=${search}&tipo=${tipo}&estado=${estado}&page=${page}`, {
       method: "GET",
       headers: {
         Authorization: Cookies.get('token'),
@@ -150,9 +151,14 @@ export const postUsers = async (formUsers) => {
     contrasena: formUsers?.Contraseña, 
   }
 
-  console.log(newUser)
   if (!newUser.name || !newUser.usuarios || !newUser.tipo || !newUser.contrasena) {
     return {msgErr: 'datos del formulario se encuentan vacia'}
+  }
+
+  if (!regexEmail.test(newUser.email) && newUser.email) {
+    return {
+      msgErr: 'correo permite letras, números, puntos, guiones. Además de ir acompañado de un @dominio.es / @dominio.com'
+    }
   }
 
   try {
@@ -186,6 +192,12 @@ export const updateUsers = async (formUsers) => {
     estado: typesOfState[formUsers?.Estado]
   }
 
+  if (!regexEmail.test(updateUser.email) && updateUser.email) {
+    return {
+      msgErr: 'correo permite letras, números, puntos, guiones. Además de ir acompañado de un @dominio.es / @dominio.com'
+    }
+  }
+
   try {
     const response = await fetch(`${URLHOST}usuarios/${formUsers?.Id}`, {
       method: "PUT",
@@ -209,3 +221,23 @@ export const updateUsers = async (formUsers) => {
     console.error("Error al obtener los datos:", error);
   }
 }
+
+export const getStasUsers = async (fun) => {
+  try {
+    const response = await fetch(`${URLHOST}usuarios/stats`, {
+      method: "GET",
+      headers: {
+        Authorization: Cookies.get('token'),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API");
+    }
+
+    const data = await response.json();
+    fun(data);
+  } catch (error) {
+    console.error("Error al obtener las metricas:", error);
+  } 
+};
