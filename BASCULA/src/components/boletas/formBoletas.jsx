@@ -7,7 +7,7 @@ import { MiniSpinner, ModalPrevisual } from "../alerts";
 import { motion } from "framer-motion";
 import { IoCloseSharp } from "react-icons/io5";
 import { ButtonPrint } from "../buttons";
-import { getConvertPdf, getPrintEpson } from "../../hooks/formDataBoletas";
+import { getPrintEpson, getToleranciaValue } from "../../hooks/formDataBoletas";
 import { CiLock } from "react-icons/ci";
 import { CiUnlock } from "react-icons/ci";
 
@@ -260,9 +260,12 @@ export const ModalOut = (props) => {
     }))
   } 
 
-  const hdlPrevisualizar = () => {
+  const hdlPrevisualizar = async() => {
+
+    const { valor } = await getToleranciaValue()
+
     const pesoNeto = boletas?.pesoOut - boletas?.pesoIn;
-    const tolerancia = boletas['Peso Teorico'] * 0.005;
+    const tolerancia = boletas['Peso Teorico'] * valor;
     const desviacion = Math.abs(pesoNeto) - boletas['Peso Teorico'];
     const absDesviacion = Math.abs(Math.abs(pesoNeto) - boletas['Peso Teorico']);
       
@@ -361,7 +364,7 @@ export const VisualizarBoletas = (props) => {
   const [isLoadImpresion, setIsLoadImpresion] = useState(false)
   const opt = ['Entrada de material', 'Salida de material']
   const isNullData =  'Vacio'
-  const pesoTolerado = boletas?.pesoTeorico * 0.005
+  const pesoTolerado = boletas?.pesoTeorico * boletas?.porTolerancia
 
   const handleConvertPdf = async() => {
     console.log(boletas)
@@ -478,7 +481,7 @@ export const VisualizarBoletas = (props) => {
               <hr className="text-gray-400" />
               <span className="text-md text-gray-700 flex justify-between"><span>Desviación:</span><span>{boletas?.desviacion ? boletas?.desviacion:0} lb</span></span>
               <hr className="text-gray-400 my-2" />
-              <span className="text-md text-gray-700 flex justify-between"><span>(Nota: Peso Tolerado)</span><span>± {pesoTolerado}</span></span>
+              <span className="text-md text-gray-700 flex justify-between"><span>(Nota: Peso Tolerado)</span><span>± {parseFloat(pesoTolerado).toFixed(2)}</span></span>
               <span className="text-md text-gray-700 mt-8">Observaciones: </span>  
               <span className="text-md text-gray-700 border-2 border-gray-200 p-2">🔺{boletas?.observaciones ? boletas?.observaciones : isNullData}</span>
             </div>
