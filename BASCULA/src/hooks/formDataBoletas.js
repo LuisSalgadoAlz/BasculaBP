@@ -376,10 +376,30 @@ export const getTimeLineDetails = async (fun, fecha,setIsLoading) => {
  * @returns 
  */
 
-export const formaterData = (formBoletas) => {
+export const getToleranciaValue = async () => {
+  try {
+    const response = await fetch(`${URLHOST}boletas/config/tolerancia`, {
+      method: "GET",
+      headers: {
+        Authorization: Cookies.get('token'),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API");
+    }
+
+    const data = await response.json();
+    return data
+  } catch (error) {
+    console.error("Error al obtener los clientes:", error);
+  }
+};
+
+export const formaterData = (formBoletas, valor) => {
   const pesoNeto = Math.abs(formBoletas?.pesoOut - formBoletas?.pesoIn);
 
-  const tolerancia = (formBoletas['Peso Teorico']) ? (formBoletas['Peso Teorico'] * 0.005) : 0;
+  const tolerancia = (formBoletas['Peso Teorico']) ? (formBoletas['Peso Teorico'] * valor) : 0;
   const desviacion = (formBoletas['Peso Teorico']) ? (Math.abs(pesoNeto) - formBoletas['Peso Teorico']) : 0;
   const absDesviacion = (formBoletas['Peso Teorico']) ? Math.abs(Math.abs(pesoNeto) - formBoletas['Peso Teorico']) : 0
   const fueraTol = (formBoletas['Peso Teorico']) ? (absDesviacion > tolerancia) : false
@@ -415,13 +435,51 @@ export const formaterData = (formBoletas) => {
 
 
 export const verificarDataNewPlaca = (funError, data, setMsg) => {
-  const {idCliente, idUsuario, idMotorista, idPlaca, idEmpresa, pesoInicial } = data 
+  const { 
+    idCliente, 
+    idUsuario, 
+    idMotorista, 
+    idPlaca, 
+    idEmpresa, 
+    pesoInicial, 
+    proceso, 
+    idMovimiento, 
+    idOrigen, 
+    idProducto,
+    NViajes, 
+    NSalida, 
+    idTrasladoOrigen
+  } = data 
 
   /* pesoInicial */
 
   if (!idCliente || !idUsuario || !idMotorista || !idPlaca || !idEmpresa) {
     funError(true)
     setMsg('Por favor, complete todos los campos antes de continuar.')
+    return false
+  }
+
+  if(proceso==0 && (!idMovimiento || !idProducto)) {
+    funError(true)
+    setMsg('Por favor, complete todos los campos de detalles de entrada.')
+    return false
+  }
+
+  if(proceso==0 && ((idMovimiento===10 || idMovimiento===11) && (!idTrasladoOrigen))) {
+    funError(true)
+    setMsg('Por favor, ingrese un origen de traslado.')
+    return false
+  }
+
+  if(proceso==0 && ((idMovimiento!=10 && idMovimiento!=11) && (!idOrigen))) {
+    funError(true)
+    setMsg('Por favor, complete todos los campos de detalles de entrada.')
+    return false
+  }
+  
+  if(idProducto===19 && (!NSalida || !NViajes)) {
+    funError(true)
+    setMsg('Por favor, ingresar numero de viaje y de salida')
     return false
   }
 
