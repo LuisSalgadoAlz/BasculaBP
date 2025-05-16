@@ -36,11 +36,11 @@ export const ESTADOS_BOLETAS_TERMINADA = [
 export const Proceso = [
     {
         id : 0, 
-        nombre : 'Entrada de material'
+        nombre : '🟢 Entrada de material'
     },
     {
         id : 1, 
-        nombre : 'Salida de material'
+        nombre : '🟡 Salida de material'
     },
 ]
 

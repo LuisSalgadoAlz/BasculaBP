@@ -119,7 +119,7 @@ export const TransladoNormal = ({bol, fill, hdl, tipo}) => {
         name={"Origen"}
         data={tipoOrigen}
         fun={hdl} 
-        stt={bol.Proceso === "" || tipo===1 ? true : false}
+        stt={(bol.Proceso === "" || tipo===1 || bol.Proceso ===0) ? true : false}
         {...tipo === 1 ? { val: 'Baprosa' } : {val: bol?.Origen}}
       />
       <SelectFormBoletas
@@ -143,7 +143,7 @@ export const TransladoInterno = ({bol, fill, hdl}) => {
         data={fill["TransladosI"]}
         fun={hdl}
         {...bol['Traslado origen'] ? {val:bol['Traslado origen']} : {}}
-        stt={bol.Proceso === "" ? true : false}
+        stt={(bol.Proceso === "" || bol.Proceso ===0) ? true : false}
       />
       <SelectFormBoletas
         classCss={classFormSelct}
@@ -165,7 +165,7 @@ export const TransladoExterno = ({bol, fill, hdl}) => {
         data={fill["TransladosE"]}
         fun={hdl}
         {...bol['Traslado origen'] ? {val:bol['Traslado origen']} : {}}
-        stt={bol.Proceso === "" ? true : false}
+        stt={(bol.Proceso === "" || bol.Proceso===0 ) ? true : false}
       />
       <SelectFormBoletas
         classCss={classFormSelct}

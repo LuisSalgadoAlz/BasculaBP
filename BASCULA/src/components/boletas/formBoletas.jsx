@@ -319,8 +319,8 @@ export const ModalOut = (props) => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 p-2 place-content-center">
               <div className="grid grid-cols-1 gap-y-2 sm:grid-cols-2">
-                <SelectFormBoletas classCss={classFormSelct} name={'Proceso'} data={fillData['Proceso']} fun={hdlChange} val={boletas?.Proceso}/>
-                <SelectFormBoletas classCss={classFormSelct} name={'Producto'} data={fillData['Producto']} fun={hdlChange} val={boletas?.Producto}/>
+                <SelectFormBoletas classCss={classFormSelct} name={'Proceso'} data={fillData['Proceso']} fun={hdlChange} val={boletas?.Proceso} stt={true}/>
+                <SelectFormBoletas classCss={classFormSelct} name={'Producto'} data={fillData['Producto']} fun={hdlChange} val={boletas?.Producto} stt={boletas?.Proceso === 0}/>
                 <SelectFormBoletas key={clean} classCss={classFormSelct} name={'Socios'} val={boletas?.Socios} data={fillData['Clientes']} fun={hdlChange} stt={true} />
                 {boletas?.Socios==-998 && <InputsFormBoletas data={claseFormInputs} name={'Cliente'} fun={hdlChange} val={boletas?.valueSocio} stt={true}/>}
                 {boletas?.Socios==-999 && <InputsFormBoletas data={claseFormInputs} name={'Proveedor'} fun={hdlChange} val={boletas?.valueSocio}  stt={true}/>}
@@ -330,7 +330,9 @@ export const ModalOut = (props) => {
                 )}
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 place-content-start">
-                <SelectFormBoletas classCss={classFormSelct} name={'Movimiento'} val={boletas?.Movimiento} data={(boletas.Proceso===0) ? fillData['Flete'] : fillData['FleteS']} fun={hdlChange} stt={(boletas.Proceso==='')? true : false}/>
+                <SelectFormBoletas classCss={classFormSelct} name={'Movimiento'} val={boletas?.Movimiento} 
+                data={(boletas.Proceso===0) ? fillData['Flete'] : fillData['FleteS']} fun={hdlChange} 
+                stt={(boletas.Proceso===0)? true : false}/>
                 
                 {move == 'Traslado Interno' ? (
                   <TransladoInterno bol={boletas} hdl={hdlChange} fill={fillData} />
