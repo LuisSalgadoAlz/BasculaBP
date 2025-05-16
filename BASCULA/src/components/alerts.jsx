@@ -1,3 +1,7 @@
+import { motion } from "framer-motion";
+import { propsModalPrevisual, propsModalPrevisualHijo } from "../constants/global";
+import { IoCloseSharp, IoScaleOutline } from "react-icons/io5";
+
 export const ModalSuccess = ({ name, hdClose }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-opa-50">
@@ -104,58 +108,74 @@ export const ModalVehiculoDuplicadoEdit = ({ name, hdClose, hdlSubmit }) => {
 
 export const ModalPrevisual = ({ hdClose, data }) => {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-opa-50">
-      <div className="bg-white p-6 rounded-2xl shadow-xl max-w-sm border border-gray-200">
-        <h2 className="text-xl font-bold text-gray-800 mb-4">Boleta</h2>
-        <p className="text-gray-600">
-          Peso Inicial:{" "}
-          <span className="font-bold">{data?.pesoInicial} lb</span>
-        </p>
-        <hr className="text-gray-400 my-1" />
-        <p className="text-gray-600">
-          Peso neto: <span className="font-bold">{data?.pesoNeto} lb</span>
-        </p>
-        <hr className="text-gray-400 my-1" />
-        <p className="text-gray-600">
-          Peso tolerancia:{" "}
-          <span className="font-bold">
-            ±{" "}
-            {data?.tolerancia || data?.tolerancia == 0
-              ? data?.tolerancia
-              : "Faltan datos"}{" "}
-            lb
-          </span>
-        </p>
-        <hr className="text-gray-400 my-1" />
-        <p className="text-gray-600">
-          Peso desviacion:{" "}
-          <span className="font-bold">
-            {data?.desviacion || data?.desviacion == 0
-              ? data?.desviacion
-              : "Faltan datos"}{" "}
-            lb
-          </span>
-        </p>
-        <hr className="text-gray-400 my-1" />
-        <p className="text-gray-600">
-          Estado:{" "}
-          {data?.fueraTol ? (
-            <span className="text-red-800">Fuera de tolerancia</span>
-          ) : (
-            <span className="text-green-800">Dentro de la tolerancia</span>
-          )}
-        </p>
-        <div className="mt-6 flex justify-center">
+    <motion.div {...propsModalPrevisual}>
+      <motion.div {...propsModalPrevisualHijo}>
+        <div className="bg-[#5A3F27] text-white px-6 py-4 flex items-center justify-between">
+          <h2 className="text-xl font-bold flex items-center">
+            <IoScaleOutline className="mr-2 text-2xl" />
+            Detalle de Peso
+          </h2>
+          <button
+            className="text-white hover:bg-[#795e47] p-1 rounded-full transition-colors"
+            onClick={hdClose}
+            aria-label="Cerrar"
+          >
+            <IoCloseSharp className="text-3xl" />
+          </button>
+        </div>
+        <div className="px-6 py-6">
+          <p className="text-gray-600">
+            Peso Inicial:{" "}
+            <span className="font-bold">{data?.pesoInicial} lb</span>
+          </p>
+          <hr className="text-gray-400 my-1" />
+          <p className="text-gray-600">
+            Peso neto: <span className="font-bold">{data?.pesoNeto} lb</span>
+          </p>
+          <hr className="text-gray-400 my-1" />
+          <p className="text-gray-600">
+            Peso tolerancia:{" "}
+            <span className="font-bold">
+              ±{" "}
+              {data?.tolerancia || data?.tolerancia == 0
+                ? data?.tolerancia
+                : "Faltan datos"}{" "}
+              lb
+            </span>
+          </p>
+          <hr className="text-gray-400 my-1" />
+          <p className="text-gray-600">
+            Peso desviacion:{" "}
+            <span className="font-bold">
+              {data?.desviacion || data?.desviacion == 0
+                ? data?.desviacion
+                : "Faltan datos"}{" "}
+              lb
+            </span>
+          </p>
+        </div>
+        <div className="px-6 py-2">
+          <hr className="text-gray-400 my-1" />
+          <p className="text-gray-600">
+            Estado:{" "}
+            {data?.fueraTol ? (
+              <span className="text-red-800">Fuera de tolerancia</span>
+            ) : (
+              <span className="text-green-800">Dentro de la tolerancia</span>
+            )}
+          </p>
+        </div>
+        <div className="px-6 py-6 flex justify-end">
           <button
             onClick={hdClose}
             aria-label="Cerrar modal de éxito"
-            className="px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700 transition-transform duration-300 ease-in-out hover:scale-105"
+            className="px-4 py-2 text-white bg-[#5A3F27] rounded-lg hover:bg-[#8d7158] transition-transform duration-300 ease-in-out hover:scale-105"
           >
             Aceptar
           </button>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };
 

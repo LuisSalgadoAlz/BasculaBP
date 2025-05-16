@@ -57,3 +57,18 @@ export const propsMotionHijo = {
     exit:{ scale: 0.1, opacity: 0, y: 50 },
     transition:{ duration: 0.7, ease: [0.22, 1, 0.36, 1] },
 }
+
+export const propsModalPrevisual = {
+    className:"fixed inset-0 flex items-center justify-center bg-opa-50 bg-opacity-60 z-50 p-4 backdrop-blur-sm", 
+    initial:{ opacity: 0 },
+    animate:{ opacity: 1 },
+    exit:{ opacity: 0 },
+    transition:{duration: 0.2 }
+}
+
+export const propsModalPrevisualHijo = {
+    className:"bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden",
+    initial:{ scale: 1, y: 0 },
+    animate:{ scale: 1, y: 0 },
+    transition:{ type: "spring", damping: 15 },
+}

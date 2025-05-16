@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import SelectFormBoletas from "./select";
 import { InputsFormBoletas, PartInputsPesos, PartInputsPesos2, PartPesosDeSalida, TransladoExterno, TransladoInterno, TransladoNormal } from "./inputs";
 import { buttonCalcular, buttonCancel, buttonClean, buttonDanger, buttonSave, claseFormInputs, classFormSelct, deptos, direccionOrigenEmpresa, } from "../../constants/boletas";
-import { propsMotionHijo, propsMotionPadre, URLHOST, URLWEBSOCKET } from "../../constants/global";
+import { propsModalPrevisual, propsModalPrevisualHijo, propsMotionHijo, propsMotionPadre, URLHOST, URLWEBSOCKET } from "../../constants/global";
 import { MiniSpinner, ModalPrevisual, SkeletonBoleta, SkeletonModalOut, Spinner } from "../alerts";
 import { motion } from "framer-motion";
 import { IoCloseSharp } from "react-icons/io5";
@@ -10,23 +10,80 @@ import { ButtonPrint } from "../buttons";
 import { getPrintEpson, getToleranciaValue } from "../../hooks/formDataBoletas";
 import { CiLock } from "react-icons/ci";
 import { CiUnlock } from "react-icons/ci";
+import { IoScaleOutline } from 'react-icons/io5';
 
 const formInputSelect = ['Transportes', 'Placa', 'Motoristas']
 
-const PrevisualizarPesoNeto = ({pn, hdlClose}) => {
+const PrevisualizarPesoNeto = ({ pn, hdlClose, unidad = "lb" }) => {
+  const [animateValue, setAnimateValue] = useState(0);
+  
+  useEffect(() => {
+    // Animación del valor numérico
+    const timer = setTimeout(() => {
+      setAnimateValue(parseFloat(pn));
+    }, 50);
+    
+    return () => clearTimeout(timer);
+  }, [pn]);
+
   return (
-    <>
-      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40 p-4 sm:p-6 min-h-screen bg-opa-50">
-        <div className="bg-white w-full max-w-sm rounded-2xl p-2 shadow-lg sm:w-[90%] md:w-[80%] lg:w-[60%] max-h-[95vh] overflow-y-auto boletas border-8 border-white">
-          <div className="flex items-center justify-between">
-            <span><strong>Peso neto:</strong> {pn} </span>
-            <button className="text-4xl hover:scale-105" onClick={hdlClose}><IoCloseSharp /></button>
+    <motion.div {...propsModalPrevisual}>
+      <motion.div {...propsModalPrevisualHijo} >
+        {/* Header */}
+        <div className="bg-[#5A3F27] text-white px-6 py-4 flex items-center justify-between">
+          <h2 className="text-xl font-bold flex items-center">
+            <IoScaleOutline className="mr-2 text-2xl" />
+            Detalle de Peso
+          </h2>
+          <button 
+            className="text-white hover:bg-[#795e47] p-1 rounded-full transition-colors"
+            onClick={hdlClose}
+            aria-label="Cerrar"
+          >
+            <IoCloseSharp className="text-3xl" />
+          </button>
+        </div>
+        
+        {/* Content */}
+        <div className="p-6">
+          <div className="flex flex-col mb-6">
+            <div className="text-gray-600 text-sm uppercase tracking-wide mb-1">Peso Neto</div>
+            <div className="flex items-baseline">
+              <motion.span 
+                className="text-4xl font-bold text-gray-800"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+              >
+                {animateValue.toLocaleString(undefined, { 
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2
+                })}
+              </motion.span>
+              <span className="ml-2 text-xl text-gray-500">{unidad}</span>
+            </div>
+          </div>
+          
+          {/* Información adicional */}
+          <div className="bg-gray-100 rounded-lg py-4 mb-6">
+            <div className="text-sm text-gray-600">
+              <p><strong>Nota:</strong> El peso neto corresponde al peso final después de restar el peso bruto y tara.</p>
+            </div>
+          </div>
+          
+          {/* Footer */}
+          <div className="flex justify-end">
+            <button 
+              onClick={hdlClose}
+              className="bg-[#5A3F27] hover:bg-[#9c7c60] text-white py-2 px-6 rounded-lg font-medium transition-colors"
+            >
+              Aceptar
+            </button>
           </div>
         </div>
-      </div>
-    </>
-  )
-}
+      </motion.div>
+    </motion.div>
+  );
+};
 
 /**
  * Todo: Boleta espcial de casulla
