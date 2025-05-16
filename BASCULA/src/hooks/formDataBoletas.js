@@ -95,8 +95,9 @@ export const getDataBoletasCompletadas = async (fun, setIsLoading, search, searc
   }
 };
 
-export const getDataBoletasPorID = async (id) => {
+export const getDataBoletasPorID = async (id, setIsLoading) => {
   try {
+    setIsLoading(true)
     const response = await fetch(`${URLHOST}boletas/boleta/${id}`, {
       method: "GET",
       headers: {
@@ -112,7 +113,9 @@ export const getDataBoletasPorID = async (id) => {
     return data
   } catch (error) {
     console.error("Error al obtener los clientes:", error);
-  } 
+  } finally {
+    setIsLoading(false)
+  }
 };
 
 export const formaterDataNewPlaca = (formBoletas) => {
@@ -164,8 +167,14 @@ export const getStatsBoletas = async (fun) => {
   }
 };
 
-export const getDataParaForm = async (setFormBoletas, data, setMove) => {
-  const response = await getDataBoletasPorID(data.Id);
+/**
+ * !Error solucionado ( PROBAR )
+ * @param {} setFormBoletas 
+ * @param {*} data 
+ * @param {*} setMove 
+ */
+export const getDataParaForm = async (setFormBoletas, data, setMove, setIsLoading) => {
+  const response = await getDataBoletasPorID(data.Id, setIsLoading);
   const esClienteX = response.boletaType === 3;
   setMove(response?.movimiento)
   console.log(response)
@@ -178,7 +187,7 @@ export const getDataParaForm = async (setFormBoletas, data, setMove) => {
     Proceso: response.proceso,
     Producto: response.idProducto,
     Movimiento: response.idMovimiento,
-    Origen: response.idOrigen, 
+    Origen: response.idOrigen || response.origen, 
     'Traslado origen' : response.idTrasladoOrigen,
     Transportes: response.idEmpresa ?? response.empresa,
     Estado: 0,
