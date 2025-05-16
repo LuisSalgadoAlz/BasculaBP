@@ -15,6 +15,8 @@ const Boletas = () => {
    */
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadTable, setSsLoadTable] = useState(false)
+  const [isLoadingDataOut, setIsLoadingDataOut] = useState(false)
+  const [isLoadingViewBol, setIsLoadingViewBol] = useState(false)
   const [stats, setStats] = useState(initialStateStats)
   const [formBoletas, setFormBoletas] = useState(initialStateFormBoletas);
   const [dataSelets, setDataSelects] = useState(initialSateDataFormSelet);
@@ -149,7 +151,7 @@ const Boletas = () => {
 
   const handleOutBol = (data) => {
     setOutBol(true)
-    getDataParaForm(setFormBoletas, data, setMove) 
+    getDataParaForm(setFormBoletas, data, setMove, setIsLoadingDataOut) 
   }
 
   const handleCompleteOut = async() => {
@@ -218,7 +220,7 @@ const Boletas = () => {
 
   const handleOpenDetails = async (data) => {
     setDetails(true)
-    const response = await getDataBoletasPorID(data?.Id)
+    const response = await getDataBoletasPorID(data?.Id, setIsLoadingViewBol)
     setDataDetails(response)
   }
 
@@ -309,7 +311,8 @@ const Boletas = () => {
     move: move,
     clean: newRender, 
     isLoading : isLoading,
-    proceso : proceso
+    proceso : proceso, 
+    isLoadingDataOut, 
   };
 
   const propsModalCasulla = { 
@@ -381,7 +384,7 @@ const Boletas = () => {
 
       {/* Area para ver los detalles de las boletas completas */}
       <AnimatePresence>
-        {details && (<VisualizarBoletas hdlClose={handleCloseDetails} boletas={dataDetails}/>)}
+        {details && (<VisualizarBoletas hdlClose={handleCloseDetails} boletas={dataDetails} isLoad={isLoadingViewBol}/>)}
         {cancelBol && (<CancelarBoleta boletas={idCancelBol} hdlClose={handleCloseCancelModal} hdlSubmitCancel={handleSubmitCancelBol} hdlChange={handleChangeCancelModal} isLoad={isLoadCancel}/>)}
       </AnimatePresence>
     </>
