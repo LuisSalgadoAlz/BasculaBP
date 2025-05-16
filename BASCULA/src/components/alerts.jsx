@@ -108,8 +108,8 @@ export const ModalVehiculoDuplicadoEdit = ({ name, hdClose, hdlSubmit }) => {
 
 export const ModalPrevisual = ({ hdClose, data }) => {
   return (
-    <motion.div {...propsModalPrevisual}>
-      <motion.div {...propsModalPrevisualHijo}>
+    <motion.div  className="fixed inset-0 flex items-center justify-center bg-opa-50 bg-opacity-60 z-50 p-4 backdrop-blur-sm" {...propsModalPrevisual}>
+      <motion.div className="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden" {...propsModalPrevisualHijo}>
         <div className="bg-[#5A3F27] text-white px-6 py-4 flex items-center justify-between">
           <h2 className="text-xl font-bold flex items-center">
             <IoScaleOutline className="mr-2 text-2xl" />

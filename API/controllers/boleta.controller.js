@@ -3,7 +3,7 @@ const dotenv = require("dotenv");
 const jwt = require("jsonwebtoken");
 const { imprimirEpson } = require("./impresiones.controller");
 const enviarCorreo = require("../utils/enviarCorreo");
-const alertaDesviacion = require("../utils/cuerposCorreo");
+const {alertaDesviacion, alertaCancelacion} = require("../utils/cuerposCorreo");
 const {setLogger} = require('../utils/logger');
 
 const generarNumBoleta = async () => {
@@ -1345,6 +1345,15 @@ const updateCancelBoletas = async (req, res) => {
         estado: "Cancelada",
       },
     });
+
+    const verificado =  jwt.verify(req.header('Authorization'), process.env.SECRET_KEY)
+    const usuario = await db.usuarios.findUnique({
+        where: {
+        usuarios: verificado["usuarios"],
+      },
+    });
+
+    alertaCancelacion(updateBoleta, usuario, enviarCorreo)
         
     setLogger('BOLETA', 'CANCELAR BOLETA', req, null, 1, updateBoleta.id)  
 

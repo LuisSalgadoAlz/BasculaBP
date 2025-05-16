@@ -12,6 +12,12 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+/**
+ * 
+ * @param {*} destino al mail que a dirigido
+ * @param {*} asunto cuerpo del mensaje
+ * @param {*} mensaje mensaje en html
+ */
 async function enviarCorreo(destino, asunto, mensaje,) {
   await transporter.sendMail({
     from: `SISTEMA BASCULA <${process.env.MAIl}>`,
