@@ -1,6 +1,15 @@
 import { motion } from "framer-motion";
 import { propsModalPrevisual, propsModalPrevisualHijo } from "../constants/global";
-import { IoCloseSharp, IoScaleOutline } from "react-icons/io5";
+import { 
+  IoHelpCircleOutline, 
+  IoScaleOutline,
+  IoCloseSharp, 
+  IoSendSharp, 
+  IoWarningOutline,
+  IoBugOutline,
+  IoInformationCircleOutline 
+} from "react-icons/io5";
+import { useState } from "react";
 
 export const ModalSuccess = ({ name, hdClose }) => {
   return (
@@ -301,5 +310,175 @@ export const SkeletonBoleta = () => {
         <div className="h-10 w-28 bg-gray-300 rounded"></div>
       </div>
     </div>
+  );
+};
+
+
+export const SupportModal = ({ hdClose }) => {
+  const [issueType, setIssueType] = useState("bug");
+  const [description, setDescription] = useState("");
+  const [email, setEmail] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  
+  const modalAnimation = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    exit: { opacity: 0 },
+    transition: { duration: 0.3 }
+  };
+  
+  const contentAnimation = {
+    initial: { y: 20, opacity: 0 },
+    animate: { y: 0, opacity: 1 },
+    exit: { y: 20, opacity: 0 },
+    transition: { delay: 0.1, duration: 0.3 }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    
+    // Aquí iría la lógica para enviar el reporte al backend
+    setTimeout(() => {
+      setSubmitting(false);
+      setSubmitted(true);
+      
+      // Reset después de 3 segundos o cerrar
+      setTimeout(() => {
+        if (submitted) hdClose();
+      }, 3000);
+    }, 1000);
+  };
+
+  const issueTypes = [
+    { id: "bug", label: "Error o bug", icon: <IoBugOutline className="text-red-500" /> },
+    { id: "functionality", label: "Funcionalidad incorrecta", icon: <IoWarningOutline className="text-amber-500" /> },
+    { id: "suggestion", label: "Sugerencia de mejora", icon: <IoInformationCircleOutline className="text-blue-500" /> }
+  ];
+
+  return (
+    <motion.div 
+      className="fixed inset-0 flex items-center justify-center bg-opa-50 z-50 p-4 backdrop-blur-sm"
+      {...modalAnimation}
+    >
+      <motion.div 
+        className="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden"
+        {...contentAnimation}
+      >
+        <div className="bg-[#5A3F27] text-white px-6 py-4 flex items-center justify-between">
+          <h2 className="text-xl font-bold flex items-center">
+            <IoHelpCircleOutline className="mr-2 text-2xl" />
+            Centro de Soporte
+          </h2>
+          <button
+            className="text-white hover:bg-[#795e47] p-1 rounded-full transition-colors"
+            onClick={hdClose}
+            aria-label="Cerrar"
+          >
+            <IoCloseSharp className="text-2xl" />
+          </button>
+        </div>
+        
+        {!submitted ? (
+          <form onSubmit={handleSubmit} className="px-6 py-6">
+            <div className="mb-6">
+              <label className="block text-gray-700 text-sm font-bold mb-3">
+                Tipo de problema
+              </label>
+              <div className="grid grid-cols-1 gap-2">
+                {issueTypes.map((type) => (
+                  <label 
+                    key={type.id}
+                    className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${
+                      issueType === type.id 
+                        ? "border-[#5A3F27] bg-[#5A3F27]/10" 
+                        : "border-gray-200 hover:bg-gray-50"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="issueType"
+                      value={type.id}
+                      checked={issueType === type.id}
+                      onChange={() => setIssueType(type.id)}
+                      className="hidden"
+                    />
+                    <div className="flex items-center">
+                      <span className="mr-3 text-xl">{type.icon}</span>
+                      <span className="font-medium">{type.label}</span>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+            
+            <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="description">
+                Descripción del problema
+              </label>
+              <textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5A3F27]"
+                rows="3"
+                placeholder="Describe detalladamente el problema o error que experimentaste"
+                required
+              />
+            </div>            
+            <div className="flex justify-between">
+              <button
+                type="button"
+                onClick={hdClose}
+                className="px-4 py-2 text-[#5A3F27] border border-[#5A3F27] rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={submitting || !description}
+                className={`px-4 py-2 text-white bg-[#5A3F27] rounded-lg flex items-center transition-all ${
+                  submitting || !description ? "opacity-70 cursor-not-allowed" : "hover:bg-[#795e47]"
+                }`}
+              >
+                {submitting ? (
+                  <span className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Enviando...
+                  </span>
+                ) : (
+                  <span className="flex items-center">
+                    Enviar reporte
+                    <IoSendSharp className="ml-2" />
+                  </span>
+                )}
+              </button>
+            </div>
+          </form>
+        ) : (
+          <div className="px-6 py-8 text-center">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">¡Reporte enviado!</h3>
+            <p className="text-gray-600 mb-6">
+              Gracias por ayudarnos a mejorar. Revisaremos tu reporte lo antes posible.
+            </p>
+            <button
+              onClick={hdClose}
+              className="px-4 py-2 text-white bg-[#5A3F27] rounded-lg hover:bg-[#795e47] transition-colors"
+            >
+              Cerrar
+            </button>
+          </div>
+        )}
+      </motion.div>
+    </motion.div>
   );
 };

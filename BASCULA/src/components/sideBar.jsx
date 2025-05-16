@@ -9,6 +9,8 @@ import { AiOutlineFileExclamation } from "react-icons/ai";
 import { SlSupport } from "react-icons/sl";
 import Cookies from "js-cookie";
 import { VERSION } from "../constants/global";
+import { useState } from "react";
+import { SupportModal } from "./alerts";
 
 const RUTAS_PRINCIPALES = [
   {
@@ -48,12 +50,14 @@ const RUTAS_ADMIN = [
 
 export const SideBar = ({ modo = "extendido", altura = 500 }) => {
   const navigate = useNavigate();
-
+  const [ShowModalSupport, setShowModalSupport] = useState()
   const handleClose = () => {
     Cookies.remove("token");
     navigate("/");
   };
-
+  const handleShowModal = () => setShowModalSupport(true)
+  const handleCloseModal = () => setShowModalSupport(false)
+  
   const isExtendido = modo === "extendido";
 
   return (
@@ -158,15 +162,15 @@ export const SideBar = ({ modo = "extendido", altura = 500 }) => {
               <hr className="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700" />
               <ul>
                 <h1 className="px-3 text-sm text-gray-300">Soporte</h1>
-                <NavLink
-                  to="/soporte"
+                <button
+                  onClick={handleShowModal}
                   className="flex items-center gap-x-3 rounded-md px-3 py-2 text-sm font-medium text-white mt-1"
                 >
                   <span className="text-lg">
                     <SlSupport />
                   </span>
                   <span className="flex-1">Soporte</span>
-                </NavLink>
+                </button>
               </ul>
             </>
           ) : (
@@ -228,6 +232,7 @@ export const SideBar = ({ modo = "extendido", altura = 500 }) => {
           </button>
         </div>
       </div>
+      {ShowModalSupport && <SupportModal hdClose={handleCloseModal}/>}
     </div>
   );
 };
