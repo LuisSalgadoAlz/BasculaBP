@@ -13,6 +13,21 @@ import { CiUnlock } from "react-icons/ci";
 
 const formInputSelect = ['Transportes', 'Placa', 'Motoristas']
 
+const PrevisualizarPesoNeto = ({pn, hdlClose}) => {
+  return (
+    <>
+      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40 p-4 sm:p-6 min-h-screen bg-opa-50">
+        <div className="bg-white w-full max-w-sm rounded-2xl p-2 shadow-lg sm:w-[90%] md:w-[80%] lg:w-[60%] max-h-[95vh] overflow-y-auto boletas border-8 border-white">
+          <div className="flex items-center justify-between">
+            <span><strong>Peso neto:</strong> {pn} </span>
+            <button className="text-4xl hover:scale-105" onClick={hdlClose}><IoCloseSharp /></button>
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}
+
 /**
  * Todo: Boleta espcial de casulla
  * @param {*} param0 
@@ -21,6 +36,8 @@ const formInputSelect = ['Transportes', 'Placa', 'Motoristas']
 export const ModalBoletas = ({hdlClose, hdlChange, fillData, formBol, boletas, hdlSubmit, clean, isLoading, proceso}) => {
   const [peso, setPeso] = useState('00lb');
   const newClient = fillData?.Clientes.filter(({id})=>id!=-999)
+  const [modalPesoNeto, setModalPesoNeto] = useState(false)
+  const [pesoNeto, setPesoNeto] = useState(0)
 
   const getPesoOut = () => {
     formBol((prev)=> ({
@@ -28,6 +45,16 @@ export const ModalBoletas = ({hdlClose, hdlChange, fillData, formBol, boletas, h
       'pesoOut' : peso.replaceAll('lb', ''), 
     }))
   } 
+
+  const closeModal = () => {
+    setModalPesoNeto(false)
+  }
+
+  const hdlPrevisualizar = async() => {
+    const pesoNeto = boletas?.pesoOut - boletas?.pesoIn;
+    setPesoNeto(pesoNeto)
+    setModalPesoNeto(true) 
+  };
 
   useEffect(() => {
     const socket = new WebSocket(URLWEBSOCKET); 
@@ -82,7 +109,9 @@ export const ModalBoletas = ({hdlClose, hdlChange, fillData, formBol, boletas, h
             <InputsFormBoletas data={claseFormInputs} name={'Observaciones'} fun={hdlChange} />
           </div>
         </div>
-   
+        
+        <button onClick={hdlPrevisualizar}  className={buttonCalcular}>Previsualizar</button>
+
         <hr className="text-gray-300 mt-1" />
 
         <div className="mt-3 px-3 grid grid-cols-2 gap-2 justify-between max-sm:grid-rows-3 max-sm:grid-cols-1">
@@ -93,7 +122,8 @@ export const ModalBoletas = ({hdlClose, hdlChange, fillData, formBol, boletas, h
             {isLoading ? 'Guardando...' : "Guardar"}
           </button>
         </div>
-    </div>
+      </div>
+      {modalPesoNeto && <PrevisualizarPesoNeto pn={pesoNeto} hdlClose={closeModal}/>}
     </div>
   );
 };
