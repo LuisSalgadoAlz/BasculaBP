@@ -549,7 +549,7 @@ const postClientePlacaMotoComodin = async (req, res) => {
         usuarios: verificado["usuarios"],
       },
     });
-    console.log(idTrasladoOrigen)
+    
     const producto = proceso === 0 && await db.producto.findUnique({where:{id:idProducto}})
     const movimiento = proceso===0 && await db.movimientos.findUnique({where: {id: idMovimiento}})
     const trasladoOrigen = (proceso === 0 && (idMovimiento==10||idMovimiento==11)) && await db.translado.findUnique({where: {id: idTrasladoOrigen}})
