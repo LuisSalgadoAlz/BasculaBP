@@ -6,7 +6,7 @@ import { FiUsers } from "react-icons/fi";
 import { PiSignOutFill } from "react-icons/pi";
 import { IoCalendarOutline } from "react-icons/io5";
 import { AiOutlineFileExclamation } from "react-icons/ai";
-
+import { SlSupport } from "react-icons/sl";
 import Cookies from "js-cookie";
 import { VERSION } from "../constants/global";
 
@@ -72,7 +72,7 @@ export const SideBar = ({ modo = "extendido", altura = 500 }) => {
           <MdOutlineScale className="text-2xl text-amber-300 mt-1" />
           {isExtendido && (
             <div className="flex-1">
-              <h2 className="text-lg font-bold text-white">Baprosa</h2>
+              <h2 className="text-lg font-bold text-white">Baprosa </h2>
               <p className="text-xs text-gray-400">
                 Sistema de Gestión Bascula
               </p>
@@ -115,7 +115,7 @@ export const SideBar = ({ modo = "extendido", altura = 500 }) => {
         <hr className="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700" />
       </div>
 
-      {/* Reportes */}
+      {/* Calendario */}
       <div className={isExtendido ? `pb-2 px-2` : 'pb-2'}>
         <ul className="flex w-full flex-col gap-1 px-2">
           {isExtendido ? (
@@ -154,11 +154,18 @@ export const SideBar = ({ modo = "extendido", altura = 500 }) => {
                 >
                   <span className="flex-1">Informes Semanal</span>
                 </NavLink>
+              </ul>
+              <hr className="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700" />
+              <ul>
+                <h1 className="px-3 text-sm text-gray-300">Soporte</h1>
                 <NavLink
-                  to="/informes/mensual"
-                  className="flex items-center gap-x-1 rounded-md py-2 text-sm font-medium text-white"
+                  to="/soporte"
+                  className="flex items-center gap-x-3 rounded-md px-3 py-2 text-sm font-medium text-white mt-1"
                 >
-                  <span className="flex-1">Informes Mensual</span>
+                  <span className="text-lg">
+                    <SlSupport />
+                  </span>
+                  <span className="flex-1">Soporte</span>
                 </NavLink>
               </ul>
             </>
@@ -166,7 +173,7 @@ export const SideBar = ({ modo = "extendido", altura = 500 }) => {
             <>
               <div className="relative group w-max">
                 <NavLink
-                  to="/Calendario"
+                  to="/calendario"
                   className="flex items-center gap-x-3 rounded-md px-5 py-2 text-sm font-medium text-white"
                 >
                   <span className="text-lg text-center">
@@ -198,14 +205,15 @@ export const SideBar = ({ modo = "extendido", altura = 500 }) => {
         </ul>
       </div>
 
-      {/* Botón Cerrar Sesión */}
+      <div className="px-4">
+        <hr className="h-px mb-2 mt-1 bg-gray-200 border-0 dark:bg-gray-700" />
+      </div>
+
       <div
         className={`${
           !isExtendido && altura <= 350 ? "block" : "absolute bottom-0"
         } py-4 px-4`}
       > 
-        <div className="w-full flex justify-center"><span className="text-white text-center text-sm">V. {VERSION}</span></div>
-        <hr className="h-px mb-4 mt-2 bg-gray-200 border-0 dark:bg-gray-700" />
         <div className="px-3 w-full">
           <button
             className="flex items-center justify-center text-white gap-3 hover:text-red-500"
@@ -339,7 +347,6 @@ export const SideBarAdmin = ({ modo = "extendido", altura = 500 }) => {
           !isExtendido && altura <= 350 ? "block" : "absolute bottom-0"
         } py-4 px-4`}
       > 
-        <div className="w-full flex justify-center"><span className="text-white text-center text-sm">V. {VERSION}</span></div>
         <hr className="h-px mb-4 mt-2 bg-gray-200 border-0 dark:bg-gray-700" />
         <div className="px-3 w-full">
           <button

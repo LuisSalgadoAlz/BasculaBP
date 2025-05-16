@@ -2,6 +2,7 @@ import { BiDockLeft } from "react-icons/bi";
 import { RxHamburgerMenu } from "react-icons/rx";
 import { SideBarCel, SideBarCelAdmin } from "./sideBarCel";
 import { useState } from "react";
+import { VERSION } from "../constants/global";
 
 const Header = ({ title, fun, type }) => {
   const [show, setShow] =useState(false)
@@ -23,9 +24,12 @@ const Header = ({ title, fun, type }) => {
             <RxHamburgerMenu />
           </button>
         </div>
-        <div>
+        <div className="flex items-center">
           <h1 className="font-bold text-xl text-[#955e37] max-sm:text-sm">
             {title}
+          </h1>
+          <h1 className="px-3 text-sm text-gray-400">
+            V. {VERSION}
           </h1>
         </div>
       </div>
