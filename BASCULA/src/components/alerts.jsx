@@ -315,9 +315,7 @@ export const SkeletonBoleta = () => {
 
 
 export const SupportModal = ({ hdClose }) => {
-  const [issueType, setIssueType] = useState("bug");
-  const [description, setDescription] = useState("");
-  const [email, setEmail] = useState("");
+  const [formSupports, setFormSupports] = useState({type: 'bug', description: ''})
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   
@@ -335,47 +333,33 @@ export const SupportModal = ({ hdClose }) => {
     transition: { delay: 0.1, duration: 0.3 }
   };
 
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    setFormSupports((prev)=>({
+      ...prev, [name] : value
+    }))
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    setSubmitting(true);
-    
-    // Aquí iría la lógica para enviar el reporte al backend
-    setTimeout(() => {
-      setSubmitting(false);
-      setSubmitted(true);
-      
-      // Reset después de 3 segundos o cerrar
-      setTimeout(() => {
-        if (submitted) hdClose();
-      }, 3000);
-    }, 1000);
+    console.log(formSupports)
   };
 
   const issueTypes = [
     { id: "bug", label: "Error o bug", icon: <IoBugOutline className="text-red-500" /> },
-    { id: "functionality", label: "Funcionalidad incorrecta", icon: <IoWarningOutline className="text-amber-500" /> },
-    { id: "suggestion", label: "Sugerencia de mejora", icon: <IoInformationCircleOutline className="text-blue-500" /> }
+    { id: "funcionalidad", label: "Funcionalidad incorrecta", icon: <IoWarningOutline className="text-amber-500" /> },
+    { id: "sugerencia", label: "Sugerencia de mejora", icon: <IoInformationCircleOutline className="text-blue-500" /> }
   ];
 
   return (
-    <motion.div 
-      className="fixed inset-0 flex items-center justify-center bg-opa-50 z-50 p-4 backdrop-blur-sm"
-      {...modalAnimation}
-    >
-      <motion.div 
-        className="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden"
-        {...contentAnimation}
-      >
+    <motion.div className="fixed inset-0 flex items-center justify-center bg-opa-50 z-50 p-4 backdrop-blur-sm" {...modalAnimation}>
+      <motion.div className="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden" {...contentAnimation}>
         <div className="bg-[#5A3F27] text-white px-6 py-4 flex items-center justify-between">
           <h2 className="text-xl font-bold flex items-center">
             <IoHelpCircleOutline className="mr-2 text-2xl" />
             Centro de Soporte
           </h2>
-          <button
-            className="text-white hover:bg-[#795e47] p-1 rounded-full transition-colors"
-            onClick={hdClose}
-            aria-label="Cerrar"
-          >
+          <button className="text-white hover:bg-[#795e47] p-1 rounded-full transition-colors" onClick={hdClose} aria-label="Cerrar">
             <IoCloseSharp className="text-2xl" />
           </button>
         </div>
@@ -391,17 +375,16 @@ export const SupportModal = ({ hdClose }) => {
                   <label 
                     key={type.id}
                     className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${
-                      issueType === type.id 
+                      formSupports.type === type.id 
                         ? "border-[#5A3F27] bg-[#5A3F27]/10" 
                         : "border-gray-200 hover:bg-gray-50"
                     }`}
                   >
                     <input
                       type="radio"
-                      name="issueType"
+                      name="type"
                       value={type.id}
-                      checked={issueType === type.id}
-                      onChange={() => setIssueType(type.id)}
+                      onChange={handleChange}
                       className="hidden"
                     />
                     <div className="flex items-center">
@@ -418,9 +401,8 @@ export const SupportModal = ({ hdClose }) => {
                 Descripción del problema
               </label>
               <textarea
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                name="description"
+                onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5A3F27]"
                 rows="3"
                 placeholder="Describe detalladamente el problema o error que experimentaste"
@@ -437,10 +419,7 @@ export const SupportModal = ({ hdClose }) => {
               </button>
               <button
                 type="submit"
-                disabled={submitting || !description}
-                className={`px-4 py-2 text-white bg-[#5A3F27] rounded-lg flex items-center transition-all ${
-                  submitting || !description ? "opacity-70 cursor-not-allowed" : "hover:bg-[#795e47]"
-                }`}
+                className={`px-4 py-2 text-white bg-[#5A3F27] rounded-lg flex items-center transition-all hover:bg-[#795e47]`}
               >
                 {submitting ? (
                   <span className="flex items-center">

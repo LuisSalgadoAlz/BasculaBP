@@ -3,6 +3,9 @@ const { exec } = require('child_process');
 const db = require('../lib/prisma')
 const PDFDocument = require('pdfkit');
 const qrcode = require('qrcode');
+const escpos = require('escpos');
+escpos.Network = require('escpos-network');
+const dotenv = require("dotenv");
 
 const imprimirEpson = (boleta) => {
   const filePath = 'boleta_epson.txt';
@@ -429,7 +432,99 @@ const imprimirPDF = async (req, res) => {
     res.status(500).send('Error al generar PDF');
   }
 }; 
+
+function getPrinter() {
+  const device = new escpos.Network(process.env.PRINTER_IP, process.env.PRINTER_PORT);
+  const printer = new escpos.Printer(device);
+  return { device, printer };
+}
+
+const testingImpresion =  async (req, res) => {
+  try {
+    // Configuración del URL para el código QR
+    const baseUrl = process.env.BASE_URL || 'http://192.9.100.56:3000';
+    const qrUrl = `${baseUrl}/boletas`;
+    
+    // Obtener la impresora configurada
+    const { device, printer } = getPrinter();
+    
+    if (!device || !printer) {
+      return res.status(500).json({
+        success: false,
+        message: 'No se pudo acceder al dispositivo de impresión'
+      });
+    }
+
+    // Configuración de la boleta
+    const companyName = 'BENEFICIO DE ARROZ PROGRESO, S.A.';
+    const fecha = new Date().toLocaleString('es-ES');
+    
+    // Abrir conexión con la impresora
+    device.open((err) => {
+      if (err) {
+        return res.status(500).json({
+          success: false,
+          message: `Error al abrir conexión con la impresora: ${err.message}`
+        });
+      }
+      
+      // Configurar e imprimir la boleta
+      printer
+        .model('qsprinter')
+        .align('ct')
+        .encode('utf8')
+        .size(0, 0.5)
+        .text('--------------------------------')
+        .text(companyName)
+        .text('--------------------------------')
+        .text(`Fecha: ${fecha}`)
+        .text(`RTD1415 | 1500`)
+        .text('--------------------------------')
+        .size(0, 0.5)
+        .text('Escanee el codigo QR para acceder')
+        .size(0, 0.5)
+        .qrimage(qrUrl, { 
+          type: 'png', 
+          size: 2, 
+          mode: 'dhdw' 
+        }, function(err) {
+          if (err) {
+            console.error('Error al generar código QR:', err);
+            this.text('Error al generar código QR')
+                .cut()
+                .close();
+                
+            return res.status(500).json({
+              success: false,
+              message: `Error al generar código QR: ${err.message}`
+            });
+          }
+          
+          this.text(' ')
+              .text('--------------------------------')
+              .text('Gracias por su visita')
+              .text('--------------------------------')
+              .cut()
+              .close();
+              
+          return res.status(200).json({
+            success: true,
+            message: 'Boleta impresa correctamente'
+          });
+        });
+    });
+  } catch (error) {
+    console.error('Error en el proceso de impresión:', error);
+    return res.status(500).json({
+      success: false,
+      message: `Error en el proceso de impresión: ${error.message}`,
+      error: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+};
+
 module.exports = {
   imprimirEpson, 
-  imprimirPDF
+  imprimirPDF, 
+  testingImpresion, 
 };

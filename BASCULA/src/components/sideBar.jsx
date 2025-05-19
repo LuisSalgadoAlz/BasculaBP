@@ -204,14 +204,34 @@ export const SideBar = ({ modo = "extendido", altura = 500 }) => {
                   Informes
                 </div>
               </div>
+              <hr className="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700" />
+              <div className="relative group w-max mt-2">
+                <button
+                  onClick={handleShowModal}
+                  className="flex items-center gap-x-3 rounded-md px-5 py-2 text-sm font-medium text-white"
+                >
+                  <span className="text-lg">
+                    <SlSupport />
+                  </span>
+                </button>
+
+                <div className="absolute left-full top-1/2 -translate-y-1/2 ml-6 hidden group-hover:block sidebar text-white text-xs px-8 py-2 rounded shadow-lg z-10 whitespace-nowrap">
+                  Soporte
+                </div>
+              </div>
+              <hr className="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700" />
             </>
           )}
         </ul>
       </div>
 
-      <div className="px-4">
-        <hr className="h-px mb-2 mt-1 bg-gray-200 border-0 dark:bg-gray-700" />
-      </div>
+      {isExtendido && 
+        <>
+          <div className="px-4">
+            <hr className="h-px mb-2 mt-1 bg-gray-200 border-0 dark:bg-gray-700" />
+          </div>
+        </>
+      }
 
       <div
         className={`${

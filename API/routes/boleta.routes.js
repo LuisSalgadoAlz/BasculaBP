@@ -17,7 +17,7 @@ const {
   getConfigTolerancia
 } = require("../controllers/boleta.controller");
 const { exportToExcel } = require("../controllers/exportaciones.controller.js");
-const { imprimirPDF } = require("../controllers/impresiones.controller.js");
+const { imprimirPDF, testingImpresion } = require("../controllers/impresiones.controller.js");
 const verificarToken = require("../middlewares/authJWT.js");
 
 boletas.get("/", getAllData);
@@ -34,6 +34,7 @@ boletas.get("/export/excel/", exportToExcel)
 boletas.get("/informes/", getMovimientosYProductos)
 boletas.get("/config/tolerancia", getConfigTolerancia)
 boletas.post("/", postBoletasNormal);
+boletas.get("/imprimir-pos-epson", testingImpresion);
 boletas.post("/newPlaca", postBoleta);
 boletas.put("/:id", updateBoleta);
 boletas.put("/cancelar/:id", updateCancelBoletas);
