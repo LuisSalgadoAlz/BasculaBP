@@ -87,7 +87,7 @@ const Login = () => {
 
         <div className="bg-white p-10 rounded-2xl shadow-2xl">
           <div className="text-center">
-            <h1 className="font-semibold text-2xl mb-0.5">Iniciar Sessión</h1>
+            <h1 className="font-semibold text-2xl mb-0.5">Iniciar Sesión</h1>
             <h3 className="text-gray-500">
               Ingrese sus credenciales para acceder al Sistema
             </h3>

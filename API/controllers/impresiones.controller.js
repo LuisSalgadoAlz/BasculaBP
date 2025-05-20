@@ -6,6 +6,7 @@ const qrcode = require('qrcode');
 const escpos = require('escpos');
 escpos.Network = require('escpos-network');
 const dotenv = require("dotenv");
+const path = require('path');
 
 const imprimirEpson = (boleta) => {
   const filePath = 'boleta_epson.txt';
@@ -444,7 +445,8 @@ const testingImpresion =  async (req, res) => {
     // Configuración del URL para el código QR
     const baseUrl = process.env.BASE_URL || 'http://192.9.100.56:3000';
     const qrUrl = `${baseUrl}/boletas`;
-    
+    const tux = path.join(__dirname, 'logo.png');
+
     // Obtener la impresora configurada
     const { device, printer } = getPrinter();
     
@@ -459,60 +461,64 @@ const testingImpresion =  async (req, res) => {
     const companyName = 'BENEFICIO DE ARROZ PROGRESO, S.A.';
     const fecha = new Date().toLocaleString('es-ES');
     
-    // Abrir conexión con la impresora
-    device.open((err) => {
-      if (err) {
-        return res.status(500).json({
-          success: false,
-          message: `Error al abrir conexión con la impresora: ${err.message}`
-        });
-      }
-      
-      // Configurar e imprimir la boleta
-      printer
-        .model('qsprinter')
-        .align('ct')
-        .encode('utf8')
-        .size(0, 0.5)
-        .text('--------------------------------')
-        .text(companyName)
-        .text('--------------------------------')
-        .text(`Fecha: ${fecha}`)
-        .text(`RTD1415 | 1500`)
-        .text('--------------------------------')
-        .size(0, 0.5)
-        .text('Escanee el codigo QR para acceder')
-        .size(0, 0.5)
-        .qrimage(qrUrl, { 
-          type: 'png', 
-          size: 2, 
-          mode: 'dhdw' 
-        }, function(err) {
-          if (err) {
-            console.error('Error al generar código QR:', err);
-            this.text('Error al generar código QR')
-                .cut()
-                .close();
-                
-            return res.status(500).json({
-              success: false,
-              message: `Error al generar código QR: ${err.message}`
-            });
-          }
-          
-          this.text(' ')
-              .text('--------------------------------')
-              .text('Gracias por su visita')
-              .text('--------------------------------')
-              .cut()
-              .close();
-              
-          return res.status(200).json({
-            success: true,
-            message: 'Boleta impresa correctamente'
+    escpos.Image.load(tux, function(image){
+      device.open((err) => {
+        if (err) {
+          return res.status(500).json({
+            success: false,
+            message: `Error al abrir conexión con la impresora: ${err.message}`
           });
-        });
-    });
+        }
+      
+        // Configurar e imprimir la boleta
+        printer
+          .model('qsprinter')
+          .align('ct')
+          .encode('utf8')
+          .size(0, 0.5)
+          .text('--------------------------------')
+          .text(companyName)
+          .text('--------------------------------')
+          .text(`Fecha: ${fecha}`)
+          .text(`RTD1415 | 1500`)
+          .text('--------------------------------')
+          .size(0, 0.5)
+          .text('Escanee el codigo QR para acceder')
+          .size(0, 0.5)
+          .image(image, 'd24')
+          .then(() => {
+            printer.qrimage(qrUrl, {
+              type: 'png',
+              size: 2,
+              mode: 'dhdw'
+            }, function(err) {
+              if (err) {
+                console.error('Error al generar código QR:', err);
+                this.text('Error al generar código QR')
+                    .cut()
+                    .close();
+
+                return res.status(500).json({
+                  success: false,
+                  message: `Error al generar código QR: ${err.message}`
+                });
+              }
+
+              this.text(' ')
+                  .text('--------------------------------')
+                  .text('Gracias por su visita')
+                  .text('--------------------------------')
+                  .cut()
+                  .close();
+
+              return res.status(200).json({
+                success: true,
+                message: 'Boleta impresa correctamente'
+              });
+            });
+          });
+      });
+    })
   } catch (error) {
     console.error('Error en el proceso de impresión:', error);
     return res.status(500).json({
