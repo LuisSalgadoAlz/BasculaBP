@@ -440,11 +440,11 @@ function getPrinter() {
   return { device, printer };
 }
 
-const testingImpresion =  async (req, res) => {
+const imprimirQRTolva = (boleta) => {
   try {
     // Configuración del URL para el código QR
     const baseUrl = process.env.BASE_URL || 'http://192.9.100.56:3000';
-    const qrUrl = `${baseUrl}/boletas`;
+    const qrUrl = `${baseUrl}/boletas/${boleta.id}`;
     const tux = path.join(__dirname, 'logo.png');
 
     // Obtener la impresora configurada
@@ -479,11 +479,9 @@ const testingImpresion =  async (req, res) => {
           .text('--------------------------------')
           .text(companyName)
           .text('--------------------------------')
-          .text(`Fecha: ${fecha}`)
-          .text(`RTD1415 | 1500`)
+          .text(`${fecha}`)
+          .text(`${boleta.placa} | ${boleta.id}`)
           .text('--------------------------------')
-          .size(0, 0.5)
-          .text('Escanee el codigo QR para acceder')
           .size(0, 0.5)
           .image(image, 'd24')
           .then(() => {
@@ -510,11 +508,6 @@ const testingImpresion =  async (req, res) => {
                   .text('--------------------------------')
                   .cut()
                   .close();
-
-              return res.status(200).json({
-                success: true,
-                message: 'Boleta impresa correctamente'
-              });
             });
           });
       });
@@ -529,8 +522,86 @@ const testingImpresion =  async (req, res) => {
   }
 };
 
+const comprobanteDeCarga = async(req, res)=> {
+    try {
+    // Configuración del URL para el código QR
+    const tux = path.join(__dirname, 'logo.png');
+
+    // Obtener la impresora configurada
+    const { device, printer } = getPrinter();
+    
+    if (!device || !printer) {
+      return res.status(500).json({
+        success: false,
+        message: 'No se pudo acceder al dispositivo de impresión'
+      });
+    }
+
+    // Configuración de la boleta
+    const companyName = 'BENEFICIO DE ARROZ PROGRESO, S.A.';
+    const fecha = new Date().toLocaleString('es-ES');
+    
+    escpos.Image.load(tux, function(image){
+      device.open((err) => {
+        if (err) {
+          return res.status(500).json({
+            success: false,
+            message: `Error al abrir conexión con la impresora: ${err.message}`
+          });
+        }
+      
+        // Configurar e imprimir la boleta
+        printer
+          .model('qsprinter')
+          .align('ct')
+          .encode('utf8')
+          .size(0, 0.5)
+          .text('--------------------------------')
+          .text(companyName)
+          .text('--------------------------------')
+          .text(` `)
+          .align('ct')
+          .text(`COMPROBANTE DE CARGA U/O DESCARGA`)
+          .text(`${fecha} No. 028051`)
+          .text(` `)
+          .text(` `)
+          .align('lt')
+          .text(`Producto: Granza Americana................`)
+          .text(`Nombre: Andelino Contreras................`)
+          .text(`Ticket: #305 (921099).....................`)
+          .text(`Total QQ. Descarga: ______________________`)
+          .text(`Observaciones: ___________________________`)
+          .text(`__________________________________________`)
+          .text(`__________________________________________`)
+          .text(` `)
+          .text(` `)
+          .align(`ct`)
+          .text(`________________________________`)
+          .text(`Aprobado Por: Axel Romero`)
+          .text(' ')
+          .size(0, 0.5)
+          .image(image, 'd24')
+          .then(() => {
+            printer.text(' ')
+                   .cut()
+                   .close()
+          });
+          return res.send({msg: 'Comprante Impreso Correctamente'})
+      });
+    })
+  } catch (error) {
+    console.error('Error en el proceso de impresión:', error);
+    return res.status(500).json({
+      success: false,
+      message: `Error en el proceso de impresión: ${error.message}`,
+      error: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+}
+
 module.exports = {
   imprimirEpson, 
   imprimirPDF, 
-  testingImpresion, 
+  imprimirQRTolva,
+  comprobanteDeCarga,  
 };
