@@ -512,35 +512,27 @@ const imprimirQRTolva = (boleta) => {
           });
       });
     })
+
+    /* Falta actualizar numero de comprobante */
   } catch (error) {
     console.error('Error en el proceso de impresión:', error);
-    return res.status(500).json({
-      success: false,
-      message: `Error en el proceso de impresión: ${error.message}`,
-      error: process.env.NODE_ENV === 'development' ? error.stack : undefined
-    });
   }
 };
 
-const comprobanteDeCarga = async(req, res)=> {
+const comprobanteDeCarga = (boleta, numComprobante, despachador)=> {
     try {
-    // Configuración del URL para el código QR
     const tux = path.join(__dirname, 'logo.png');
-
-    // Obtener la impresora configurada
     const { device, printer } = getPrinter();
-    
+
     if (!device || !printer) {
       return res.status(500).json({
         success: false,
         message: 'No se pudo acceder al dispositivo de impresión'
       });
     }
-
-    // Configuración de la boleta
     const companyName = 'BENEFICIO DE ARROZ PROGRESO, S.A.';
     const fecha = new Date().toLocaleString('es-ES');
-    
+    /* 42 */
     escpos.Image.load(tux, function(image){
       device.open((err) => {
         if (err) {
@@ -562,22 +554,20 @@ const comprobanteDeCarga = async(req, res)=> {
           .text(` `)
           .align('ct')
           .text(`COMPROBANTE DE CARGA U/O DESCARGA`)
-          .text(`${fecha} No. 028051`)
+          .text(`${fecha} No. ${addCero(numComprobante)}`)
           .text(` `)
           .text(` `)
           .align('lt')
-          .text(`Producto: Granza Americana................`)
-          .text(`Nombre: Andelino Contreras................`)
-          .text(`Ticket: #305 (921099).....................`)
-          .text(`Total QQ. Descarga: ______________________`)
-          .text(`Observaciones: ___________________________`)
-          .text(`__________________________________________`)
-          .text(`__________________________________________`)
+          .text(`Producto: Granza Americana`)
+          .text(`Nombre: ${boleta.motorista}`)
+          .text(`Ticket: #${boleta.Nviajes} (${boleta.NSalida})`)
+          .text(`Total QQ. Descarga: ${(boleta.pesoTeorico/100).toFixed(2)}`)
+          .text(`Observaciones: ${boleta.observaciones}`)
           .text(` `)
           .text(` `)
           .align(`ct`)
           .text(`________________________________`)
-          .text(`Aprobado Por: Axel Romero`)
+          .text(`Aprobado Por: ${despachador}`)
           .text(' ')
           .size(0, 0.5)
           .image(image, 'd24')
@@ -586,17 +576,15 @@ const comprobanteDeCarga = async(req, res)=> {
                    .cut()
                    .close()
           });
-          return res.send({msg: 'Comprante Impreso Correctamente'})
       });
     })
   } catch (error) {
     console.error('Error en el proceso de impresión:', error);
-    return res.status(500).json({
-      success: false,
-      message: `Error en el proceso de impresión: ${error.message}`,
-      error: process.env.NODE_ENV === 'development' ? error.stack : undefined
-    });
   }
+}
+
+const addCero = (str) => {
+  return String(str).padStart(7, '0')
 }
 
 module.exports = {
