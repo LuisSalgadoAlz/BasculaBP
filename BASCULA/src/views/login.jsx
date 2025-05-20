@@ -76,7 +76,7 @@ const Login = () => {
 
   return (
     <>
-      <div className="title justify-items-center items-center content-center min-h-screen mozila-firefox">
+      <div className="title justify-items-center items-center content-center min-h-screen mozila-firefox max-sm:p-6">
         <div className="mb-10 text-center">
           <h1 className="font-bold text-4xl text-[#955e37]">Baprosa</h1>
           <h3 className="font-medium text-gray-500">
