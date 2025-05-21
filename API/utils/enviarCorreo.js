@@ -19,12 +19,16 @@ const transporter = nodemailer.createTransport({
  * @param {*} mensaje mensaje en html
  */
 async function enviarCorreo(destino, asunto, mensaje,) {
-  await transporter.sendMail({
+  try {
+    await transporter.sendMail({
     from: `SISTEMA BASCULA <${process.env.MAIl}>`,
     to: destino,
     subject: asunto,
     html: mensaje,
   });
+  }catch(err){
+    console.log(`Se produjo el siguiente error: ${err}`)
+  }
 }
 
     module.exports = enviarCorreo;

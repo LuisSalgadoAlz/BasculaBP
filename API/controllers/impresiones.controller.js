@@ -7,6 +7,7 @@ const escpos = require('escpos');
 escpos.Network = require('escpos-network');
 const dotenv = require("dotenv");
 const path = require('path');
+const { setLoggerSystema } = require('../utils/logger');
 
 const imprimirEpson = (boleta) => {
   const filePath = 'boleta_epson.txt';
@@ -440,6 +441,11 @@ function getPrinter() {
   return { device, printer };
 }
 
+/**
+ * Terminada
+ * @param {*} boleta 
+ * @returns 
+ */
 const imprimirQRTolva = (boleta) => {
   try {
     // Configuración del URL para el código QR
@@ -451,23 +457,24 @@ const imprimirQRTolva = (boleta) => {
     const { device, printer } = getPrinter();
     
     if (!device || !printer) {
-      return res.status(500).json({
-        success: false,
-        message: 'No se pudo acceder al dispositivo de impresión'
-      });
+      setLoggerSystema(
+        'IMPRESORAS', 
+        'ERROR NO SE ENCONTRO LA IMPRESORA DE TICKETS, REVISE LA CONEXION', 
+        3
+      )
     }
 
-    // Configuración de la boleta
-    const companyName = 'BENEFICIO DE ARROZ PROGRESO, S.A.';
     const fecha = new Date().toLocaleString('es-ES');
     
     escpos.Image.load(tux, function(image){
       device.open((err) => {
         if (err) {
-          return res.status(500).json({
-            success: false,
-            message: `Error al abrir conexión con la impresora: ${err.message}`
-          });
+          setLoggerSystema(
+            'IMPRESORAS', 
+            'ERROR EN ESTABLECER LA CONEXION CON LA IMPRESORA DE TICKETS, REVISE LA CONE', 
+            3
+          )
+          console.log({msg: err})
         }
       
         // Configurar e imprimir la boleta
@@ -475,14 +482,6 @@ const imprimirQRTolva = (boleta) => {
           .model('qsprinter')
           .align('ct')
           .encode('utf8')
-          .size(0, 0.5)
-          .text('--------------------------------')
-          .text(companyName)
-          .text('--------------------------------')
-          .text(`${fecha}`)
-          .text(`${boleta.placa} | ${boleta.id}`)
-          .text('--------------------------------')
-          .size(0, 0.5)
           .image(image, 'd24')
           .then(() => {
             printer.qrimage(qrUrl, {
@@ -503,6 +502,10 @@ const imprimirQRTolva = (boleta) => {
               }
 
               this.text(' ')
+                  .size(0, 0.5)
+                  .text(`${fecha}`)
+                  .text(`${boleta.placa} | ${boleta.id}`)
+                  .size(0, 0.5)
                   .text('--------------------------------')
                   .text('Gracias por su visita')
                   .text('--------------------------------')
@@ -513,13 +516,22 @@ const imprimirQRTolva = (boleta) => {
       });
     })
 
-    /* Falta actualizar numero de comprobante */
+    return true
+    
   } catch (error) {
     console.error('Error en el proceso de impresión:', error);
+    return false
   }
 };
 
-const comprobanteDeCarga = (boleta, numComprobante, despachador)=> {
+
+/**
+ * Terminada
+ * @param {*} boleta 
+ * @param {*} despachador 
+ * @returns 
+ */
+const comprobanteDeCarga = (boleta, despachador)=> {
     try {
     const tux = path.join(__dirname, 'logo.png');
     const { device, printer } = getPrinter();
@@ -549,20 +561,44 @@ const comprobanteDeCarga = (boleta, numComprobante, despachador)=> {
           .encode('utf8')
           .size(0, 0.5)
           .text('--------------------------------')
+          .style('B')
           .text(companyName)
+          .style('NORMAL')
           .text('--------------------------------')
           .text(` `)
           .align('ct')
-          .text(`COMPROBANTE DE CARGA U/O DESCARGA`)
-          .text(`${fecha} No. ${addCero(numComprobante)}`)
-          .text(` `)
+          .text(`COMPROBANTE DE DESCARGA`)
+          .text(`${fecha} No. ${addCero(boleta.numBoleta)}`)
           .text(` `)
           .align('lt')
-          .text(`Producto: Granza Americana`)
-          .text(`Nombre: ${boleta.motorista}`)
-          .text(`Ticket: #${boleta.Nviajes} (${boleta.NSalida})`)
-          .text(`Total QQ. Descarga: ${(boleta.pesoTeorico/100).toFixed(2)}`)
-          .text(`Observaciones: ${boleta.observaciones}`)
+          .tableCustom([
+            { text: "PRODUCTO:", align: "LEFT", width: 0.4, style: 'B' }, 
+            { text: "Granza Americana", align: "RIGHT", width: 0.4 }
+          ])
+          .tableCustom([
+            { text: "MOTORISTA:", align: "LEFT", width: 0.4, style: 'B' }, 
+            { text: `${boleta.motorista}`, align: "RIGHT", width: 0.4 }
+          ])
+          .tableCustom([
+            { text: "TICKET:", align: "LEFT", width: 0.4, style: 'B' }, 
+            { text: `#${boleta.Nviajes} (${boleta.NSalida})`, align: "RIGHT", width: 0.4 }
+          ])
+          .text('------------------------------------------')
+          .tableCustom([
+            { text: "PESO TEORICO:", align: "LEFT", width: 0.4, style: 'B' }, 
+            { text: `${(boleta.pesoTeorico/100).toFixed(2)} QQ`, align: "RIGHT", width: 0.4 }
+          ])
+          .tableCustom([
+            { text: "TOTAL QQ. DESCARGA:", align: "LEFT", width: 0.4, style: 'B' }, 
+            { text: `${(boleta.pesoNeto/100).toFixed(2)} QQ`, align: "RIGHT", width: 0.4 }
+          ])
+          .tableCustom([
+            { text: `${boleta.desviacion < 0 && 'DESVIACION:'}`, align: "LEFT", width: 0.4, style: 'B' }, 
+            { text: `${boleta.desviacion < 0 && `${(boleta.desviacion/100).toFixed(2)+' QQ'}`}`, align: "RIGHT", width: 0.4 }
+          ])
+          .text('------------------------------------------')
+          .text(`Observaciones: ${boleta.observaciones? boleta.observaciones: 'Ninguna.'}`)
+          .style(`NORMAL`)
           .text(` `)
           .text(` `)
           .align(`ct`)

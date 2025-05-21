@@ -15,15 +15,6 @@ const generarNumBoleta = async () => {
   return (ultimo?.numBoleta || 0) + 1;
 };
 
-const generarNumComprobante = async () => {
-  const ultimo = await db.boleta.findFirst({
-    orderBy: { numComprobante: 'desc' },
-    select: { numComprobante: true },
-  });
-
-  return (ultimo?.numComprobante || 0) + 1;
-};
-
 /**
  * Se grego los loggeres
  * @param {*} req 
@@ -516,9 +507,10 @@ const postClientePlacaMoto = async (req, res) => {
         })
       },
     });
+
     if(idProducto===18 || idProducto===19) {
       imprimirQRTolva(newBol)
-    }
+    } 
     setLogger('BOLETA', 'AGREGAR BOLETA (ENTRADA DE DATOS)', req, null, 1, newBol.id)  
 
     res
@@ -965,10 +957,8 @@ const updateBoletaOut = async (req, res) => {
     
     /* IMPRESION DE COMPROBANTE PARA MOTORISTA */
 
-    const numComprobante = await generarNumComprobante()
-
     if (idProducto===19) {
-      comprobanteDeCarga(nuevaBoleta, numComprobante, despachador['name'])
+      comprobanteDeCarga(nuevaBoleta, despachador['name'])
     }
     setLogger('BOLETA', 'MODIFICAR BOLETA (SALIDA DE BOLETA)', req, null, 1, nuevaBoleta.id)  
 
@@ -1096,6 +1086,10 @@ const updateBoletaOutComdin = async (req, res) => {
           : null,
       },
     });
+
+    if (idProducto===19) {
+      comprobanteDeCarga(nuevaBoleta, despachador['name'])
+    }
 
     setLogger('BOLETA', 'MODIFICAR BOLETA (SALIDA DE BOLETA | COMODIN)', req, null, 1, nuevaBoleta.id)  
 
