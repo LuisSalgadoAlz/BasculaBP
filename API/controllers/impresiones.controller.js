@@ -9,6 +9,8 @@ const dotenv = require("dotenv");
 const path = require('path');
 const { setLoggerSystema } = require('../utils/logger');
 const ipp = require('ipp');
+const { print } = require('pdf-to-printer');
+const PdfPrinter = require('pdfmake');
 
 const imprimirEpson = (boleta) => {
   const filePath = 'boleta_epson.txt';
@@ -624,295 +626,135 @@ const addCero = (str) => {
   return String(str).padStart(7, '0')
 }
 
-
-/**
- * !IMPORTANTE TRABAJANDO EN ESTA PARTE
- * @param {*} texto 
- * @param {*} titulo 
- * @param {*} rutaArchivo 
- * @returns 
- */
-
-function crearPDFMediaCarta(texto, titulo, rutaArchivo) {
-  return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({
-      size: [612, 396],
-      // Especificar la versión de PDF compatible con la mayoría de impresoras
-      pdfVersion: '1.4' 
-    });
-    
-    const stream = fs.createWriteStream(rutaArchivo);
-    stream.on('finish', () => {
-      console.log(`PDF creado correctamente en: ${rutaArchivo}`);
-      resolve();
-    });
-    stream.on('error', (error) => {
-      console.error(`Error al crear el PDF: ${error.message}`);
-      reject(error);
-    });
-    
-    doc.pipe(stream);
-    
-    // Agregar contenido
-    doc.fontSize(16).text(titulo || 'Documento', { align: 'center' });
-    doc.moveDown();
-    doc.fontSize(12).text(texto);
-    
-    doc.end();
-  });
-}
-
-function sendPdfToPrint(rutaArchivo) {
-  // Verificar si las variables de entorno están establecidas
-  const printerHost = process.env.PRINTER_WORKFORCE;
-  const printerPort = process.env.PRINTER_WORKFORCE_PORT;
-  const printerUrl = process.env.PRINTER_WORKFORCE_URL;
-  
-  if (!printerHost || !printerPort || !printerUrl) {
-    console.error('Error: Variables de entorno de impresora no configuradas correctamente');
-    console.error(`PRINTER_WORKFORCE: ${printerHost}`);
-    console.error(`PRINTER_WORKFORCE_PORT: ${printerPort}`);
-    console.error(`PRINTER_WORKFORCE_URL: ${printerUrl}`);
-    return Promise.reject(new Error('Configuración de impresora incompleta'));
-  }
-  
-  const printerConfig = {
-    host: printerHost,
-    port: printerPort,
-    printer: printerUrl, 
-    username: 'bascula',
-    password: '123'
-  };
-  
-  console.log(`Intentando imprimir en: ipp://${printerConfig.host}:${printerConfig.port}/${printerConfig.printer}`);
-  
-  return new Promise((resolve, reject) => {
-    // Verificar si el archivo existe
-    if (!fs.existsSync(rutaArchivo)) {
-      return reject(new Error(`El archivo PDF no existe: ${rutaArchivo}`));
-    }
-    
-    // Leer archivo PDF
-    fs.readFile(rutaArchivo, (err, datos) => {
-      if (err) {
-        console.error(`Error al leer el archivo PDF: ${err.message}`);
-        return reject(err);
-      }
-      
-      console.log(`Archivo PDF leído correctamente: ${datos.length} bytes`);
-      
-      try {
-        // Primero consultamos los formatos soportados por la impresora
-        const impresora = ipp.Printer(`ipp://${printerConfig.host}:${printerConfig.port}/${printerConfig.printer}`, {
-          version: '2.0',
-          username: printerConfig.username,
-          password: printerConfig.password
-        });
-
-        impresora.execute("Get-Printer-Attributes", {
-          "operation-attributes-tag": {
-            "requesting-user-name": "admin",
-            "requested-attributes": [
-              "media-supported",
-              "document-format-supported",
-              "printer-name",
-              "printer-info"
-            ]
-          }
-        }, (err, res) => {
-          if (err) {
-            console.error("Error al consultar la impresora:", err);
-            return;
-          }
-
-          console.log("\n===== INFORMACIÓN DE LA IMPRESORA =====");
-          console.log(`Nombre: ${res["printer-attributes-tag"]["printer-name"]}`);
-          console.log(`Descripción: ${res["printer-attributes-tag"]["printer-info"]}`);
-          
-          console.log("\n===== FORMATOS DE DOCUMENTO SOPORTADOS =====");
-          const formatos = res["printer-attributes-tag"]["document-format-supported"];
-          formatos.forEach((formato, index) => {
-            console.log(`${index + 1}. ${formato}`);
-          });
-
-          console.log("\n===== TAMAÑOS DE PAPEL SOPORTADOS (MEDIA) =====");
-          const medios = res["printer-attributes-tag"]["media-supported"];
-          if (Array.isArray(medios)) {
-            medios.forEach((medio, index) => {
-              console.log(`${index + 1}. ${medio}`);
-            });
-            
-            console.log("\nPosibles valores para media carta:");
-            const mediaCarta = medios.filter(medio => 
-              medio.includes("statement") || 
-              medio.includes("5.5") || 
-              medio.includes("half") ||
-              medio.includes("executive")
-            );
-            mediaCarta.forEach((medio, index) => {
-              console.log(`${index + 1}. ${medio}`);
-            });
-          } else {
-            console.log("No se pudo obtener la lista de tamaños de papel soportados");
-          }
-        });
-                
-        // Consultar las capacidades de la impresora primero
-        impresora.execute("Get-Printer-Attributes", {
-          "operation-attributes-tag": {
-            "requesting-user-name": "admin",
-          }
-        }, (err, printerInfo) => {
-          if (err) {
-            console.error(`Error al obtener atributos de impresora: ${JSON.stringify(err)}`);
-            // Continuamos de todas formas, intentando con un formato estándar
-          } else {
-            console.log("Formatos soportados por la impresora:", 
-              printerInfo && printerInfo["printer-attributes-tag"] && 
-              printerInfo["printer-attributes-tag"]["document-format-supported"]);
-          }
-          
-          // Configurar opciones de impresión con un formato más compatible
-          const opciones = {
-            "operation-attributes-tag": {
-              "requesting-user-name": "admin",
-              "job-name": "Impresión Media Carta",
-              // Usar un formato más simple y universalmente soportado
-              "document-format": "application/octet-stream"
-            },
-            "job-attributes-tag": {
-              "copies": 1,
-              "media": "na_invoice_5.5x8.5in", // Media carta
-              "sides": "one-sided", 
-              "media-source": "c1", 
-            },
-            data: datos
-          };
-          
-          console.log('Enviando trabajo de impresión con formato:', opciones["operation-attributes-tag"]["document-format"]);
-          
-          // Enviar trabajo de impresión
-          impresora.execute("Print-Job", opciones, (err, res) => {
-            if (err) {
-              console.error(`Error al imprimir: ${JSON.stringify(err)}`);
-              
-              // Si falla, intentamos con otro formato común
-              console.log("Intentando con formato alternativo: application/postscript");
-              opciones["operation-attributes-tag"]["document-format"] = "application/postscript";
-              
-              impresora.execute("Print-Job", opciones, (err2, res2) => {
-                if (err2) {
-                  console.error(`Error en segundo intento: ${JSON.stringify(err2)}`);
-                  return reject(err2);
-                }
-                console.log(`Impresión exitosa en segundo intento: ${JSON.stringify(res2)}`);
-                resolve(res2);
-              });
-            } else {
-              console.log(`Impresión exitosa: ${JSON.stringify(res)}`);
-              resolve(res);
-            }
-          });
-        });
-      } catch (error) {
-        console.error(`Error al crear el cliente IPP: ${error.message}`);
-        reject(error);
-      }
-    });
-  });
-}
-
-// Función alternativa que usa CUPS directamente si está disponible
-function printWithCups(rutaArchivo) {
-  return new Promise((resolve, reject) => {
-    // Verificar si el comando lp está disponible
-    const { exec } = require('child_process');
-    
-    console.log('Intentando imprimir con CUPS (lp command)...');
-    
-    // Usar CUPS directamente si está disponible
-    exec(`lp -d "$(lpstat -d | awk '{print $4}')" "${rutaArchivo}"`, (error, stdout, stderr) => {
-      if (error) {
-        console.error(`Error al imprimir con CUPS: ${error.message}`);
-        return reject(error);
-      }
-      console.log(`Impresión con CUPS exitosa: ${stdout}`);
-      resolve({ mensaje: "Impreso con CUPS exitosamente", detalles: stdout });
-    });
-  });
-}
-
-// Ruta para generar e imprimir con métodos alternativos si es necesario
-const imprimirWorkForce = async (req, res) => {
-  try {
-    console.log('Procesando solicitud de impresión...');
-    const { texto, titulo } = req.body;
-    
-    if (!texto) {
-      console.error('Error: No se proporcionó texto para imprimir');
-      return res.status(400).json({ error: 'Se requiere texto para imprimir' });
-    }
-    
-    console.log(`Imprimiendo texto: "${texto.substring(0, 30)}..." con título: "${titulo || 'Sin título'}"`);
-    
-    // Crear directorio temporal si no existe
-    const tempDir = path.join(__dirname, 'temp');
-    if (!fs.existsSync(tempDir)) {
-      console.log(`Creando directorio temporal: ${tempDir}`);
-      fs.mkdirSync(tempDir);
-    }
-    
-    // Ruta para el archivo PDF temporal
-    const pdfPath = path.join(tempDir, `doc-${Date.now()}.pdf`);
-    console.log(`Ruta del PDF temporal: ${pdfPath}`);
-    
-    // Crear el PDF
-    await crearPDFMediaCarta(texto, titulo, pdfPath);
-    
-    console.log('PDF creado, enviando a impresora...');
-    
-    let resultado;
-    let errorIPP;
-    
-    // Intentar primero con IPP
-    try {
-      resultado = await sendPdfToPrint(pdfPath);
-    } catch (error) {
-      console.error(`Error en método IPP: ${error.message}`);
-      errorIPP = error;
-      
-      // Si IPP falla, intentar con CUPS si estamos en Linux/Mac
-      if (process.platform !== 'win32') {
-        try {
-          console.log('IPP falló, intentando con CUPS...');
-          resultado = await printWithCups(pdfPath);
-        } catch (cupsError) {
-          console.error(`Error en método CUPS: ${cupsError.message}`);
-          throw new Error(`Ambos métodos de impresión fallaron: IPP: ${errorIPP.message}, CUPS: ${cupsError.message}`);
+function generarContenido(copia, esPrimera = false, colors) {
+  const contenido = [
+    !esPrimera ? { text: '', pageBreak: 'before' } : null,
+    {
+      canvas: [
+        {
+          type: 'rect',
+          x: 0,
+          y: 0,
+          w: 608,
+          h: 15,
+          color: colors[copia], 
         }
-      } else {
-        throw error; // En Windows solo tenemos la opción de IPP
+      ],
+      absolutePosition: { x: 2, y: 2 }
+    },
+    {
+      text: esPrimera ? '' : "C O P I A",
+      color: 'gray',
+      opacity: 0.2  ,
+      bold: true,
+      italics: true,
+      fontSize: 40,
+      absolutePosition: { x: 195, y: 140 }, // Ajusta según tus necesidades
+    },
+    { text: 'BAPROSA', alignment: 'center', bold: true, margin: [0, 15, 0, 0]  },
+    { text: 'Boleta de Peso No. 01280', alignment: 'center', bold: true,  margin: [0, 5, 0, 2] },
+    { text: `Proceso: Salida - Flete de Venta / Duración del Proceso 00:00:00`, alignment: 'center', margin: [0, 1, 0, 15] },
+    {
+      canvas: [{ type: 'line', x1: 36, y1: 0, x2: 576, y2: 0, lineWidth: 1 }]
+    },
+    {
+      margin: [36, 10, 36, 0],
+      layout: 'noBorders',
+      watermark: {text: copia.toUpperCase(), color: 'blue', opacity: 0.3, bold: true, italics: false},
+      table: {
+      widths: ['*', '*'],
+      body: [
+          ['Fecha        : 14 de Abril de 2025', ''],
+          ['Cliente      : Hermanitos Alvarez Carbajal', 'Hora Entrada     : DIDERPROBA'],
+          ['Placa        : Migon', 'Hora de Salida   : Flete de Venta'],
+          ['Motorista    : C116807', ''],
+          ['Trasnporte   : HECTOR SALAZAR', ''],
+          ['Origen       : BAPROSA', ''],
+          ['Destino      : BAPROSA', ''],
+          ['Producto     : BAPROSA', ''],
+        ]
+      }
+    },
+    {
+      margin: [36, 10, 36, 0],
+      canvas: [{ type: 'line', x1: 0, y1: 0, x2: 540, y2: 0, lineWidth: 1 }]
+    },
+    {
+      margin: [36, 10, 36, 0],
+      layout: 'noBorders',
+      table: {
+        widths: ['*', '*'],
+        body: [
+          ['Peso Entrada : 31,580', 'Peso Salida   : 81,660'],
+          ['Peso Neto    : 50,080', 'Peso Teórico  : 50,000'],
+          ['Desviación   : 80', ''],
+        ]
+      }
+    },
+    {
+      margin: [36, 10, 36, 0],
+      canvas: [{ type: 'line', x1: 0, y1: 0, x2: 540, y2: 0, lineWidth: 1 }]
+    },
+    {
+      margin: [36, 10, 36, 0],
+      layout: 'noBorders',
+      table: {
+        widths: ['*', '*'],
+        body: [
+          [{ text: 'Pesador       : Luis Armando Salgado' }, 'Autorizado  : '],
+        ]
       }
     }
-    
-    // Limpiar archivo temporal
-    console.log(`Eliminando archivo temporal: ${pdfPath}`);
-    fs.unlinkSync(pdfPath);
-    
-    console.log('Proceso de impresión completado correctamente');
-    res.json({
-      mensaje: 'Documento impreso correctamente',
-      detalles: resultado
-    });
-  } catch (error) {
-    console.error(`Error en proceso de impresión: ${error.message}`);
-    res.status(500).json({ 
-      error: error.message,
-      stack: error.stack
-    });
-  }
-};
+  ];
 
+  // Elimina el null del principio si es la primera copia
+  return contenido.filter(Boolean);
+}
+
+const imprimirWorkForce = async(req, res) => {
+  const copias = ['original', 'ventas', 'contabilidad', 'motorista'];
+  const colors = {original:'white', ventas: 'green', contabilidad: 'pink', motorista:'yellow'}
+  const boleta = await db.boleta
+  const fonts = {
+    Courier: {
+      normal: 'Courier',
+      bold: 'Courier-Bold',
+      italics: 'Courier-Oblique',
+      bolditalics: 'Courier-BoldOblique'
+    }
+  };
+
+  const printer = new PdfPrinter(fonts);
+  const filePath = 'boleta_epson.pdf';
+
+  const docDefinition = {
+    pageSize: { width: 612, height: 264 },
+    pageMargins: [2, 5, 2, 2],
+    defaultStyle: {
+      font: 'Courier',
+      fontSize: 8.5
+    },	
+    content: copias.flatMap((copia, i) => generarContenido(copia, i === 0, colors))
+  };
+
+  const pdfDoc = printer.createPdfKitDocument(docDefinition);
+  const writeStream = fs.createWriteStream(filePath);
+
+  pdfDoc.pipe(writeStream);
+  pdfDoc.end();
+  res.send({ msg: `Impresión exitosa` });
+
+  /* writeStream.on('finish', () => {
+    print(filePath, { printer: `WFBASCULA` })
+    .then(() => {
+        console.log('Impresión exitosa!');
+        res.send({msg: `Impresion exitosa`})
+    })
+    .catch(error => {
+        console.error('Error durante la impresión:', error);
+    })
+  }); */
+};
 
 module.exports = {
   imprimirEpson, 
