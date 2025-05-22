@@ -626,22 +626,31 @@ const addCero = (str) => {
   return String(str).padStart(7, '0')
 }
 
-function generarContenido(copia, esPrimera = false, colors) {
+function generarContenido(copia, esPrimera = false, colors, boleta, despachador) {
+  
+  const TIEMPOPROCESO = boleta.fechaFin - boleta.fechaInicio;
+  const totalSegundos = Math.floor(TIEMPOPROCESO / 1000);
+  const horas = Math.floor(totalSegundos / 3600);
+  const minutos = Math.floor((totalSegundos % 3600) / 60);
+  const segundos = totalSegundos % 60;
+  const TIEMPOESTADIA = `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
+
+
+  /**
+   * IDENTIFICADOR DE TARA Y PESO BRUTO
+   */
+  const TARA = boleta.proceso == 0 ? boleta.pesoFinal : boleta.pesoInicial
+  const PESOBRUTO = boleta.proceso == 0 ? boleta.pesoInicial : boleta.pesoFinal
+
+  /**
+   * Identificador de proceso
+   */
+
+  const PROCESO = boleta.proceso===0 ? 'Entrada' : 'Salida'
+
   const contenido = [
     !esPrimera ? { text: '', pageBreak: 'before' } : null,
-    {
-      canvas: [
-        {
-          type: 'rect',
-          x: 0,
-          y: 0,
-          w: 608,
-          h: 15,
-          color: colors[copia], 
-        }
-      ],
-      absolutePosition: { x: 2, y: 2 }
-    },
+    { canvas: [ { type: 'rect', x: 0, y: 0, w: 608, h: 15, color: colors[copia], }], absolutePosition: { x: 2, y: 2 } },
     {
       text: esPrimera ? '' : "C O P I A",
       color: 'gray',
@@ -652,8 +661,8 @@ function generarContenido(copia, esPrimera = false, colors) {
       absolutePosition: { x: 195, y: 140 }, // Ajusta según tus necesidades
     },
     { text: 'BAPROSA', alignment: 'center', bold: true, margin: [0, 15, 0, 0]  },
-    { text: 'Boleta de Peso No. 01280', alignment: 'center', bold: true,  margin: [0, 5, 0, 2] },
-    { text: `Proceso: Salida - Flete de Venta / Duración del Proceso 00:00:00`, alignment: 'center', margin: [0, 1, 0, 15] },
+    { text: `Boleta de Peso No. ${addCero(boleta.numBoleta)}`, alignment: 'center', bold: true,  margin: [0, 5, 0, 2] },
+    { text: `Proceso: ${PROCESO} - ${boleta.movimiento} / Duración del Proceso ${TIEMPOESTADIA}`, alignment: 'center', margin: [0, 1, 0, 15] },
     {
       canvas: [{ type: 'line', x1: 36, y1: 0, x2: 576, y2: 0, lineWidth: 1 }]
     },
@@ -664,14 +673,14 @@ function generarContenido(copia, esPrimera = false, colors) {
       table: {
       widths: ['*', '*'],
       body: [
-          ['Fecha        : 14 de Abril de 2025', ''],
-          ['Cliente      : Hermanitos Alvarez Carbajal', 'Hora Entrada     : DIDERPROBA'],
-          ['Placa        : Migon', 'Hora de Salida   : Flete de Venta'],
-          ['Motorista    : C116807', ''],
-          ['Trasnporte   : HECTOR SALAZAR', ''],
-          ['Origen       : BAPROSA', ''],
-          ['Destino      : BAPROSA', ''],
-          ['Producto     : BAPROSA', ''],
+          [`Fecha        : ${new Date().toLocaleString()}`, ''],
+          [`Cliente      : ${boleta.socio}`, `Hora Entrada     : ${boleta.fechaInicio.toLocaleString()}`],
+          [`Placa        : ${boleta.placa}`, `Hora de Salida   : ${boleta.fechaFin.toLocaleString()}`],
+          [`Motorista    : ${boleta.motorista}`, ''],
+          [`Transporte   : ${boleta.empresa}`, ''],
+          [`Origen       : ${boleta.origen || boleta.trasladoOrigen}`, ''],
+          [`Destino      : ${boleta.destino || boleta.trasladoDestino}`, ''],
+          [`Producto     : ${boleta.producto}`, ''],
         ]
       }
     },
@@ -685,9 +694,9 @@ function generarContenido(copia, esPrimera = false, colors) {
       table: {
         widths: ['*', '*'],
         body: [
-          ['Peso Entrada : 31,580', 'Peso Salida   : 81,660'],
-          ['Peso Neto    : 50,080', 'Peso Teórico  : 50,000'],
-          ['Desviación   : 80', ''],
+          [`Peso Tara    : ${TARA}`, `Peso Teórico     : ${boleta.pesoTeorico}`],
+          [`Peso Bruto   : ${PESOBRUTO}`, `Desviación       : ${boleta.desviacion}`],
+          [`Peso Neto    : ${boleta.pesoNeto}`, ''],
         ]
       }
     },
@@ -701,7 +710,7 @@ function generarContenido(copia, esPrimera = false, colors) {
       table: {
         widths: ['*', '*'],
         body: [
-          [{ text: 'Pesador       : Luis Armando Salgado' }, 'Autorizado  : '],
+          [{ text: `Pesador       : ${despachador}` }, 'Autorizado  : '],
         ]
       }
     }
@@ -711,10 +720,17 @@ function generarContenido(copia, esPrimera = false, colors) {
   return contenido.filter(Boolean);
 }
 
+const generarCantidadCopias = (boleta) => {
+  return ['o', 'g', 'p', 'y'];
+}
+
 const imprimirWorkForce = async(req, res) => {
-  const copias = ['original', 'ventas', 'contabilidad', 'motorista'];
-  const colors = {original:'white', ventas: 'green', contabilidad: 'pink', motorista:'yellow'}
-  const boleta = await db.boleta
+  const colors = {o:'white', g: 'green', p: 'pink', y:'yellow'}
+
+  const boleta = await db.boleta.findUnique({where:{id:43}})
+  const despachador = await db.usuarios.findUnique({where: {usuarios:boleta.usuario}})
+  const copias = generarCantidadCopias(boleta);
+  
   const fonts = {
     Courier: {
       normal: 'Courier',
@@ -734,7 +750,7 @@ const imprimirWorkForce = async(req, res) => {
       font: 'Courier',
       fontSize: 8.5
     },	
-    content: copias.flatMap((copia, i) => generarContenido(copia, i === 0, colors))
+    content: copias.flatMap((copia, i) => generarContenido(copia, i === 0, colors, boleta, despachador.name))
   };
 
   const pdfDoc = printer.createPdfKitDocument(docDefinition);
