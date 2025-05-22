@@ -721,16 +721,40 @@ function generarContenido(copia, esPrimera = false, colors, boleta, despachador)
 }
 
 const generarCantidadCopias = (boleta) => {
+  const { idMovimiento, idProducto, boletaType, idSocio } = boleta
+
+  /* Traslados */
+  if (idMovimiento == 10 || idMovimiento == 11) {
+    return ['o', 'p']
+  }
+
+  /* Productores */
+  if (idProducto == 17) {
+    ['o', 'g', 'p', 'y']
+  }
+
+  /**
+   * ! TRABAJANDO AQUI
+   */
+  if (idSocio==null){
+    return ['o']
+  }
+
+  /* Servicio Bascula */
+
+  /**
+   * Si no identifica los casos retornar las 4 
+   */
   return ['o', 'g', 'p', 'y'];
 }
 
 const imprimirWorkForce = async(req, res) => {
   const colors = {o:'white', g: 'green', p: 'pink', y:'yellow'}
 
-  const boleta = await db.boleta.findUnique({where:{id:43}})
+  const boleta = await db.boleta.findUnique({where:{id:248}})
   const despachador = await db.usuarios.findUnique({where: {usuarios:boleta.usuario}})
   const copias = generarCantidadCopias(boleta);
-  
+
   const fonts = {
     Courier: {
       normal: 'Courier',
