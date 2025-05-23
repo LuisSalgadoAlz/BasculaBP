@@ -610,8 +610,8 @@ export const verificarDataCasulla = (funError, data, setMsg, pesoIn) => {
 
   console.log(data)
 
-
-  if (pesoFinal <= 0 || pesoIn<= 0) {
+  /* Aqui se puso parseFloat */
+  if (parseFloat(pesoFinal) <= 0 || parseFloat(pesoIn)<= 0) {
     setMsg('Los pesos deben ser diferente de 0')
     funError(true)
     return false
