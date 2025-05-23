@@ -527,13 +527,13 @@ export const verificarDataCompleto = (funError, data, setMsg, pesoIn) => {
 
   /* idPlaca observaciones ordenDeTransferencia pesoInicial pesoTeorico*/
 
-  if(proceso == 0 && pesoIn<=pesoFinal){
+  if(proceso == 0 && parseFloat(pesoIn)<=parseFloat(pesoFinal)){
     setMsg('Peso inicial debe ser mayor al peso final)')
     funError(true)
     return false
   }
 
-  if(proceso == 1 && pesoIn>=pesoFinal){
+  if(proceso == 1 && parseFloat(pesoIn)>=parseFloat(pesoFinal)){
     setMsg('Peso final debe ser mayor al peso de inicio')
     funError(true)
     return false
@@ -545,7 +545,6 @@ export const verificarDataCompleto = (funError, data, setMsg, pesoIn) => {
     return false
   }
 
-  console.log(data)
   if ((idMovimiento==11 || idMovimiento==10) && (idTrasladoOrigen == idTrasladoDestino)) {
     setMsg('traslado origen y destino deben de ser diferentes')
     funError(true)
@@ -576,7 +575,7 @@ export const verificarDataCompleto = (funError, data, setMsg, pesoIn) => {
     return false
   }
 
-  if (pesoFinal <= 0) {
+  if (parseFloat(pesoFinal) <= 0) {
     setMsg('El peso final debe ser mayor que 0')
     funError(true)
     return false
