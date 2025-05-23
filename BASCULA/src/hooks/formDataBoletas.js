@@ -498,7 +498,7 @@ export const verificarDataNewPlaca = (funError, data, setMsg) => {
     return false
   }
   
-  if (pesoInicial <= 0 ) {
+  if (parseFloat(pesoInicial) <= 0 ) {
     funError(true)
     setMsg('Por favor, el peso inicial no debe de ser menor o igual a 0')
     return false
