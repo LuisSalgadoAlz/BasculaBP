@@ -225,7 +225,7 @@ const alertaSoporte = (datosFormulario, usuario, enviarCorreo) => {
     'Sugerencia de mejora': '💡'
   };
   
-  const icono = iconoTipoProblema[datosFormulario.tipoProblema] || '❓';
+  const icono = iconoTipoProblema[datosFormulario.type] || '❓';
   
   // Construir el cuerpo del correo con estilos mejorados
   const cuerpoMail = `
@@ -237,7 +237,7 @@ const alertaSoporte = (datosFormulario, usuario, enviarCorreo) => {
       <table style="width: 100%; border-collapse: collapse;">
         <tr>
           <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold; width: 40%;">Tipo de Problema:</td>
-          <td style="padding: 8px; border-bottom: 1px solid #eee;">${datosFormulario.tipoProblema || 'No especificado'}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee;">${datosFormulario.type || 'No especificado'}</td>
         </tr>
         <tr>
           <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Usuario:</td>
@@ -299,4 +299,4 @@ const alertaSoporte = (datosFormulario, usuario, enviarCorreo) => {
   }
 };
 
-module.exports = {alertaCancelacion, alertaDesviacion};
+module.exports = {alertaCancelacion, alertaDesviacion, alertaSoporte};
