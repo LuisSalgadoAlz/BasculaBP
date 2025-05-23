@@ -626,7 +626,7 @@ const addCero = (str) => {
   return String(str).padStart(7, '0')
 }
 
-function generarContenido(copia, esPrimera = false, colors, boleta, despachador) {
+function generarContenidoTercioCarta(copia, esPrimera = false, colors, boleta, despachador) {
   
   const TIEMPOPROCESO = boleta.fechaFin - boleta.fechaInicio;
   const totalSegundos = Math.floor(TIEMPOPROCESO / 1000);
@@ -658,9 +658,9 @@ function generarContenido(copia, esPrimera = false, colors, boleta, despachador)
       bold: true,
       italics: true,
       fontSize: 40,
-      absolutePosition: { x: 195, y: 140 }, // Ajusta según tus necesidades
+      absolutePosition: { x: 195, y: 140 },
     },
-    { text: 'BAPROSA', alignment: 'center', bold: true, margin: [0, 15, 0, 0]  },
+    { text: 'BENEFICIO DE ARROZ PROGRESO, S.A.', alignment: 'center', bold: true, margin: [0, 15, 0, 0]  },
     { text: `Boleta de Peso No. ${addCero(boleta.numBoleta)}`, alignment: 'center', bold: true,  margin: [0, 5, 0, 2] },
     { text: `Proceso: ${PROCESO} - ${boleta.movimiento} / Duración del Proceso ${TIEMPOESTADIA}`, alignment: 'center', margin: [0, 1, 0, 15] },
     {
@@ -720,38 +720,180 @@ function generarContenido(copia, esPrimera = false, colors, boleta, despachador)
   return contenido.filter(Boolean);
 }
 
+function generarContenidoMediaCarta(copia, esPrimera = false, colors, boleta, despachador) {
+  
+  const TIEMPOPROCESO = boleta.fechaFin - boleta.fechaInicio;
+  const totalSegundos = Math.floor(TIEMPOPROCESO / 1000);
+  const horas = Math.floor(totalSegundos / 3600);
+  const minutos = Math.floor((totalSegundos % 3600) / 60);
+  const segundos = totalSegundos % 60;
+  const TIEMPOESTADIA = `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
+
+
+  /**
+   * IDENTIFICADOR DE TARA Y PESO BRUTO
+   */
+  const TARA = boleta.proceso == 0 ? boleta.pesoFinal : boleta.pesoInicial
+  const PESOBRUTO = boleta.proceso == 0 ? boleta.pesoInicial : boleta.pesoFinal
+
+  /**
+   * Identificador de proceso
+   */
+
+  const PROCESO = boleta.proceso===0 ? 'Entrada' : 'Salida'
+
+  const contenido = [
+    !esPrimera ? { text: '', pageBreak: 'before' } : null,
+    { canvas: [ { type: 'rect', x: 0, y: 0, w: 608, h: 15, color: colors[copia], }], absolutePosition: { x: 2, y: 2 } },
+    { canvas: [ { type: 'rect', x: 0, y: 0, w: 15, h: 380, color: colors[copia] }], absolutePosition: { x: 50, y: 2 } },
+    {
+      text: esPrimera ? '' : "C O P I A",
+      color: 'gray',
+      opacity: 0.2  ,
+      bold: true,
+      italics: true,
+      fontSize: 60,
+      absolutePosition: { x: 140, y: 150 }, 
+    },
+    { text: 'BENEFICIO DE ARROZ PROGRESO, S.A.', alignment: 'center', bold: true, margin: [0, 25, 0, 0], fontSize: 14 },
+    { text: `Boleta de Peso No. ${addCero(boleta.numBoleta)}`, alignment: 'center', bold: true, margin: [0, 10, 0, 5], fontSize: 13 },
+    { text: `Proceso: ${PROCESO} - ${boleta.movimiento} / Duración del Proceso ${TIEMPOESTADIA}`, alignment: 'center', margin: [0, 8, 0, 15], fontSize: 11 },
+    {
+      canvas: [{ type: 'line', x1: 36, y1: 0, x2: 576, y2: 0, lineWidth: 0.5 }]
+    },
+    {
+      margin: [36, 10, 36, 0],
+      layout: 'noBorders',
+      watermark: {text: copia.toUpperCase(), color: 'blue', opacity: 0.3, bold: true, italics: false},
+      table: {
+      widths: ['*', '*'],
+      body: [
+          [`Fecha        : ${new Date().toLocaleString()}`, ''],
+          [`Cliente      : ${boleta.socio}`, `Hora Entrada     : ${boleta.fechaInicio.toLocaleString()}`],
+          [`Placa        : ${boleta.placa}`, `Hora de Salida   : ${boleta.fechaFin.toLocaleString()}`],
+          [`Motorista    : ${boleta.motorista}`, ''],
+          [`Transporte   : ${boleta.empresa}`, ''],
+          [`Origen       : ${boleta.origen || boleta.trasladoOrigen}`, ''],
+          [`Destino      : ${boleta.destino || boleta.trasladoDestino}`, ''],
+          [`Producto     : ${boleta.producto}`, ''],
+        ]
+      }
+    },
+    {
+      margin: [36, 10, 36, 0],
+      canvas: [{ type: 'line', x1: 0, y1: 0, x2: 540, y2: 0, lineWidth: 0.5 }]
+    },
+    {
+      margin: [36, 10, 36, 0],
+      layout: 'noBorders',
+      table: {
+        widths: ['*', '*'],
+        body: [
+          [`Peso Tara    : ${TARA}`, `Peso Teórico     : ${boleta.pesoTeorico}`],
+          [`Peso Bruto   : ${PESOBRUTO}`, `Desviación       : ${boleta.desviacion}`],
+          [`Peso Neto    : ${boleta.pesoNeto}`, ''],
+        ]
+      }
+    },
+    {
+      margin: [36, 10, 36, 0],
+      canvas: [{ type: 'line', x1: 0, y1: 0, x2: 540, y2: 0, lineWidth: 0.5 }]
+    },
+    {
+      margin: [36, 10, 36, 0],
+      layout: 'noBorders',
+      table: {
+        widths: ['*', '*'],
+        body: [
+          [{ text: `Pesador      : ${despachador}` }, 'Autorizado  : '],
+        ]
+      }
+    }
+  ];
+
+  // Elimina el null del principio si es la primera copia
+  return contenido.filter(Boolean);
+}
+
 const generarCantidadCopias = (boleta) => {
-  const { idMovimiento, idProducto, boletaType, idSocio } = boleta
+  const { idMovimiento, idProducto, boletaType, idEmpresa, idSocio, } = boleta
+  const arrContenerizados =  [4, 5, 6, 15, 16]
+  const arrSubproductos = [2, 7, 8, 9, 10]
+  const arrExtras = [27, 28, 29, 30, 31, 32, 33, 34]
+
+  /* Clientes Planta */
+  if (boletaType==3 || boletaType==4){
+    return ['o']
+  }
 
   /* Traslados */
   if (idMovimiento == 10 || idMovimiento == 11) {
     return ['o', 'p']
   }
 
-  /* Productores */
+  /* Productores */ 
   if (idProducto == 17) {
-    ['o', 'g', 'p', 'y']
+    return ['o', 'g', 'p', 'y']
   }
 
-  /**
-   * ! TRABAJANDO AQUI
-   */
-  if (idSocio==null){
+
+  /* Servicio Bascula */
+  if (idMovimiento==12){
+    return ['o', 'g', 'y']
+  }
+
+  /* Subproductos / Casulla */
+  if (idProducto==11) {
+    return ['o', 'g', 'p', 'y']
+  }
+
+  /* Motoristas de Baprosa Detalle y Mayoreo */
+  if (idEmpresa==1 || idEmpresa==1015) {
     return ['o']
   }
 
-  /* Servicio Bascula */
+  /* Servcio Contratado de Baprosa */
+  if (idSocio==1 && (idEmpresa !=1 && idEmpresa !=1015 && idEmpresa!=1014) ) {
+    return ['o', 'g', 'y']
+  }
+
+  /* Conetenerizados: Arroz Oro y Escaldado */
+  if(arrContenerizados.includes(idProducto)) {
+    return ['o', 'y', 'p']
+  }
+
+  /* Importaciones a Granel */
+  if (idProducto==18) {
+    return ['o', 'y']
+  }
+
+  /* Productos extras */
+  if(arrExtras.includes(idProducto)){
+    return ['o']
+  }
+
+  /* Subproductos que no sean Casulla */
+  if(arrSubproductos.includes(idProducto)) {
+    return ['o', 'g', 'p']
+  }
+
+
 
   /**
-   * Si no identifica los casos retornar las 4 
+   * Default 4 impresiones 
    */
   return ['o', 'g', 'p', 'y'];
 }
 
 const imprimirWorkForce = async(req, res) => {
+  /**
+   *  TODO - > 1/3 de carta pageSize: { width: 612, height: 264 } font 9 
+   *  TODO - > 1/2 de carta pageSize: { width: 612, height: 396 }
+   */
+
   const colors = {o:'white', g: 'green', p: 'pink', y:'yellow'}
 
-  const boleta = await db.boleta.findUnique({where:{id:248}})
+  const boleta = await db.boleta.findUnique({where:{id:109	}})
   const despachador = await db.usuarios.findUnique({where: {usuarios:boleta.usuario}})
   const copias = generarCantidadCopias(boleta);
 
@@ -768,13 +910,13 @@ const imprimirWorkForce = async(req, res) => {
   const filePath = 'boleta_epson.pdf';
 
   const docDefinition = {
-    pageSize: { width: 612, height: 264 },
+    pageSize: { width: 612, height: 396 },
     pageMargins: [2, 5, 2, 2],
     defaultStyle: {
       font: 'Courier',
-      fontSize: 8.5
+      fontSize: 11
     },	
-    content: copias.flatMap((copia, i) => generarContenido(copia, i === 0, colors, boleta, despachador.name))
+    content: copias.flatMap((copia, i) => generarContenidoMediaCarta(copia, i === 0, colors, boleta, despachador.name))
   };
 
   const pdfDoc = printer.createPdfKitDocument(docDefinition);
