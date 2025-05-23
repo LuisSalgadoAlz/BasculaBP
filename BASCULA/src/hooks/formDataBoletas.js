@@ -596,7 +596,7 @@ export const verificarDataCasulla = (funError, data, setMsg, pesoIn) => {
     pesoFinal
   } = data;
 
-  if(proceso == 1 && pesoIn>=pesoFinal){
+  if(proceso == 1 && parseFloat(pesoIn)>=parseFloat(pesoFinal)){
     setMsg('Peso final debe ser mayor al peso de inicio')
     funError(true)
     return false

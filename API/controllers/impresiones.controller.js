@@ -648,9 +648,18 @@ function generarContenidoTercioCarta(copia, esPrimera = false, colors, boleta, d
 
   const PROCESO = boleta.proceso===0 ? 'Entrada' : 'Salida'
 
+  
+  /**
+   * Identificador de fuera de tolerancia
+   */
+
+  const fueraTol = boleta.estado === 'Completo(Fuera de tolerancia)';
+
   const contenido = [
     !esPrimera ? { text: '', pageBreak: 'before' } : null,
-    { canvas: [ { type: 'rect', x: 0, y: 0, w: 608, h: 15, color: colors[copia], }], absolutePosition: { x: 2, y: 2 } },
+    { canvas: [ { type: 'rect', x: 0, y: 0, w: 608, h: 10, color: colors[copia], }], absolutePosition: { x: 2, y: 0 } },
+    { canvas: [ { type: 'rect', x: 0, y: 0, w: 10, h: 380, color: colors[copia] }], absolutePosition: { x: 105, y: 2 } },
+    { canvas: [ { type: 'rect', x: 0, y: 0, w: 608, h: 10, color: colors[copia], }], absolutePosition: { x: 2, y: 252 } },
     {
       text: esPrimera ? '' : "C O P I A",
       color: 'gray',
@@ -696,7 +705,12 @@ function generarContenidoTercioCarta(copia, esPrimera = false, colors, boleta, d
         body: [
           [`Peso Tara    : ${TARA}`, `Peso Teórico     : ${boleta.pesoTeorico}`],
           [`Peso Bruto   : ${PESOBRUTO}`, `Desviación       : ${boleta.desviacion}`],
-          [`Peso Neto    : ${boleta.pesoNeto}`, ''],
+          [
+            `Peso Neto    : ${boleta.pesoNeto}`,
+            fueraTol
+              ? { text: 'FUERA DE TOLERANCIA', color: 'red', bold: true }
+              : ''
+          ]
         ]
       }
     },
@@ -728,7 +742,7 @@ function generarContenidoMediaCarta(copia, esPrimera = false, colors, boleta, de
   const minutos = Math.floor((totalSegundos % 3600) / 60);
   const segundos = totalSegundos % 60;
   const TIEMPOESTADIA = `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
-
+  
 
   /**
    * IDENTIFICADOR DE TARA Y PESO BRUTO
@@ -742,10 +756,16 @@ function generarContenidoMediaCarta(copia, esPrimera = false, colors, boleta, de
 
   const PROCESO = boleta.proceso===0 ? 'Entrada' : 'Salida'
 
+  /**
+   * Identificador de fuera de tolerancia
+   */
+
+  const fueraTol = boleta.estado === 'Completo(Fuera de tolerancia)';
+
   const contenido = [
     !esPrimera ? { text: '', pageBreak: 'before' } : null,
     { canvas: [ { type: 'rect', x: 0, y: 0, w: 608, h: 15, color: colors[copia], }], absolutePosition: { x: 2, y: 2 } },
-    { canvas: [ { type: 'rect', x: 0, y: 0, w: 15, h: 380, color: colors[copia] }], absolutePosition: { x: 50, y: 2 } },
+    { canvas: [ { type: 'rect', x: 0, y: 0, w: 15, h: 380, color: colors[copia] }], absolutePosition: { x: 120, y: 2 } },
     { canvas: [ { type: 'rect', x: 0, y: 0, w: 608, h: 15, color: colors[copia], }], absolutePosition: { x: 2, y: 378 } },
     {
       text: esPrimera ? '' : "C O P I A",
@@ -792,7 +812,12 @@ function generarContenidoMediaCarta(copia, esPrimera = false, colors, boleta, de
         body: [
           [`Peso Tara    : ${TARA}`, `Peso Teórico     : ${boleta.pesoTeorico}`],
           [`Peso Bruto   : ${PESOBRUTO}`, `Desviación       : ${boleta.desviacion}`],
-          [`Peso Neto    : ${boleta.pesoNeto}`, ''],
+          [
+            `Peso Neto    : ${boleta.pesoNeto}`,
+            fueraTol
+              ? { text: 'FUERA DE TOLERANCIA', color: 'red', bold: true }
+              : ''
+          ]
         ]
       }
     },
@@ -819,7 +844,7 @@ function generarContenidoMediaCarta(copia, esPrimera = false, colors, boleta, de
 const generarCantidadCopias = (boleta) => {
   const { idMovimiento, idProducto, boletaType, idEmpresa, idSocio, } = boleta
   const arrContenerizados =  [4, 5, 6, 15, 16]
-  const arrSubproductos = [2, 7, 8, 9, 10]
+  const arrSubproductos = [2, 7, 8, 9, 10,21]
   const arrExtras = [27, 28, 29, 30, 31, 32, 33, 34]
 
   /* Clientes Planta */
@@ -886,15 +911,13 @@ const generarCantidadCopias = (boleta) => {
   return ['o', 'g', 'p', 'y'];
 }
 
-const imprimirWorkForce = async(req, res) => {
-  /**
-   *  TODO - > 1/3 de carta pageSize: { width: 612, height: 264 } font 9 
-   *  TODO - > 1/2 de carta pageSize: { width: 612, height: 396 }
-   */
 
+/**
+ *  TODO - > 1/3 de carta pageSize: { width: 612, height: 264 } font 9 
+ *  TODO - > 1/2 de carta pageSize: { width: 612, height: 396 }
+ */
+const imprimirWorkForce = async(boleta) => {
   const colors = {o:'white', g: '#98FB98', p: 'pink', y:'yellow'}
-
-  const boleta = await db.boleta.findUnique({where:{id:109	}})
   const despachador = await db.usuarios.findUnique({where: {usuarios:boleta.usuario}})
   const copias = generarCantidadCopias(boleta);
 
@@ -912,7 +935,7 @@ const imprimirWorkForce = async(req, res) => {
 
   const docDefinition = {
     pageSize: { width: 612, height: 396 },
-    pageMargins: [2, 5, 2, 2],
+    pageMargins: [2, 2, 2, 2],
     defaultStyle: {
       font: 'Courier',
       fontSize: 11
@@ -925,16 +948,14 @@ const imprimirWorkForce = async(req, res) => {
 
   pdfDoc.pipe(writeStream);
   pdfDoc.end();
-  res.send({ msg: `Impresión exitosa` });
 
   writeStream.on('finish', () => {
     print(filePath, { printer: `WFBASCULA` })
     .then(() => {
-        console.log('Impresión exitosa!');
-        res.send({msg: `Impresion exitosa`})
+        console.log('Imprimiendo...') 
     })
     .catch(error => {
-        console.error('Error durante la impresión:', error);
+        return true
     })
   });
 };

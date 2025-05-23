@@ -1,7 +1,7 @@
 const db = require("../lib/prisma");
 const dotenv = require("dotenv");
 const jwt = require("jsonwebtoken");
-const { imprimirEpson, imprimirQRTolvas, imprimirQRTolva, comprobanteDeCarga } = require("./impresiones.controller");
+const { imprimirEpson, imprimirQRTolva, comprobanteDeCarga, imprimirWorkForce } = require("./impresiones.controller");
 const enviarCorreo = require("../utils/enviarCorreo");
 const {alertaDesviacion, alertaCancelacion} = require("../utils/cuerposCorreo");
 const {setLogger} = require('../utils/logger');
@@ -314,11 +314,15 @@ const postBoletasNormal = async (req, res) => {
 
     setLogger('BOLETA', 'AGREGAR BOLETA CASULLA', req, null, 1, nuevaBoleta.id)  
 
-    imprimirEpson(nuevaBoleta);
-
-    res
-      .status(201)
-      .json({ msg: "Boleta creado exitosamente", boleta: nuevaBoleta });
+    /* Imprimir Boleta */
+    const response = await imprimirWorkForce(nuevaBoleta)
+    
+    if (response) {
+      return res.status(201).json({ msg: "Boleta creado exitosamente e impresa con exito" });
+    }
+    
+    return res.status(201).json({ msg: "Boleta creado exitosamente, pero revise su impresora" });
+  
   } catch (error) {
     console.error(error);
     setLogger('BOLETA', 'AGREGAR BOLETA CASULLA', req, null, 3)  
@@ -960,13 +964,19 @@ const updateBoletaOut = async (req, res) => {
     if (idProducto===19) {
       comprobanteDeCarga(nuevaBoleta, despachador['name'])
     }
+
     setLogger('BOLETA', 'MODIFICAR BOLETA (SALIDA DE BOLETA)', req, null, 1, nuevaBoleta.id)  
 
+    /* Imprimir Boleta */
 
-    imprimirEpson(nuevaBoleta);
-    res
-      .status(201)
-      .json({ msg: "Boleta creado exitosamente", boleta: nuevaBoleta });
+    const response = await imprimirWorkForce(nuevaBoleta)
+    
+    if (response) {
+      return res.status(201).json({ msg: "Boleta creado exitosamente e impresa con exito" });
+    }
+    
+    return res.status(201).json({ msg: "Boleta creado exitosamente, pero revise su impresora" });
+  
   } catch (error) {
     setLogger('BOLETA', 'MODIFICAR BOLETA (SALIDA DE BOLETA)', req, null, 3)  
     res.status(500).json({ msg: `Error al crear usuario: ${error.message}` });
@@ -1094,9 +1104,15 @@ const updateBoletaOutComdin = async (req, res) => {
     setLogger('BOLETA', 'MODIFICAR BOLETA (SALIDA DE BOLETA | COMODIN)', req, null, 1, nuevaBoleta.id)  
 
 
-    imprimirEpson(nuevaBoleta);
-
-    res.status(201).json({ msg: "Boleta creado exitosamente" });
+    /* Imprimir Boleta */
+    const response = await imprimirWorkForce(nuevaBoleta)
+    
+    if (response) {
+      return res.status(201).json({ msg: "Boleta creado exitosamente e impresa con exito" });
+    }
+    
+    return res.status(201).json({ msg: "Boleta creado exitosamente, pero revise su impresora" });
+  
   } catch (error) {
     setLogger('BOLETA', 'MODIFICAR BOLETA (SALIDA DE BOLETA | COMODIN)', req, null, 3)  
     res.status(500).json({ msg: `Error al crear usuario: ${error.message}` });
