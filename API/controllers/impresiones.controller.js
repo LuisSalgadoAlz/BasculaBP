@@ -746,6 +746,7 @@ function generarContenidoMediaCarta(copia, esPrimera = false, colors, boleta, de
     !esPrimera ? { text: '', pageBreak: 'before' } : null,
     { canvas: [ { type: 'rect', x: 0, y: 0, w: 608, h: 15, color: colors[copia], }], absolutePosition: { x: 2, y: 2 } },
     { canvas: [ { type: 'rect', x: 0, y: 0, w: 15, h: 380, color: colors[copia] }], absolutePosition: { x: 50, y: 2 } },
+    { canvas: [ { type: 'rect', x: 0, y: 0, w: 608, h: 15, color: colors[copia], }], absolutePosition: { x: 2, y: 378 } },
     {
       text: esPrimera ? '' : "C O P I A",
       color: 'gray',
@@ -891,7 +892,7 @@ const imprimirWorkForce = async(req, res) => {
    *  TODO - > 1/2 de carta pageSize: { width: 612, height: 396 }
    */
 
-  const colors = {o:'white', g: 'green', p: 'pink', y:'yellow'}
+  const colors = {o:'white', g: '#98FB98', p: 'pink', y:'yellow'}
 
   const boleta = await db.boleta.findUnique({where:{id:109	}})
   const despachador = await db.usuarios.findUnique({where: {usuarios:boleta.usuario}})
@@ -926,7 +927,7 @@ const imprimirWorkForce = async(req, res) => {
   pdfDoc.end();
   res.send({ msg: `Impresión exitosa` });
 
-  /* writeStream.on('finish', () => {
+  writeStream.on('finish', () => {
     print(filePath, { printer: `WFBASCULA` })
     .then(() => {
         console.log('Impresión exitosa!');
@@ -935,7 +936,7 @@ const imprimirWorkForce = async(req, res) => {
     .catch(error => {
         console.error('Error durante la impresión:', error);
     })
-  }); */
+  });
 };
 
 module.exports = {
