@@ -171,6 +171,7 @@ const alertaCancelacion = (boletaCancelada, usuario, enviarCorreo) => {
       </p>
 
       <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;"/>
+      <div style="text-align: center;">  
         ${footerImgage}
         <p style="font-size: 12px; color: #888;">
           SISTEMA DE BÁSCULA · <strong>BAPROSA</strong><br/>
