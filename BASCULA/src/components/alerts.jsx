@@ -10,6 +10,7 @@ import {
   IoInformationCircleOutline 
 } from "react-icons/io5";
 import { useState } from "react";
+import { postEnviarMensajeDeSoporte } from "../hooks/admin/soporte";
 
 export const ModalSuccess = ({ name, hdClose }) => {
   return (
@@ -314,11 +315,23 @@ export const SkeletonBoleta = () => {
 };
 
 
+export const AlertSupport = ({ msg }) => {
+    return (
+        <>
+          <div className="my-4 text-sm text-yellow-800 rounded-lg bg-white" role="alert">
+            <span className="font-medium">Alerta!</span> { msg }
+          </div>
+        </>
+    )
+}
+
 export const SupportModal = ({ hdClose }) => {
-  const [formSupports, setFormSupports] = useState({type: 'bug', description: ''})
+  const [formSupports, setFormSupports] = useState({type: '', description: ''})
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  
+  const [isEmpty, setIsEmpty] = useState(false)
+  const [msg, setMsg] = useState('')
+
   const modalAnimation = {
     initial: { opacity: 0 },
     animate: { opacity: 1 },
@@ -340,15 +353,24 @@ export const SupportModal = ({ hdClose }) => {
     }))
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async(e) => {
     e.preventDefault();
-    console.log(formSupports)
+    if (!formSupports.type) {
+      setIsEmpty(true)
+      setMsg("Por favor, ingrese el tipo de problema.")
+      return
+    }
+    const response = await postEnviarMensajeDeSoporte(formSupports, setSubmitting)
+    if(response.msg) {
+      setIsEmpty(false)
+      setSubmitted(true)
+    }
   };
 
   const issueTypes = [
-    { id: "bug", label: "Error o bug", icon: <IoBugOutline className="text-red-500" /> },
-    { id: "funcionalidad", label: "Funcionalidad incorrecta", icon: <IoWarningOutline className="text-amber-500" /> },
-    { id: "sugerencia", label: "Sugerencia de mejora", icon: <IoInformationCircleOutline className="text-blue-500" /> }
+    { id: "Error o bug", label: "Error o bug", icon: <IoBugOutline className="text-red-500" /> },
+    { id: "Funcionalidad incorrecta", label: "Funcionalidad incorrecta", icon: <IoWarningOutline className="text-amber-500" /> },
+    { id: "Sugerencia de mejora", label: "Sugerencia de mejora", icon: <IoInformationCircleOutline className="text-blue-500" /> }
   ];
 
   return (
@@ -408,7 +430,8 @@ export const SupportModal = ({ hdClose }) => {
                 placeholder="Describe detalladamente el problema o error que experimentaste"
                 required
               />
-            </div>            
+            </div>
+            {isEmpty && <AlertSupport msg={ msg }/>}            
             <div className="flex justify-between">
               <button
                 type="button"
