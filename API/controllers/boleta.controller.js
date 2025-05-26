@@ -504,7 +504,7 @@ const postClientePlacaMoto = async (req, res) => {
             idOrigen, 
             origen: origen.nombre,
           }), 
-          ...(idProducto === 19 && {
+          ...(idProducto === 18 && {
             Nviajes: parseInt(NViajes), 
             NSalida: parseInt(NSalida), 
           }),
@@ -512,7 +512,7 @@ const postClientePlacaMoto = async (req, res) => {
       },
     });
 
-    if(idProducto===18 || idProducto===19) {
+    if(idProducto===17 || idProducto===18) {
       imprimirQRTolva(newBol)
     } 
     setLogger('BOLETA', 'AGREGAR BOLETA (ENTRADA DE DATOS)', req, null, 1, newBol.id)  
@@ -586,7 +586,7 @@ const postClientePlacaMotoComodin = async (req, res) => {
           ...((idMovimiento!=10 && idMovimiento!=11) && {
             origen: idOrigen,
           }), 
-          ...(idProducto === 19 && {
+          ...(idProducto === 18 && {
             Nviajes: parseInt(NViajes), 
             NSalida: parseInt(NSalida), 
           }),
@@ -594,7 +594,7 @@ const postClientePlacaMotoComodin = async (req, res) => {
       },
     });
 
-    if(idProducto===18 || idProducto===19) {
+    if(idProducto===17 || idProducto===18) {
       imprimirQRTolva(newBol)
     }
 
@@ -961,7 +961,7 @@ const updateBoletaOut = async (req, res) => {
     
     /* IMPRESION DE COMPROBANTE PARA MOTORISTA */
 
-    if (idProducto===19) {
+    if (idProducto===18) {
       comprobanteDeCarga(nuevaBoleta, despachador['name'])
     }
 
@@ -1097,7 +1097,7 @@ const updateBoletaOutComdin = async (req, res) => {
       },
     });
 
-    if (idProducto===19) {
+    if (idProducto===18) {
       comprobanteDeCarga(nuevaBoleta, despachador['name'])
     }
 

@@ -486,7 +486,7 @@ export const verificarDataNewPlaca = (funError, data, setMsg) => {
     return false
   }
   
-  if(idProducto===19 && (!NSalida || !NViajes)) {
+  if(idProducto===18 && (!NSalida || !NViajes)) {
     funError(true)
     setMsg('Por favor, ingresar numero de viaje y de salida')
     return false

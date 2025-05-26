@@ -596,8 +596,8 @@ const comprobanteDeCarga = (boleta, despachador)=> {
             { text: `${(boleta.pesoNeto/100).toFixed(2)} QQ`, align: "RIGHT", width: 0.4 }
           ])
           .tableCustom([
-            { text: `${boleta.desviacion < 0 && 'DESVIACION:'}`, align: "LEFT", width: 0.4, style: 'B' }, 
-            { text: `${boleta.desviacion < 0 && `${(boleta.desviacion/100).toFixed(2)+' QQ'}`}`, align: "RIGHT", width: 0.4 }
+            { text: `DESVIACION:`, align: "LEFT", width: 0.4, style: 'B' }, 
+            { text: `${parseFloat(boleta.desviacion || 0) < 0 ? `${(boleta.desviacion/100).toFixed(2)+' QQ'}` : '0 QQ'}`, align: "RIGHT", width: 0.4 }
           ])
           .text('------------------------------------------')
           .text(`Observaciones: ${boleta.observaciones? boleta.observaciones: 'Ninguna.'}`)
@@ -634,7 +634,7 @@ function generarContenidoTercioCarta(copia, esPrimera = false, colors, boleta, d
   const minutos = Math.floor((totalSegundos % 3600) / 60);
   const segundos = totalSegundos % 60;
   const TIEMPOESTADIA = `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
-
+  const TYPEOFUSER = boleta.proceso == 0 ? 'Proveedor    ' : 'Cliente      ';
 
   /**
    * IDENTIFICADOR DE TARA Y PESO BRUTO
@@ -658,7 +658,7 @@ function generarContenidoTercioCarta(copia, esPrimera = false, colors, boleta, d
   const contenido = [
     !esPrimera ? { text: '', pageBreak: 'before' } : null,
     { canvas: [ { type: 'rect', x: 0, y: 0, w: 608, h: 10, color: colors[copia], }], absolutePosition: { x: 2, y: 0 } },
-    { canvas: [ { type: 'rect', x: 0, y: 0, w: 10, h: 380, color: colors[copia] }], absolutePosition: { x: 105, y: 2 } },
+    { canvas: [ { type: 'rect', x: 0, y: 0, w: 10, h: 250, color: colors[copia] }], absolutePosition: { x: 98, y: 2 } },
     { canvas: [ { type: 'rect', x: 0, y: 0, w: 608, h: 10, color: colors[copia], }], absolutePosition: { x: 2, y: 252 } },
     {
       text: esPrimera ? '' : "C O P I A",
@@ -667,7 +667,7 @@ function generarContenidoTercioCarta(copia, esPrimera = false, colors, boleta, d
       bold: true,
       italics: true,
       fontSize: 40,
-      absolutePosition: { x: 195, y: 140 },
+      absolutePosition: { x: 195, y: 130 },
     },
     { text: 'BENEFICIO DE ARROZ PROGRESO, S.A.', alignment: 'center', bold: true, margin: [0, 15, 0, 0]  },
     { text: `Boleta de Peso No. ${addCero(boleta.numBoleta)}`, alignment: 'center', bold: true,  margin: [0, 5, 0, 2] },
@@ -683,7 +683,7 @@ function generarContenidoTercioCarta(copia, esPrimera = false, colors, boleta, d
       widths: ['*', '*'],
       body: [
           [`Fecha        : ${new Date().toLocaleString()}`, ''],
-          [`Cliente      : ${boleta.socio}`, `Hora Entrada     : ${boleta.fechaInicio.toLocaleString()}`],
+          [`${TYPEOFUSER}: ${boleta.socio}`, `Hora Entrada     : ${boleta.fechaInicio.toLocaleString()}`],
           [`Placa        : ${boleta.placa}`, `Hora de Salida   : ${boleta.fechaFin.toLocaleString()}`],
           [`Motorista    : ${boleta.motorista}`, ''],
           [`Transporte   : ${boleta.empresa}`, ''],
@@ -724,7 +724,7 @@ function generarContenidoTercioCarta(copia, esPrimera = false, colors, boleta, d
       table: {
         widths: ['*', '*'],
         body: [
-          [{ text: `Pesador       : ${despachador}` }, 'Autorizado  : '],
+          [{ text: `Pesador      : ${despachador}` }, 'Autorizado       : '],
         ]
       }
     }
@@ -848,7 +848,7 @@ const generarCantidadCopias = (boleta) => {
   const arrExtras = [27, 28, 29, 30, 31, 32, 33, 34]
 
   /* Clientes Planta */
-  if (boletaType==3 || boletaType==4){
+  if ((boletaType==3 || boletaType==4) && (idProducto !=24 && idProducto!=25 && idMovimiento!=12)){
     return ['o']
   }
 
@@ -934,13 +934,13 @@ const imprimirWorkForce = async(boleta) => {
   const filePath = 'boleta_epson.pdf';
 
   const docDefinition = {
-    pageSize: { width: 612, height: 396 },
+    pageSize: { width: 612, height: 264 },
     pageMargins: [2, 2, 2, 2],
     defaultStyle: {
       font: 'Courier',
-      fontSize: 11
+      fontSize: 8
     },	
-    content: copias.flatMap((copia, i) => generarContenidoMediaCarta(copia, i === 0, colors, boleta, despachador.name))
+    content: copias.flatMap((copia, i) => generarContenidoTercioCarta(copia, i === 0, colors, boleta, despachador.name))
   };
 
   const pdfDoc = printer.createPdfKitDocument(docDefinition);

@@ -282,7 +282,7 @@ export const ModalNormal = ({ hdlClose, hdlChange, fillData, formBol, boletas, h
                    * !Imporatnte: esto se debera de cambiar a algo mas sustancial, que sea migratorio
                    */
                 }
-                {boletas?.Producto ===19 &&(
+                {boletas?.Producto ===18 &&(
                   <>
                     <div className="grid grid-cols-2 gap-3 mt-2 mb-4">
                       <div>
