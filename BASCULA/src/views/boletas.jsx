@@ -155,16 +155,22 @@ const Boletas = () => {
   }
 
   const handleCompleteOut = async() => {
-    const {valor} = await getToleranciaValue()
-    const response = formaterData(formBoletas, valor)
-    const isCorrect = true /* verificarDataCompleto(setErr, response, setMsg, formBoletas?.pesoIn) */
-    console.log(response)
-    if (isCorrect) {
-      await updateBoletaOut(response, formBoletas.idBoleta, setIsLoading)
-      setSuccess(true)
-      setMsg('dar salida a boleta')
-      setOutBol(false)
-      closeAllDataOfForm()    
+    setIsLoading(true)
+    try{
+      const {valor} = await getToleranciaValue()
+      const response = formaterData(formBoletas, valor)
+      const isCorrect = true /* verificarDataCompleto(setErr, response, setMsg, formBoletas?.pesoIn) */
+      console.log(response)
+      if (isCorrect) {
+        await updateBoletaOut(response, formBoletas.idBoleta, setIsLoading)
+        setSuccess(true)
+        setMsg('dar salida a boleta')
+        setOutBol(false)
+        closeAllDataOfForm()    
+      }
+    } catch (err) {
+      console.error(err)
+      setIsLoading(false)
     }
   }
 

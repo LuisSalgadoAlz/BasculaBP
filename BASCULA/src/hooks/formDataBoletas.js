@@ -198,9 +198,8 @@ export const getDataParaForm = async (setFormBoletas, data, setMove, setIsLoadin
   }));
 };
 
-export const updateBoletaOut = async (boleta, id, setIsLoading) => {
+export const updateBoletaOut = async (boleta, id) => {
   try {
-    setIsLoading(true)
     const response = await fetch(`${URLHOST}boletas/${id}`, {
       method: "PUT",
       body: JSON.stringify(boleta),
@@ -221,9 +220,7 @@ export const updateBoletaOut = async (boleta, id, setIsLoading) => {
     }
   } catch (error) {
     console.error("Error al obtener los datos:", error);
-  } finally {
-    setIsLoading(false)
-  }
+  } 
 };
 
 export const postBoletasCasulla = async (boleta, setIsLoading) => {
