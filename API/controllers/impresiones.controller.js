@@ -903,7 +903,7 @@ const generarCantidadCopias = (boleta) => {
     return ['o', 'g', 'p']
   }
 
-
+  /* Se realizaran microcambios con la nueva tabla de prioridad */
 
   /**
    * Default 4 impresiones 
