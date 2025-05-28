@@ -738,7 +738,10 @@ function generarContenidoTercioCarta(copia, esPrimera = false, colors, boleta, d
       absolutePosition: { x: 195, y: 130 },
     },
     { text: 'BENEFICIO DE ARROZ PROGRESO, S.A.', alignment: 'center', bold: true, margin: [0, 15, 0, 0]  },
-    { text: `Boleta de Peso No. ${addCero(boleta.numBoleta)}`, alignment: 'center', bold: true,  margin: [0, 5, 0, 2] },
+    { text: [
+      { text: 'Boleta de Peso ', bold: true },
+      { text: `No. ${addCero(boleta.numBoleta)}`, color: 'red', bold: true }
+    ], alignment: 'center', bold: true,  margin: [0, 5, 0, 2] },
     { text: `Proceso: ${PROCESO} - ${boleta.movimiento} / Duración del Proceso ${TIEMPOESTADIA}`, alignment: 'center', margin: [0, 1, 0, 15] },
     {
       canvas: [{ type: 'line', x1: 36, y1: 0, x2: 576, y2: 0, lineWidth: 1 }]
@@ -846,7 +849,10 @@ function generarContenidoTercioCartaReimpresion(copia, esPrimera = false, colors
       absolutePosition: { x: 80, y: 130 },
     },
     { text: 'BENEFICIO DE ARROZ PROGRESO, S.A.', alignment: 'center', bold: true, margin: [0, 15, 0, 0]  },
-    { text: `Boleta de Peso No. ${addCero(boleta.numBoleta)}`, alignment: 'center', bold: true,  margin: [0, 5, 0, 2] },
+    { text: [
+      { text: 'Boleta de Peso ', bold: true },
+      { text: `No. ${addCero(boleta.numBoleta)}`, color: 'red', bold: true }
+    ], alignment: 'center', bold: true,  margin: [0, 5, 0, 2] },
     { text: `Proceso: ${PROCESO} - ${boleta.movimiento} / Duración del Proceso ${TIEMPOESTADIA}`, alignment: 'center', margin: [0, 1, 0, 15] },
     {
       canvas: [{ type: 'line', x1: 36, y1: 0, x2: 576, y2: 0, lineWidth: 1 }]
