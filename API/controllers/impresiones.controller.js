@@ -1019,37 +1019,13 @@ const generarCantidadCopias = (boleta) => {
   const { idMovimiento, idProducto, boletaType, idEmpresa, idSocio, } = boleta
   const arrContenerizados =  [4, 5, 6, 15, 16]
   const arrSubproductos = [2, 7, 8, 9, 10,21]
-  const arrExtras = [27, 28, 29, 30, 31, 32, 33, 34]
+  const arrExtras = [1, 27, 28, 29, 30, 31, 32, 33, 34]
+  const arrTraslados = [10, 11]
+  const todasLasCopias = [11, 17]
+  const paseDeSalida = [18, 23]
 
-  /* Clientes Planta */
-  if ((boletaType==3 || boletaType==4) && (idProducto !=24 && idProducto!=25 && idMovimiento!=12)){
-    return ['o']
-  }
-
-  /* Traslados */
-  if (idMovimiento == 10 || idMovimiento == 11) {
+  if (arrTraslados.includes(idMovimiento)) {
     return ['o', 'p']
-  }
-
-  /* Productores */ 
-  if (idProducto == 17) {
-    return ['o', 'g', 'p', 'y']
-  }
-
-
-  /* Servicio Bascula */
-  if (idMovimiento==12){
-    return ['o', 'g', 'y']
-  }
-
-  /* Subproductos / Casulla */
-  if (idProducto==11) {
-    return ['o', 'g', 'p', 'y']
-  }
-
-  /* Motoristas de Baprosa Detalle y Mayoreo */
-  if (idEmpresa==1 || idEmpresa==1015) {
-    return ['o']
   }
 
   /* Servcio Contratado de Baprosa */
@@ -1057,32 +1033,37 @@ const generarCantidadCopias = (boleta) => {
     return ['o', 'g', 'y']
   }
 
-  /* Conetenerizados: Arroz Oro y Escaldado */
-  if(arrContenerizados.includes(idProducto)) {
-    return ['o', 'y', 'p']
-  }
-
-  /* Importaciones a Granel */
-  if (idProducto==18) {
-    return ['o', 'y']
-  }
-
-  /* Productos extras */
   if(arrExtras.includes(idProducto)){
     return ['o']
   }
 
-  /* Subproductos que no sean Casulla */
+  if (paseDeSalida.includes(idProducto)) {
+    return ['o', 'y']
+  }
+
+  if(arrContenerizados.includes(idProducto)) {
+    return ['o', 'y', 'p']
+  }
+
   if(arrSubproductos.includes(idProducto)) {
     return ['o', 'g', 'p']
   }
 
-  /* Se realizaran microcambios con la nueva tabla de prioridad */
+  if (todasLasCopias.includes(idProducto)) {
+    return ['o', 'g', 'p', 'y']
+  }
 
-  /**
-   * Default 4 impresiones 
-   */
-  return ['o', 'g', 'p', 'y'];
+  /* Clientes Planta */
+  if ((boletaType==3 || boletaType==4) && (idProducto !=24 && idProducto!=25 && idMovimiento!=12)){
+    return ['o']
+  }
+
+  /* Servicio Bascula */
+  if (idMovimiento==12){
+    return ['o', 'g', 'y']
+  }
+
+  return ['o'];
 }
 
 
