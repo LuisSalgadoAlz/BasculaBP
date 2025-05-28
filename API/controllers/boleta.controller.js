@@ -1,7 +1,7 @@
 const db = require("../lib/prisma");
 const dotenv = require("dotenv");
 const jwt = require("jsonwebtoken");
-const { imprimirEpson, imprimirQRTolva, comprobanteDeCarga, imprimirWorkForce, imprimirTikets } = require("./impresiones.controller");
+const { imprimirEpson, imprimirQRTolva, comprobanteDeCarga, imprimirWorkForce, imprimirTikets, getReimprimirWorkForce } = require("./impresiones.controller");
 const enviarCorreo = require("../utils/enviarCorreo");
 const {alertaDesviacion, alertaCancelacion} = require("../utils/cuerposCorreo");
 const {setLogger} = require('../utils/logger');
@@ -1265,13 +1265,14 @@ const getBoletasHistorial = async (req, res) => {
 const getReimprimir = async (req, res) => {
   try {
     const id = req.params.id;
+    const type = req.query.type;
     const boleta = await db.boleta.findUnique({
       where: {
         id: parseInt(id),
       },
     });
-
-    imprimirEpson(boleta);
+    const types_colors = {yellow:['y'], pink:['p'], green:['g']}
+    getReimprimirWorkForce(boleta, types_colors[type]);
     res.send({ msg: "Impresion correcta" });
   } catch (err) {
     console.log(err);

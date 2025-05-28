@@ -248,10 +248,10 @@ export const postBoletasCasulla = async (boleta, setIsLoading) => {
   }
 };
 
-export const getPrintEpson = async (id, setIsLoading) => {
+export const getPrintEpson = async (id, setIsLoading, types) => {
   try {
     setIsLoading(true)
-    const response = await fetch(`${URLHOST}boletas/historial/${id}`, {
+    const response = await fetch(`${URLHOST}boletas/historial/${id}?type=${types}`, {
       method: "GET",
       headers: {
         Authorization: Cookies.get('token'),
@@ -269,7 +269,7 @@ export const getPrintEpson = async (id, setIsLoading) => {
   } finally{
     setTimeout(() => {  
       setIsLoading(false)
-    }, 10000);
+    }, 2000);
   }
 };
 

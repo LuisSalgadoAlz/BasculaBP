@@ -11,6 +11,7 @@ import { getPrintEpson, getToleranciaValue } from "../../hooks/formDataBoletas";
 import { CiLock } from "react-icons/ci";
 import { CiUnlock } from "react-icons/ci";
 import { IoScaleOutline } from 'react-icons/io5';
+import { Toaster, toast } from 'sonner';
 
 const formInputSelect = ['Transportes', 'Placa', 'Motoristas']
 
@@ -457,7 +458,9 @@ export const ModalOut = (props) => {
 
 export const VisualizarBoletas = (props) => {
   const { hdlClose, boletas, isLoad } = props;
-  const [isLoadImpresion, setIsLoadImpresion] = useState(false)
+  const [isLoadingYellow, setIsLoadingYellow] = useState(false)
+  const [isLoadingGreen, setIsLoadingGreen] = useState(false)
+  const [isLoadingPink, setIsLoadingPink] = useState(false)
   const opt = ['Entrada de material', 'Salida de material']
   const isNullData =  'Vacio'
   const pesoTolerado = boletas?.pesoTeorico * boletas?.porTolerancia
@@ -468,12 +471,19 @@ export const VisualizarBoletas = (props) => {
     window.open(url, '_blank');
   }
 
-  const handlePrint = async() => {
-    const response = await getPrintEpson(boletas?.id, setIsLoadImpresion)
-    console.log('Imprimiendo...')
-    if(response?.msg) {
-      console.log('Impresion exitosa')
-    }
+  const handlePrintYellow = async() => {
+    const response = await getPrintEpson(boletas?.id, setIsLoadingYellow, 'yellow')
+    if(response?.msg) toast.success('SE IMPRIMIO CORRECTAMENTE BOLETA AMARILLA');
+  } 
+
+  const handlePrintGreen = async() => {
+    const response = await getPrintEpson(boletas?.id, setIsLoadingGreen, 'green')
+    if(response?.msg) toast.success('SE IMPRIMIO CORRECTAMENTE BOLETA VERDE')
+  } 
+
+  const handlePrintPink = async() => {
+    const response = await getPrintEpson(boletas?.id, setIsLoadingPink, 'pink')
+    if(response?.msg) toast.success('SE IMPRIMIO CORRECTAMENTE BOLETA ROSADA')
   } 
 
   const tiempoDeEstadia = () => {
@@ -590,11 +600,13 @@ export const VisualizarBoletas = (props) => {
           <div className="flex items-center justify-end gap-2 mt-4">
             {boletas?.estado !='Cancelada' && (
               <>
-                <button className={buttonClean} onClick={handleConvertPdf}>Convertir a PDF</button>
-                <ButtonPrint name={'Imprimir'} fun={handlePrint} isLoad={isLoadImpresion}/>
+                <ButtonPrint name={'Imprimir'} fun={handlePrintYellow} isLoad={isLoadingYellow} color={`bg-yellow-500`}/>
+                <ButtonPrint name={'Imprimir'} fun={handlePrintPink} isLoad={isLoadingPink} color={`bg-pink-500`}/>
+                <ButtonPrint name={'Imprimir'} fun={handlePrintGreen} isLoad={isLoadingGreen} color={`bg-green-500`}/> 
               </>
             )} 
           </div>
+          <Toaster position="top-center" toastOptions={{style: { background: '#955e37', color: 'white'},}}/>
         </div>
       )}
       </motion.div>
