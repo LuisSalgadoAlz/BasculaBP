@@ -1078,47 +1078,51 @@ const generarCantidadCopias = (boleta) => {
  *  TODO - > 1/2 de carta pageSize: { width: 612, height: 396 }
  */
 const imprimirWorkForce = async(boleta) => {
-  const colors = {o:'white', g: '#98FB98', p: 'pink', y:'yellow'}
-  const despachador = await db.usuarios.findUnique({where: {usuarios:boleta.usuario}})
-  const copias = generarCantidadCopias(boleta);
+  try{
+    const colors = {o:'white', g: '#98FB98', p: 'pink', y:'yellow'}
+    const despachador = await db.usuarios.findUnique({where: {usuarios:boleta.usuario}})
+    const copias = generarCantidadCopias(boleta);
 
-  const fonts = {
-    Courier: {
-      normal: 'Courier',
-      bold: 'Courier-Bold',
-      italics: 'Courier-Oblique',
-      bolditalics: 'Courier-BoldOblique'
-    }
-  };
+    const fonts = {
+      Courier: {
+        normal: 'Courier',
+        bold: 'Courier-Bold',
+        italics: 'Courier-Oblique',
+        bolditalics: 'Courier-BoldOblique'
+      }
+    };
 
-  const printer = new PdfPrinter(fonts);
-  const filePath = 'boleta_epson.pdf';
+    const printer = new PdfPrinter(fonts);
+    const filePath = 'boleta_epson.pdf';
 
-  const docDefinition = {
-    pageSize: { width: 612, height: 264 },
-    pageMargins: [2, 2, 2, 2],
-    defaultStyle: {
-      font: 'Courier',
-      fontSize: 8
-    },	
-    content: copias.flatMap((copia, i) => generarContenidoTercioCarta(copia, i === 0, colors, boleta, despachador.name))
-  };
+    const docDefinition = {
+      pageSize: { width: 612, height: 264 },
+      pageMargins: [2, 2, 2, 2],
+      defaultStyle: {
+        font: 'Courier',
+        fontSize: 8
+      },	
+      content: copias.flatMap((copia, i) => generarContenidoTercioCarta(copia, i === 0, colors, boleta, despachador.name))
+    };
 
-  const pdfDoc = printer.createPdfKitDocument(docDefinition);
-  const writeStream = fs.createWriteStream(filePath);
+    const pdfDoc = printer.createPdfKitDocument(docDefinition);
+    const writeStream = fs.createWriteStream(filePath);
 
-  pdfDoc.pipe(writeStream);
-  pdfDoc.end();
+    pdfDoc.pipe(writeStream);
+    pdfDoc.end();
 
-  writeStream.on('finish', () => {
-    print(filePath, { printer: `WFBASCULA` })
-    .then(() => {
-        console.log('Imprimiendo...') 
-    })
-    .catch(error => {
-        return true
-    })
-  });
+    writeStream.on('finish', () => {
+      print(filePath, { printer: `WFBASCULA` })
+      .then(() => {
+          console.log('Imprimiendo...') 
+      })
+      .catch(error => {
+          return true
+      })
+    });
+  }catch(err){
+    console.log(err)
+  }
 };
 
 /**
@@ -1126,47 +1130,51 @@ const imprimirWorkForce = async(boleta) => {
  */
 
 const getReimprimirWorkForce = async(boleta, type) => {
-  const colors = {o:'white', g: '#98FB98', p: 'pink', y:'yellow'}
-  const despachador = await db.usuarios.findUnique({where: {usuarios:boleta.usuario}})
-  const copias = type
+  try{
+    const colors = {o:'white', g: '#98FB98', p: 'pink', y:'yellow'}
+    const despachador = await db.usuarios.findUnique({where: {usuarios:boleta.usuario}})
+    const copias = type
 
-  const fonts = {
-    Courier: {
-      normal: 'Courier',
-      bold: 'Courier-Bold',
-      italics: 'Courier-Oblique',
-      bolditalics: 'Courier-BoldOblique'
-    }
-  };
+    const fonts = {
+      Courier: {
+        normal: 'Courier',
+        bold: 'Courier-Bold',
+        italics: 'Courier-Oblique',
+        bolditalics: 'Courier-BoldOblique'
+      }
+    };
 
-  const printer = new PdfPrinter(fonts);
-  const filePath = 'boleta_epson.pdf';
+    const printer = new PdfPrinter(fonts);
+    const filePath = 'boleta_epson.pdf';
 
-  const docDefinition = {
-    pageSize: { width: 612, height: 264 },
-    pageMargins: [2, 2, 2, 2],
-    defaultStyle: {
-      font: 'Courier',
-      fontSize: 8
-    },	
-    content: copias.flatMap((copia, i) => generarContenidoTercioCartaReimpresion(copia, i === 0, colors, boleta, despachador.name))
-  };
+    const docDefinition = {
+      pageSize: { width: 612, height: 264 },
+      pageMargins: [2, 2, 2, 2],
+      defaultStyle: {
+        font: 'Courier',
+        fontSize: 8
+      },	
+      content: copias.flatMap((copia, i) => generarContenidoTercioCartaReimpresion(copia, i === 0, colors, boleta, despachador.name))
+    };
 
-  const pdfDoc = printer.createPdfKitDocument(docDefinition);
-  const writeStream = fs.createWriteStream(filePath);
+    const pdfDoc = printer.createPdfKitDocument(docDefinition);
+    const writeStream = fs.createWriteStream(filePath);
 
-  pdfDoc.pipe(writeStream);
-  pdfDoc.end();
+    pdfDoc.pipe(writeStream);
+    pdfDoc.end();
 
-  writeStream.on('finish', () => {
-    print(filePath, { printer: `WFBASCULA` })
-    .then(() => {
-        console.log('Imprimiendo...') 
-    })
-    .catch(error => {
-        return true
-    })
-  });
+    writeStream.on('finish', () => {
+      print(filePath, { printer: `WFBASCULA` })
+      .then(() => {
+          console.log('Imprimiendo...') 
+      })
+      .catch(error => {
+          return true
+      })
+    });
+  }catch(err){
+    console.log(err)
+  }
 };
 
 module.exports = {
