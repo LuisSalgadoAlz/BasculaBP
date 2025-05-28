@@ -507,7 +507,7 @@ export const VisualizarBoletas = (props) => {
         <div className="w-full p-5">
           <div className="mb-1 flex items-center justify-between gap-7">
             <div>
-              <h2 className="text-2xl font-bold text-gray-800">Boleta - # {boletas?.id}</h2>
+              <h2 className="text-2xl font-bold text-gray-800">Boleta - # {boletas?.numBoleta}</h2>
               <p className="text-sm text-gray-500">Visualización general de la boleta</p>
             </div>
             <button className="text-4xl" onClick={hdlClose}><IoCloseSharp /></button>
