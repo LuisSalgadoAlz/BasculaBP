@@ -1,7 +1,7 @@
 const db = require("../lib/prisma");
 const dotenv = require("dotenv");
 const jwt = require("jsonwebtoken");
-const { imprimirEpson, imprimirQRTolva, comprobanteDeCarga, imprimirWorkForce } = require("./impresiones.controller");
+const { imprimirEpson, imprimirQRTolva, comprobanteDeCarga, imprimirWorkForce, imprimirTikets } = require("./impresiones.controller");
 const enviarCorreo = require("../utils/enviarCorreo");
 const {alertaDesviacion, alertaCancelacion} = require("../utils/cuerposCorreo");
 const {setLogger} = require('../utils/logger');
@@ -513,7 +513,7 @@ const postClientePlacaMoto = async (req, res) => {
     });
 
     if(idProducto===17 || idProducto===18) {
-      imprimirQRTolva(newBol)
+      imprimirTikets(newBol, despachador['name'])
     } 
     setLogger('BOLETA', 'AGREGAR BOLETA (ENTRADA DE DATOS)', req, null, 1, newBol.id)  
 
@@ -595,7 +595,7 @@ const postClientePlacaMotoComodin = async (req, res) => {
     });
 
     if(idProducto===17 || idProducto===18) {
-      imprimirQRTolva(newBol)
+      imprimirTikets(newBol, despachador['name'])
     }
 
     setLogger('BOLETA', 'AGREGAR BOLETA (ENTRADA DE DATOS | COMODIN)', req, null, 1, newBol.id)  
