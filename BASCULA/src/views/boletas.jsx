@@ -5,7 +5,7 @@ import CardHeader from "../components/card-header";
 import { CancelarBoleta, ModalBoletas, ModalNormal, ModalOut, VisualizarBoletas } from "../components/boletas/formBoletas";
 import { initialSateDataFormSelet, initialStateFormBoletas, initialStateStats } from "../constants/boletas";
 import { formaterData, getAllDataForSelect, postBoletasNormal, getDataBoletas, getStatsBoletas, formaterDataNewPlaca, verificarDataNewPlaca, getDataParaForm, updateBoletaOut, verificarDataCompleto, postBoletasCasulla, getDataBoletasCompletadas, getDataBoletasPorID, updateCancelBoletas, verificarDataCasulla, getToleranciaValue } from "../hooks/formDataBoletas";
-import { ModalErr, ModalSuccess } from "../components/alerts";
+import { ModalErr, ModalReimprimirTicket, ModalSuccess } from "../components/alerts";
 import { AnimatePresence } from "framer-motion";
 
 const Boletas = () => {
@@ -32,6 +32,8 @@ const Boletas = () => {
   const [proceso, setProceso] = useState('')
   const [details, setDetails] = useState(false)
   const [dataDetails, setDataDetails] = useState()
+  const [modalPrintTicket, setModalPrintTicket] = useState(false)
+  const [infoTicket, setInfoTicket] = useState('')
   /**
    * Variables para la segunda parte
    */
@@ -268,6 +270,24 @@ const Boletas = () => {
     fechDataSeaSearch()
   }
   
+  /**
+   * Reimpresion ticket tolva
+   * !Trabajando aqui
+   */
+  const handleCloseModalPrintTicket = () => {
+    setModalPrintTicket(false)
+    setInfoTicket('')
+  }
+
+  const funReimprimir = (info) => {
+    setInfoTicket(info?.Placa)
+    setModalPrintTicket(true)
+  }
+
+  const handleClickPrintTicketTolva = () => {
+
+  }
+
   const fetchData = useCallback(() => {
     getAllDataForSelect(modalEspecial ? 1 : '', plc, formBoletas.Socios, formBoletas.Transportes, formBoletas.Motoristas, setDataSelects);
     getDataBoletas(setDataTable, setSsLoadTable, search, searchDate, pagination);
@@ -354,7 +374,14 @@ const Boletas = () => {
     handlePaginationCompletadas,
     hdlOpenDetails: handleOpenDetails,
     hdlCancel: handleCancelBoleta,
+    funReimprimir
   };
+
+  const modalPrintTicketProps = {
+    ticketNumber: infoTicket, 
+    hdClose: handleCloseModalPrintTicket, 
+    hdlSubmit: handleClickPrintTicketTolva, 
+  }
 
   return (
     <>
@@ -394,6 +421,7 @@ const Boletas = () => {
       <AnimatePresence>
         {details && (<VisualizarBoletas hdlClose={handleCloseDetails} boletas={dataDetails} isLoad={isLoadingViewBol}/>)}
         {cancelBol && (<CancelarBoleta boletas={idCancelBol} hdlClose={handleCloseCancelModal} hdlSubmitCancel={handleSubmitCancelBol} hdlChange={handleChangeCancelModal} isLoad={isLoadCancel}/>)}
+        {modalPrintTicket && <ModalReimprimirTicket {...modalPrintTicketProps} />}
       </AnimatePresence>
     </>
   );

@@ -597,6 +597,75 @@ const imprimirTikets = (boleta, despachador) => {
 }
 
 /**
+ * Reimpresion de lo de arriba
+ */
+
+const reImprimirTikets = (boleta, despachador) => {
+  try {
+    const { device, printer } = getPrinter();
+    const TITLE = boleta.idProducto === 17 ? 'RECIBO  DE GRANZA NACIONAL' : 'RECIBO DE GRANZA AMERICANA'
+    const LABEL = boleta.idProducto === 17 ? 'PRODUCTOR:' : 'MOTORISTA:';
+    const LABELVALUE = boleta.idProducto === 17 ? boleta.socio : boleta.motorista;
+    const PROCEDENCIA = boleta.idProducto === 17 ? boleta.origen : boleta.socio;
+
+    if (!device || !printer) {
+      console.log('No se pudo acceder al dispositivo de impresión')
+      return
+    }
+    const companyName = 'BENEFICIO DE ARROZ PROGRESO, S.A.';
+    const fecha = new Date().toLocaleString('es-ES');
+    
+    device.open((err) => {
+        if (err) {
+          console.log(err)
+        }
+      
+        // Configurar e imprimir la boleta
+        printer
+          .model('qsprinter')
+          .align('ct')
+          .encode('utf8')
+          .size(0, 0.5)
+          .text('--------------------------------')
+          .style('B')
+          .text(companyName)
+          .style('NORMAL')
+          .text('--------------------------------')
+          .align('ct')
+          .text(TITLE)
+          .text(`Reimpresión - ${fecha}`)
+          .text(` `)
+          .align('lt')
+          .text('------------------------------------------')
+          .tableCustom([
+            { text: LABEL, align: "LEFT", width: 0.4, style: 'B' }, 
+            { text: LABELVALUE, align: "RIGHT", width: 0.4 }
+          ])
+          .tableCustom([
+            { text: "PLACA:", align: "LEFT", width: 0.4, style: 'B' }, 
+            { text: boleta.placa, align: "RIGHT", width: 0.4 }
+          ])
+          .tableCustom([
+            { text: "PROCEDENCIA:", align: "LEFT", width: 0.4, style: 'B' }, 
+            { text: PROCEDENCIA, align: "RIGHT", width: 0.4 }
+          ])
+          .text('------------------------------------------')
+          .style(`NORMAL`)
+          .text(` `)
+          .align(`ct`)
+          .text(`________________________________`)
+          .text(`FIRMA: ${despachador}`)
+          .text(' ')
+          .size(0, 0.5)
+          .cut()
+          .close()
+      });
+  } catch (error) {
+    console.error('Error en el proceso de impresión:', error);
+  }
+}
+
+/**
  * Terminada
  * @param {*} boleta 
  * @param {*} despachador 
@@ -1189,4 +1258,5 @@ module.exports = {
   imprimirWorkForce, 
   imprimirTikets, 
   getReimprimirWorkForce,
+  reImprimirTikets
 };

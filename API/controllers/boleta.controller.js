@@ -1,7 +1,7 @@
 const db = require("../lib/prisma");
 const dotenv = require("dotenv");
 const jwt = require("jsonwebtoken");
-const { imprimirEpson, imprimirQRTolva, comprobanteDeCarga, imprimirWorkForce, imprimirTikets, getReimprimirWorkForce } = require("./impresiones.controller");
+const { imprimirEpson, imprimirQRTolva, comprobanteDeCarga, imprimirWorkForce, imprimirTikets, getReimprimirWorkForce, reImprimirTikets } = require("./impresiones.controller");
 const enviarCorreo = require("../utils/enviarCorreo");
 const {alertaDesviacion, alertaCancelacion} = require("../utils/cuerposCorreo");
 const {setLogger} = require('../utils/logger');
@@ -351,6 +351,7 @@ const getDataBoletas = async (req, res) => {
         motorista: true,
         socio: true,
         placa: true,
+        producto: true, 
         fechaInicio: true,
         proceso: true
       },
@@ -408,6 +409,7 @@ const getDataBoletas = async (req, res) => {
       Cliente: el.socio,
       Transporte: el.empresa,
       Motorista: el.motorista,
+      Producto: el.producto || 'N/A',
       Fecha: el.fechaInicio.toLocaleString(),
     }));
 
@@ -1279,6 +1281,22 @@ const getReimprimir = async (req, res) => {
   }
 };
 
+const getReimprimirTicket = async (req, res) => {
+  try {
+    const id = req.query.id;
+   /*  const boleta = await db.boleta.findUnique({
+      where: {
+        id: parseInt(id),
+      },
+    }); */
+/*     const despachador = await db.usuarios.findUnique({where: {usuarios:boleta.usuario}})
+ *//*     reImprimirTikets(boleta, despachador.name)
+ */    res.send({ msg: "Impresion correcta" });
+  } catch (err){
+    console.log(err)
+  }
+}
+
 /* Para el calentario */
 
 /**
@@ -1450,4 +1468,5 @@ module.exports = {
   updateCancelBoletas,
   getMovimientosYProductos,
   getConfigTolerancia, 
+  getReimprimirTicket
 };

@@ -1,12 +1,13 @@
-import { IoExitOutline } from "react-icons/io5";
-import { IoEyeSharp } from "react-icons/io5";
 import { FaArrowUp } from "react-icons/fa6";
 import { FaArrowDown } from "react-icons/fa6";
-import { IoWarningOutline } from "react-icons/io5";
+import { IoWarningOutline, IoTicketOutline, IoEyeSharp, IoExitOutline } from "react-icons/io5";
 import { GoIssueClosed } from "react-icons/go";
 import { MdOutlineCancel } from "react-icons/md";
+import { IoIosRemove } from "react-icons/io";
 
-export const TableBoletas = ({ datos = [{}], fun, tipo = 0, funCancel }) => {
+const TIKECTS_PRINTS = ['GRANZA BRUTA NACIONAL', 'GRANZA']
+
+export const TableBoletas = ({ datos = [{}], fun, tipo = 0, funCancel, funReimprimir }) => {
   return (
     <>
       <div className="relative overflow-x-auto min-h-[400px]">
@@ -19,6 +20,11 @@ export const TableBoletas = ({ datos = [{}], fun, tipo = 0, funCancel }) => {
                     {el}
                   </th>
                 )
+              )}
+              {tipo == 0 && (
+                <th scope="col" className="px-6 py-3 text-center">
+                  Reimprimir
+                </th>
               )}
               {tipo == 0 && (
                 <th scope="col" className="px-6 py-3 text-center">
@@ -82,6 +88,28 @@ export const TableBoletas = ({ datos = [{}], fun, tipo = 0, funCancel }) => {
                         )}
                       </td>
                     )
+                )}
+                {tipo == 0 && (
+                  <td className="py-3 text-center">
+                    {TIKECTS_PRINTS.includes(fila?.Producto) ? (
+                      <button
+                        className="font-medium text-gray-800 hover:underline text-center"
+                        onClick={() => funReimprimir(fila)}
+                      >
+                        <span className="text-center">
+                          <IoTicketOutline className="text-2xl" />
+                        </span>
+                      </button>
+                    ): (
+                      <button
+                        className="font-medium text-gray-800 hover:underline text-center"
+                      >
+                        <span className="text-center">
+                          <IoIosRemove className="text-2xl" />
+                        </span>
+                      </button>
+                    )}
+                  </td>
                 )}
                 {tipo == 0 && (
                   <td className="py-3 text-center">

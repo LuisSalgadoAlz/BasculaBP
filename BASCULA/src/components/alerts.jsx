@@ -484,3 +484,33 @@ export const SupportModal = ({ hdClose }) => {
     </motion.div>
   );
 };
+
+export const ModalReimprimirTicket = ({ ticketNumber, hdClose, hdlSubmit }) => {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-opa-50">
+      <div className="bg-white p-6 rounded-2xl shadow-xl max-w-sm border border-gray-200">
+        <h2 className="text-xl font-bold text-gray-800 mb-4">Reimprimir Ticket</h2>
+        <p className="text-gray-600">
+          ¿Está seguro que desea reimprimir el ticket de tolva placa:  
+          <span className="text-[#5A3F27] font-semibold"> {ticketNumber}</span>?
+        </p>
+        <div className="mt-6 flex justify-end gap-2">
+          <button
+            onClick={hdClose}
+            aria-label="Cancelar reimpresión"
+            className="px-4 py-2 text-gray-400 rounded-lg transition-transform duration-300 ease-in-out hover:scale-105"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={hdlSubmit}
+            aria-label="Confirmar reimpresión"
+            className="px-4 py-2 text-white bg-[#5A3F27] rounded-lg transition-transform duration-300 ease-in-out hover:scale-105"
+          >
+            Reimprimir
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
