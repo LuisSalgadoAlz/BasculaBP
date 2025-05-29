@@ -1034,6 +1034,10 @@ const generarCantidadCopias = (boleta) => {
     return ['o', 'p']
   }
 
+  if (idMovimiento==13){
+    return ['o', 'y']
+  }
+
   /* Servcio Contratado de Baprosa */
   if (idSocio==1 && (idEmpresa !=1 && idEmpresa !=1015 && idEmpresa!=1014) ) {
     return ['o', 'g', 'y']
