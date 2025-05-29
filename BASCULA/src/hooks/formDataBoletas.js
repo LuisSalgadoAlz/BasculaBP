@@ -531,9 +531,11 @@ export const verificarDataCompleto = (funError, data, setMsg, pesoIn) => {
   }
 
   if(proceso == 1 && parseFloat(pesoIn)>=parseFloat(pesoFinal)){
-    setMsg('Peso final debe ser mayor al peso de inicio')
-    funError(true)
-    return false
+    if (idMovimiento!=13 && idMovimiento!=12) {
+      setMsg('Peso final debe ser mayor al peso de inicio')
+      funError(true)
+      return false
+    }
   }
   
   if (!idCliente || !idEmpresa || !idMotorista || !idMovimiento || !idProducto) {
