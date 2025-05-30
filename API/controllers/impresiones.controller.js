@@ -1093,7 +1093,7 @@ function generarContenidoMediaCarta(copia, esPrimera = false, colors, boleta, de
 const generarCantidadCopias = (boleta) => {
   const { idMovimiento, idProducto, boletaType, idEmpresa, idSocio, } = boleta
   const arrContenerizados =  [4, 5, 6, 15, 16]
-  const arrSubproductos = [2, 7, 8, 9, 10,21]
+  const arrSubproductos = [2, 7, 8, 9, 10, 21, 35]
   const arrExtras = [1, 27, 28, 29, 30, 31, 32, 33, 34]
   const arrTraslados = [10, 11]
   const todasLasCopias = [11, 17]
