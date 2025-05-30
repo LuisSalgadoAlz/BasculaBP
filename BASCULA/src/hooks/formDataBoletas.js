@@ -605,6 +605,21 @@ export const verificarDataCompleto = (funError, data, setMsg, pesoIn) => {
     return false
   }
 
+  /**
+   * Parte de las direcciones
+   */
+  if(proceso==1 && !idDestino && (idMovimiento!=11 && idMovimiento!=10)){
+    setMsg('Ingrese todos los datos de direcciones.')
+    funError(true)
+    return false
+  }
+
+  if((idMovimiento==11 || idMovimiento==10) && (!idTrasladoDestino || !idTrasladoOrigen)){
+    setMsg('Ingrese todos los datos de direcciones.')
+    funError(true)
+    return false
+  }
+
   return true
 }
 
