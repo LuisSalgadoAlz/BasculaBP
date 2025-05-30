@@ -1284,15 +1284,21 @@ const getReimprimir = async (req, res) => {
 const getReimprimirTicket = async (req, res) => {
   try {
     const id = req.query.id;
-   /*  const boleta = await db.boleta.findUnique({
+    const boleta = await db.boleta.findUnique({
       where: {
         id: parseInt(id),
       },
-    }); */
-/*     const despachador = await db.usuarios.findUnique({where: {usuarios:boleta.usuario}})
- *//*     reImprimirTikets(boleta, despachador.name)
- */    res.send({ msg: "Impresion correcta" });
+    });
+    const despachador = await db.usuarios.findUnique({where: {usuarios:boleta.usuario}})
+    try {
+      reImprimirTikets(boleta, despachador.name)
+      res.send({ msg: "Impresion correcta" });
+    }catch(err) {
+      console.log(`Error al reimprimir ticket de tolva`)
+      res.send({ msgErr: "No se pudo realizar la reimpresión del ticket" });
+    }
   } catch (err){
+    res.send({ msgErr: "No se pudo realizar la reimpresión del ticket" });
     console.log(err)
   }
 }

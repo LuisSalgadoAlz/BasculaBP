@@ -4,7 +4,7 @@ import ViewBoletas from "../components/boletas/viewBoletas";
 import CardHeader from "../components/card-header";
 import { CancelarBoleta, ModalBoletas, ModalNormal, ModalOut, VisualizarBoletas } from "../components/boletas/formBoletas";
 import { initialSateDataFormSelet, initialStateFormBoletas, initialStateStats } from "../constants/boletas";
-import { formaterData, getAllDataForSelect, postBoletasNormal, getDataBoletas, getStatsBoletas, formaterDataNewPlaca, verificarDataNewPlaca, getDataParaForm, updateBoletaOut, verificarDataCompleto, postBoletasCasulla, getDataBoletasCompletadas, getDataBoletasPorID, updateCancelBoletas, verificarDataCasulla, getToleranciaValue } from "../hooks/formDataBoletas";
+import { formaterData, getAllDataForSelect, postBoletasNormal, getDataBoletas, getStatsBoletas, formaterDataNewPlaca, verificarDataNewPlaca, getDataParaForm, updateBoletaOut, verificarDataCompleto, postBoletasCasulla, getDataBoletasCompletadas, getDataBoletasPorID, updateCancelBoletas, verificarDataCasulla, getToleranciaValue, getReimprimirTicketTolva } from "../hooks/formDataBoletas";
 import { ModalErr, ModalReimprimirTicket, ModalSuccess } from "../components/alerts";
 import { AnimatePresence } from "framer-motion";
 
@@ -34,6 +34,7 @@ const Boletas = () => {
   const [dataDetails, setDataDetails] = useState()
   const [modalPrintTicket, setModalPrintTicket] = useState(false)
   const [infoTicket, setInfoTicket] = useState('')
+  const [loadingPrintTicket, setLoadingPrintTicket] = useState(false)
   /**
    * Variables para la segunda parte
    */
@@ -280,12 +281,24 @@ const Boletas = () => {
   }
 
   const funReimprimir = (info) => {
-    setInfoTicket(info?.Placa)
+    setInfoTicket(info)
     setModalPrintTicket(true)
   }
 
-  const handleClickPrintTicketTolva = () => {
-
+  const handleClickPrintTicketTolva = async() => {
+    const response = await getReimprimirTicketTolva(infoTicket?.Id, setLoadingPrintTicket)
+    if (response.msg){
+      setSuccess(true)
+      setMsg(response.msg)
+      setModalPrintTicket(false)
+      setInfoTicket('')
+      return
+    }
+    if(response.msgErr){
+      setErr(true)
+      setMsg(response.msgErr)
+      return
+    }
   }
 
   const fetchData = useCallback(() => {
@@ -378,7 +391,7 @@ const Boletas = () => {
   };
 
   const modalPrintTicketProps = {
-    ticketNumber: infoTicket, 
+    ticketNumber: infoTicket?.Placa, 
     hdClose: handleCloseModalPrintTicket, 
     hdlSubmit: handleClickPrintTicketTolva, 
   }

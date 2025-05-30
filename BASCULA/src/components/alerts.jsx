@@ -487,7 +487,7 @@ export const SupportModal = ({ hdClose }) => {
 
 export const ModalReimprimirTicket = ({ ticketNumber, hdClose, hdlSubmit }) => {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-opa-50">
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-opa-50">
       <div className="bg-white p-6 rounded-2xl shadow-xl max-w-sm border border-gray-200">
         <h2 className="text-xl font-bold text-gray-800 mb-4">Reimprimir Ticket</h2>
         <p className="text-gray-600">

@@ -633,7 +633,7 @@ const reImprimirTikets = (boleta, despachador) => {
           .text('--------------------------------')
           .align('ct')
           .text(TITLE)
-          .text(`Reimpresión - ${fecha}`)
+          .text(`REIMPRESION - ${fecha}`)
           .text(` `)
           .align('lt')
           .text('------------------------------------------')
