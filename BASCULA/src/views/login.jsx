@@ -2,7 +2,7 @@ import { useState } from "react";
 import { BiUser, BiLockAlt } from "react-icons/bi";
 import ModalError from "../components/modals";
 import { useNavigate } from "react-router";
-import { URLHOST } from '../constants/global'
+import { AUTH_CONFIG, TOKEN_EXPIRY_MINUTES, URLHOST } from '../constants/global'
 import Cookies from 'js-cookie';
 
 const Login = () => {
@@ -34,25 +34,23 @@ const Login = () => {
       });
   
       const res = await token.json();
-  
-      if (res.token && res.type=='BASCULA') {
-        const expirationDate = new Date();
-        expirationDate.setMinutes(expirationDate.getMinutes() + 30); // Expira en 30 minutos
-        Cookies.set('token', res.token, { expires: expirationDate });
-        Cookies.set('type', res.type, { expires: expirationDate });
-        Cookies.set('name', res.name, { expires: expirationDate });
-        navigate('/dashboard')  
-      }
 
-      if (res.token && res.type=='ADMINISTRADOR') {
+      const setAuthCookies = (token, type, name) => {
         const expirationDate = new Date();
-        expirationDate.setMinutes(expirationDate.getMinutes() + 30); // Expira en 30 minutos
-        Cookies.set('token', res.token, { expires: expirationDate });
-        Cookies.set('type', res.type, { expires: expirationDate });
-        Cookies.set('name', res.name, { expires: expirationDate });
-        navigate('/admin/dashboard')  
-      }
+        expirationDate.setMinutes(expirationDate.getMinutes() + TOKEN_EXPIRY_MINUTES);
+        
+        const cookieOptions = { expires: expirationDate };
+        
+        Cookies.set('token', token, cookieOptions);
+        Cookies.set('type', type, cookieOptions);
+        Cookies.set('name', name, cookieOptions);
+      };
 
+      // Código principal simplificado
+      if (res.token && AUTH_CONFIG[res.type]) {
+        setAuthCookies(res.token, res.type, res.name);
+        navigate(AUTH_CONFIG[res.type]);
+      }
   
       if (res.msg) {
         setMsg(res.msg);
