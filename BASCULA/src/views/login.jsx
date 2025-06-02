@@ -40,6 +40,7 @@ const Login = () => {
         expirationDate.setMinutes(expirationDate.getMinutes() + 30); // Expira en 30 minutos
         Cookies.set('token', res.token, { expires: expirationDate });
         Cookies.set('type', res.type, { expires: expirationDate });
+        Cookies.set('name', res.name, { expires: expirationDate });
         navigate('/dashboard')  
       }
 
@@ -48,6 +49,7 @@ const Login = () => {
         expirationDate.setMinutes(expirationDate.getMinutes() + 30); // Expira en 30 minutos
         Cookies.set('token', res.token, { expires: expirationDate });
         Cookies.set('type', res.type, { expires: expirationDate });
+        Cookies.set('name', res.name, { expires: expirationDate });
         navigate('/admin/dashboard')  
       }
 

@@ -32,7 +32,8 @@ const loginUsers = async (req, res) => {
                     
                     return res.json({
                         token: token, 
-                        type: usuario.tipo
+                        type: usuario.tipo, 
+                        name: usuario.name,
                     })
                 }
                 return res.status(401).json({msg: 'Credenciales incorrectas'})

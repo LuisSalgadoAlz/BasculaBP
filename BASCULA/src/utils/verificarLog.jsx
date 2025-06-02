@@ -19,6 +19,7 @@ const VerificarLog = ({Children, redirectTo='/', userType}) => {
             expirationDate.setMinutes(expirationDate.getMinutes() + 30);
             Cookies.set('token', Cookies.get('token'), { expires: expirationDate });
             Cookies.set('type', Cookies.get('type'), { expires: expirationDate });
+            Cookies.set('name', Cookies.get('name'), { expires: expirationDate });
             return
         }
         <ModalErr name={'Session Expiro!'} />
