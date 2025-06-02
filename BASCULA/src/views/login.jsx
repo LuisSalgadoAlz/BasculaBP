@@ -38,15 +38,12 @@ const Login = () => {
       const setAuthCookies = (token, type, name) => {
         const expirationDate = new Date();
         expirationDate.setMinutes(expirationDate.getMinutes() + TOKEN_EXPIRY_MINUTES);
-        
         const cookieOptions = { expires: expirationDate };
-        
         Cookies.set('token', token, cookieOptions);
         Cookies.set('type', type, cookieOptions);
         Cookies.set('name', name, cookieOptions);
       };
 
-      // Código principal simplificado
       if (res.token && AUTH_CONFIG[res.type]) {
         setAuthCookies(res.token, res.type, res.name);
         navigate(AUTH_CONFIG[res.type]);
