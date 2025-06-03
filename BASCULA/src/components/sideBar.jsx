@@ -48,6 +48,19 @@ const RUTAS_ADMIN = [
   },
 ];
 
+const RUTAS_TOLVA = [
+  {
+    path: "/tolva/dashboard",
+    name: "Dashboard",
+    icon: <MdOutlineDashboard />,
+  },
+  {
+    path: "/tolva/registros",
+    name: "Registros",
+    icon: <AiOutlineFileExclamation />,
+  },
+]
+
 export const SideBar = ({ modo = "extendido", altura = 500 }) => {
   const navigate = useNavigate();
   const [ShowModalSupport, setShowModalSupport] = useState()
@@ -311,7 +324,6 @@ export const SideBar = ({ modo = "extendido", altura = 500 }) => {
   );
 };
 
-
 export const SideBarAdmin = ({ modo = "extendido", altura = 500 }) => {
   const navigate = useNavigate();
 
@@ -424,6 +436,153 @@ export const SideBarAdmin = ({ modo = "extendido", altura = 500 }) => {
 
       {/* Botón Cerrar Sesión */}
             <div
+        className={`${
+          !isExtendido && altura <= 350 ? "block" : "mt-auto"
+        }`}
+      > 
+        <div className="px-3 w-full relative">
+          {/* Botón principal del usuario */}
+          <button
+            className={`w-full flex items-center gap-3 px-3 py-3 text-sm text-white hover:bg-white/10 rounded-lg transition-all duration-200 ${
+              !isExtendido ? "justify-center px-2" : ""
+            } ${isDropdownOpen ? 'bg-white/10' : ''}`}
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+          >
+            {/* Avatar */}
+            <div className="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden ring-2 ring-white/20">
+              <img 
+                src="/api/placeholder/36/36" 
+                alt="Avatar" 
+                className="w-full h-full object-cover rounded-full"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'flex';
+                }}
+              />
+              <PiUserCircleFill className="text-white/80 text-xl hidden" />
+            </div>
+            
+            {isExtendido && (
+              <>
+                <span className="flex-1 text-left font-medium text-white">{Cookies.get('name')}</span>
+                <PiCaretDownFill 
+                  className={`text-xs text-white/70 transition-all duration-200 ${
+                    isDropdownOpen ? 'rotate-180' : ''
+                  }`} 
+                />
+              </>
+            )}
+          </button>
+
+          {/* Dropdown Menu */}
+          {isDropdownOpen && isExtendido && (
+            <div className="absolute bottom-full left-3 right-3 mb-3 bg-[#725033] border border-[#725033] rounded-lg shadow-xl z-50 backdrop-blur-sm">
+              <button
+                className="w-full px-4 py-3.5 text-left text-sm text-slate-200 hover:bg-slate-600 hover:text-white transition-all duration-150 flex items-center gap-3"
+                onClick={()=>console.log("Holaaaaaaa")}
+              >
+                <PiUserCircleFill className="text-base opacity-70" />
+                Perfil
+              </button>
+              
+              <div className="border-t border-slate-600 my-1" />
+              
+              <button
+                className="w-full px-4 py-3.5 text-left text-sm text-slate-200 hover:bg-red-600 hover:text-white transition-all duration-150 flex items-center gap-3"
+                onClick={handleClose}
+              >
+                <PiSignOutFill className="text-base opacity-70" />
+                Cerrar Sesión
+              </button>
+            </div>
+          )}
+
+          {/* Overlay para cerrar el dropdown */}
+          {isDropdownOpen && (
+            <div 
+              className="fixed inset-0 z-40" 
+              onClick={() => setIsDropdownOpen(false)}
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const SideBarTolva = ({ modo = "extendido", altura = 500 }) => {
+  const navigate = useNavigate();
+
+  const handleClose = () => {
+    Cookies.remove("token");
+    navigate("/");
+  };
+
+  const isExtendido = modo === "extendido";
+
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  return (
+    <div
+      className={`${
+        isExtendido ? "w-[290px]" : "w-[80px]"
+      } sidebar p-1 max-sm:hidden min-md:visible flex flex-col`}
+    >
+      {/* Header */}
+      <div data-sidebar="header" className="flex flex-col gap-2 p-2">
+        <div
+          className={`flex items-center ${
+            isExtendido ? "gap-2 px-2 py-2" : "gap-2 px-4 py-2"
+          }`}
+        >
+          <MdOutlineScale className="text-2xl text-amber-300 mt-1" />
+          {isExtendido && (
+            <div className="flex-1">
+              <h2 className="text-lg font-bold text-white">Baprosa</h2>
+              <p className="text-xs text-gray-400">
+                Asignación Tolva
+              </p>
+            </div>
+          )}
+        </div>
+        {isExtendido && (
+          <div className="px-2 py-2">
+            <input
+              type="text"
+              className="block w-full p-2 text-white border border-[#725033] rounded-md bg-[#5A3F27] text-sm focus:border-blue-500"
+              placeholder="Buscar..."
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Rutas principales */}
+      <div className="p-2">
+        <ul className="flex w-full flex-col gap-1 px-2">
+          {isExtendido && <h1 className="px-3 text-sm text-gray-300">Tolva</h1>}
+          {RUTAS_TOLVA.map((data, key) => (
+            <div key={key} className="relative group w-full">
+              <NavLink
+                to={data.path}
+                className="flex items-center gap-x-3 rounded-md px-3 py-2 text-sm font-medium text-white"
+              >
+                <span className="text-lg">{data.icon}</span>
+                {isExtendido && <span className="flex-1">{data.name}</span>}
+              </NavLink>
+
+              {!isExtendido && (
+                <div className="absolute left-full top-1/2 -translate-y-1/2 ml-6 hidden group-hover:block sidebar text-white text-xs px-8 py-2 rounded shadow-lg z-10 whitespace-nowrap">
+                  {data.name}
+                </div>
+              )}
+            </div>
+          ))}
+        </ul>
+        <hr className="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700" />
+      </div>
+
+      {/* Botón Cerrar Sesión */}
+      <div
         className={`${
           !isExtendido && altura <= 350 ? "block" : "mt-auto"
         }`}
