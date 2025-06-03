@@ -798,13 +798,13 @@ function generarContenidoTercioCarta(copia, esPrimera = false, colors, boleta, d
     { canvas: [ { type: 'rect', x: 0, y: 0, w: 10, h: 250, color: colors[copia] }], absolutePosition: { x: 98, y: 2 } },
     { canvas: [ { type: 'rect', x: 0, y: 0, w: 608, h: 10, color: colors[copia], }], absolutePosition: { x: 2, y: 252 } },
     {
-      text: esPrimera ? '' : "C O P I A",
+      text: esPrimera ? 'O R I G I N A L' : "C O P I A",
       color: 'gray',
       opacity: 0.2  ,
       bold: true,
       italics: true,
       fontSize: 40,
-      absolutePosition: { x: 195, y: 130 },
+      absolutePosition: { x: esPrimera ? 120 : 195, y: 130 },
     },
     { text: 'BENEFICIO DE ARROZ PROGRESO, S.A.', alignment: 'center', bold: true, margin: [0, 15, 0, 0]  },
     { text: [
@@ -1236,15 +1236,15 @@ const getReimprimirWorkForce = async(boleta, type) => {
     pdfDoc.pipe(writeStream);
     pdfDoc.end();
 
-    writeStream.on('finish', () => {
-      print(filePath, { printer: `WFBASCULA` })
-      .then(() => {
-          console.log('Imprimiendo...') 
-      })
-      .catch(error => {
-          return true
-      })
-    });
+      writeStream.on('finish', () => {
+        print(filePath, { printer: `WFBASCULA` })
+        .then(() => {
+            console.log('Imprimiendo...') 
+        })
+        .catch(error => {
+            return true
+        })
+      });
   }catch(err){
     console.log(err)
   }
