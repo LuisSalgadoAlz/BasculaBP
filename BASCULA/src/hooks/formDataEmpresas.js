@@ -383,7 +383,7 @@ export const verificarDataVehiculos = (funErr, data, setMsg) => {
   /* Placas */
   if (!regexPlca.test(placa) || placa == "") {
     funErr(true)
-    setMsg('placa invalida. Formatos validos (particulares: 3 letras y 4 números | comerciales: 1 letra C, O o D + 6 números).')
+    setMsg('Placa inválida. Formatos válidos: Honduras (ABC1234 o C123456), El Salvador y Nicaragua (una letra seguida de 6 números, como M123456), Guatemala (123ABC o P123ABC).');
     return false
   }
   
