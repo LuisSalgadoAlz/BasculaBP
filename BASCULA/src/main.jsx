@@ -5,6 +5,7 @@ import "./index.css";
 import VerificarLog from "./utils/verificarLog";
 import { Spinner } from "./components/alerts";
 import ViewDisabled from "./views/viewDisabled";
+const DashboardTolva = lazy(()=>import('./views/tolva/dashboard'));
 const Users = lazy(()=>import('./views/admin/users'))
 const Logs = lazy(()=>import('./views/admin/logs'))
 const DashboardAdmin = lazy(()=>import('./views/admin/dashboard'))
@@ -39,6 +40,15 @@ const navRutas = createBrowserRouter([
       {
         path: '/admin/logs',
         element: <Logs />
+      }, 
+    ]
+  },
+  {
+    element: <VerificarLog userType='TOLVA' />,
+    children: [
+      {
+        path: '/tolva/dashboard',
+        element: <DashboardTolva />
       }, 
     ]
   },
