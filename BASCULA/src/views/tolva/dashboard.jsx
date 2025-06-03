@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { FiCalendar, FiClock } from "react-icons/fi";
 import { FaBox } from "react-icons/fa";
-import { postAnalizarQR } from "../../hooks/tolva/formDataTolva";
+import { getDataSelectSilos, postAnalizarQR, } from "../../hooks/tolva/formDataTolva";
+import { Modals } from "../../components/tolva/modals";
+import { Toaster, toast } from 'sonner';
 
 const StatCard = ({ icon, title, value, color }) => {
   return (
@@ -20,6 +22,11 @@ const StatCard = ({ icon, title, value, color }) => {
 const DashboardTolva = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [isLoadingImage, setIsLoadingImage] = useState(false)
+  const [modalDeAsignacion, setModalDeAsignacion] = useState(false)
+  const [data, setData] = useState('')
+  const [silos, setSilos] = useState([])
+  const [formData, setFormData] = useState({silo: ''})
+
   const handleImageChange = (event) => {
     const file = event.target.files[0];
 
@@ -58,9 +65,41 @@ const DashboardTolva = () => {
   };
 
   const handleScanQr = async() => {
+    setModalDeAsignacion(true)
     const response = await postAnalizarQR(selectedImage, setIsLoadingImage)
-    console.log(response)
+    if (response?.err) {
+      toast.error(response?.err);
+      setData('')
+      setModalDeAsignacion(false)
+      return
+    }
+    setData(response?.boleta)
   }
+
+  const handleCloseModalAsignacion = () => {
+    setModalDeAsignacion(false)
+    setData('');
+  }
+
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    setFormData((prev)=>({
+      ...prev, [name] : value
+    }))
+  }
+
+  useEffect(() => {
+    getDataSelectSilos(setSilos)
+  }, []);
+
+  const propsModalAsignacion = {
+    hdlClose: handleCloseModalAsignacion, 
+    isLoadingImage, 
+    data,  
+    silos, 
+    handleChange, 
+  }
+
 
   return (
     <div className="min-h-screen">
@@ -201,6 +240,8 @@ const DashboardTolva = () => {
           </div>
         </div>
       </div>
+      <Toaster position="top-center" toastOptions={{style: { background: '#955e37', color: 'white'},}}/>
+      {modalDeAsignacion && <Modals {...propsModalAsignacion}/>}
     </div>
   );
 };
