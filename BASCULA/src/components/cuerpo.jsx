@@ -1,16 +1,18 @@
 import { useState, useEffect } from "react";
-import {SideBar, SideBarAdmin} from "../components/sideBar";
+import Cookies from 'js-cookie';
 import Header from "../components/header";
-import Cookies from 'js-cookie'
+import { SideBar, SideBarAdmin, SideBarTolva } from "../components/sideBar";
 
-export const Cuerpo = ({ children }) => {
-  const [sideBarShow, setSideBarShow] = useState(Cookies.get('sideBarShow')=='true')
-  const [altura, setAltura] = useState(window.innerHeight.toString());
-  const [anchura, setAnchura] = useState(window.innerWidth.toString());
+// Componente genérico
+const CuerpoBase = ({ children, SideBarComponent, title, type }) => {
+  const [sideBarShow, setSideBarShow] = useState(Cookies.get('sideBarShow') === 'true');
+  const [altura, setAltura] = useState(window.innerHeight);
+  const [anchura, setAnchura] = useState(window.innerWidth);
 
   const handleShow = () => {
-    setSideBarShow(!sideBarShow)
-    Cookies.set('sideBarShow', !sideBarShow);
+    const newState = !sideBarShow;
+    setSideBarShow(newState);
+    Cookies.set('sideBarShow', newState.toString());
   };
 
   useEffect(() => {
@@ -20,73 +22,49 @@ export const Cuerpo = ({ children }) => {
     };
 
     window.addEventListener("resize", modificar);
-
-    return () => {
-      window.removeEventListener("resize", modificar);
-    };
+    return () => window.removeEventListener("resize", modificar);
   }, []);
 
-  return (
-    <>
-      <main className="min-w-screen min-h-screen flex">
-        {anchura < 950 || altura <= 750 || !sideBarShow ? (
-          <SideBar modo="compacto" />
-        ) : (
-          <SideBar />
-        )}
+  const modoCompacto = anchura < 950 || altura <= 750 || !sideBarShow;
 
-        {/* header */}
-        <div className="w-full max-h-screen flex flex-col overflow-hidden">
-          <Header title="Sistema de Gestión de Báscula" fun={handleShow} type={'BASCULA'}/>
-          <div className="flex-1 overflow-x-hidden body-components">
-            <div className="mx-9 my-7">{children}</div>
-          </div>
+  return (
+    <main className="min-w-screen min-h-screen flex">
+      <SideBarComponent modo={modoCompacto ? "compacto" : undefined} />
+
+      <div className="w-full max-h-screen flex flex-col overflow-hidden">
+        <Header title={title} fun={handleShow} type={type} />
+        <div className="flex-1 overflow-x-hidden body-components">
+          <div className="mx-9 my-7">{children}</div>
         </div>
-      </main>
-    </>
+      </div>
+    </main>
   );
 };
 
-export const CuerpoAdmin = ({ children }) => {
-  const [sideBarShow, setSideBarShow] = useState(Cookies.get('sideBarShow')=='true')
-  const [altura, setAltura] = useState(window.innerHeight.toString());
-  const [anchura, setAnchura] = useState(window.innerWidth.toString());
+// Componentes específicos
+export const Cuerpo = ({ children }) => (
+  <CuerpoBase
+    children={children}
+    SideBarComponent={SideBar}
+    title="Sistema de Gestión de Báscula"
+    type="BASCULA"  
+  />
+);
 
-  const handleShow = () => {
-    setSideBarShow(!sideBarShow)
-    Cookies.set('sideBarShow', !sideBarShow);
-  };
+export const CuerpoAdmin = ({ children }) => (
+  <CuerpoBase
+    children={children}
+    SideBarComponent={SideBarAdmin}
+    title="Administración - Sistema Báscula"
+    type="ADMINISTRADOR"
+  />
+);
 
-  useEffect(() => {
-    const modificar = () => {
-      setAltura(window.innerHeight);
-      setAnchura(window.innerWidth);
-    };
-
-    window.addEventListener("resize", modificar);
-
-    return () => {
-      window.removeEventListener("resize", modificar);
-    };
-  }, []);
-
-  return (
-    <>
-      <main className="min-w-screen min-h-screen flex">
-        {anchura < 950 || altura <= 750 || !sideBarShow ? (
-          <SideBarAdmin modo="compacto" />
-        ) : (
-          <SideBarAdmin />
-        )}
-
-        {/* header */}
-        <div className="w-full max-h-screen flex flex-col overflow-hidden">
-          <Header title="Administración - Sistema Báscula" fun={handleShow} type={'ADMINISTRADOR'}/>
-          <div className="flex-1 overflow-x-hidden body-components">
-            <div className="mx-9 my-7">{children}</div>
-          </div>
-        </div>
-      </main>
-    </>
-  );
-};
+export const CuerpoTolva = ({ children }) => (
+  <CuerpoBase
+    children={children}
+    SideBarComponent={SideBarTolva}
+    title="Tolva - Sistema Báscula"
+    type="ADMINISTRADOR"
+  />
+);
