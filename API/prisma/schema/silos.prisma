@@ -1,0 +1,7 @@
+model Silos {
+    id Int @id @default(autoincrement())
+    nombre String
+    capacidad Float?
+    estado Boolean?
+}
+

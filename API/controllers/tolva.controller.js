@@ -90,31 +90,31 @@ const analizadorQR = async (req, res) => {
     
     try {
       const idBolQR = parseInt(result.data)
-      const boleta = await db.boleta.findMany({
+      const boleta = await db.boleta.findUnique({
         where: {
           id: idBolQR,
         }
       })
       return res.send({boleta: boleta})
     } catch (err) {
-      console.log(err)
-    }
-    return res.json({
-      success: true,
-      qr: result
-    });
-    
+      return res.send({err: 'Codigo QR ya asignado / No detectado / QR no es del sistema'})
+    }    
   } catch (error) {
     console.error('Error en analizadorQR:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error procesando imagen',
-      error: error.message
-    });
+    return res.send({err: 'Codigo QR ya asignado / No detectado / QR no es del sistema'})
   }
 };
 
+const getDataForSelectSilos = async(req, res) => {
+  try{
+    const data = await db.silos.findMany()
+    res.status(200).send(data)
+  }catch(err) {
+    console.log(err)
+  }
+}
+
 
 module.exports = {
-  analizadorQR
+  analizadorQR, getDataForSelectSilos
 };
