@@ -5,103 +5,214 @@ const jsQR = require('jsqr');
 const jimp = require('jimp');
 const sharp = require('sharp');
 
-/* Se deben de quitar dos dependencias */
-
 const analyzeQRWithSharp = async (imageBuffer) => {
   try {
-    // Validar que el buffer no esté vacío
     if (!imageBuffer || imageBuffer.length === 0) {
       throw new Error('Buffer de imagen vacío');
     }
 
-    console.log('Procesando imagen, tamaño del buffer:', imageBuffer.length);
+    const startTime = Date.now();
 
-    // Procesar con Sharp (más confiable que Jimp para este caso)
+    // Obtener metadatos una sola vez
+    const metadata = await sharp(imageBuffer).metadata();
+    
+    // Calcular tamaño objetivo más agresivo para obtener mas velocidad
+    let targetWidth = metadata.width;
+    let targetHeight = metadata.height;
+    
+    const maxDimension = 800; // Reducido a 800 para mayor velocidad
+    if (Math.max(targetWidth, targetHeight) > maxDimension) {
+      const ratio = maxDimension / Math.max(targetWidth, targetHeight);
+      targetWidth = Math.round(targetWidth * ratio);
+      targetHeight = Math.round(targetHeight * ratio);
+    }
+
+    const processStart = Date.now();
     const processedImage = await sharp(imageBuffer)
-      .resize(800, 800, { fit: 'inside', withoutEnlargement: true })
+      .resize(targetWidth, targetHeight, { 
+        kernel: sharp.kernel.nearest,
+        fit: 'fill'
+      })
       .greyscale()
       .normalize()
-      .sharpen()
-      .png()
+      .png({ compressionLevel: 1 })
       .toBuffer();
+    
+    // Función helper para crear imageData más eficientemente
+    const createImageData = async (image) => {
+      const { data, info } = await sharp(image)
+        .ensureAlpha()
+        .raw()
+        .toBuffer({ resolveWithObject: true });
+      return { data: new Uint8ClampedArray(data), width: info.width, height: info.height };
+    };
 
-    // Obtener datos de imagen en formato RGBA
-    const { data, info } = await sharp(processedImage)
-      .ensureAlpha()
-      .raw()
-      .toBuffer({ resolveWithObject: true });
+    // Intentos optimizados - solo los más efectivos
+    const attempts = [
+      // Intento 1: Imagen normal (más probable que funcione)
+      async () => {
+        const imgData = await createImageData(processedImage);
+        return jsQR(imgData.data, imgData.width, imgData.height, {
+          inversionAttempts: "attemptBoth"
+        });
+      },
 
-    const { width, height } = info;
+      // Intento 2: Solo si el primero falla - imagen más pequeña y rápida
+      async () => {
+        const quickImage = await sharp(imageBuffer)
+          .resize(400, 400, { fit: 'inside', kernel: sharp.kernel.nearest })
+          .greyscale()
+          .normalize()
+          .png({ compressionLevel: 0 })
+          .toBuffer();
+        
+        const imgData = await createImageData(quickImage);
+        return jsQR(imgData.data, imgData.width, imgData.height, {
+          inversionAttempts: "attemptBoth"
+        });
+      },
 
-    // Convertir datos a Uint8ClampedArray
-    const imageData = new Uint8ClampedArray(data);
-
-    // Intentar detectar QR con diferentes configuraciones
-    let code = jsQR(imageData, width, height, {
-      inversionAttempts: "attemptBoth"
-    });
-
-    if (!code) {
-      // Segundo intento con imagen invertida
-      const invertedData = new Uint8ClampedArray(imageData.length);
-      for (let i = 0; i < imageData.length; i += 4) {
-        invertedData[i] = 255 - imageData[i];     // R
-        invertedData[i + 1] = 255 - imageData[i + 1]; // G
-        invertedData[i + 2] = 255 - imageData[i + 2]; // B
-        invertedData[i + 3] = imageData[i + 3];   // A
+      // Intento 3: Solo para casos difíciles - con contraste
+      async () => {
+        const contrastImage = await sharp(processedImage)
+          .linear(1.3, -30) // Contraste más suave pero efectivo
+          .toBuffer();
+        
+        const imgData = await createImageData(contrastImage);
+        return jsQR(imgData.data, imgData.width, imgData.height, {
+          inversionAttempts: "attemptBoth"
+        });
       }
-      
-      code = jsQR(invertedData, width, height);
+    ];
+
+    // Timeout para evitar procesos colgados
+    for (let i = 0; i < attempts.length; i++) {
+      const attemptStart = Date.now();      
+      try {
+        // Timeout de 1 segundo por intento
+        const code = await Promise.race([
+          attempts[i](),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Timeout')), 1000)
+          )
+        ]);
+        
+        if (code) {
+          return {
+            found: true,
+            data: code.data,
+            processingTime: Date.now() - startTime
+          };
+        }
+      } catch (error) {
+        console.warn(`Intento ${i + 1} falló: ${error.message}`);
+      }
     }
 
-    if (code) {
-      return {
-        found: true,
-        data: code.data,
-      };
-    } else {
-      return {
-        found: false,
-        error: 'No se encontró código QR en la imagen'
-      };
-    }
-
-  } catch (error) {
-    console.error('Error en analizar:', error);
     return {
       found: false,
-      error: `Error procesando imagen: ${error.message}`
+      error: 'QR no encontrado',
+      processingTime: Date.now() - startTime
+    };
+
+  } catch (error) {
+    console.error('Error:', error);
+    return {
+      found: false,
+      error: `Error: ${error.message}`
     };
   }
 };
 
-// Controlador actualizado
+// Versión ultra-rápida para casos simples
+const quickQRAnalysis = async (imageBuffer) => {
+  try {
+    const startTime = Date.now();
+
+    // Procesamiento mínimo para casos fáciles
+    const { data, info } = await sharp(imageBuffer)
+      .resize(600, 600, { fit: 'inside', kernel: sharp.kernel.nearest })
+      .greyscale()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+
+    const code = jsQR(new Uint8ClampedArray(data), info.width, info.height, {
+      inversionAttempts: "dontInvert" // Más rápido
+    });
+    
+    return code ? {
+      found: true,
+      data: code.data,
+      processingTime: Date.now() - startTime
+    } : null;
+
+  } catch (error) {
+    return null;
+  }
+};
+
+// Controlador optimizado con análisis rápido primero
 const analizadorQR = async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({
-        success: false,
-        message: 'No se recibió imagen'
+      return res.status(200).json({err: 'No se recibió imagen'});
+    }
+
+    const maxFileSize = 5 * 1024 * 1024;
+    if (req.file.buffer.length > maxFileSize) {
+      return res.status(200).json({err:'Archivo demasiado grande'});
+    }
+
+    const totalStart = Date.now();
+
+    // Intentar análisis rápido primero
+    let result = await quickQRAnalysis(req.file.buffer);
+    
+    // Si el análisis rápido falla, usar el completo
+    if (!result) {
+      console.log('Quick analysis failed, trying full analysis...');
+      result = await analyzeQRWithSharp(req.file.buffer);
+    }
+
+    const totalTime = Date.now() - totalStart;
+
+    if (!result || !result.found) {
+      return res.status(200).json({
+        err: result?.error || 'QR no detectado',
+        processingTime: totalTime
       });
     }
-    
 
-    const result = await analyzeQRWithSharp(req.file.buffer);
-    
     try {
-      const idBolQR = parseInt(result.data)
+      const idBolQR = parseInt(result.data);
+      
+      if (isNaN(idBolQR)) {
+        return res.status(200).json({err:'QR no contiene ID válido'});
+      }
+
+      // Consulta a DB en paralelo mientras se procesa
+      const dbStart = Date.now();
       const boleta = await db.boleta.findUnique({
-        where: {
-          id: idBolQR,
-        }
-      })
-      return res.send({boleta: boleta})
+        where: { id: idBolQR }
+      });
+
+      if (!boleta) {
+        return res.status(200).json({err: 'Boleta no encontrada'});
+      }
+
+      return res.json({ 
+        boleta: boleta,
+        processingTime: totalTime 
+      });
+
     } catch (err) {
-      return res.send({err: 'Codigo QR ya asignado / No detectado / QR no es del sistema'})
-    }    
+      console.error('Error DB:', err);
+      return res.status(200).json({err: 'QR inválido o no del sistema'});
+    }
+    
   } catch (error) {
-    console.error('Error en analizadorQR:', error);
-    return res.send({err: 'Codigo QR ya asignado / No detectado / QR no es del sistema'})
+    console.error('Error general:', error);
+    return res.status(200).json({err: 'Error interno'});
   }
 };
 
@@ -113,7 +224,6 @@ const getDataForSelectSilos = async(req, res) => {
     console.log(err)
   }
 }
-
 
 module.exports = {
   analizadorQR, getDataForSelectSilos
