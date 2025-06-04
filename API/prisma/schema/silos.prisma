@@ -3,5 +3,7 @@ model Silos {
     nombre String
     capacidad Float?
     estado Boolean?
+
+    silosXboletas Boleta[]
 }
 

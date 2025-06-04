@@ -41,6 +41,7 @@ model Boleta {
     fechaInicio DateTime
     fechaFin DateTime?
     porTolerancia Float?
+    siloID Int?
 
     /* Relaciones dentro de la boleta */
     placasBoletas Vehiculo? @relation(fields: [idPlaca], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -50,4 +51,5 @@ model Boleta {
     tipoDeProductoBoleta Producto? @relation(fields: [idProducto], references: [id])
     motoristaBoleta Motoristas? @relation(fields: [idMotorista], references: [id], onDelete: NoAction, onUpdate: NoAction)
     boletasMovimientos Movimientos? @relation(fields: [idMovimiento], references: [id])
+    boletasXsilos Silos? @relation(fields: [siloID], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
