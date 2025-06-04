@@ -1,0 +1,22 @@
+BEGIN TRY
+
+BEGIN TRAN;
+
+-- AlterTable
+ALTER TABLE [dbo].[Boleta] ADD [siloID] INT;
+
+-- AddForeignKey
+ALTER TABLE [dbo].[Boleta] ADD CONSTRAINT [Boleta_siloID_fkey] FOREIGN KEY ([siloID]) REFERENCES [dbo].[Silos]([id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+COMMIT TRAN;
+
+END TRY
+BEGIN CATCH
+
+IF @@TRANCOUNT > 0
+BEGIN
+    ROLLBACK TRAN;
+END;
+THROW
+
+END CATCH
