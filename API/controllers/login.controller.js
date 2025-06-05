@@ -43,7 +43,9 @@ const loginUsers = async (req, res) => {
         res.status(404).json({msg: 'Credenciales incorrectas'})
     }catch(error){
         console.error(error)
-        res.status(500).json({msg: `Error al iniciar sesión: ${error.message}`})
+        res.status(500).json({ 
+            msg: 'Ocurrió un error al iniciar sesión. Si hubo un apagón reciente, espere 30 segundos e intente nuevamente. Si el problema persiste por más de 3 minutos, comuníquese con el área de IT.' 
+        });
     }
 }
 
