@@ -1,9 +1,14 @@
 import { useEffect, useState } from "react";
 import { FiCalendar, FiClock } from "react-icons/fi";
 import { FaBox } from "react-icons/fa";
-import { getDataSelectSilos, postAnalizarQR, } from "../../hooks/tolva/formDataTolva";
+import {
+  getDataSelectSilos,
+  postAnalizarQR,
+  updateSilos,
+} from "../../hooks/tolva/formDataTolva";
 import { Modals } from "../../components/tolva/modals";
-import { Toaster, toast } from 'sonner';
+import { Toaster, toast } from "sonner";
+import { isSelectedView, noSelectectView } from "../../constants/boletas";
 
 const StatCard = ({ icon, title, value, color }) => {
   return (
@@ -21,11 +26,14 @@ const StatCard = ({ icon, title, value, color }) => {
 
 const DashboardTolva = () => {
   const [selectedImage, setSelectedImage] = useState(null);
-  const [isLoadingImage, setIsLoadingImage] = useState(false)
-  const [modalDeAsignacion, setModalDeAsignacion] = useState(false)
-  const [data, setData] = useState('')
-  const [silos, setSilos] = useState([])
-  const [formData, setFormData] = useState({silo: ''})
+  const [isLoadingImage, setIsLoadingImage] = useState(false);
+  const [modalDeAsignacion, setModalDeAsignacion] = useState(false);
+  const [data, setData] = useState("");
+  const [silos, setSilos] = useState([]);
+  const [formData, setFormData] = useState({ silo: "" });
+  const [error, setError] = useState("");
+  const [isLoadAsingar, setIsLoadAsingar] = useState(false);
+  const [modeView, setModeView] = useState(false);
 
   const handleImageChange = (event) => {
     const file = event.target.files[0];
@@ -64,42 +72,79 @@ const DashboardTolva = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
-  const handleScanQr = async() => {
-    setModalDeAsignacion(true)
-    const response = await postAnalizarQR(selectedImage, setIsLoadingImage)
+  const isToLarge = (bytes) => {
+    if (bytes === 0) return 0;
+    const k = 1024;
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    if (
+      sizes[i] == "MB" &&
+      parseFloat((bytes / Math.pow(k, i)).toFixed(2)) > 10
+    )
+      return true;
+    return false;
+  };
+
+  const handleScanQr = async () => {
+    if (isToLarge(selectedImage.size)) {
+      toast.error("Imagen demasido grande, tamaño debe ser menor a 10MB");
+      return;
+    }
+    setModalDeAsignacion(true);
+    const response = await postAnalizarQR(selectedImage, setIsLoadingImage);
     if (response?.err) {
       toast.error(response?.err);
-      setData('')
-      setModalDeAsignacion(false)
-      return
+      setData("");
+      setModalDeAsignacion(false);
+      return;
     }
-    setData(response?.boleta)
-  }
+    setData(response?.boleta);
+  };
 
   const handleCloseModalAsignacion = () => {
-    setModalDeAsignacion(false)
-    setData('');
-  }
+    setModalDeAsignacion(false);
+    setData("");
+  };
 
   const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData((prev)=>({
-      ...prev, [name] : value
-    }))
-  }
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const hdlSubmit = async () => {
+    if (!formData?.silo) {
+      setError("No se ha seleccionado ningun silo.");
+      return;
+    }
+    setError("");
+    const response = await updateSilos(formData, data?.id, setIsLoadAsingar);
+    if (response?.msg) {
+      toast.success(response?.msg);
+      setModalDeAsignacion(false);
+      setFormData("");
+    }
+    if (response?.err) toast.error("Intente de nuevo");
+  };
 
   useEffect(() => {
-    getDataSelectSilos(setSilos)
+    getDataSelectSilos(setSilos);
   }, []);
 
+  const handleChangeView = () => {
+    setModeView(!modeView);
+  };
   const propsModalAsignacion = {
-    hdlClose: handleCloseModalAsignacion, 
-    isLoadingImage, 
-    data,  
-    silos, 
-    handleChange, 
-  }
-
+    hdlClose: handleCloseModalAsignacion,
+    hdlSubmit,
+    isLoadingImage,
+    data,
+    silos,
+    handleChange,
+    error,
+  };
 
   return (
     <div className="min-h-screen">
@@ -141,65 +186,34 @@ const DashboardTolva = () => {
             color="bg-red-500"
           />
         </div>
-
+        <div className="filtros grid grid-rows-1 grid-flow-col my-4">
+          <button
+            onClick={handleChangeView}
+            className={modeView == false ? isSelectedView : noSelectectView}
+          >
+            Escanear QR
+          </button>
+          <button
+            onClick={handleChangeView}
+            className={modeView == true ? isSelectedView : noSelectectView}
+          >
+            Asignadas
+          </button>
+        </div>
         {/* Tabla de logs con acciones */}
-        <div className="bg-white shadow-md rounded-lg border border-gray-200 overflow-hidden">
-          <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-            <h2 className="text-xl font-semibold text-gray-800">
-              Analizador de Códigos QR
-            </h2>
-          </div>
-          <div className="w-full p-4">
-            {!selectedImage ? (
-              <label
-                htmlFor="fileInput"
-                className="flex flex-col items-center rounded border border-gray-300 p-4 text-gray-900 shadow-sm sm:p-6 cursor-pointer hover:bg-gray-50 transition-colors"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth="1.5"
-                  stroke="currentColor"
-                  className="w-6 h-6"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M7.5 7.5h-.75A2.25 2.25 0 0 0 4.5 9.75v7.5a2.25 2.25 0 0 0 2.25 2.25h7.5a2.25 2.25 0 0 0 2.25-2.25v-7.5a2.25 2.25 0 0 0-2.25-2.25h-.75m0-3-3-3m0 0-3 3m3-3v11.25m6-2.25h.75a2.25 2.25 0 0 1 2.25 2.25v7.5a2.25 2.25 0 0 1-2.25 2.25h-7.5a2.25 2.25 0 0 1-2.25-2.25v-.75"
-                  />
-                </svg>
-
-                <span className="mt-4 font-medium">Seleccionar imagen</span>
-
-                <span className="mt-2 inline-block rounded border border-gray-200 bg-gray-50 px-3 py-1.5 text-center text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-100">
-                  Buscar archivo
-                </span>
-
-                <input
-                  id="fileInput"
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  className="sr-only"
-                  onChange={handleImageChange}
-                />
-              </label>
-            ) : (
-              <div className="space-y-4">
-                {/* Vista previa de la imagen */}
-                <div className="relative">
-                  <img
-                    src={selectedImage.url}
-                    alt={selectedImage.name}
-                    className="w-full h-64 object-cover rounded-lg border border-gray-200"
-                  />
-
-                  {/* Botón para eliminar imagen */}
-                  <button
-                    onClick={removeImage}
-                    className="absolute top-2 right-2 p-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors shadow-lg"
-                    title="Eliminar imagen"
+        <div className="bg-white shadow-md rounded-lg border border-gray-200 overflow-hidden min-h-[550px]">
+          {!modeView && (
+            <>
+              <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+                <h2 className="text-xl font-semibold text-gray-800">
+                  Analizador de Códigos QR
+                </h2>
+              </div>
+              <div className="w-full p-4">
+                {!selectedImage ? (
+                  <label
+                    htmlFor="fileInput"
+                    className="flex flex-col bg-white min-h-[45vh] items-center justify-center rounded border border-gray-300 p-4 text-gray-900 shadow-sm sm:p-6 cursor-pointer hover:bg-gray-50 transition-colors"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -207,41 +221,104 @@ const DashboardTolva = () => {
                       viewBox="0 0 24 24"
                       strokeWidth="1.5"
                       stroke="currentColor"
-                      className="w-4 h-4"
+                      className="w-6 h-6"
                     >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        d="M6 18L18 6M6 6l12 12"
+                        d="M7.5 7.5h-.75A2.25 2.25 0 0 0 4.5 9.75v7.5a2.25 2.25 0 0 0 2.25 2.25h7.5a2.25 2.25 0 0 0 2.25-2.25v-7.5a2.25 2.25 0 0 0-2.25-2.25h-.75m0-3-3-3m0 0-3 3m3-3v11.25m6-2.25h.75a2.25 2.25 0 0 1 2.25 2.25v7.5a2.25 2.25 0 0 1-2.25 2.25h-7.5a2.25 2.25 0 0 1-2.25-2.25v-.75"
                       />
                     </svg>
-                  </button>
-                </div>
 
-                {/* Información de la imagen */}
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <p className="text-sm font-medium text-gray-900 truncate">
-                    {selectedImage.name}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {formatFileSize(selectedImage.size)}
-                  </p>
-                </div>
+                    <span className="mt-4 font-medium">Seleccionar imagen</span>
 
-                {/* Botón para subir */}
-                <button
-                  onClick={handleScanQr}
-                  className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                >
-                  Subir imagen
-                </button>
+                    <span className="mt-2 inline-block rounded border border-gray-200 bg-gray-50 px-3 py-1.5 text-center text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-100">
+                      Buscar archivo
+                    </span>
+
+                    <input
+                      id="fileInput"
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      className="sr-only"
+                      onChange={handleImageChange}
+                    />
+                  </label>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Vista previa de la imagen */}
+                    <div className="relative">
+                      <img
+                        src={selectedImage.url}
+                        alt={selectedImage.name}
+                        className="w-full h-64 object-cover rounded-lg border border-gray-200"
+                      />
+
+                      {/* Botón para eliminar imagen */}
+                      <button
+                        onClick={removeImage}
+                        className="absolute top-2 right-2 p-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors shadow-lg"
+                        title="Eliminar imagen"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth="1.5"
+                          stroke="currentColor"
+                          className="w-4 h-4"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+
+                    {/* Información de la imagen */}
+                    <div className="bg-gray-50 p-3 rounded-lg">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {selectedImage.name}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {formatFileSize(selectedImage.size)}
+                      </p>
+                    </div>
+
+                    {/* Botón para subir */}
+                    <button
+                      onClick={handleScanQr}
+                      className="w-full bg-[#725033] text-white py-2 px-4 rounded-lg hover:bg-[#866548] transition-colors font-medium"
+                    >
+                      Encontrar Boleta
+                    </button>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </>
+          )}
+          {modeView && (
+            <>
+              <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+                <h2 className="text-xl font-semibold text-gray-800">
+                  Ultimas 40 agregadas
+                </h2>
+              </div>
+              <div className="w-full p-4">
+                Aqui va la tabla
+              </div>
+            </>
+          )}
         </div>
       </div>
-      <Toaster position="top-center" toastOptions={{style: { background: '#955e37', color: 'white'},}}/>
-      {modalDeAsignacion && <Modals {...propsModalAsignacion}/>}
+      <Toaster
+        position="top-center"
+        toastOptions={{ style: { background: "#955e37", color: "white" } }}
+      />
+      {modalDeAsignacion && <Modals {...propsModalAsignacion} />}
     </div>
   );
 };

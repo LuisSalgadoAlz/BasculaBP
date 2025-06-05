@@ -7,21 +7,16 @@ import {
   IoGrid,
   IoBusinessOutline,
 } from "react-icons/io5";
+import { MdOutlinePlace } from "react-icons/md";
 
-export const Modals = ({
-  hdlClose,
-  hdlSubmit,
-  isLoadingImage,
-  data,
-  silos,
-  handleChange,
-}) => {
-  const [siloSeleccionado, setSiloSeleccionado] = useState("");
-  const [error, setError] = useState("");
+export const Modals = (props) => {
+  const { hdlClose, hdlSubmit, isLoadingImage, data, silos, handleChange, error} = props
 
   if (data.err) {
     return;
   }
+/*   const LABELVALUE = boleta.idProducto === 17 ? boleta.socio : boleta.motorista;
+  const PROCEDENCIA = boleta.idProducto === 17 ? boleta.origen : boleta.socio; */
 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black bg-opa-50 p-4">
@@ -65,9 +60,9 @@ export const Modals = ({
                     <IoPerson size={16} className="text-blue-600" />
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">Socio</p>
+                    <p className="text-xs text-gray-500">{data.idProducto === 17 ? 'Productor' : 'Motorista'}</p>
                     <p className="text-sm font-medium text-gray-800">
-                      {data?.socio || "No especificado"}
+                      {(data.idProducto === 17 ? data.socio : data.motorista) || "No especificado"}
                     </p>
                   </div>
                 </div>
@@ -94,6 +89,19 @@ export const Modals = ({
                     <p className="text-xs text-gray-500">Producto</p>
                     <p className="text-sm font-medium text-gray-800">
                       {data?.producto || "No especificado"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Procedencia */}
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center w-8 h-8 bg-orange-100 rounded-full">
+                    <MdOutlinePlace  size={16} className="text-orange-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Procedencia</p>
+                    <p className="text-sm font-medium text-gray-800">
+                      {(data.idProducto === 17 ? data.origen : data.socio) || "No especificado"}
                     </p>
                   </div>
                 </div>
