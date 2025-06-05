@@ -452,8 +452,7 @@ function getPrinter() {
 const imprimirQRTolva = (boleta) => {
   try {
     // Configuración del URL para el código QR
-    const baseUrl = process.env.BASE_URL || 'http://192.9.100.56:3000';
-    const qrUrl = `${baseUrl}/boletas/${boleta.id}`;
+    const qrUrl = `${boleta.id}`;
     const tux = path.join(__dirname, 'logo.png');
 
     // Obtener la impresora configurada
