@@ -170,7 +170,6 @@ const analizadorQR = async (req, res) => {
     
     // Si el análisis rápido falla, usar el completo
     if (!result) {
-      console.log('Quick analysis failed, trying full analysis...');
       result = await analyzeQRWithSharp(req.file.buffer);
     }
 
@@ -200,6 +199,14 @@ const analizadorQR = async (req, res) => {
         return res.status(200).json({err: 'Boleta no encontrada'});
       }
 
+      if(boleta.estado !='Pendiente') {
+        return res.status(200).json({err: 'Boleta ya finalizada, no puede asignarla.'});
+      }
+
+      if (boleta.siloID) {
+        return res.status(200).json({err: 'Boleta ya ha sido asignada.'});
+      }
+
       return res.json({ 
         boleta: boleta,
         processingTime: totalTime 
@@ -225,6 +232,41 @@ const getDataForSelectSilos = async(req, res) => {
   }
 }
 
+const updateSiloInBoletas = async(req, res) => {
+  try{
+    const { silo } = req.body;
+    const boletaID = req.params.id;
+
+    const updateSiloBoleta = await db.boleta.update({
+      where : {
+        id: parseInt(boletaID)
+      },
+      data: {
+        siloID : parseInt(silo), 
+        fechaTolva: new Date(), 
+      }
+    })
+    res.status(200).send({msg:'¡Boleta ha sido asignada correctamente!'})
+  } catch(err) {
+    res.status(200).send({err:'Intente denuevo'})
+    console.log(err)
+  }
+}
+
+const getAsignForDay = async(req, res) => {
+  try{
+    const data = await db.boleta.findMany({
+      where : {
+        siloID: {
+          not: null
+        }
+      }
+    })
+  }catch(err){
+    console.log(err)
+  }
+}
+
 module.exports = {
-  analizadorQR, getDataForSelectSilos
+  analizadorQR, getDataForSelectSilos, updateSiloInBoletas, getAsignForDay
 };
