@@ -797,13 +797,13 @@ function generarContenidoTercioCarta(copia, esPrimera = false, colors, boleta, d
     { canvas: [ { type: 'rect', x: 0, y: 0, w: 10, h: 250, color: colors[copia] }], absolutePosition: { x: 98, y: 2 } },
     { canvas: [ { type: 'rect', x: 0, y: 0, w: 608, h: 10, color: colors[copia], }], absolutePosition: { x: 2, y: 252 } },
     {
-      text: esPrimera ? 'O R I G I N A L' : "C O P I A",
+      text: 'O R I G I N A L',
       color: 'gray',
       opacity: 0.2  ,
       bold: true,
       italics: true,
       fontSize: 40,
-      absolutePosition: { x: esPrimera ? 120 : 195, y: 130 },
+      absolutePosition: { x: 120, y: 130 },
     },
     { text: 'BENEFICIO DE ARROZ PROGRESO, S.A.', alignment: 'center', bold: true, margin: [0, 15, 0, 0]  },
     { text: [
@@ -873,7 +873,7 @@ function generarContenidoTercioCarta(copia, esPrimera = false, colors, boleta, d
   return contenido.filter(Boolean);
 }
 
-function generarContenidoTercioCartaReimpresion(copia, esPrimera = false, colors, boleta, despachador) {
+function generarContenidoTercioCartaReimpresion(copia, esPrimera = false, colors, boleta, despachador, isPrint, datePrint) {
   
   const TIEMPOPROCESO = boleta.fechaFin - boleta.fechaInicio;
   const totalSegundos = Math.floor(TIEMPOPROCESO / 1000);
@@ -908,13 +908,13 @@ function generarContenidoTercioCartaReimpresion(copia, esPrimera = false, colors
     { canvas: [ { type: 'rect', x: 0, y: 0, w: 10, h: 250, color: colors[copia] }], absolutePosition: { x: 98, y: 2 } },
     { canvas: [ { type: 'rect', x: 0, y: 0, w: 608, h: 10, color: colors[copia], }], absolutePosition: { x: 2, y: 252 } },
     {
-      text: "R E I M P R E S I O N",
+      text: isPrint ? "R E I M P R E S I O N" : "O R I G I N A L",
       color: 'gray',
       opacity: 0.2  ,
       bold: true,
       italics: true,
-      fontSize: 35,
-      absolutePosition: { x: 80, y: 130 },
+      fontSize: isPrint ? 35 : 40,
+      absolutePosition: { x: isPrint ? 80 : 120, y: 130 },
     },
     { text: 'BENEFICIO DE ARROZ PROGRESO, S.A.', alignment: 'center', bold: true, margin: [0, 15, 0, 0]  },
     { text: [
@@ -932,7 +932,7 @@ function generarContenidoTercioCartaReimpresion(copia, esPrimera = false, colors
       table: {
       widths: ['*', '*'],
       body: [
-          [`Fecha        : ${boleta.fechaFin.toLocaleString()}`, `Reimpresión      : ${new Date().toLocaleString()}`],
+          [`Fecha        : ${isPrint ? new Date(datePrint).toLocaleString() : new Date().toLocaleString()}`, isPrint ? `Reimpresión      : ${new Date().toLocaleString()}`: ''],
           [`${TYPEOFUSER}: ${boleta.socio}`, `Hora Entrada     : ${boleta.fechaInicio.toLocaleString()}`],
           [`Placa        : ${boleta.placa}`, `Hora de Salida   : ${boleta.fechaFin.toLocaleString()}`],
           [`Motorista    : ${boleta.motorista}`, ''],
@@ -1152,8 +1152,21 @@ const generarCantidadCopias = (boleta) => {
 const imprimirWorkForce = async(boleta) => {
   try{
     const colors = {o:'white', g: '#98FB98', p: 'pink', y:'yellow'}
+    const datePrint = new Date()
     const despachador = await db.usuarios.findUnique({where: {usuarios:boleta.usuario}})
-    const copias = generarCantidadCopias(boleta);
+    const copias = generarCantidadCopias(boleta); /* Genera Arreglo de Copias ['o', 'g', 'p', 'y'] puede ser ['o', 'g', 'y']  segun el caso*/
+
+    const saveDatePrints =  await db.boleta.update({
+      where : {
+        id: parseInt(boleta.id)
+      }, 
+      data : {
+        impreso: new Date(), 
+        ...(copias.includes('y') ? {impresaAmarilla : datePrint} : {}),
+        ...(copias.includes('g') ? {ImpresaVerde : datePrint} : {}),
+        ...(copias.includes('p') ? {impresaRosa : datePrint} : {}), 
+      }
+    })
 
     const fonts = {
       Courier: {
@@ -1204,8 +1217,28 @@ const imprimirWorkForce = async(boleta) => {
 const getReimprimirWorkForce = async(boleta, type) => {
   try{
     const colors = {o:'white', g: '#98FB98', p: 'pink', y:'yellow'}
+    const datePrint = new Date()
     const despachador = await db.usuarios.findUnique({where: {usuarios:boleta.usuario}})
     const copias = type
+    const estadoCopias = {
+      g: boleta.ImpresaVerde,
+      p: boleta.impresaRosa,
+      y: boleta.impresaAmarilla,
+    };
+
+    const isPrint = !!estadoCopias[type];
+    if (!isPrint) {
+      const updatePrint = await db.boleta.update({
+        where: {
+          id: parseInt(boleta.id)
+        }, 
+        data:{
+          ...(copias.includes('y') ? {impresaAmarilla : datePrint} : {}),
+          ...(copias.includes('g') ? {ImpresaVerde : datePrint} : {}),
+          ...(copias.includes('p') ? {impresaRosa : datePrint} : {}), 
+        }
+      })
+    }
 
     const fonts = {
       Courier: {
@@ -1226,7 +1259,7 @@ const getReimprimirWorkForce = async(boleta, type) => {
         font: 'Courier',
         fontSize: 8
       },	
-      content: copias.flatMap((copia, i) => generarContenidoTercioCartaReimpresion(copia, i === 0, colors, boleta, despachador.name))
+      content: copias.flatMap((copia, i) => generarContenidoTercioCartaReimpresion(copia, i === 0, colors, boleta, despachador.name, isPrint, estadoCopias[type]))
     };
 
     const pdfDoc = printer.createPdfKitDocument(docDefinition);

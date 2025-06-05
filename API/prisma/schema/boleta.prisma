@@ -24,6 +24,9 @@ model Boleta {
     manifiesto Int?
     estado String 
     impreso DateTime?
+    impresaAmarilla DateTime?
+    ImpresaVerde DateTime?
+    impresaRosa DateTime?
     idUsuario Int 
     usuario String
     idMotorista Int?
