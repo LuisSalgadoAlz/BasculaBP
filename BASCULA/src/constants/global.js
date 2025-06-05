@@ -1,6 +1,6 @@
 export const URLHOST = 'http://192.9.100.56:80/api/'
 export const URLWEBSOCKET = 'ws://192.9.100.56:80'
-export const VERSION = '1.0.6'
+export const VERSION = '1.0.7'
 
 export const AUTH_CONFIG = {
   BASCULA: '/dashboard',
