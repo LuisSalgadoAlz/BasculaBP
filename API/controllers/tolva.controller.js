@@ -255,18 +255,110 @@ const updateSiloInBoletas = async(req, res) => {
 
 const getAsignForDay = async(req, res) => {
   try{
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 15;
+    const skip = (page - 1) * limit;
+
+    const where = {
+      siloID: { not: null },
+      idProducto : {in:[17, 18]}
+    }
+
     const data = await db.boleta.findMany({
-      where : {
-        siloID: {
-          not: null
+      select: {
+        id: true,
+        socio: true,
+        empresa:true,
+        motorista: true,
+        producto: true,
+        origen: true,
+        fechaTolva: true, 
+        boletasXsilos: {
+          select :{
+            nombre: true
+          }
         }
-      }
+      }, 
+      where, 
+      orderBy:{
+        fechaTolva: 'desc'
+      },
+      skip: skip,
+      take: limit,
     })
+
+    const totalData = await db.boleta.count({
+      where, 
+    })
+
+    const refactorData = data.map((prev) => {
+      const { boletasXsilos, ...rest } = prev;
+      return {
+        Silo: boletasXsilos?.nombre ?? null,
+        ...rest,
+        fechaTolva: new Date(prev.fechaTolva).toLocaleString(),
+      }
+    });
+    res.status(200).send( {
+      data: refactorData, 
+      pagination: {
+        totalData, 
+        totalPages: Math.ceil(totalData / limit),
+        currentPage: page,
+        limit,
+      }
+    } )
+  }catch(err){
+    console.log(err)
+  }
+}
+
+const getStatsForTolva = async(req, res) =>{
+  try{
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const day = now.getDate(); 
+    startOfDay = new Date(Date.UTC(year, month, day, 6, 0, 0));
+    endOfDay = new Date(Date.UTC(year, month, day + 1, 5, 59, 59, 999));
+
+    const fechaTolva = { gte: startOfDay, lte: endOfDay }
+
+    const [total, pendientes, gamericana, gnacional] = await Promise.all([
+      db.boleta.count({
+        where: {
+          siloID:{not: null}, 
+          fechaTolva, 
+        }
+      }), 
+      db.boleta.count({
+        where: {
+          idProducto: {in:[17, 18]}, 
+          siloID: null, 
+          estado: 'Pendiente',
+        }
+      }), 
+      db.boleta.count({
+        where:{
+          siloID:{not: null}, 
+          idProducto: 18, 
+          fechaTolva
+        }
+      }), 
+      db.boleta.count({
+        where:{
+          siloID:{not: null}, 
+          idProducto: 17, 
+          fechaTolva
+        }
+      })
+    ])
+    res.status(200).send({total, pendientes, gamericana, gnacional})
   }catch(err){
     console.log(err)
   }
 }
 
 module.exports = {
-  analizadorQR, getDataForSelectSilos, updateSiloInBoletas, getAsignForDay
+  analizadorQR, getDataForSelectSilos, updateSiloInBoletas, getAsignForDay, getStatsForTolva
 };
