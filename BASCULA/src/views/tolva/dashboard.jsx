@@ -2,13 +2,18 @@ import { useEffect, useState } from "react";
 import { FiCalendar, FiClock } from "react-icons/fi";
 import { FaBox } from "react-icons/fa";
 import {
+  getDataAsign,
   getDataSelectSilos,
+  getStatsTolvaDiarias,
   postAnalizarQR,
   updateSilos,
 } from "../../hooks/tolva/formDataTolva";
 import { Modals } from "../../components/tolva/modals";
 import { Toaster, toast } from "sonner";
 import { isSelectedView, noSelectectView } from "../../constants/boletas";
+import { TableTolva } from "../../components/tolva/table";
+import { NoData } from "../../components/alerts";
+import { Pagination } from "../../components/buttons";
 
 const StatCard = ({ icon, title, value, color }) => {
   return (
@@ -34,6 +39,10 @@ const DashboardTolva = () => {
   const [error, setError] = useState("");
   const [isLoadAsingar, setIsLoadAsingar] = useState(false);
   const [modeView, setModeView] = useState(false);
+  const [silosAsignados, setSilosAsignados] = useState([{}])
+  const [isLoadingTable, setLoadingTables] = useState(false)
+  const [stats, setStats] = useState()
+  const [pagination, setPagination] = useState(1)
 
   const handleImageChange = (event) => {
     const file = event.target.files[0];
@@ -122,6 +131,8 @@ const DashboardTolva = () => {
     setError("");
     const response = await updateSilos(formData, data?.id, setIsLoadAsingar);
     if (response?.msg) {
+      getDataAsign(setSilosAsignados, setLoadingTables)
+      getStatsTolvaDiarias(setStats)
       toast.success(response?.msg);
       setModalDeAsignacion(false);
       setFormData("");
@@ -131,11 +142,26 @@ const DashboardTolva = () => {
 
   useEffect(() => {
     getDataSelectSilos(setSilos);
+    getStatsTolvaDiarias(setStats)
   }, []);
 
-  const handleChangeView = () => {
-    setModeView(!modeView);
-  };
+  useEffect(() => {
+    getDataAsign(setSilosAsignados, setLoadingTables, pagination)
+  }, [pagination]);
+
+  const handlePagination = (item) => {
+    if (pagination>0) {
+      const newRender = pagination+item
+      if(newRender==0) return
+      if(newRender>silosAsignados.pagination.totalPages) return
+      setPagination(newRender) 
+    }
+  } 
+
+  const handleResetPagination = () => {
+    setPagination(1)
+  }
+
   const propsModalAsignacion = {
     hdlClose: handleCloseModalAsignacion,
     hdlSubmit,
@@ -164,44 +190,44 @@ const DashboardTolva = () => {
           <StatCard
             icon={<FiCalendar size={24} className="text-white" />}
             title="Total Boletas"
-            value={0}
+            value={stats?.total || 0}
             color="bg-blue-500"
           />
           <StatCard
             icon={<FiClock size={24} className="text-white" />}
             title="Pendientes"
-            value={0}
+            value={stats?.pendientes || 0}
             color="bg-amber-500"
           />
           <StatCard
             icon={<FaBox size={24} className="text-white" />}
             title="Granza Americana"
-            value={0}
+            value={stats?.gamericana || 0}
             color="bg-yellow-500"
           />
           <StatCard
             icon={<FaBox size={24} className="text-white" />}
             title="Granza Nacional"
-            value={0}
+            value={stats?.gnacional || 0}
             color="bg-red-500"
           />
         </div>
         <div className="filtros grid grid-rows-1 grid-flow-col my-4">
           <button
-            onClick={handleChangeView}
+            onClick={()=> setModeView(false)}
             className={modeView == false ? isSelectedView : noSelectectView}
           >
             Escanear QR
           </button>
           <button
-            onClick={handleChangeView}
+            onClick={()=> setModeView(true)}
             className={modeView == true ? isSelectedView : noSelectectView}
           >
             Asignadas
           </button>
         </div>
         {/* Tabla de logs con acciones */}
-        <div className="bg-white shadow-md rounded-lg border border-gray-200 overflow-hidden min-h-[550px]">
+        <div className="bg-white shadow-md rounded-lg border border-gray-200 overflow-hidden min-h-[450px]">
           {!modeView && (
             <>
               <div className="p-6 border-b border-gray-200 flex justify-between items-center">
@@ -304,11 +330,20 @@ const DashboardTolva = () => {
             <>
               <div className="p-6 border-b border-gray-200 flex justify-between items-center">
                 <h2 className="text-xl font-semibold text-gray-800">
-                  Ultimas 40 agregadas
+                  Asiganadas Hoy
                 </h2>
               </div>
-              <div className="w-full p-4">
-                Aqui va la tabla
+              <div className="w-full p-4 h-[550px] overflow-y-auto">
+                {(isLoadingTable && !silosAsignados) ? <Spinner /> : (!silosAsignados.data || silosAsignados.data.length == 0) ? (
+                    <div className="min-h-[550px] flex items-center justify-center">
+                      <NoData />
+                    </div>
+                ) : (
+                  <TableTolva datos={silosAsignados?.data} />
+                )}
+              </div>
+              <div className="p-6 border-b border-gray-200 flex justify-center items-center">
+                {silosAsignados?.data && silosAsignados.pagination.totalPages > 1 && <Pagination pg={pagination} sp={setPagination} hp={handlePagination} dt={silosAsignados}/>}
               </div>
             </>
           )}
