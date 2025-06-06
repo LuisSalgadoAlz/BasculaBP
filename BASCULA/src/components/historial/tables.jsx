@@ -23,7 +23,7 @@ const TableHistorial = ({ datos = [], imprimirCopia }) => {
               <tr key={index} className="bg-white border-b  border-gray-200 hover:bg-[#FDF5D4]">
                 {Object.values(fila).map((el, key) => (
                   <td key={key} className="px-6 py-3 text-gray-700">
-                    {el}
+                    {el || 'N/A'}
                   </td>
                 ))}
                 <td className="py-3 text-center">
