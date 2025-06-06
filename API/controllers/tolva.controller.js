@@ -255,13 +255,22 @@ const updateSiloInBoletas = async(req, res) => {
 
 const getAsignForDay = async(req, res) => {
   try{
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const day = now.getDate(); 
+    startOfDay = new Date(Date.UTC(year, month, day, 6, 0, 0));
+    endOfDay = new Date(Date.UTC(year, month, day + 1, 5, 59, 59, 999));
+
+    const fechaTolva = { gte: startOfDay, lte: endOfDay }
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 15;
     const skip = (page - 1) * limit;
 
     const where = {
       siloID: { not: null },
-      idProducto : {in:[17, 18]}
+      idProducto : {in:[17, 18]},
+      fechaTolva, 
     }
 
     const data = await db.boleta.findMany({

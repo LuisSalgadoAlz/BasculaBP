@@ -189,25 +189,25 @@ const DashboardTolva = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-3 max-sm:hidden">
           <StatCard
             icon={<FiCalendar size={24} className="text-white" />}
-            title="Total Boletas"
+            title="Total Boletas(hoy)"
             value={stats?.total || 0}
             color="bg-blue-500"
           />
           <StatCard
             icon={<FiClock size={24} className="text-white" />}
-            title="Pendientes"
+            title="Pendientes(hoy)"
             value={stats?.pendientes || 0}
             color="bg-amber-500"
           />
           <StatCard
             icon={<FaBox size={24} className="text-white" />}
-            title="Granza Americana"
+            title="Granza Americana(hoy)"
             value={stats?.gamericana || 0}
             color="bg-yellow-500"
           />
           <StatCard
             icon={<FaBox size={24} className="text-white" />}
-            title="Granza Nacional"
+            title="Granza Nacional(hoy)"
             value={stats?.gnacional || 0}
             color="bg-red-500"
           />
