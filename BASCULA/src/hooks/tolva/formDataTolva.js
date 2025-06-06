@@ -75,3 +75,46 @@ export const updateSilos = async (silo, id, setIsLoading) => {
     setIsLoading(false)
   }
 };
+
+export const getDataAsign = async (fun, setIsLoading, pagination) => {
+  try {
+    setIsLoading(true)
+    const response = await fetch(`${URLHOST}tolva/silosForTime?page=${pagination }`, {
+      method: "GET",
+      headers: {
+        Authorization: Cookies.get('token'),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API");
+    }
+
+    const data = await response.json();
+    fun(data);
+  } catch (error) {
+    console.error("Error al obtener los clientes:", error);
+  } finally {
+    setIsLoading(false)
+  }
+};
+
+export const getStatsTolvaDiarias = async (fun) => {
+  try {
+    const response = await fetch(`${URLHOST}tolva/stats`, {
+      method: "GET",
+      headers: {
+        Authorization: Cookies.get('token'),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API");
+    }
+
+    const data = await response.json();
+    fun(data);
+  } catch (error) {
+    console.error("Error al obtener los clientes:", error);
+  } 
+};
