@@ -108,9 +108,8 @@ body {
 */
 
 @media (max-width: 640px) {
-  /* Oculta todas las columnas excepto la primera y la última en pantallas pequeñas */
-  td:not(:first-child):not(:last-child), 
-  th:not(:first-child):not(:last-child) {
+  td:not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(3)):not(:last-child),
+  th:not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(3)):not(:last-child) {
     display: none;
   }
 }

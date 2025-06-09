@@ -54,11 +54,11 @@ const RUTAS_TOLVA = [
     name: "Dashboard",
     icon: <MdOutlineDashboard />,
   },
-  {
+  /* {
     path: "/tolva/registros",
     name: "Registros",
     icon: <AiOutlineFileExclamation />,
-  },
+  }, */
 ]
 
 export const SideBar = ({ modo = "extendido", altura = 500 }) => {

@@ -1,6 +1,6 @@
 import { BiDockLeft } from "react-icons/bi";  
 import { RxHamburgerMenu } from "react-icons/rx";
-import { SideBarCel, SideBarCelAdmin } from "./sideBarCel";
+import { SideBarCel, SideBarCelAdmin, SideBarCelTolva } from "./sideBarCel";
 import { useState } from "react";
 import { VERSION } from "../constants/global";
 
@@ -35,6 +35,7 @@ const Header = ({ title, fun, type }) => {
       </div>
       {(show && type=='BASCULA') &&  <SideBarCel hdlClose={handleClose} />}
       {(show && type=='ADMINISTRADOR') &&  <SideBarCelAdmin hdlClose={handleClose} />}
+      {(show && type=='TOLVA') &&  <SideBarCelTolva hdlClose={handleClose} />}
     </>
   );
 };

@@ -65,6 +65,6 @@ export const CuerpoTolva = ({ children }) => (
     children={children}
     SideBarComponent={SideBarTolva}
     title="Tolva - Sistema Báscula"
-    type="ADMINISTRADOR"
+    type="TOLVA"
   />
 );
