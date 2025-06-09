@@ -118,7 +118,7 @@ export const getDataBoletasPorID = async (id, setIsLoading) => {
   }
 };
 
-export const formaterDataNewPlaca = (formBoletas) => {
+export const formaterDataNewPlaca = (formBoletas, marchamos) => {
   const typeSocio = formBoletas?.Socios ==-998 ?  formBoletas?.Cliente : formBoletas?.Proveedor
   console.log(formBoletas)
   const allData = {
@@ -140,7 +140,15 @@ export const formaterDataNewPlaca = (formBoletas) => {
         idOrigen: formBoletas?.Origen || null, 
       }),
       NSalida: formBoletas?.NSalida || null, 
-      NViajes:  formBoletas.NViajes  || null
+      NViajes:  formBoletas.NViajes  || null, 
+      ...(formBoletas?.Movimiento==2 && {
+        sello1 : marchamos[0] || null,
+        sello2 : marchamos[1] || null,
+        sello3 : marchamos[2] || null,
+        sello4 : marchamos[3] || null,
+        sello5 : marchamos[4] || null,
+        sello6 : marchamos[5] || null,
+      })
     })
   }
   console.log(allData)
