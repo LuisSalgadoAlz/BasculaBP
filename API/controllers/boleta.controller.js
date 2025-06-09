@@ -448,7 +448,13 @@ const postClientePlacaMoto = async (req, res) => {
       NSalida, 
       NViajes, 
       idMovimiento, 
-      idTrasladoOrigen
+      idTrasladoOrigen, 
+      sello1,
+      sello2, 
+      sello3, 
+      sello4, 
+      sello5, 
+      sello6, 
     } = req.body;
 
     const empresa = await db.empresa.findUnique({
@@ -510,6 +516,9 @@ const postClientePlacaMoto = async (req, res) => {
             Nviajes: parseInt(NViajes), 
             NSalida: parseInt(NSalida), 
           }),
+          ...((idMovimiento==2) && {
+            sello1, sello2, sello3, sello4, sello5, sello6, 
+          }) 
         })
       },
     });
@@ -549,7 +558,13 @@ const postClientePlacaMotoComodin = async (req, res) => {
       NViajes, 
       idMovimiento, 
       idTrasladoOrigen, 
-      proceso
+      proceso, 
+      sello1,
+      sello2, 
+      sello3, 
+      sello4, 
+      sello5, 
+      sello6, 
     } = req.body;
 
     const verificado = jwt.verify(idUsuario, process.env.SECRET_KEY);
@@ -592,6 +607,9 @@ const postClientePlacaMotoComodin = async (req, res) => {
             Nviajes: parseInt(NViajes), 
             NSalida: parseInt(NSalida), 
           }),
+          ...((idMovimiento==2) && {
+            sello1, sello2, sello3, sello4, sello5, sello6, 
+          }) 
         })
       },
     });
