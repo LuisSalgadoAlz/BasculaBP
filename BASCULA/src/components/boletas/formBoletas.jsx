@@ -191,9 +191,14 @@ export const ModalBoletas = ({hdlClose, hdlChange, fillData, formBol, boletas, h
  * @param {*} param0 
  * @returns 
  */
-export const ModalNormal = ({ hdlClose, hdlChange, fillData, formBol, boletas, hdlClean, hdlSubmit, clean, isLoading }) => {
+export const ModalNormal = ({ hdlClose, hdlChange, fillData, formBol, boletas, hdlClean, hdlSubmit, clean, isLoading, setAddMarchamos, marchamos }) => {
   const [peso, setPeso] = useState('00lb');
   const [itemSelect, setItemSelect] = useState(false)
+  const [openMarchamos, setOpenMarchamos] = useState(false)
+  
+  /* Props de hijos */
+  const propsAddMarchamos = {setAddMarchamos, marchamos, setOpenMarchamos}
+
   const getPesoIn = () => {
     formBol((prev) => ({
       ...prev,
@@ -283,7 +288,7 @@ export const ModalNormal = ({ hdlClose, hdlChange, fillData, formBol, boletas, h
                    * !Imporatnte: esto se debera de cambiar a algo mas sustancial, que sea migratorio
                    */
                 }
-                {boletas?.Producto ===18 &&(
+                {(boletas?.Producto ===18 && boletas?.Movimiento==2) &&(
                   <>
                     <div className="grid grid-cols-2 gap-3 mt-2 mb-4">
                       <div>
@@ -297,6 +302,16 @@ export const ModalNormal = ({ hdlClose, hdlChange, fillData, formBol, boletas, h
                     </div>
                   </>
                 )}
+                {((boletas?.Producto === 18 || boletas?.Producto === 17) && boletas?.Movimiento==2) && (
+                  <>
+                    <button 
+                      className={buttonCalcular}
+                      onClick={()=>setOpenMarchamos(true)}>
+                      Agregar Marchamos
+                    </button>
+                  </>
+                )}
+                {openMarchamos && <AgregarMarchamos {...propsAddMarchamos}/>}
               </>
             )}
           </div>
@@ -647,3 +662,135 @@ export const CancelarBoleta = (props) => {
     </motion.div>
   );
 };
+
+
+const AgregarMarchamos = ({ marchamos = [], setAddMarchamos, setOpenMarchamos }) => {
+  const [cuerpo, setCuerpo] = useState('')
+
+  const handleNewMarchamo = () => {
+    if (cuerpo.trim() === '') return
+    if (cuerpo.length != 6) return
+    if (marchamos.length==6) return
+    const nuevosMarchamos = [...marchamos, cuerpo]
+    setAddMarchamos(nuevosMarchamos)
+    setCuerpo('')
+  }
+
+  const handleChangeCuerpo = (e) => {
+    const { value } = e.target
+    if(value.length > 6) return
+    if(value<0) return
+    setCuerpo(e.target.value)
+  }
+
+  const handleKeyDown = (e) => {
+    const forbiddenKeys = ['e', 'E', '+', '-', '.', ','];
+    if (forbiddenKeys.includes(e.key)) {
+      e.preventDefault();
+    }
+} ;
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleNewMarchamo()
+    }
+  }
+
+  const handleRemoveMarchamo = (indexToRemove) => {
+    const nuevosMarchamos = marchamos.filter((_, index) => index !== indexToRemove)
+    setAddMarchamos(nuevosMarchamos)
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="bg-white w-full max-w-lg rounded-2xl p-6 shadow-2xl max-h-[90vh] overflow-hidden border border-gray-200">
+        {/* Header */}
+        <div className="mb-2">
+          <h2 className="text-lg font-bold text-gray-800 mb-2">Adicionar Marchamos</h2>
+        </div>
+
+        {/* Input Section */}
+        <div className="mb-6">
+          <div className="relative">
+            <input
+              className="w-full text-sm px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all duration-200 outline-none text-gray-700 placeholder-gray-400"
+              placeholder="Ingrese nuevo marchamo..."
+              value={cuerpo}
+              type="number"
+              onChange={handleChangeCuerpo}
+              onKeyDown={handleKeyDown}
+              onKeyPress={handleKeyPress}
+            />
+            <button
+              onClick={handleNewMarchamo}
+              disabled={cuerpo.trim() === ''}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-[#725033] hover:bg-[#68513d] disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
+            >
+              Agregar
+            </button>
+          </div>
+        </div>
+
+        {/* Lista de Marchamos */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-gray-700">
+              Marchamos ({marchamos.length})
+            </h3>
+          </div>
+          
+          <div className="max-h-64 overflow-y-auto space-y-2 pr-2 custom-scrollbar border border-gray-200 p-4 rounded-xl">
+            {marchamos.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <p className="font-medium">No hay marchamos agregados</p>
+                <p className="text-sm">Agregue su primer marchamo arriba</p>
+              </div>
+            ) : (
+              marchamos.map((item, index) => (
+                <div
+                  key={index}
+                  className="group flex items-center justify-between bg-gradient-to-r from-gray-50 to-gray-100 hover:from-blue-50 hover:to-blue-100 px-2 py-1 rounded-xl border border-gray-200 hover:border-blue-300 transition-all duration-200 shadow-sm hover:shadow-md"
+                >
+                  <span className="text-gray-700 font-normal text-sm flex-1 mr-3">
+                    {item}
+                  </span>
+                  <button
+                    onClick={() => handleRemoveMarchamo(index)}
+                    className="opacity-0 group-hover:opacity-100 bg-red-500 hover:bg-red-600 text-white w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl"
+                    title="Eliminar marchamo"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+            
+        {/* Footer con estadísticas */}
+        <div className="mt-6 pt-4 border-t border-gray-200">
+          <button className="w-full bg-[] rounded-sm p-1 hover:scale-105" onClick={()=>setOpenMarchamos(false)}>Finalizar</button>
+        </div>
+      </div>
+
+      <style jsx>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #f1f5f9;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #94a3b8;
+        }
+      `}</style>
+    </div>
+  )
+}
