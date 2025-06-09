@@ -34,6 +34,7 @@ const Boletas = () => {
   const [dataDetails, setDataDetails] = useState()
   const [modalPrintTicket, setModalPrintTicket] = useState(false)
   const [infoTicket, setInfoTicket] = useState('')
+  const [marchamos, setAddMarchamos] = useState([])
   const [loadingPrintTicket, setLoadingPrintTicket] = useState(false)
   /**
    * Variables para la segunda parte
@@ -136,12 +137,13 @@ const Boletas = () => {
    * Todo: terminada Primera parte
    */
   const handleSubmitNewPlaca = async () => {
-    const response = formaterDataNewPlaca(formBoletas)
+    const response = formaterDataNewPlaca(formBoletas, marchamos)
     const isCorrect = verificarDataNewPlaca(setErr,response, setMsg)
     if (isCorrect) {
       await postBoletasNormal(response, setIsLoading)
       setSuccess(true)
       setMsg('agregar nueva boleta')
+      setAddMarchamos([])
       setOpenModalForm(false)
       closeAllDataOfForm()
     } 
@@ -336,7 +338,9 @@ const Boletas = () => {
     hdlClean: limpiar,
     hdlSubmit: handleSubmitNewPlaca,
     clean: newRender,
-    isLoading: isLoading
+    isLoading: isLoading, 
+    setAddMarchamos, 
+    marchamos,
   };
 
   const propsModalOutPlacas = {
