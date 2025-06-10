@@ -45,6 +45,8 @@ model Boleta {
     fechaFin DateTime?
     porTolerancia Float?
     siloID Int?
+    silo2 Int?
+    silo3 Int?
     fechaTolva DateTime?
     sello1 String?
     sello2 String?

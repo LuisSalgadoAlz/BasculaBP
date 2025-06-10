@@ -234,7 +234,7 @@ const getDataForSelectSilos = async(req, res) => {
 
 const updateSiloInBoletas = async(req, res) => {
   try{
-    const { silo } = req.body;
+    const { silo, silo2, silo3 } = req.body;
     const boletaID = req.params.id;
 
     const updateSiloBoleta = await db.boleta.update({
@@ -242,7 +242,9 @@ const updateSiloInBoletas = async(req, res) => {
         id: parseInt(boletaID)
       },
       data: {
-        siloID : parseInt(silo), 
+        siloID : parseInt(silo),
+        silo2 : parseInt(silo2),
+        silo3 : parseInt(silo3), 
         fechaTolva: new Date(), 
       }
     })
@@ -272,7 +274,10 @@ const getAsignForDay = async(req, res) => {
       idProducto : {in:[17, 18]},
       fechaTolva, 
     }
-
+    
+    const silos = await db.silos.findMany({select:{id: true, nombre:true}})
+    const newSilos = Object.fromEntries(silos.map(silo => [silo.id, silo.nombre]));
+    console.log(newSilos)
     const data = await db.boleta.findMany({
       select: {
         id: true,
@@ -286,27 +291,33 @@ const getAsignForDay = async(req, res) => {
           select :{
             nombre: true
           }
-        }
+        },
+        silo2: true, 
+        silo3: true,
       }, 
       where, 
       orderBy:{
         fechaTolva: 'desc'
-      },
+      },  
       skip: skip,
       take: limit,
     })
 
-    const totalData = await db.boleta.count({
-      where, 
-    })
+    const totalData = await db.boleta.count({ where, })
 
     const refactorData = data.map((prev) => {
-      const { boletasXsilos, ...rest } = prev;
+      const { boletasXsilos, silo2, silo3, ...rest } = prev;
+      const siloNombre = [
+        boletasXsilos?.nombre,
+        newSilos[prev.silo2],
+        newSilos[prev.silo3],
+      ].filter(Boolean).join(' / ');
+
       return {
-        Silo: boletasXsilos?.nombre ?? null,
+        Silo: siloNombre,
         ...rest,
         fechaTolva: new Date(prev.fechaTolva).toLocaleString(),
-      }
+      };
     });
     res.status(200).send( {
       data: refactorData, 
