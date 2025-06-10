@@ -76,6 +76,7 @@ const Boletas = () => {
     setOpenModalForm(!openModelForm);
     setFormBoletas(initialStateFormBoletas)
     setDataSelects(initialSateDataFormSelet)
+    setAddMarchamos([])
     getAllDataForSelect('', '', '', '', '',setDataSelects);
     setPlc('')
   };
@@ -106,6 +107,7 @@ const Boletas = () => {
     }
     if (name == "Placa" && (formBoletas?.Socios ==-998 || formBoletas?.Socios ==-999)) setPlc(value);
     if (name == "Movimiento") setMove(data)
+    if (name == "Movimiento" && value!=2) setAddMarchamos([])
     if (name == "Estado" && value==1) setFormBoletas((prev) => ({...prev, ['Proceso'] : 1}))
     if (name == "Socios" && (value==-998 || value==-999)) {
       setFormBoletas((prev) => ({
@@ -128,6 +130,7 @@ const Boletas = () => {
     const key = newRender + 1
     setFormBoletas(initialStateFormBoletas)
     setDataSelects(initialSateDataFormSelet)
+    setAddMarchamos([])
     setPlc('')
     setNewRender(key)
     getAllDataForSelect('', '', '', '', '',setDataSelects);
