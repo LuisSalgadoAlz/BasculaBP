@@ -61,7 +61,7 @@ const DashboardAdmin = () => {
         </div>
       </div>
 
-      <div className="mt-6 shadow-md rounded-2xl">
+      <div className="mt-6 rounded-2xl">
         {/* System Metrics */}
         <div className="mb-8">
           <div className="flex justify-between items-center mb-6">
