@@ -302,7 +302,7 @@ export const ModalNormal = ({ hdlClose, hdlChange, fillData, formBol, boletas, h
                     </div>
                   </>
                 )}
-                {((boletas?.Producto === 18 || boletas?.Producto === 17) && boletas?.Movimiento==2) && (
+                {(boletas?.Movimiento==2) && (
                   <>
                     <button 
                       className={buttonCalcular}
