@@ -125,9 +125,15 @@ const DashboardTolva = () => {
 
   const hdlSubmit = async () => {
     if (!formData?.silo) {
-      setError("No se ha seleccionado ningun silo.");
+      setError("No se ha seleccionado el silo principal.");
       return;
     }
+    if (formData?.silo == formData?.silo2 || formData?.silo == formData?.silo3 || formData?.silo2 == formData?.silo3){
+      if(formData?.silo2 !='' && formData?.silo3){
+        toast.error(`Los silos no deben de ser iguales.`);
+        return
+      }
+    } 
     setError("");
     const response = await updateSilos(formData, data?.id, setIsLoadAsingar);
     if (response?.msg) {
