@@ -612,12 +612,12 @@ export const VisualizarBoletas = (props) => {
           </div>
 
           {/* Impresiones */}
-          <div className="flex items-center justify-end gap-2 mt-4">
+          <div className="flex items-center justify-end gap-2 mt-4 max-sm:flex-col">
             {boletas?.estado !='Cancelada' && (
               <>
-                <ButtonPrint name={'Imprimir'} fun={handlePrintYellow} isLoad={isLoadingYellow} color={`bg-yellow-500`}/>
-                <ButtonPrint name={'Imprimir'} fun={handlePrintPink} isLoad={isLoadingPink} color={`bg-pink-500`}/>
-                <ButtonPrint name={'Imprimir'} fun={handlePrintGreen} isLoad={isLoadingGreen} color={`bg-green-500`}/> 
+                <ButtonPrint name={'Imprimir'} fun={handlePrintYellow} isLoad={isLoadingYellow} color={`bg-yellow-500 max-sm:w-full`}/>
+                <ButtonPrint name={'Imprimir'} fun={handlePrintPink} isLoad={isLoadingPink} color={`bg-pink-500 max-sm:w-full`}/>
+                <ButtonPrint name={'Imprimir'} fun={handlePrintGreen} isLoad={isLoadingGreen} color={`bg-green-500 max-sm:w-full`}/> 
               </>
             )} 
           </div>
