@@ -361,6 +361,8 @@ const Boletas = () => {
     isLoading : isLoading,
     proceso : proceso, 
     isLoadingDataOut, 
+    setAddMarchamos, 
+    marchamos, 
   };
 
   const propsModalCasulla = { 

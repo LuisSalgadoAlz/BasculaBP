@@ -350,12 +350,15 @@ export const ModalOut = (props) => {
     clean, 
     isLoading, 
     isLoadingDataOut, 
-    proceso
+    proceso,
+    setAddMarchamos, 
+    marchamos
   } = props;
   
   const [peso, setPeso] = useState('00lb');
   const [modal, setModal] = useState(false)
   const [dataPrev, setDataPrev] = useState()
+  const [openMarchamos, setOpenMarchamos] = useState(false)
 
   const getPesoOut = () => {
     formBol((prev)=> ({
@@ -400,6 +403,8 @@ export const ModalOut = (props) => {
       socket.close();
     };
   }, []);  
+
+  const propsAddMarchamos = {setAddMarchamos, marchamos, setOpenMarchamos}
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4 sm:p-6 min-h-screen bg-opa-50">
@@ -451,7 +456,13 @@ export const ModalOut = (props) => {
                 <InputsFormBoletas data={claseFormInputs} name={'Observaciones'} fun={hdlChange} />
               </div>
             </div>
-            <button onClick={hdlPrevisualizar} className={buttonCalcular}>Previsualizar</button>
+
+            <div className={`px-3 flex`}>
+              <button onClick={hdlPrevisualizar} className={buttonCalcular}>Previsualizar</button>
+              {
+                boletas?.Proceso == 1 && <button className={buttonCalcular} onClick={()=>setOpenMarchamos(true)}> Agregar Marchamos </button>
+              }
+            </div>
       
             <hr className="text-gray-300 mt-1" />
 
@@ -463,6 +474,7 @@ export const ModalOut = (props) => {
                 {isLoading ? 'Guardando...' : 'Guardar'}
               </button>
             </div>
+            {openMarchamos && <AgregarMarchamos {...propsAddMarchamos}/>}
           </>
         )}
       </div>
