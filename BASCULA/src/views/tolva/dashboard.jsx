@@ -129,7 +129,7 @@ const DashboardTolva = () => {
       return;
     }
     if (formData?.silo == formData?.silo2 || formData?.silo == formData?.silo3 || formData?.silo2 == formData?.silo3){
-      if(formData?.silo2 !='' && formData?.silo3){
+      if(formData?.silo2 !='' || formData?.silo3!=''){
         toast.error(`Los silos no deben de ser iguales.`);
         return
       }
