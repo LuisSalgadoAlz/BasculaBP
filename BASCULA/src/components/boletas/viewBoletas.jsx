@@ -53,14 +53,16 @@ const ViewBoletas = (props) => {
       return (
         <>
           <TableBoletas datos={boletas.data} fun={hdlOut} funCancel={hdlCancel} funReimprimir={funReimprimir}/>
-          {boletas.pagination.totalPages > 1 && (
-            <Pagination
-              pg={pagination}
-              sp={setPagination}
-              hp={handlePagination}
-              dt={boletas}
-            />
-          )}
+          <div className="mt-3">
+            {boletas.pagination.totalPages > 1 && (
+              <Pagination
+                pg={pagination}
+                sp={setPagination}
+                hp={handlePagination}
+                dt={boletas}
+              />
+            )}
+          </div>
         </>
       );
     } else {
@@ -77,14 +79,16 @@ const ViewBoletas = (props) => {
             fun={hdlOpenDetails}
             tipo={1}
           />
-          {completadas.pagination.totalPages > 1 && (
-            <Pagination
-              pg={pagination}
-              sp={setPagination}
-              hp={handlePaginationCompletadas}
-              dt={completadas}
-            />
-          )}
+          <div className="mt-3">
+            {completadas.pagination.totalPages > 1 && (
+              <Pagination
+                pg={pagination}
+                sp={setPagination}
+                hp={handlePaginationCompletadas}
+                dt={completadas}
+              />
+            )}
+          </div>
         </>
       );
     }
