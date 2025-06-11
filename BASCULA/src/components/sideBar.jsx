@@ -254,61 +254,86 @@ export const SideBar = ({ modo = "extendido", altura = 500 }) => {
         }`}
       > 
         <div className="px-3 w-full relative">
-          {/* Botón principal del usuario */}
-          <button
-            className={`w-full flex items-center gap-3 px-3 py-3 text-sm text-white hover:bg-white/10 rounded-lg transition-all duration-200 ${
-              !isExtendido ? "justify-center px-2" : ""
-            } ${isDropdownOpen ? 'bg-white/10' : ''}`}
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-          >
-            {/* Avatar */}
-            <div className="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden ring-2 ring-white/20">
-              <img 
-                src="/api/placeholder/36/36" 
-                alt="Avatar" 
-                className="w-full h-full object-cover rounded-full"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'flex';
-                }}
-              />
-              <PiUserCircleFill className="text-white/80 text-xl hidden" />
-            </div>
-            
-            {isExtendido && (
-              <>
-                <span className="flex-1 text-left font-medium text-white">{Cookies.get('name')}</span>
-                <PiCaretDownFill 
-                  className={`text-xs text-white/70 transition-all duration-200 ${
-                    isDropdownOpen ? 'rotate-180' : ''
-                  }`} 
+          {/* Contenedor principal */}
+          <div className="relative w-full">
+            <button
+              className={`w-full flex items-center gap-3 px-3 py-3 text-sm text-white hover:bg-white/10 rounded-lg transition-all duration-200 ${
+                !isExtendido ? "justify-center px-2" : ""
+              } ${isDropdownOpen ? 'bg-white/10' : ''}`}
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            >
+              {/* Avatar */}
+              <div className="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden ring-2 ring-white/20">
+                <img 
+                  src="/api/placeholder/36/36" 
+                  alt="Avatar" 
+                  className="w-full h-full object-cover rounded-full"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'flex';
+                  }}
                 />
-              </>
-            )}
-          </button>
+                <PiUserCircleFill className="text-white/80 text-xl hidden" />
+              </div>
+              
+              {isExtendido && (
+                <>
+                  <span className="flex-1 text-left font-medium text-white">{Cookies.get('name')}</span>
+                  <PiCaretDownFill 
+                    className={`text-xs text-white/70 transition-all duration-200 ${
+                      isDropdownOpen ? 'rotate-180' : ''
+                    }`} 
+                  />
+                </>
+              )}
+            </button>
 
-          {/* Dropdown Menu */}
-          {isDropdownOpen && isExtendido && (
-            <div className="absolute bottom-full left-3 right-3 mb-3 bg-[#725033] border border-[#725033] rounded-lg shadow-xl z-50 backdrop-blur-sm">
-              <button
-                className="w-full px-4 py-3.5 text-left text-sm text-slate-200 hover:bg-[#765c45] hover:text-white transition-all duration-150 flex items-center gap-3"
-                onClick={()=>console.log("Holaaaaaaa")}
-              >
-                <PiUserCircleFill className="text-base opacity-70" />
-                Perfil
-              </button>
-              
-              <div className="border-t border-slate-600 my-1" />
-              
-              <button
-                className="w-full px-4 py-3.5 text-left text-sm text-slate-200 hover:bg-red-600 hover:text-white transition-all duration-150 flex items-center gap-3"
-                onClick={handleClose}
-              >
-                <PiSignOutFill className="text-base opacity-70" />
-                Cerrar Sesión
-              </button>
-            </div>
-          )}
+            {/* Dropdown cuando está extendido - aparece abajo */}
+            {isDropdownOpen && isExtendido && (
+              <div className="absolute bottom-full left-3 right-3 mb-3 bg-[#725033] border border-[#725033] rounded-lg shadow-xl z-50 backdrop-blur-sm">
+                <button
+                  className="w-full px-4 py-3.5 text-left text-sm text-slate-200 hover:bg-[#765c45] hover:text-white transition-all duration-150 flex items-center gap-3"
+                  onClick={()=>console.log("Holaaaaaaa")}
+                >
+                  <PiUserCircleFill className="text-base opacity-70" />
+                  Perfil
+                </button>
+                
+                <div className="border-t border-slate-600 my-1" />
+                
+                <button
+                  className="w-full px-4 py-3.5 text-left text-sm text-slate-200 hover:bg-red-600 hover:text-white transition-all duration-150 flex items-center gap-3"
+                  onClick={handleClose}
+                >
+                  <PiSignOutFill className="text-base opacity-70" />
+                  Cerrar Sesión
+                </button>
+              </div>
+            )}
+
+            {/* Dropdown cuando está colapsado - aparece al lado */}
+            {isDropdownOpen && !isExtendido && (
+              <div className="absolute left-full top-1/6 -translate-y-1/2 ml-5 bg-[#725033] border border-[#725033] rounded-lg shadow-xl z-50 backdrop-blur-sm whitespace-nowrap">
+                <button
+                  className="w-full px-4 py-3.5 text-left text-sm text-slate-200 hover:bg-[#765c45] hover:text-white transition-all duration-150 flex items-center gap-3 min-w-[160px]"
+                  onClick={()=>console.log("Holaaaaaaa")}
+                >
+                  <PiUserCircleFill className="text-base opacity-70" />
+                  Perfil
+                </button>
+                
+                <div className="border-t border-slate-600 my-1" />
+                
+                <button
+                  className="w-full px-4 py-3.5 text-left text-sm text-slate-200 hover:bg-red-600 hover:text-white transition-all duration-150 flex items-center gap-3 min-w-[160px]"
+                  onClick={handleClose}
+                >
+                  <PiSignOutFill className="text-base opacity-70" />
+                  Cerrar Sesión
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* Overlay para cerrar el dropdown */}
           {isDropdownOpen && (
@@ -435,67 +460,92 @@ export const SideBarAdmin = ({ modo = "extendido", altura = 500 }) => {
       </div>
 
       {/* Botón Cerrar Sesión */}
-            <div
+      <div
         className={`${
           !isExtendido && altura <= 350 ? "block" : "mt-auto"
         }`}
       > 
         <div className="px-3 w-full relative">
-          {/* Botón principal del usuario */}
-          <button
-            className={`w-full flex items-center gap-3 px-3 py-3 text-sm text-white hover:bg-white/10 rounded-lg transition-all duration-200 ${
-              !isExtendido ? "justify-center px-2" : ""
-            } ${isDropdownOpen ? 'bg-white/10' : ''}`}
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-          >
-            {/* Avatar */}
-            <div className="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden ring-2 ring-white/20">
-              <img 
-                src="/api/placeholder/36/36" 
-                alt="Avatar" 
-                className="w-full h-full object-cover rounded-full"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'flex';
-                }}
-              />
-              <PiUserCircleFill className="text-white/80 text-xl hidden" />
-            </div>
-            
-            {isExtendido && (
-              <>
-                <span className="flex-1 text-left font-medium text-white">{Cookies.get('name')}</span>
-                <PiCaretDownFill 
-                  className={`text-xs text-white/70 transition-all duration-200 ${
-                    isDropdownOpen ? 'rotate-180' : ''
-                  }`} 
+          {/* Contenedor principal */}
+          <div className="relative w-full">
+            <button
+              className={`w-full flex items-center gap-3 px-3 py-3 text-sm text-white hover:bg-white/10 rounded-lg transition-all duration-200 ${
+                !isExtendido ? "justify-center px-2" : ""
+              } ${isDropdownOpen ? 'bg-white/10' : ''}`}
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            >
+              {/* Avatar */}
+              <div className="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden ring-2 ring-white/20">
+                <img 
+                  src="/api/placeholder/36/36" 
+                  alt="Avatar" 
+                  className="w-full h-full object-cover rounded-full"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'flex';
+                  }}
                 />
-              </>
-            )}
-          </button>
+                <PiUserCircleFill className="text-white/80 text-xl hidden" />
+              </div>
+              
+              {isExtendido && (
+                <>
+                  <span className="flex-1 text-left font-medium text-white">{Cookies.get('name')}</span>
+                  <PiCaretDownFill 
+                    className={`text-xs text-white/70 transition-all duration-200 ${
+                      isDropdownOpen ? 'rotate-180' : ''
+                    }`} 
+                  />
+                </>
+              )}
+            </button>
 
-          {/* Dropdown Menu */}
-          {isDropdownOpen && isExtendido && (
-            <div className="absolute bottom-full left-3 right-3 mb-3 bg-[#725033] border border-[#725033] rounded-lg shadow-xl z-50 backdrop-blur-sm">
-              <button
-                className="w-full px-4 py-3.5 text-left text-sm text-slate-200 hover:bg-slate-600 hover:text-white transition-all duration-150 flex items-center gap-3"
-                onClick={()=>console.log("Holaaaaaaa")}
-              >
-                <PiUserCircleFill className="text-base opacity-70" />
-                Perfil
-              </button>
-              
-              <div className="border-t border-slate-600 my-1" />
-              
-              <button
-                className="w-full px-4 py-3.5 text-left text-sm text-slate-200 hover:bg-red-600 hover:text-white transition-all duration-150 flex items-center gap-3"
-                onClick={handleClose}
-              >
-                <PiSignOutFill className="text-base opacity-70" />
-                Cerrar Sesión
-              </button>
-            </div>
-          )}
+            {/* Dropdown cuando está extendido - aparece abajo */}
+            {isDropdownOpen && isExtendido && (
+              <div className="absolute bottom-full left-3 right-3 mb-3 bg-[#725033] border border-[#725033] rounded-lg shadow-xl z-50 backdrop-blur-sm">
+                <button
+                  className="w-full px-4 py-3.5 text-left text-sm text-slate-200 hover:bg-[#765c45] hover:text-white transition-all duration-150 flex items-center gap-3"
+                  onClick={()=>console.log("Holaaaaaaa")}
+                >
+                  <PiUserCircleFill className="text-base opacity-70" />
+                  Perfil
+                </button>
+                
+                <div className="border-t border-slate-600 my-1" />
+                
+                <button
+                  className="w-full px-4 py-3.5 text-left text-sm text-slate-200 hover:bg-red-600 hover:text-white transition-all duration-150 flex items-center gap-3"
+                  onClick={handleClose}
+                >
+                  <PiSignOutFill className="text-base opacity-70" />
+                  Cerrar Sesión
+                </button>
+              </div>
+            )}
+
+            {/* Dropdown cuando está colapsado - aparece al lado */}
+            {isDropdownOpen && !isExtendido && (
+              <div className="absolute left-full top-1/6 -translate-y-1/2 ml-5 bg-[#725033] border border-[#725033] rounded-lg shadow-xl z-50 backdrop-blur-sm whitespace-nowrap">
+                <button
+                  className="w-full px-4 py-3.5 text-left text-sm text-slate-200 hover:bg-[#765c45] hover:text-white transition-all duration-150 flex items-center gap-3 min-w-[160px]"
+                  onClick={()=>console.log("Holaaaaaaa")}
+                >
+                  <PiUserCircleFill className="text-base opacity-70" />
+                  Perfil
+                </button>
+                
+                <div className="border-t border-slate-600 my-1" />
+                
+                <button
+                  className="w-full px-4 py-3.5 text-left text-sm text-slate-200 hover:bg-red-600 hover:text-white transition-all duration-150 flex items-center gap-3 min-w-[160px]"
+                  onClick={handleClose}
+                >
+                  <PiSignOutFill className="text-base opacity-70" />
+                  Cerrar Sesión
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* Overlay para cerrar el dropdown */}
           {isDropdownOpen && (
@@ -588,61 +638,86 @@ export const SideBarTolva = ({ modo = "extendido", altura = 500 }) => {
         }`}
       > 
         <div className="px-3 w-full relative">
-          {/* Botón principal del usuario */}
-          <button
-            className={`w-full flex items-center gap-3 px-3 py-3 text-sm text-white hover:bg-white/10 rounded-lg transition-all duration-200 ${
-              !isExtendido ? "justify-center px-2" : ""
-            } ${isDropdownOpen ? 'bg-white/10' : ''}`}
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-          >
-            {/* Avatar */}
-            <div className="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden ring-2 ring-white/20">
-              <img 
-                src="/api/placeholder/36/36" 
-                alt="Avatar" 
-                className="w-full h-full object-cover rounded-full"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'flex';
-                }}
-              />
-              <PiUserCircleFill className="text-white/80 text-xl hidden" />
-            </div>
-            
-            {isExtendido && (
-              <>
-                <span className="flex-1 text-left font-medium text-white">{Cookies.get('name')}</span>
-                <PiCaretDownFill 
-                  className={`text-xs text-white/70 transition-all duration-200 ${
-                    isDropdownOpen ? 'rotate-180' : ''
-                  }`} 
+          {/* Contenedor principal */}
+          <div className="relative w-full">
+            <button
+              className={`w-full flex items-center gap-3 px-3 py-3 text-sm text-white hover:bg-white/10 rounded-lg transition-all duration-200 ${
+                !isExtendido ? "justify-center px-2" : ""
+              } ${isDropdownOpen ? 'bg-white/10' : ''}`}
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            >
+              {/* Avatar */}
+              <div className="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden ring-2 ring-white/20">
+                <img 
+                  src="/api/placeholder/36/36" 
+                  alt="Avatar" 
+                  className="w-full h-full object-cover rounded-full"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'flex';
+                  }}
                 />
-              </>
-            )}
-          </button>
+                <PiUserCircleFill className="text-white/80 text-xl hidden" />
+              </div>
+              
+              {isExtendido && (
+                <>
+                  <span className="flex-1 text-left font-medium text-white">{Cookies.get('name')}</span>
+                  <PiCaretDownFill 
+                    className={`text-xs text-white/70 transition-all duration-200 ${
+                      isDropdownOpen ? 'rotate-180' : ''
+                    }`} 
+                  />
+                </>
+              )}
+            </button>
 
-          {/* Dropdown Menu */}
-          {isDropdownOpen && isExtendido && (
-            <div className="absolute bottom-full left-3 right-3 mb-3 bg-[#725033] border border-[#725033] rounded-lg shadow-xl z-50 backdrop-blur-sm">
-              <button
-                className="w-full px-4 py-3.5 text-left text-sm text-slate-200 hover:bg-slate-600 hover:text-white transition-all duration-150 flex items-center gap-3"
-                onClick={()=>console.log("Holaaaaaaa")}
-              >
-                <PiUserCircleFill className="text-base opacity-70" />
-                Perfil
-              </button>
-              
-              <div className="border-t border-slate-600 my-1" />
-              
-              <button
-                className="w-full px-4 py-3.5 text-left text-sm text-slate-200 hover:bg-red-600 hover:text-white transition-all duration-150 flex items-center gap-3"
-                onClick={handleClose}
-              >
-                <PiSignOutFill className="text-base opacity-70" />
-                Cerrar Sesión
-              </button>
-            </div>
-          )}
+            {/* Dropdown cuando está extendido - aparece abajo */}
+            {isDropdownOpen && isExtendido && (
+              <div className="absolute bottom-full left-3 right-3 mb-3 bg-[#725033] border border-[#725033] rounded-lg shadow-xl z-50 backdrop-blur-sm">
+                <button
+                  className="w-full px-4 py-3.5 text-left text-sm text-slate-200 hover:bg-[#765c45] hover:text-white transition-all duration-150 flex items-center gap-3"
+                  onClick={()=>console.log("Holaaaaaaa")}
+                >
+                  <PiUserCircleFill className="text-base opacity-70" />
+                  Perfil
+                </button>
+                
+                <div className="border-t border-slate-600 my-1" />
+                
+                <button
+                  className="w-full px-4 py-3.5 text-left text-sm text-slate-200 hover:bg-red-600 hover:text-white transition-all duration-150 flex items-center gap-3"
+                  onClick={handleClose}
+                >
+                  <PiSignOutFill className="text-base opacity-70" />
+                  Cerrar Sesión
+                </button>
+              </div>
+            )}
+
+            {/* Dropdown cuando está colapsado - aparece al lado */}
+            {isDropdownOpen && !isExtendido && (
+              <div className="absolute left-full top-1/6 -translate-y-1/2 ml-5 bg-[#725033] border border-[#725033] rounded-lg shadow-xl z-50 backdrop-blur-sm whitespace-nowrap">
+                <button
+                  className="w-full px-4 py-3.5 text-left text-sm text-slate-200 hover:bg-[#765c45] hover:text-white transition-all duration-150 flex items-center gap-3 min-w-[160px]"
+                  onClick={()=>console.log("Holaaaaaaa")}
+                >
+                  <PiUserCircleFill className="text-base opacity-70" />
+                  Perfil
+                </button>
+                
+                <div className="border-t border-slate-600 my-1" />
+                
+                <button
+                  className="w-full px-4 py-3.5 text-left text-sm text-slate-200 hover:bg-red-600 hover:text-white transition-all duration-150 flex items-center gap-3 min-w-[160px]"
+                  onClick={handleClose}
+                >
+                  <PiSignOutFill className="text-base opacity-70" />
+                  Cerrar Sesión
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* Overlay para cerrar el dropdown */}
           {isDropdownOpen && (
