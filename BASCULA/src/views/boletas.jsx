@@ -2,7 +2,7 @@ import { use, useCallback, useEffect, useState } from "react";
 import { ButtonAdd, ButtonAddBoleta } from "../components/buttons";
 import ViewBoletas from "../components/boletas/viewBoletas";
 import CardHeader from "../components/card-header";
-import { CancelarBoleta, ModalBoletas, ModalNormal, ModalOut, VisualizarBoletas } from "../components/boletas/formBoletas";
+import { CancelarBoleta, ModalBoletas, ModalNormal, ModalOut, ValidarMarchamos, VisualizarBoletas } from "../components/boletas/formBoletas";
 import { initialSateDataFormSelet, initialStateFormBoletas, initialStateStats } from "../constants/boletas";
 import { formaterData, getAllDataForSelect, postBoletasNormal, getDataBoletas, getStatsBoletas, formaterDataNewPlaca, verificarDataNewPlaca, getDataParaForm, updateBoletaOut, verificarDataCompleto, postBoletasCasulla, getDataBoletasCompletadas, getDataBoletasPorID, updateCancelBoletas, verificarDataCasulla, getToleranciaValue, getReimprimirTicketTolva } from "../hooks/formDataBoletas";
 import { ModalErr, ModalReimprimirTicket, ModalSuccess } from "../components/alerts";
@@ -35,6 +35,7 @@ const Boletas = () => {
   const [modalPrintTicket, setModalPrintTicket] = useState(false)
   const [infoTicket, setInfoTicket] = useState('')
   const [marchamos, setAddMarchamos] = useState([])
+  const [modalAlertSinMarchamos, setModalAlertMarchamos] = useState(false)
   const [loadingPrintTicket, setLoadingPrintTicket] = useState(false)
   /**
    * Variables para la segunda parte
@@ -141,7 +142,7 @@ const Boletas = () => {
    */
   const handleSubmitNewPlaca = async () => {
     const response = formaterDataNewPlaca(formBoletas, marchamos)
-    const isCorrect = verificarDataNewPlaca(setErr,response, setMsg)
+    const isCorrect = verificarDataNewPlaca(setErr,response, setMsg, marchamos)
     if (isCorrect) {
       await postBoletasNormal(response, setIsLoading)
       setSuccess(true)
@@ -162,27 +163,61 @@ const Boletas = () => {
     getDataParaForm(setFormBoletas, data, setMove, setIsLoadingDataOut) 
   }
 
-  const handleCompleteOut = async() => {
+  /**
+   * Modificado para agregar marchamos
+   * @returns 
+   */
+  const procesoDeGuardadoBoletaFinal = async() => {
     setIsLoading(true)
     try{
       const {valor} = await getToleranciaValue()
-      const response = formaterData(formBoletas, valor)
+      const response = formaterData(formBoletas, valor, marchamos)
       const isCorrect = verificarDataCompleto(setErr, response, setMsg, formBoletas?.pesoIn)
-      console.log(response)
       if (isCorrect) {
         await updateBoletaOut(response, formBoletas.idBoleta, setIsLoading)
-        setSuccess(true)
-        setMsg('dar salida a boleta')
-        setOutBol(false)
-        closeAllDataOfForm()    
+        return true
       }
     } catch (err) {
       console.error(err)
-      setIsLoading(false)
+      return false
     } finally {
       setIsLoading(false)
     }
   }
+
+  const finalizarProcesoExitoso = () => {
+    setMsg('dar salida a boleta');
+    setOutBol(false);
+    setModalAlertMarchamos(false);
+    closeAllDataOfForm();
+    setSuccess(true);
+  };
+
+  const handleCompleteOut = async () => {
+    if (marchamos.length === 0 && formBoletas?.Proceso===1) { 
+      setModalAlertMarchamos(true);
+      return;
+    }
+
+    const isFinish = await procesoDeGuardadoBoletaFinal();
+    if (isFinish) { finalizarProcesoExitoso(); }
+  };
+
+  const handleConfirmacionMarchamos = async () => {
+    const isFinish = await procesoDeGuardadoBoletaFinal();
+    
+    if (isFinish) {
+      setPagination(1);
+      setModalAlertMarchamos(false);
+      finalizarProcesoExitoso();  
+    }
+  };
+
+  const handleCancelNoMarchamos = () => {
+    setModalAlertMarchamos(false);
+    setIsLoading(false);
+  };
+
 
 
   /**
@@ -273,6 +308,7 @@ const Boletas = () => {
     setCancelBol(false)
     setIdCancelBol('')
     fetchData()
+    setPagination(1)
     fechDataSeaSearch()
   }
   
@@ -405,6 +441,12 @@ const Boletas = () => {
     hdlSubmit: handleClickPrintTicketTolva, 
   }
 
+  const propsModalAlertNoMarchamos = { 
+    hdClose: handleCancelNoMarchamos, 
+    hdlSubmit: handleConfirmacionMarchamos, 
+    isLoading, 
+  }
+
   return (
     <>
       <div className="flex justify-between w-full gap-5 max-sm:flex-col max-md:flex-col mb-4">
@@ -438,6 +480,7 @@ const Boletas = () => {
       {err && <ModalErr name={msg} hdClose={()=>setErr(false)} />}
       {success && <ModalSuccess name={msg} hdClose={handleCloseSuccess} />}
 
+      {modalAlertSinMarchamos && <ValidarMarchamos {...propsModalAlertNoMarchamos}/>}
 
       {/* Area para ver los detalles de las boletas completas */}
       <AnimatePresence>
