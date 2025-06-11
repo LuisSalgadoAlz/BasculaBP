@@ -435,13 +435,18 @@ export const getToleranciaValue = async () => {
   }
 };
 
-export const formaterData = (formBoletas, valor) => {
+export const formaterData = (formBoletas, valor, marchamos) => {
   const pesoNeto = Math.abs(formBoletas?.pesoOut - formBoletas?.pesoIn);
 
   const tolerancia = (formBoletas['Peso Teorico']) ? (formBoletas['Peso Teorico'] * valor) : 0;
   const desviacion = (formBoletas['Peso Teorico']) ? (Math.abs(pesoNeto) - formBoletas['Peso Teorico']) : 0;
   const absDesviacion = (formBoletas['Peso Teorico']) ? Math.abs(Math.abs(pesoNeto) - formBoletas['Peso Teorico']) : 0
   const fueraTol = (formBoletas['Peso Teorico']) ? (absDesviacion > tolerancia) : false
+  
+  const allSellos = marchamos.slice(0, 6).reduce((acc, sello, index) => {
+    acc[`sello${index + 1}`] = sello;
+    return acc;
+  }, {});
 
   const allData = {
     idCliente : formBoletas?.Socios,
@@ -467,13 +472,15 @@ export const formaterData = (formBoletas, valor) => {
     ordenDeTransferencia : formBoletas['Orden de Transferencia'] || null, 
     tipoSocio: formBoletas?.tipoSocio, 
     pesoNeto: pesoNeto, 
-    desviacion: desviacion
+    desviacion: desviacion, 
+    allSellos,
   }
+  console.log(allData)
   return allData
 }
 
 
-export const verificarDataNewPlaca = (funError, data, setMsg) => {
+export const verificarDataNewPlaca = (funError, data, setMsg, marchamos) => {
   const { 
     idCliente, 
     idUsuario, 
@@ -487,7 +494,7 @@ export const verificarDataNewPlaca = (funError, data, setMsg) => {
     idProducto,
     NViajes, 
     NSalida, 
-    idTrasladoOrigen
+    idTrasladoOrigen,
   } = data 
 
   /* pesoInicial */
@@ -533,6 +540,12 @@ export const verificarDataNewPlaca = (funError, data, setMsg) => {
     setMsg('Por favor, el peso inicial no debe de ser menor o igual a 0')
     return false
   }  
+
+  if(idMovimiento==2 && marchamos.length ==0){
+    funError(true)
+    setMsg('Las importaciones deben de llevar al menos 1 marchamo.')
+    return false
+  }
 
   return true
 };
