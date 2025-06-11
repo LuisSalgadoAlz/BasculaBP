@@ -91,6 +91,7 @@ const Boletas = () => {
     setProceso('')
     setPlc('')
     setMove('')
+    setAddMarchamos([])
   }
 
   /**
@@ -191,6 +192,7 @@ const Boletas = () => {
     setModalAlertMarchamos(false);
     closeAllDataOfForm();
     setSuccess(true);
+    setAddMarchamos([])
   };
 
   const handleCompleteOut = async () => {
