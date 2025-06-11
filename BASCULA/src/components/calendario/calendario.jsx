@@ -141,11 +141,13 @@ export const Calendario = () => {
                     <NoData />
                   </div>
                 ) : (
-                  <TimelineComponent 
-                    groups={detailsDaySeletect.groups} 
-                    items={detailsDaySeletect.items} 
-                    defaultTime={expandedDate}
-                  />
+                  <div className="max-h-[82vh] mt-2 bg-gray-50 overflow-y-auto">
+                    <TimelineComponent 
+                      groups={detailsDaySeletect.groups} 
+                      items={detailsDaySeletect.items} 
+                      defaultTime={expandedDate}
+                    />
+                  </div>
                 )}
             </motion.div>
           </motion.div>

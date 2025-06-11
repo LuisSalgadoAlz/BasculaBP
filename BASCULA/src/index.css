@@ -256,3 +256,10 @@ a.active {
   background-color: hsl(var(--sidebar))!important;
   color: white!important; 
 }
+
+.rct-header-root {
+  position: sticky;
+  top: 0;
+  z-index: 999; /* Aumenta para asegurar que se superponga */
+  background: white;
+}
