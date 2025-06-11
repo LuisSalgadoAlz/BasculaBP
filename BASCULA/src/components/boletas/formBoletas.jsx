@@ -5,12 +5,11 @@ import { buttonCalcular, buttonCancel, buttonClean, buttonDanger, buttonSave, cl
 import { propsModalPrevisual, propsModalPrevisualHijo, propsMotionHijo, propsMotionPadre, URLHOST, URLWEBSOCKET } from "../../constants/global";
 import { MiniSpinner, ModalPrevisual, SkeletonBoleta, SkeletonModalOut, Spinner } from "../alerts";
 import { motion } from "framer-motion";
-import { IoCloseSharp } from "react-icons/io5";
+import { IoCloseSharp, IoAlertCircleOutline, IoScaleOutline } from "react-icons/io5"; 
 import { ButtonPrint } from "../buttons";
 import { getPrintEpson, getToleranciaValue } from "../../hooks/formDataBoletas";
 import { CiLock } from "react-icons/ci";
 import { CiUnlock } from "react-icons/ci";
-import { IoScaleOutline } from 'react-icons/io5';
 import { Toaster, toast } from 'sonner';
 
 const formInputSelect = ['Transportes', 'Placa', 'Motoristas']
@@ -806,3 +805,56 @@ const AgregarMarchamos = ({ marchamos = [], setAddMarchamos, setOpenMarchamos })
     </div>
   )
 }
+
+export const ValidarMarchamos = ({ hdClose, hdlSubmit, isLoading }) => {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opa-50">
+      <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-md w-full mx-4 border border-gray-100 animate-fadeIn">
+        {/* Header con icono y título */}
+        <div className="flex items-center justify-center gap-3 mb-6">
+          <IoAlertCircleOutline className="text-3xl text-red-500 animate-pulse" />
+          <h2 className="text-2xl font-bold text-red-600 tracking-wide">
+            ALERTA
+          </h2>
+          <IoAlertCircleOutline className="text-3xl text-red-500 animate-pulse" />
+        </div>
+
+        {/* Contenido del mensaje */}
+        <div className="text-center mb-8">
+          <p className="text-gray-700 text-lg">
+            ¿Está seguro que desea ingresar la boleta{' '}
+            <span className="text-red-600 font-bold mt-2 text-xl"> SIN MARCHAMOS?</span>
+          </p>
+        </div>
+
+        {/* Botones de acción */}
+        <div className="flex flex-col sm:flex-row gap-3 justify-end">
+          <button
+            onClick={hdClose}
+            aria-label="Cancelar operación"
+            disabled={isLoading}
+            className="px-6 py-3 w-full text-gray-600 font-medium rounded-lg border border-gray-300 
+                       transition-all duration-200 ease-in-out 
+                       hover:bg-gray-50 hover:border-gray-400 hover:scale-[1.02]
+                       focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2
+                       active:scale-95"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={hdlSubmit}
+            aria-label="Confirmar ingreso sin marchamos"
+            disabled={isLoading}
+            className="px-6 py-3 w-full text-white font-semibold bg-gradient-to-r from-red-600 to-red-700 
+                       rounded-lg shadow-lg transition-all duration-200 ease-in-out 
+                       hover:from-red-700 hover:to-red-800 hover:scale-[1.02] hover:shadow-xl
+                       focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2
+                       active:scale-95"
+          >
+            {isLoading ? 'PROCESANDO...' : 'CONFIRMAR'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
