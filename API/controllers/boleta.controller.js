@@ -848,6 +848,7 @@ const updateBoletaOut = async (req, res) => {
       pesoNeto,
       pesoFinal,
       desviacion,
+      allSellos
     } = req.body;
 
     const verificado = jwt.verify(idUsuario, process.env.SECRET_KEY);
@@ -966,6 +967,7 @@ const updateBoletaOut = async (req, res) => {
         pesoNeto: parseFloat(pesoNeto),
         desviacion: parseFloat(desviacion),
         porTolerancia,
+        ...allSellos,
         ordenDeCompra: proceso == 0 ? parseInt(ordenDeCompra) : null,
         ordenDeTransferencia: isTraslado
           ? parseInt(ordenDeTransferencia)
