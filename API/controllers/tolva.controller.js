@@ -277,7 +277,6 @@ const getAsignForDay = async(req, res) => {
     
     const silos = await db.silos.findMany({select:{id: true, nombre:true}})
     const newSilos = Object.fromEntries(silos.map(silo => [silo.id, silo.nombre]));
-    console.log(newSilos)
     const data = await db.boleta.findMany({
       select: {
         id: true,
