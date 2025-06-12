@@ -586,7 +586,7 @@ export const VisualizarBoletas = (props) => {
               <div className="flex flex-col gap-1">
                 <span className="text-md font-bold text-gray-700">Datos de la boleta:</span>
                 <hr className="text-gray-400 mb-4" />
-                <span className="text-md text-gray-700 border-2 p-4 rounded-sm mb-4">{parseInt(boletas?.proceso)===0 || parseInt(boletas?.proceso)===1 ? opt[parseInt(boletas?.proceso)]  : isNullData}</span>
+                <span className="text-md text-gray-700 border-2 p-2 rounded-sm mb-4">{parseInt(boletas?.proceso)===0 || parseInt(boletas?.proceso)===1 ? opt[parseInt(boletas?.proceso)]  : isNullData}</span>
                 <span className="text-md text-gray-700">Producto: {boletas?.producto ? boletas?.producto : isNullData}</span>
                 <span className="text-md text-gray-700">Movimiento: {boletas?.movimiento ? boletas?.movimiento : isNullData}</span>
                 <span className="text-md text-gray-700">Manifiesto: {boletas?.manifiesto ? boletas?.manifiesto: isNullData}</span>
@@ -596,6 +596,14 @@ export const VisualizarBoletas = (props) => {
                 <span className="text-md text-gray-700">Fecha Inicial: {boletas?.fechaInicio ? new Date(boletas?.fechaInicio).toLocaleString(): isNullData}</span>
                 <span className="text-md text-gray-700">Fecha Inicial: {boletas?.fechaInicio ? new Date(boletas?.fechaFin).toLocaleString(): isNullData}</span>
                 <span className="text-md text-gray-700">Duracion del proceso: {tiempoDeEstadia()}</span>
+                <hr className="text-gray-400 my-4"/>
+                <span className="text-md font-bold text-gray-700">Marchamos:</span>
+                <span className="text-md text-gray-700 bg-gray-200 p-2 rounded-sm shadow-2xl">
+                  Sellos:{' '}
+                  {[boletas?.sello1, boletas?.sello2, boletas?.sello3, boletas?.sello4, boletas?.sello5, boletas?.sello6]
+                    .filter(Boolean)
+                    .join(', ') || 'N/A'}
+                </span>
               </div>
             </div>
             <div className="p-4 border-2 border-gray-300 rounded-lg">
