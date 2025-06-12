@@ -7,7 +7,7 @@ import {
   IoGrid,
   IoBusinessOutline,
 } from "react-icons/io5";
-import { MdOutlinePlace } from "react-icons/md";
+import { MdOutlinePlace, MdOutlineSecurity } from "react-icons/md";
 
 export const Modals = (props) => {
   const { hdlClose, hdlSubmit, isLoadingImage, data, silos, handleChange, error} = props
@@ -114,6 +114,21 @@ export const Modals = (props) => {
                     <p className="text-sm font-medium text-gray-800">
                       {new Date(data?.fechaInicio).toLocaleString() ||
                         "No especificada"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Marchamos */}
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center w-8 h-8 bg-purple-100 rounded-full">
+                    <MdOutlineSecurity size={16} className="text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Marchamos</p>
+                    <p className="text-sm font-medium text-gray-800">
+                      {[data?.sello1, data?.sello2, data?.sello3, data?.sello4, data?.sello5, data?.sello6]
+                    .filter(Boolean)
+                    .join(', ') || 'N/A'}
                     </p>
                   </div>
                 </div>
