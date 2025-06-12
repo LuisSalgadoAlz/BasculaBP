@@ -41,6 +41,7 @@ const Informes = () => {
   };
 
   const handlePushFilter = () => {
+    console.log(formFiltros)
     if (!formFiltros?.dateIn || !formFiltros?.dateOut) {
       setErr(true);
       setMsg(
@@ -60,7 +61,7 @@ const Informes = () => {
       return;
     }
 
-    const url = `${URLHOST}boletas/export/excel?movimiento=${formFiltros?.movimiento}&producto=${formFiltros?.producto}&dateIn=${formFiltros?.dateIn}&dateOut=${formFiltros?.dateOut}`;
+    const url = `${URLHOST}boletas/export/excel?movimiento=${formFiltros?.movimiento}&producto=${formFiltros?.producto}&dateIn=${formFiltros?.dateIn}&dateOut=${formFiltros?.dateOut}&socio=${formFiltros?.socio}`;
     window.open(url, '_blank');
   };
 

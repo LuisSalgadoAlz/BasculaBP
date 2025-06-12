@@ -10,6 +10,7 @@ const exportToExcel = async (req, res) => {
     const dateOut = req.query.dateOut;
     const producto = req.query.producto || null;
     const movimiento = req.query.movimiento || null;
+    const socio = req.query.socio || null;
 
     const [y1, m1, d1] = dateIn.split("-").map(Number);
     const startOfDay = new Date(Date.UTC(y1, m1 - 1, d1, 6, 0, 0));
@@ -25,6 +26,7 @@ const exportToExcel = async (req, res) => {
         AND: [{estado: {not: "Pendiente"}}, {estado: {not: "Cancelada"}}],
         ...(movimiento ? { movimiento: movimiento } : {}),
         ...(producto ? { producto: producto } : {}),
+        ...(socio ? {socio : socio} : {})
       },
     });
 
