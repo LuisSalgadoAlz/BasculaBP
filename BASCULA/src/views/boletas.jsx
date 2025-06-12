@@ -168,22 +168,33 @@ const Boletas = () => {
    * Modificado para agregar marchamos
    * @returns 
    */
-  const procesoDeGuardadoBoletaFinal = async() => {
+
+  const validarDatosPrincipales = async () => {
+    const {valor} = await getToleranciaValue()
+    const response = formaterData(formBoletas, valor, marchamos)
+    const isCorrect = verificarDataCompleto(setErr, response, setMsg, formBoletas?.pesoIn)
+    return { isCorrect, response, valor }
+  }
+
+  const guardarBoletaConDatos = async (response) => {
     setIsLoading(true)
-    try{
-      const {valor} = await getToleranciaValue()
-      const response = formaterData(formBoletas, valor, marchamos)
-      const isCorrect = verificarDataCompleto(setErr, response, setMsg, formBoletas?.pesoIn)
-      if (isCorrect) {
-        await updateBoletaOut(response, formBoletas.idBoleta, setIsLoading)
-        return true
-      }
+    try {
+      await updateBoletaOut(response, formBoletas.idBoleta, setIsLoading)
+      return true
     } catch (err) {
       console.error(err)
       return false
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const procesoDeGuardadoBoletaFinal = async() => {
+    const { isCorrect, response } = await validarDatosPrincipales()
+    if (isCorrect) {
+      return await guardarBoletaConDatos(response)
+    }
+    return false
   }
 
   const finalizarProcesoExitoso = () => {
@@ -196,12 +207,18 @@ const Boletas = () => {
   };
 
   const handleCompleteOut = async () => {
+    const { isCorrect, response } = await validarDatosPrincipales()
+    
+    if (!isCorrect) {
+      return;
+    }
+
     if (marchamos.length === 0 && formBoletas?.Proceso===1) { 
       setModalAlertMarchamos(true);
       return;
     }
 
-    const isFinish = await procesoDeGuardadoBoletaFinal();
+    const isFinish = await guardarBoletaConDatos(response)
     if (isFinish) { finalizarProcesoExitoso(); }
   };
 
@@ -237,7 +254,7 @@ const Boletas = () => {
   }
 
   const handleSubmitCasulla = async() => {
-    const response = formaterData(formBoletas)
+    const response = formaterData(formBoletas, 0, marchamos)
     const allForm = {...response, ['pesoInicial']: formBoletas?.pesoIn, ["Cliente"] : formBoletas?.Cliente}
     const isCorrect = verificarDataCasulla(setErr, response, setMsg, formBoletas?.pesoIn)
     if (isCorrect) {
