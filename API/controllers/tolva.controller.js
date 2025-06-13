@@ -223,6 +223,30 @@ const analizadorQR = async (req, res) => {
   }
 };
 
+/* Sustituto en caso de que falle el QR */
+
+const buscarBoleSinQR = async(req, res) => {
+  try {
+    const id = req.query.id || null;
+    
+    if (!id || id==0) return res.status(200).send({err: 'ID no valida, intente denuevo.'})
+    
+    const boleta = await db.boleta.findUnique({where:{id:parseInt(id)}})
+
+    if (!boleta) return res.status(200).send({err: 'Boleta no encontrada'})
+    if (boleta.estado !='Pendiente') return res.status(200).send({err: 'Boleta ya finalizada, no puede asignarla.'})
+    if (boleta.siloID) return res.status(200).send({err: 'Boleta ya ha sido asignada.'})
+    
+    return res.json({ 
+      boleta: boleta,
+      processingTime: 0, 
+    });
+
+  }catch(err){
+    console.log(err)
+  }
+}
+
 const getDataForSelectSilos = async(req, res) => {
   try{
     const data = await db.silos.findMany()
@@ -379,5 +403,5 @@ const getStatsForTolva = async(req, res) =>{
 }
 
 module.exports = {
-  analizadorQR, getDataForSelectSilos, updateSiloInBoletas, getAsignForDay, getStatsForTolva
+  analizadorQR, getDataForSelectSilos, updateSiloInBoletas, getAsignForDay, getStatsForTolva, buscarBoleSinQR
 };
