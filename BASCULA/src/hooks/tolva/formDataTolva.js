@@ -99,6 +99,29 @@ export const getDataAsign = async (fun, setIsLoading, pagination) => {
   }
 };
 
+export const getBoletaSinQR = async (id, setIsLoading) => {
+  try {
+    setIsLoading(true)
+    const response = await fetch(`${URLHOST}tolva/analizar-sin-qr?id=${id}`, {
+      method: "GET",
+      headers: {
+        Authorization: Cookies.get('token'),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API");
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error al obtener los clientes:", error);
+  } finally {
+    setIsLoading(false)
+  }
+};
+
 export const getStatsTolvaDiarias = async (fun) => {
   try {
     const response = await fetch(`${URLHOST}tolva/stats`, {
