@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { FiCalendar, FiClock } from "react-icons/fi";
 import { FaBox } from "react-icons/fa";
 import {
+  getBoletaSinQR,
   getDataAsign,
   getDataSelectSilos,
   getStatsTolvaDiarias,
@@ -43,7 +44,7 @@ const DashboardTolva = () => {
   const [isLoadingTable, setLoadingTables] = useState(false)
   const [stats, setStats] = useState()
   const [pagination, setPagination] = useState(1)
-
+  const [buscarID, setBuscarID] = useState('')
   const handleImageChange = (event) => {
     const file = event.target.files[0];
 
@@ -123,17 +124,45 @@ const DashboardTolva = () => {
     }));
   };
 
+  const handleKeyDown = (e) => {
+    const forbiddenKeys = ['e', 'E', '+', '-', '.', ','];
+    if (forbiddenKeys.includes(e.key)) {
+      e.preventDefault();
+    }
+  };
+
+  const handleChangeForSearch = (e) => {
+    const { value } = e.target
+    setBuscarID(value)
+  }
+
+  const handleClickSearch = async(e) => {
+    setModalDeAsignacion(true);
+    const response = await getBoletaSinQR(buscarID, setIsLoadingImage)
+    if (response?.err) {
+      toast.error(response?.err);
+      setData("");
+      setModalDeAsignacion(false);
+      return;
+    }
+    setData(response?.boleta);
+  }
+
   const hdlSubmit = async () => {
-    if (!formData?.silo) {
+    const { silo, silo2, silo3 } = formData || {};
+
+    if (!silo) {
       setError("No se ha seleccionado el silo principal.");
       return;
     }
-    if (formData?.silo == formData?.silo2 || formData?.silo == formData?.silo3 || formData?.silo2 == formData?.silo3){
-      if(formData?.silo2 !='' || formData?.silo3!=''){
-        toast.error(`Los silos no deben de ser iguales.`);
-        return
-      }
-    } 
+    
+    const filledSilos = [silo, silo2, silo3].filter(Boolean);
+    const uniqueSilos = new Set(filledSilos);
+
+    if (filledSilos.length !== uniqueSilos.size) {
+      toast.error('Los silos no deben de ser iguales.');
+      return;
+    }
     setError("");
     const response = await updateSilos(formData, data?.id, setIsLoadAsingar);
     if (response?.msg) {
@@ -236,10 +265,30 @@ const DashboardTolva = () => {
         <div className="bg-white shadow-md rounded-lg border border-gray-200 overflow-hidden min-h-[450px]">
           {!modeView && (
             <>
-              <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-                <h2 className="text-xl font-semibold text-gray-800">
-                  Analizador de Códigos QR
-                </h2>
+              <div className="p-4 sm:p-6 border-b border-gray-200 bg-white shadow-sm">
+                <div className="flex flex-col justify-baseline gap-4 w-full">
+                  <h2 className="text-md sm:text-xl font-semibold text-gray-800 text-left sm:text-left">
+                    Analizador de Códigos QR
+                  </h2>
+                  
+                  <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto sm:min-w-[300px]">
+                    <input
+                      type="number" className="flex-1 bg-white py-2.5 px-4 rounded-lg border focus:border transition-all duration-200 font-medium placeholder-gray-300" 
+                      onKeyDown={handleKeyDown}
+                      onChange={handleChangeForSearch}
+                      placeholder="Buscar por ID..."
+                    />
+                    
+                    <button 
+                    onClick={handleClickSearch}
+                    className="bg-[#725033] hover:bg-[#866548] text-white font-medium 
+                                      py-2.5 px-6 rounded-lg transition-all duration-200 
+                                      focus:outline-none focus:ring-2 focus:ring-[#a67c5a] 
+                                      min-w-[100px]">
+                      Buscar
+                    </button>
+                  </div>
+                </div>
               </div>
               <div className="w-full p-4">
                 {!selectedImage ? (
