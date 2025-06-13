@@ -650,6 +650,8 @@ const reImprimirTikets = (boleta, despachador) => {
             { text: "PROCEDENCIA:", align: "LEFT", width: 0.4, style: 'B' }, 
             { text: PROCEDENCIA, align: "RIGHT", width: 0.4 }
           ])
+          .text(`MARCHAMOS:`)
+          .text([boleta?.sello1, boleta?.sello2, boleta?.sello3, boleta?.sello4, boleta?.sello5, boleta?.sello6].filter(Boolean).join(', ') || 'N/A')
           .text('------------------------------------------')
           .style(`NORMAL`)
           .text(` `)
