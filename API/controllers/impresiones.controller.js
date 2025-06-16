@@ -1099,7 +1099,7 @@ const generarCantidadCopias = (boleta) => {
   const arrSubproductos = [2, 7, 8, 9, 10]
   const arrExtras = [1, 27, 28, 29, 30, 31, 32, 33, 34]
   const arrTraslados = [10, 11]
-  const todasLasCopias = [11, 17, 21, 35]
+  const todasLasCopias = [11, 17, 21, 35, 36]
   const paseDeSalida = [18, 23]
 
   if (arrTraslados.includes(idMovimiento)) {
