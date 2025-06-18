@@ -1,8 +1,9 @@
 import {URLHOST} from '../../constants/global'
 import Cookies from 'js-cookie'
 
-export const getDatosUsuarios = async (fun) => {
+export const getDatosUsuarios = async (fun, setIsLoading) => {
   try {
+    setIsLoading(true)
     const response = await fetch(`${URLHOST}tolva/tipoUsuario`, {
       method: "GET",
       headers: {
@@ -18,6 +19,8 @@ export const getDatosUsuarios = async (fun) => {
     fun(data);
   } catch (error) {
     console.error("Error al obtener los clientes:", error);
+  } finally{
+    setIsLoading(false)
   }
 };
 
