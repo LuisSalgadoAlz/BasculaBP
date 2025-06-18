@@ -221,17 +221,40 @@ const analizadorQR = async (req, res) => {
 };
 
 /* Sustituto en caso de que falle el QR */
-
+/**
+ * Faltan agregar validacion de la tolva de los recibos
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 const buscarBoleSinQR = async(req, res) => {
   try {
     const id = req.query.id || null;
+    const token = req.header('Authorization');
     
+    if (!token) return res.status(401).send({ error: 'Token no proporcionado' });
+    const verificado = jwt.verify(token, process.env.SECRET_KEY);
+    
+    const usuario = await db.usuarios.findUnique({
+      select: {
+        name: true,
+        UsuariosPorTolva: {
+          select: { tolva: true }
+        }
+      },
+      where: { usuarios: verificado["usuarios"] }
+    });
+
     if (!id || id==0) return res.status(200).send({err: 'ID no valida, intente denuevo.'})
     
     const boleta = await db.boleta.findUnique({where:{id:parseInt(id)}})
 
     if (!boleta) return res.status(200).send({err: 'Boleta no encontrada'})
     if (boleta.estado !='Pendiente') return res.status(200).send({err: 'Boleta ya finalizada, no puede asignarla.'})
+    if (boleta.idProducto !=17 && boleta.idProducto!=18) return res.status(200).send({err: 'Favor, ingresar boletas proporcionadas por su ticket'})
+
+    if (boleta.tolvaAsignada!=usuario.UsuariosPorTolva.tolva) return res.status(200).send({err: 'Boleta, no esta asignada a su tolva, favor enviar a la tolva correcta'})
+
     /* Falta Validacion */
     return res.json({ 
       boleta: boleta,
@@ -243,20 +266,59 @@ const buscarBoleSinQR = async(req, res) => {
   }
 }
 
-const getDataForSelectSilos = async(req, res) => {
-  try{
-    const tolva = req.query.tolva || null;
+/**
+ * CORRECTA LISTA PARA PRODUCCION
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
+const getDataForSelectSilos = async (req, res) => {
+  try {
+    const token = req.header('Authorization');
+    if (!token) return res.status(401).send({ error: 'Token no proporcionado' });
 
-    const [t1, t2] = Promise.all([
-      db.silos.findMany()
-    ])
-    const data = await db.silos.findMany()
-    res.status(200).send(data)
-  }catch(err) {
-    console.log(err)
+    const verificado = jwt.verify(token, process.env.SECRET_KEY);
+    
+    const usuario = await db.usuarios.findUnique({
+      select: {
+        name: true,
+        UsuariosPorTolva: {
+          select: { tolva: true }
+        }
+      },
+      where: { usuarios: verificado["usuarios"] }
+    });
+
+    if (!usuario || !usuario.UsuariosPorTolva) {
+      return res.status(201).send({ error: 'Usuario o configuración de tolva no encontrada' });
+    }
+
+    const tolva = usuario.UsuariosPorTolva.tolva;
+    const filtros = {
+      1: [1, 3],
+      2: [2, 3]
+    };
+
+    const silos = await db.silos.findMany({
+      where: {
+        nivelTolvaPermitida: {
+          in: filtros[tolva] || filtros[2]
+        }
+      }
+    });
+
+    res.status(200).send(silos);
+  } catch (err) {
+    console.error('Error al obtener silos:', err);
+    res.status(500).send({ error: 'Error interno del servidor' });
   }
-}
+};
 
+/**
+ * CORRECTA, LISTA PARA PRODUCCION
+ * @param {*} req 
+ * @param {*} res 
+ */
 const getListUsersForTolva = async(req, res) =>{
   try{
     const verificado = jwt.verify(req.header('Authorization'), process.env.SECRET_KEY);
@@ -274,25 +336,44 @@ const getListUsersForTolva = async(req, res) =>{
     console.log(err)
   }
 }
+
 /**
  * !ARREGLAR
  * @param {*} req 
  * @param {*} res 
  */
-const updateSiloInBoletas = async(req, res) => {
+const postSiloInBoletas = async(req, res) => {
   try{
-    const { silo, silo2, silo3 } = req.body;
+    const { silo, silo2, silo3, tolvaDescarga } = req.body;
     const boletaID = req.params.id;
 
-    const updateSiloBoleta = await db.boleta.update({
-      where : {
-        id: parseInt(boletaID)
+    const token = req.header('Authorization');
+    
+    if (!token) return res.status(401).send({ error: 'Token no proporcionado' });
+    const verificado = jwt.verify(token, process.env.SECRET_KEY);
+    
+    const usuario = await db.usuarios.findUnique({
+      select: {
+        id:true, 
+        name: true,
+        UsuariosPorTolva: {
+          select: { tolva: true }
+        }
       },
+      where: { usuarios: verificado["usuarios"] }
+    });
+
+    const updateSiloBoleta = await db.tolva.create({
       data: {
-        siloID : parseInt(silo),
-        silo2 : parseInt(silo2),
-        silo3 : parseInt(silo3), 
-        fechaTolva: new Date(), 
+        idBoleta: parseInt(boletaID), 
+        fechaEntrada: new Date(), 
+        idUsuarioTolva: usuario.id, 
+        usuarioTolva: usuario.name, 
+        siloPrincipal: parseInt(silo), 
+        siloSecundario: parseInt(silo2)|| null, 
+        SiloTerciario: parseInt(silo3) || null, 
+        estado: 0, 
+        tolvaDescarga: `T${usuario.UsuariosPorTolva.tolva}-${tolvaDescarga}`
       }
     })
     res.status(200).send({msg:'¡Boleta ha sido asignada correctamente!'})
@@ -403,5 +484,5 @@ const getStatsForTolva = async(req, res) =>{
 }
 
 module.exports = {
-  analizadorQR, getDataForSelectSilos, updateSiloInBoletas, getAsignForDay, getStatsForTolva, buscarBoleSinQR, getListUsersForTolva
+  analizadorQR, getDataForSelectSilos, postSiloInBoletas, getAsignForDay, getStatsForTolva, buscarBoleSinQR, getListUsersForTolva
 };
