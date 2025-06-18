@@ -141,9 +141,10 @@ export const Modals = (props) => {
                   Seleccionar tolva de descarga 
                 </label>
                 <select name="tolvaDescarga"
+                  onChange={handleChange}
                   className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#5A3F27] focus:border-transparent text-sm transition-all border-gray-300`}
                 >
-                  <option value={1}>Seleccione tolva de descarga</option>
+                  <option value={null}>Seleccione tolva de descarga</option>
                   <option value={1}>Tolva De Descarga #1</option>
                   <option value={2}>Tolva De Descarga #2</option>
                 </select>
