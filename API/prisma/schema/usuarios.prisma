@@ -9,5 +9,6 @@ model Usuarios {
     /* Relaciones con la boletas vendria siendo de una a muchas un usuario puede tener muchas boletas pero una
     boleta solo puede tener un usuario */
     
+    UsuariosPorTolva UsuariosPorTolva?
     boletas Boleta[]
 }
