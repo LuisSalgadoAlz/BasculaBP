@@ -527,8 +527,10 @@ export const VisualizarBoletas = (props) => {
     return `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
   };
   
-  const TARA = (boletas?.pesoInicial && boletas?.pesoFinal) ? boletas?.proceso == 0 ? boletas?.pesoFinal : boletas?.pesoInicial : 0
-  const PESOBRUTO = (boletas?.pesoInicial && boletas?.pesoFinal) ? boletas?.proceso == 0 ? boletas?.pesoInicial : boletas?.pesoFinal : 0
+  const isEspecialTraslado = boletas?.proceso === 0 && (boletas?.idMovimiento===10 || boletas?.idMovimiento===11)
+
+  const TARA = isEspecialTraslado ? boletas?.pesoInicial : ((boletas?.pesoInicial && boletas?.pesoFinal) ? boletas?.proceso == 0 ? boletas?.pesoFinal : boletas?.pesoInicial : 0)
+  const PESOBRUTO =isEspecialTraslado ? boletas?.pesoFinal : ((boletas?.pesoInicial && boletas?.pesoFinal) ? boletas?.proceso == 0 ? boletas?.pesoInicial : boletas?.pesoFinal : 0)
 
   return (
     <div className="fixed inset-0 bg-opacity-50 z-50 min-h-screen overflow-auto ">
