@@ -14,7 +14,7 @@ import { Modals } from "../../components/tolva/modals";
 import { Toaster, toast } from "sonner";
 import { isSelectedView, noSelectectView } from "../../constants/boletas";
 import { TableTolva } from "../../components/tolva/table";
-import { NoData } from "../../components/alerts";
+import { NoData, Spinner } from "../../components/alerts";
 import { Pagination } from "../../components/buttons";
 
 const StatCard = ({ icon, title, value, color }) => {
@@ -34,6 +34,7 @@ const StatCard = ({ icon, title, value, color }) => {
 const DashboardTolva = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [userData, setUserData] = useState(null)
+  const [isLoadingUserData, setIsLoadingUserData] = useState(false)
   const [isLoadingImage, setIsLoadingImage] = useState(false);
   const [modalDeAsignacion, setModalDeAsignacion] = useState(false);
   const [data, setData] = useState("");
@@ -180,7 +181,7 @@ const DashboardTolva = () => {
   useEffect(() => {
     getDataSelectSilos(setSilos);
     getStatsTolvaDiarias(setStats)
-    getDatosUsuarios(setUserData)
+    getDatosUsuarios(setUserData, setIsLoadingUserData)
   }, []);
 
   useEffect(() => {
@@ -217,196 +218,43 @@ const DashboardTolva = () => {
         <div className="flex justify-between w-full gap-5 max-sm:flex-col max-md:flex-col mb-4">
           <div className="parte-izq">
             <h1 className="text-3xl font-bold titulo max-sm:text-xl">Registros de: {userData?.name || 'Cargando...'} </h1>
-            <h1 className="text-md   font-bold titulo">Tolva Asignada: {`Tolva ${userData?.UsuariosPorTolva?.tolva}` || 'NO ASIGNADA'}</h1>
+            <h1 className="text-md   font-bold titulo">Tolva Asignada: {`Tolva ${userData?.UsuariosPorTolva?.tolva || 'NO ASIGNADA'}`}</h1>
             <h1 className="text-gray-600 max-sm:text-sm">
               {" "}
               Sistema de gestión de almacenamiento de boletas en tolva.
             </h1>
           </div>
         </div>
-        {/* Tarjetas de estadísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-3 max-sm:hidden">
-          <StatCard
-            icon={<FiCalendar size={24} className="text-white" />}
-            title="Total Boletas(hoy)"
-            value={stats?.total || 0}
-            color="bg-blue-500"
-          />
-          <StatCard
-            icon={<FiClock size={24} className="text-white" />}
-            title="Pendientes(hoy)"
-            value={stats?.pendientes || 0}
-            color="bg-amber-500"
-          />
-          <StatCard
-            icon={<FaBox size={24} className="text-white" />}
-            title="Granza Americana(hoy)"
-            value={stats?.gamericana || 0}
-            color="bg-yellow-500"
-          />
-          <StatCard
-            icon={<FaBox size={24} className="text-white" />}
-            title="Granza Nacional(hoy)"
-            value={stats?.gnacional || 0}
-            color="bg-red-500"
-          />
-        </div>
-        <div className="filtros grid grid-rows-1 grid-flow-col my-4">
-          <button
-            onClick={()=> setModeView(false)}
-            className={modeView == false ? isSelectedView : noSelectectView}
-          >
-            Escanear QR
-          </button>
-          <button
-            onClick={()=> setModeView(true)}
-            className={modeView == true ? isSelectedView : noSelectectView}
-          >
-            Asignadas
-          </button>
-        </div>
-        {/* Tabla de logs con acciones */}
-        <div className="bg-white shadow-md rounded-lg border border-gray-200 overflow-hidden min-h-[450px]">
-          {!modeView && (
-            <>
-              <div className="p-4 sm:p-6 border-b border-gray-200 bg-white shadow-sm">
-                <div className="flex flex-col justify-baseline gap-4 w-full">
-                  <h2 className="text-md sm:text-xl font-semibold text-gray-800 text-left sm:text-left">
-                    Analizador de Códigos QR
-                  </h2>
-                  
-                  <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto sm:min-w-[300px]">
-                    <input
-                      type="number" className="flex-1 bg-white py-2.5 px-4 rounded-lg border focus:border transition-all duration-200 font-medium placeholder-gray-300" 
-                      onKeyDown={handleKeyDown}
-                      onChange={handleChangeForSearch}
-                      placeholder="Buscar por ID..."
-                    />
-                    
-                    <button 
-                    onClick={handleClickSearch}
-                    className="bg-[#725033] hover:bg-[#866548] text-white font-medium 
-                                      py-2.5 px-6 rounded-lg transition-all duration-200 
-                                      focus:outline-none focus:ring-2 focus:ring-[#a67c5a] 
-                                      min-w-[100px]">
-                      Buscar
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <div className="w-full p-4">
-                {!selectedImage ? (
-                  <label
-                    htmlFor="fileInput"
-                    className="flex flex-col bg-white min-h-[45vh] items-center justify-center rounded border border-gray-300 p-4 text-gray-900 shadow-sm sm:p-6 cursor-pointer hover:bg-gray-50 transition-colors"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth="1.5"
-                      stroke="currentColor"
-                      className="w-6 h-6"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M7.5 7.5h-.75A2.25 2.25 0 0 0 4.5 9.75v7.5a2.25 2.25 0 0 0 2.25 2.25h7.5a2.25 2.25 0 0 0 2.25-2.25v-7.5a2.25 2.25 0 0 0-2.25-2.25h-.75m0-3-3-3m0 0-3 3m3-3v11.25m6-2.25h.75a2.25 2.25 0 0 1 2.25 2.25v7.5a2.25 2.25 0 0 1-2.25 2.25h-7.5a2.25 2.25 0 0 1-2.25-2.25v-.75"
-                      />
-                    </svg>
-
-                    <span className="mt-4 font-medium">Seleccionar imagen</span>
-
-                    <span className="mt-2 inline-block rounded border border-gray-200 bg-gray-50 px-3 py-1.5 text-center text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-100">
-                      Buscar archivo
-                    </span>
-
-                    <input
-                      id="fileInput"
-                      type="file"
-                      accept="image/*"
-                      capture="environment"
-                      className="sr-only"
-                      onChange={handleImageChange}
-                    />
-                  </label>
-                ) : (
-                  <div className="space-y-4">
-                    {/* Vista previa de la imagen */}
-                    <div className="relative">
-                      <img
-                        src={selectedImage.url}
-                        alt={selectedImage.name}
-                        className="w-full h-64 object-cover rounded-lg border border-gray-200"
-                      />
-
-                      {/* Botón para eliminar imagen */}
-                      <button
-                        onClick={removeImage}
-                        className="absolute top-2 right-2 p-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors shadow-lg"
-                        title="Eliminar imagen"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          strokeWidth="1.5"
-                          stroke="currentColor"
-                          className="w-4 h-4"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-
-                    {/* Información de la imagen */}
-                    <div className="bg-gray-50 p-3 rounded-lg">
-                      <p className="text-sm font-medium text-gray-900 truncate">
-                        {selectedImage.name}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {formatFileSize(selectedImage.size)}
-                      </p>
-                    </div>
-
-                    {/* Botón para subir */}
-                    <button
-                      onClick={handleScanQr}
-                      className="w-full bg-[#725033] text-white py-2 px-4 rounded-lg hover:bg-[#866548] transition-colors font-medium"
-                    >
-                      Encontrar Boleta
-                    </button>
-                  </div>
-                )}
-              </div>
-            </>
-          )}
-          {modeView && (
-            <>
-              <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-                <h2 className="text-xl font-semibold text-gray-800">
-                  Asiganadas Hoy
-                </h2>
-              </div>
-              <div className="w-full p-4 h-[550px] overflow-y-auto">
-                {(isLoadingTable && !silosAsignados) ? <Spinner /> : (!silosAsignados.data || silosAsignados.data.length == 0) ? (
-                    <div className="min-h-[550px] flex items-center justify-center">
-                      <NoData />
-                    </div>
-                ) : (
-                  <TableTolva datos={silosAsignados?.data} />
-                )}
-              </div>
-              <div className="p-6 border-b border-gray-200 flex justify-center items-center">
-                {silosAsignados?.data && silosAsignados.pagination.totalPages > 1 && <Pagination pg={pagination} sp={setPagination} hp={handlePagination} dt={silosAsignados}/>}
-              </div>
-            </>
-          )}
-        </div>
+        {isLoadingUserData ? (
+          <div className="flex items-center justify-center min-h-[70vh]">
+            <Spinner />
+          </div>
+        ) : (
+          <>
+            {userData?.name && userData?.UsuariosPorTolva ? (
+              <DashboardContent 
+                stats={stats}
+                modeView={modeView}
+                setModeView={setModeView}
+                selectedImage={selectedImage}
+                silosAsignados={silosAsignados}
+                isLoadingTable={isLoadingTable}
+                pagination={pagination}
+                setPagination={setPagination}
+                handlePagination={handlePagination}
+                handleKeyDown={handleKeyDown}
+                handleChangeForSearch={handleChangeForSearch}
+                handleClickSearch={handleClickSearch}
+                handleImageChange={handleImageChange}
+                removeImage={removeImage}
+                handleScanQr={handleScanQr}
+                formatFileSize={formatFileSize}
+              />
+            ) : (
+              <NoTolvaAssignedMessage />
+            )}
+          </>
+        )}
       </div>
       <Toaster
         position="top-center"
@@ -416,5 +264,474 @@ const DashboardTolva = () => {
     </div>
   );
 };
+
+/* Partes del dashboard */
+
+function DashboardContent({
+  stats,
+  modeView,
+  setModeView,
+  selectedImage,
+  silosAsignados,
+  isLoadingTable,
+  pagination,
+  setPagination,
+  handlePagination,
+  handleKeyDown,
+  handleChangeForSearch,
+  handleClickSearch,
+  handleImageChange,
+  removeImage,
+  handleScanQr,
+  formatFileSize
+}) {
+  const isSelectedView = "bg-[#725033] text-white px-4 py-2 rounded-lg font-medium transition-all duration-200";
+  const noSelectectView = "bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-300 transition-all duration-200";
+
+  return (
+    <>
+      {/* Tarjetas de estadísticas - Solo en desktop */}
+      <StatsCards stats={stats} />
+      
+      {/* Filtros de vista */}
+      <ViewModeToggle 
+        modeView={modeView}
+        setModeView={setModeView}
+        isSelectedView={isSelectedView}
+        noSelectectView={noSelectectView}
+      />
+      
+      {/* Contenido principal */}
+      <MainContentCard 
+        modeView={modeView}
+        selectedImage={selectedImage}
+        silosAsignados={silosAsignados}
+        isLoadingTable={isLoadingTable}
+        pagination={pagination}
+        setPagination={setPagination}
+        handlePagination={handlePagination}
+        handleKeyDown={handleKeyDown}
+        handleChangeForSearch={handleChangeForSearch}
+        handleClickSearch={handleClickSearch}
+        handleImageChange={handleImageChange}
+        removeImage={removeImage}
+        handleScanQr={handleScanQr}
+        formatFileSize={formatFileSize}
+      />
+    </>
+  );
+}
+
+function StatsCards({ stats }) {
+  const statsData = [
+    {
+      icon: <FiCalendar size={24} className="text-white" />,
+      title: "Total Boletas(hoy)",
+      value: stats?.total || 0,
+      color: "bg-blue-500"
+    },
+    {
+      icon: <FiClock size={24} className="text-white" />,
+      title: "Pendientes(hoy)",
+      value: stats?.pendientes || 0,
+      color: "bg-amber-500"
+    },
+    {
+      icon: <FaBox size={24} className="text-white" />,
+      title: "Granza Americana(hoy)",
+      value: stats?.gamericana || 0,
+      color: "bg-yellow-500"
+    },
+    {
+      icon: <FaBox size={24} className="text-white" />,
+      title: "Granza Nacional(hoy)",
+      value: stats?.gnacional || 0,
+      color: "bg-red-500"
+    }
+  ];
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-3 max-sm:hidden">
+      {statsData.map((stat, index) => (
+        <StatCard
+          key={index}
+          icon={stat.icon}
+          title={stat.title}
+          value={stat.value}
+          color={stat.color}
+        />
+      ))}
+    </div>
+  );
+}
+
+// Componente para alternar entre modos de vista
+function ViewModeToggle({ modeView, setModeView, isSelectedView, noSelectectView }) {
+  return (
+    <div className="filtros grid grid-rows-1 grid-flow-col my-4">
+      <button
+        onClick={() => setModeView(false)}
+        className={modeView === false ? isSelectedView : noSelectectView}
+      >
+        Escanear QR
+      </button>
+      <button
+        onClick={() => setModeView(true)}
+        className={modeView === true ? isSelectedView : noSelectectView}
+      >
+        Asignadas
+      </button>
+    </div>
+  );
+}
+
+// Componente principal de contenido
+function MainContentCard({ 
+  modeView, 
+  selectedImage,
+  silosAsignados,
+  isLoadingTable,
+  pagination,
+  setPagination,
+  handlePagination,
+  handleKeyDown,
+  handleChangeForSearch,
+  handleClickSearch,
+  handleImageChange,
+  removeImage,
+  handleScanQr,
+  formatFileSize
+}) {
+  return (
+    <div className="bg-white shadow-md rounded-lg border border-gray-200 overflow-hidden min-h-[450px]">
+      {!modeView ? (
+        <QRScannerView 
+          selectedImage={selectedImage}
+          handleKeyDown={handleKeyDown}
+          handleChangeForSearch={handleChangeForSearch}
+          handleClickSearch={handleClickSearch}
+          handleImageChange={handleImageChange}
+          removeImage={removeImage}
+          handleScanQr={handleScanQr}
+          formatFileSize={formatFileSize}
+        />
+      ) : (
+        <AssignedView 
+          silosAsignados={silosAsignados}
+          isLoadingTable={isLoadingTable}
+          pagination={pagination}
+          setPagination={setPagination}
+          handlePagination={handlePagination}
+        />
+      )}
+    </div>
+  );
+}
+
+// Componente para la vista de escáner QR
+function QRScannerView({
+  selectedImage,
+  handleKeyDown,
+  handleChangeForSearch,
+  handleClickSearch,
+  handleImageChange,
+  removeImage,
+  handleScanQr,
+  formatFileSize
+}) {
+  return (
+    <>
+      <QRScannerHeader 
+        handleKeyDown={handleKeyDown}
+        handleChangeForSearch={handleChangeForSearch}
+        handleClickSearch={handleClickSearch}
+      />
+      <QRScannerContent 
+        selectedImage={selectedImage}
+        handleImageChange={handleImageChange}
+        removeImage={removeImage}
+        handleScanQr={handleScanQr}
+        formatFileSize={formatFileSize}
+      />
+    </>
+  );
+}
+
+// Header del escáner QR
+function QRScannerHeader({ handleKeyDown, handleChangeForSearch, handleClickSearch }) {
+  return (
+    <div className="p-4 sm:p-6 border-b border-gray-200 bg-white shadow-sm">
+      <div className="flex flex-col justify-baseline gap-4 w-full">
+        <h2 className="text-md sm:text-xl font-semibold text-gray-800 text-left sm:text-left">
+          Analizador de Códigos QR
+        </h2>
+        
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto sm:min-w-[300px]">
+          <input
+            type="number" 
+            className="flex-1 bg-white py-2.5 px-4 rounded-lg border focus:border transition-all duration-200 font-medium placeholder-gray-300" 
+            onKeyDown={handleKeyDown}
+            onChange={handleChangeForSearch}
+            placeholder="Buscar por ID..."
+          />
+          
+          <button 
+            onClick={handleClickSearch}
+            className="bg-[#725033] hover:bg-[#866548] text-white font-medium 
+                      py-2.5 px-6 rounded-lg transition-all duration-200 
+                      focus:outline-none focus:ring-2 focus:ring-[#a67c5a] 
+                      min-w-[100px]"
+          >
+            Buscar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Contenido del escáner QR
+function QRScannerContent({ 
+  selectedImage, 
+  handleImageChange, 
+  removeImage, 
+  handleScanQr, 
+  formatFileSize 
+}) {
+  return (
+    <div className="w-full p-4">
+      {!selectedImage ? (
+        <ImageUploadArea handleImageChange={handleImageChange} />
+      ) : (
+        <ImagePreviewArea 
+          selectedImage={selectedImage}
+          removeImage={removeImage}
+          handleScanQr={handleScanQr}
+          formatFileSize={formatFileSize}
+        />
+      )}
+    </div>
+  );
+}
+
+// Área de carga de imagen
+function ImageUploadArea({ handleImageChange }) {
+  return (
+    <label
+      htmlFor="fileInput"
+      className="flex flex-col bg-white min-h-[45vh] items-center justify-center rounded border border-gray-300 p-4 text-gray-900 shadow-sm sm:p-6 cursor-pointer hover:bg-gray-50 transition-colors"
+    >
+      <UploadIcon />
+      <span className="mt-4 font-medium">Seleccionar imagen</span>
+      <span className="mt-2 inline-block rounded border border-gray-200 bg-gray-50 px-3 py-1.5 text-center text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-100">
+        Buscar archivo
+      </span>
+      <input
+        id="fileInput"
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="sr-only"
+        onChange={handleImageChange}
+      />
+    </label>
+  );
+}
+
+// Área de vista previa de imagen
+function ImagePreviewArea({ selectedImage, removeImage, handleScanQr, formatFileSize }) {
+  return (
+    <div className="space-y-4">
+      {/* Vista previa de la imagen */}
+      <div className="relative">
+        <img
+          src={selectedImage.url}
+          alt={selectedImage.name}
+          className="w-full h-64 object-cover rounded-lg border border-gray-200"
+        />
+        
+        {/* Botón para eliminar imagen */}
+        <button
+          onClick={removeImage}
+          className="absolute top-2 right-2 p-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors shadow-lg"
+          title="Eliminar imagen"
+        >
+          <CloseIcon />
+        </button>
+      </div>
+
+      {/* Información de la imagen */}
+      <div className="bg-gray-50 p-3 rounded-lg">
+        <p className="text-sm font-medium text-gray-900 truncate">
+          {selectedImage.name}
+        </p>
+        <p className="text-sm text-gray-500">
+          {formatFileSize(selectedImage.size)}
+        </p>
+      </div>
+
+      {/* Botón para subir */}
+      <button
+        onClick={handleScanQr}
+        className="w-full bg-[#725033] text-white py-2 px-4 rounded-lg hover:bg-[#866548] transition-colors font-medium"
+      >
+        Encontrar Boleta
+      </button>
+    </div>
+  );
+}
+
+// Vista de asignados
+function AssignedView({ 
+  silosAsignados, 
+  isLoadingTable, 
+  pagination, 
+  setPagination, 
+  handlePagination 
+}) {
+  return (
+    <>
+      <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+        <h2 className="text-xl font-semibold text-gray-800">
+          Asignadas Hoy
+        </h2>
+      </div>
+      
+      <div className="w-full p-4 h-[550px] overflow-y-auto">
+        {isLoadingTable && !silosAsignados ? (
+          <Spinner />
+        ) : (!silosAsignados?.data || silosAsignados.data.length === 0) ? (
+          <div className="min-h-[550px] flex items-center justify-center">
+            <NoData />
+          </div>
+        ) : (
+          <TableTolva datos={silosAsignados.data} />
+        )}
+      </div>
+      
+      <div className="p-6 border-b border-gray-200 flex justify-center items-center">
+        {silosAsignados?.data && silosAsignados.pagination.totalPages > 1 && (
+          <Pagination 
+            pg={pagination} 
+            sp={setPagination} 
+            hp={handlePagination} 
+            dt={silosAsignados}
+          />
+        )}
+      </div>
+    </>
+  );
+}
+
+// Componente para mensaje de sin tolva asignada
+function NoTolvaAssignedMessage() {
+  return (
+    <div className="bg-white flex items-center justify-center shadow-md rounded-lg border border-gray-200 overflow-hidden min-h-[70vh]">
+      <div className="flex items-center justify-center h-full p-8">
+        <div className="text-center max-w-md">
+          <div className="mb-6">
+            <AlertIcon />
+          </div>
+          
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            ¡Alerta!
+          </h3>
+          
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
+            <p className="text-sm text-gray-700 leading-relaxed">
+              Usted no tiene una tolva asignada actualmente. Para poder acceder al sistema, 
+              necesita tener una tolva asignada a su usuario.
+            </p>
+          </div>
+          
+          <ContactInfo />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Información de contacto
+function ContactInfo() {
+  return (
+    <div className="space-y-3">
+      <p className="text-sm font-medium text-gray-900">
+        Por favor, comuníquese con:
+      </p>
+      <div className="flex flex-col sm:flex-row gap-3 justify-center">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2">
+          <span className="text-sm font-medium text-blue-800">
+            Departamento de IT
+          </span>
+        </div>
+        <div className="text-sm text-gray-500 flex items-center justify-center">
+          o
+        </div>
+        <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-2">
+          <span className="text-sm font-medium text-green-800">
+            Jefe de Tolva
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Iconos como componentes
+function UploadIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth="1.5"
+      stroke="currentColor"
+      className="w-6 h-6"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M7.5 7.5h-.75A2.25 2.25 0 0 0 4.5 9.75v7.5a2.25 2.25 0 0 0 2.25 2.25h7.5a2.25 2.25 0 0 0 2.25-2.25v-7.5a2.25 2.25 0 0 0-2.25-2.25h-.75m0-3-3-3m0 0-3 3m3-3v11.25m6-2.25h.75a2.25 2.25 0 0 1 2.25 2.25v7.5a2.25 2.25 0 0 1-2.25 2.25h-7.5a2.25 2.25 0 0 1-2.25-2.25v-.75"
+      />
+    </svg>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth="1.5"
+      stroke="currentColor"
+      className="w-4 h-4"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M6 18L18 6M6 6l12 12"
+      />
+    </svg>
+  );
+}
+
+function AlertIcon() {
+  return (
+    <svg
+      className="mx-auto h-16 w-16 text-orange-500"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={1.5}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
+      />
+    </svg>
+  );
+}
 
 export default DashboardTolva;
