@@ -455,8 +455,10 @@ const postClientePlacaMoto = async (req, res) => {
       sello4, 
       sello5, 
       sello6, 
+      tolvaAsignada, 
     } = req.body;
 
+    console.log(req.body)
     const empresa = await db.empresa.findUnique({
       where: { id: parseInt(idEmpresa) },
     });
@@ -514,7 +516,8 @@ const postClientePlacaMoto = async (req, res) => {
           }), 
           ...(idProducto === 18 && {
             Nviajes: parseInt(NViajes), 
-            NSalida: parseInt(NSalida), 
+            NSalida: parseInt(NSalida),
+            tolvaAsignada: parseInt(tolvaAsignada), 
           }),
           ...((idMovimiento==2) && {
             sello1, sello2, sello3, sello4, sello5, sello6, 
@@ -523,9 +526,9 @@ const postClientePlacaMoto = async (req, res) => {
       },
     });
 
-    if(idProducto===17 || idProducto===18) {
+    /* if(idProducto===17 || idProducto===18) {
       imprimirTikets(newBol, despachador['name'])
-    } 
+    }  */
     setLogger('BOLETA', 'AGREGAR BOLETA (ENTRADA DE DATOS)', req, null, 1, newBol.id)  
 
     res
@@ -564,7 +567,8 @@ const postClientePlacaMotoComodin = async (req, res) => {
       sello3, 
       sello4, 
       sello5, 
-      sello6, 
+      sello6,
+      tolvaAsignada, 
     } = req.body;
 
     const verificado = jwt.verify(idUsuario, process.env.SECRET_KEY);
@@ -605,7 +609,8 @@ const postClientePlacaMotoComodin = async (req, res) => {
           }), 
           ...(idProducto === 18 && {
             Nviajes: parseInt(NViajes), 
-            NSalida: parseInt(NSalida), 
+            NSalida: parseInt(NSalida),
+            tolvaAsignada: parseInt(tolvaAsignada), 
           }),
           ...((idMovimiento==2) && {
             sello1, sello2, sello3, sello4, sello5, sello6, 
@@ -614,9 +619,9 @@ const postClientePlacaMotoComodin = async (req, res) => {
       },
     });
 
-    if(idProducto===17 || idProducto===18) {
+    /* if(idProducto===17 || idProducto===18) {
       imprimirTikets(newBol, despachador['name'])
-    }
+    } */
 
     setLogger('BOLETA', 'AGREGAR BOLETA (ENTRADA DE DATOS | COMODIN)', req, null, 1, newBol.id)  
 
