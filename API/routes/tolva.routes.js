@@ -1,5 +1,5 @@
 const tolva = require('express').Router();
-const { analizadorQR, getDataForSelectSilos, updateSiloInBoletas, getAsignForDay, getStatsForTolva, buscarBoleSinQR, getListUsersForTolva } = require('../controllers/tolva.controller.js');
+const { analizadorQR, getDataForSelectSilos, getAsignForDay, getStatsForTolva, buscarBoleSinQR, getListUsersForTolva, postSiloInBoletas } = require('../controllers/tolva.controller.js');
 const verificarToken = require('../middlewares/authJWT.js')
 const upload = require('../middlewares/upload.js');
 
@@ -9,6 +9,6 @@ tolva.get("/stats", getStatsForTolva)
 tolva.get("/analizar-sin-qr", buscarBoleSinQR)
 tolva.get("/tipoUsuario", getListUsersForTolva)
 tolva.post("/analizar-qr", upload.single('image'), analizadorQR);
-tolva.put("/add/silo/:id", updateSiloInBoletas)
+tolva.put("/add/silo/:id", postSiloInBoletas)
 
 module.exports = tolva;  
