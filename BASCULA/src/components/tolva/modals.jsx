@@ -26,7 +26,7 @@ export const Modals = (props) => {
         ) : (
           <>
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
               <h2 className="text-xl font-bold text-gray-800">
                 Asignar Boleta #{data?.id}
               </h2>
@@ -138,12 +138,23 @@ export const Modals = (props) => {
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
                   <IoBusinessOutline size={16} />
-                  Asignar a Silo
+                  Seleccionar tolva de descarga 
+                </label>
+                <select name="tolvaDescarga"
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#5A3F27] focus:border-transparent text-sm transition-all border-gray-300`}
+                >
+                  <option value={1}>Seleccione tolva de descarga</option>
+                  <option value={1}>Tolva De Descarga #1</option>
+                  <option value={2}>Tolva De Descarga #2</option>
+                </select>
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                  <IoBusinessOutline size={16} />
+                  Seleccionar Destino
                 </label>
                 <select name="silo" onChange={handleChange}
                   className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#5A3F27] focus:border-transparent text-sm transition-all border-gray-300`}
                 >
-                  <option value="">Seleccione primer silo</option>
+                  <option value="">Seleccione destino principal</option>
                   {silos.map((silo) => (
                     <option key={silo.id} value={silo.id}>
                       {silo.nombre} -{" "}
@@ -154,7 +165,7 @@ export const Modals = (props) => {
                 <select name="silo2" onChange={handleChange}
                   className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#5A3F27] focus:border-transparent text-sm transition-all border-gray-300`}
                 >
-                  <option value="">Seleccione segundo silo (opcional)</option>
+                  <option value="">Seleccione destino #2 (opcional)</option>
                   {silos.map((silo) => (
                     <option key={silo.id} value={silo.id}>
                       {silo.nombre} -{" "}
@@ -165,7 +176,7 @@ export const Modals = (props) => {
                 <select name="silo3" onChange={handleChange}
                   className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#5A3F27] focus:border-transparent text-sm transition-all border-gray-300`}
                 >
-                  <option value="">Seleccione tercer silo (opcional)</option>
+                  <option value="">Seleccione destino #3 (opcional)</option>
                   {silos.map((silo) => (
                     <option key={silo.id} value={silo.id}>
                       {silo.nombre} -{" "}

@@ -5,6 +5,7 @@ import {
   getBoletaSinQR,
   getDataAsign,
   getDataSelectSilos,
+  getDatosUsuarios,
   getStatsTolvaDiarias,
   postAnalizarQR,
   updateSilos,
@@ -32,6 +33,7 @@ const StatCard = ({ icon, title, value, color }) => {
 
 const DashboardTolva = () => {
   const [selectedImage, setSelectedImage] = useState(null);
+  const [userData, setUserData] = useState(null)
   const [isLoadingImage, setIsLoadingImage] = useState(false);
   const [modalDeAsignacion, setModalDeAsignacion] = useState(false);
   const [data, setData] = useState("");
@@ -178,6 +180,7 @@ const DashboardTolva = () => {
   useEffect(() => {
     getDataSelectSilos(setSilos);
     getStatsTolvaDiarias(setStats)
+    getDatosUsuarios(setUserData)
   }, []);
 
   useEffect(() => {
@@ -213,10 +216,11 @@ const DashboardTolva = () => {
         {/* Encabezado */}
         <div className="flex justify-between w-full gap-5 max-sm:flex-col max-md:flex-col mb-4">
           <div className="parte-izq">
-            <h1 className="text-3xl font-bold titulo">Registros: Boletas</h1>
+            <h1 className="text-3xl font-bold titulo max-sm:text-xl">Registros de: {userData?.name || 'Cargando...'} </h1>
+            <h1 className="text-md   font-bold titulo">Tolva Asignada: {`Tolva ${userData?.UsuariosPorTolva?.tolva}` || 'NO ASIGNADA'}</h1>
             <h1 className="text-gray-600 max-sm:text-sm">
               {" "}
-              Sistema de gestión de almacenamiento de boletas.
+              Sistema de gestión de almacenamiento de boletas en tolva.
             </h1>
           </div>
         </div>

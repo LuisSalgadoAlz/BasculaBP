@@ -4,6 +4,7 @@ const {setLogger} = require('../utils/logger');
 const jsQR = require('jsqr');
 const jimp = require('jimp');
 const sharp = require('sharp');
+const jwt = require("jsonwebtoken");
 
 const analyzeQRWithSharp = async (imageBuffer) => {
   try {
@@ -203,10 +204,6 @@ const analizadorQR = async (req, res) => {
         return res.status(200).json({err: 'Boleta ya finalizada, no puede asignarla.'});
       }
 
-      if (boleta.siloID) {
-        return res.status(200).json({err: 'Boleta ya ha sido asignada.'});
-      }
-
       return res.json({ 
         boleta: boleta,
         processingTime: totalTime 
@@ -235,8 +232,7 @@ const buscarBoleSinQR = async(req, res) => {
 
     if (!boleta) return res.status(200).send({err: 'Boleta no encontrada'})
     if (boleta.estado !='Pendiente') return res.status(200).send({err: 'Boleta ya finalizada, no puede asignarla.'})
-    if (boleta.siloID) return res.status(200).send({err: 'Boleta ya ha sido asignada.'})
-    
+    /* Falta Validacion */
     return res.json({ 
       boleta: boleta,
       processingTime: 0, 
@@ -249,6 +245,11 @@ const buscarBoleSinQR = async(req, res) => {
 
 const getDataForSelectSilos = async(req, res) => {
   try{
+    const tolva = req.query.tolva || null;
+
+    const [t1, t2] = Promise.all([
+      db.silos.findMany()
+    ])
     const data = await db.silos.findMany()
     res.status(200).send(data)
   }catch(err) {
@@ -256,6 +257,28 @@ const getDataForSelectSilos = async(req, res) => {
   }
 }
 
+const getListUsersForTolva = async(req, res) =>{
+  try{
+    const verificado = jwt.verify(req.header('Authorization'), process.env.SECRET_KEY);
+    const usuario = await db.usuarios.findUnique({
+      select:{
+        name: true, 
+        UsuariosPorTolva: true,
+      },
+      where: {
+        usuarios: verificado["usuarios"],
+      },
+    });
+    res.json(usuario)
+  }catch(err){
+    console.log(err)
+  }
+}
+/**
+ * !ARREGLAR
+ * @param {*} req 
+ * @param {*} res 
+ */
 const updateSiloInBoletas = async(req, res) => {
   try{
     const { silo, silo2, silo3 } = req.body;
@@ -279,6 +302,11 @@ const updateSiloInBoletas = async(req, res) => {
   }
 }
 
+/**
+ * ! ERROR ARREGLAR
+ * @param {*} req 
+ * @param {*} res 
+ */
 const getAsignForDay = async(req, res) => {
   try{
     const now = new Date();
@@ -293,7 +321,7 @@ const getAsignForDay = async(req, res) => {
     const limit = parseInt(req.query.limit) || 15;
     const skip = (page - 1) * limit;
 
-    const where = {
+    /* const where = {
       siloID: { not: null },
       idProducto : {in:[17, 18]},
       fechaTolva, 
@@ -308,15 +336,7 @@ const getAsignForDay = async(req, res) => {
         empresa:true,
         motorista: true,
         producto: true,
-        origen: true,
-        fechaTolva: true, 
-        boletasXsilos: {
-          select :{
-            nombre: true
-          }
-        },
-        silo2: true, 
-        silo3: true,
+        origen: true, 
       }, 
       where, 
       orderBy:{
@@ -341,12 +361,12 @@ const getAsignForDay = async(req, res) => {
         ...rest,
         fechaTolva: new Date(prev.fechaTolva).toLocaleString(),
       };
-    });
+    }); */
     res.status(200).send( {
-      data: refactorData, 
+      data: null, 
       pagination: {
-        totalData, 
-        totalPages: Math.ceil(totalData / limit),
+        totalData:0, 
+        totalPages: Math.ceil(0 / limit),
         currentPage: page,
         limit,
       }
@@ -356,6 +376,9 @@ const getAsignForDay = async(req, res) => {
   }
 }
 
+/**
+ * ! ERROR ARREGLAR
+ */
 const getStatsForTolva = async(req, res) =>{
   try{
     const now = new Date();
@@ -368,33 +391,10 @@ const getStatsForTolva = async(req, res) =>{
     const fechaTolva = { gte: startOfDay, lte: endOfDay }
 
     const [total, pendientes, gamericana, gnacional] = await Promise.all([
-      db.boleta.count({
-        where: {
-          siloID:{not: null}, 
-          fechaTolva, 
-        }
-      }), 
-      db.boleta.count({
-        where: {
-          idProducto: {in:[17, 18]}, 
-          siloID: null, 
-          estado: 'Pendiente',
-        }
-      }), 
-      db.boleta.count({
-        where:{
-          siloID:{not: null}, 
-          idProducto: 18, 
-          fechaTolva
-        }
-      }), 
-      db.boleta.count({
-        where:{
-          siloID:{not: null}, 
-          idProducto: 17, 
-          fechaTolva
-        }
-      })
+      0, 
+      0, 
+      0, 
+      0
     ])
     res.status(200).send({total, pendientes, gamericana, gnacional})
   }catch(err){
@@ -403,5 +403,5 @@ const getStatsForTolva = async(req, res) =>{
 }
 
 module.exports = {
-  analizadorQR, getDataForSelectSilos, updateSiloInBoletas, getAsignForDay, getStatsForTolva, buscarBoleSinQR
+  analizadorQR, getDataForSelectSilos, updateSiloInBoletas, getAsignForDay, getStatsForTolva, buscarBoleSinQR, getListUsersForTolva
 };
