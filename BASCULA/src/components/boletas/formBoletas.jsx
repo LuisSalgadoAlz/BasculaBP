@@ -603,7 +603,7 @@ export const VisualizarBoletas = (props) => {
                 <hr className="text-gray-400 my-4"/>
                 <span className="text-md font-bold text-gray-700">Tiempos:</span>
                 <span className="text-md text-gray-700">Fecha Inicial: {boletas?.fechaInicio ? new Date(boletas?.fechaInicio).toLocaleString(): isNullData}</span>
-                <span className="text-md text-gray-700">Fecha Inicial: {boletas?.fechaInicio ? new Date(boletas?.fechaFin).toLocaleString(): isNullData}</span>
+                <span className="text-md text-gray-700">Fecha Final: {boletas?.fechaInicio ? new Date(boletas?.fechaFin).toLocaleString(): isNullData}</span>
                 <span className="text-md text-gray-700">Duracion del proceso: {tiempoDeEstadia()}</span>
                 <hr className="text-gray-400 my-4"/>
                 <span className="text-md font-bold text-gray-700">Marchamos:</span>
