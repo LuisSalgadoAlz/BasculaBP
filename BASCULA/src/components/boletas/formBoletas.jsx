@@ -298,6 +298,13 @@ export const ModalNormal = ({ hdlClose, hdlChange, fillData, formBol, boletas, h
                         <label htmlFor="NViajes" className="block text-sm text-gray-600"># Viaje</label>
                         <input name="NViajes" onChange={hdlChange} className={claseFormInputs} value={boletas?.NViajes}/>
                       </div>
+                      <div className="col-span-2">
+                        <select name="TolvaAsignada" className={`${claseFormInputs} p-3`} onChange={hdlChange} value={boletas?.TolvaAsignada}>
+                          <option value={null}>Seleccione una tolva</option>
+                          <option value={1}>Tolva 1</option>
+                          <option value={2}>Tolva 2</option>
+                        </select>
+                      </div>
                     </div>
                   </>
                 )}
@@ -527,9 +534,11 @@ export const VisualizarBoletas = (props) => {
     return `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
   };
   
-  const TARA = (boletas?.pesoInicial && boletas?.pesoFinal) ? boletas?.proceso == 0 ? boletas?.pesoFinal : boletas?.pesoInicial : 0
-  const PESOBRUTO = (boletas?.pesoInicial && boletas?.pesoFinal) ? boletas?.proceso == 0 ? boletas?.pesoInicial : boletas?.pesoFinal : 0
+  const isTrasladoEntrada = boletas?.proceso == 0 && (boletas?.idMovimiento==12 || boletas?.idMovimiento==13)
 
+  const TARA = isTrasladoEntrada ? ((boletas?.pesoInicial && boletas?.pesoFinal) ? boletas?.proceso == 0 ? boletas?.pesoFinal : boletas?.pesoInicial : 0) : boletas?.pesoInicial
+  const PESOBRUTO = (boletas?.pesoInicial && boletas?.pesoFinal) ? boletas?.proceso == 0 ? boletas?.pesoInicial : boletas?.pesoFinal : 0
+  
   return (
     <div className="fixed inset-0 bg-opacity-50 z-50 min-h-screen overflow-auto ">
       <motion.div
