@@ -736,8 +736,8 @@ const comprobanteDeCarga = (boleta, despachador)=> {
             { text: `${(boleta.pesoNeto/100).toFixed(2)} QQ`, align: "RIGHT", width: 0.4 }
           ])
           .tableCustom([
-            { text: `DESVIACION:`, align: "LEFT", width: 0.4, style: 'B' }, 
-            { text: `${parseFloat(boleta.desviacion || 0) < 0 ? `${(boleta.desviacion/100).toFixed(2)+' QQ'}` : '0 QQ'}`, align: "RIGHT", width: 0.4 }
+            { text: `${parseFloat(boleta.desviacion || 0) < 0 ? `DESVIACION:` : ''}`, align: "LEFT", width: 0.4, style: 'B' }, 
+            { text: `${parseFloat(boleta.desviacion || 0) < 0 ? `${(boleta.desviacion/100).toFixed(2)+' QQ'}` : ''}`, align: "RIGHT", width: 0.4 }
           ])
           .text('------------------------------------------')
           .text(`Observaciones: ${boleta.observaciones? boleta.observaciones: 'Ninguna.'}`)
