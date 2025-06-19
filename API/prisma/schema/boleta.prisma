@@ -62,13 +62,12 @@ model Boleta {
     motoristaBoleta Motoristas? @relation(fields: [idMotorista], references: [id], onDelete: NoAction, onUpdate: NoAction)
     boletasMovimientos Movimientos? @relation(fields: [idMovimiento], references: [id])
     
-    /* Relacion de 1 a 1 */
-    tolva Tolva?
+    tolva Tolva[]
 }
 
 model Tolva {
   id             Int     @id @default(autoincrement())
-  idBoleta       Int     @unique
+  idBoleta       Int 
   fechaEntrada   DateTime
   fechaSalida    DateTime?
   idUsuarioTolva Int
@@ -78,6 +77,11 @@ model Tolva {
   siloSecundario Int?
   SiloTerciario  Int?
   estado Int?
+  idUsuarioDeCierre Int?
+  usuarioDeCierre String?
+  observacionDeCancelacion String?
+  observacionTiempo String?
+
   // lrelacion de los silos
   principal      Silos   @relation("PrincipalSilo", fields: [siloPrincipal], references: [id], onUpdate: NoAction, onDelete: NoAction)
   secundario     Silos?  @relation("SecundarioSilo", fields: [siloSecundario], references: [id], onUpdate: NoAction, onDelete: NoAction)
