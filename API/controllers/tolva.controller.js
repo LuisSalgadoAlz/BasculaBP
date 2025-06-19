@@ -340,7 +340,7 @@ const getListUsersForTolva = async(req, res) =>{
 }
 
 /**
- * !ARREGLAR
+ * !Faltan las observaciones
  * @param {*} req 
  * @param {*} res 
  */
@@ -395,6 +395,69 @@ const postSiloInBoletas = async(req, res) => {
   } catch(err) {
     console.log(err)
     res.status(200).send({err:'Intente denuevo'})
+  }
+}
+
+const getTolvasDeDescargasOcupadas = async(req, res) => {
+  try{
+    const token = req.header('Authorization');
+    
+    if (!token) return res.status(401).send({ error: 'Token no proporcionado' });
+    const verificado = jwt.verify(token, process.env.SECRET_KEY);
+    
+    const usuario = await db.usuarios.findUnique({
+      select: {
+        id:true, 
+        name: true,
+        UsuariosPorTolva: {
+          select: { tolva: true }
+        }
+      },
+      where: { usuarios: verificado["usuarios"] }
+    });
+
+    const tolva = usuario?.UsuariosPorTolva?.tolva;
+    if (!tolva) return res.status(404).json({ error: 'Tolva no asignada al usuario' });
+
+    const [descarga1, descarga2] = await Promise.all(
+      [1, 2].map(num =>
+        db.tolva.findMany({
+          select: {
+            idBoleta: true, 
+            fechaEntrada: true, 
+            usuarioTolva:true, 
+            tolvaDescarga:true,
+            estado: true,
+            boleta: {
+              select:{
+                socio:true, 
+                placa:true, 
+                motorista:true, 
+                origen: true, 
+              }
+            },
+            principal: {
+              select: {nombre:true,}
+            },
+            secundario: {
+              select:{nombre:true}
+            },
+            terciario:{
+              select:{nombre:true}
+            }, 
+          },
+          where: {
+            tolvaDescarga: { contains: `T${tolva}-${num}` },
+            estado: 0
+          }
+        })
+      )
+    );
+    
+    res.status(200).send({descarga1, descarga2})
+
+  }catch(err){
+    console.log(err)
   }
 }
 
@@ -499,5 +562,12 @@ const getStatsForTolva = async(req, res) =>{
 }
 
 module.exports = {
-  analizadorQR, getDataForSelectSilos, postSiloInBoletas, getAsignForDay, getStatsForTolva, buscarBoleSinQR, getListUsersForTolva
+  analizadorQR, 
+  getDataForSelectSilos, 
+  postSiloInBoletas, 
+  getAsignForDay, 
+  getStatsForTolva, 
+  buscarBoleSinQR, 
+  getListUsersForTolva, 
+  getTolvasDeDescargasOcupadas
 };

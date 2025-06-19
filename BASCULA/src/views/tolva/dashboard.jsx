@@ -7,13 +7,14 @@ import {
   getDataSelectSilos,
   getDatosUsuarios,
   getStatsTolvaDiarias,
+  getTolvasDeDescagas,
   postAnalizarQR,
   updateSilos,
 } from "../../hooks/tolva/formDataTolva";
 import { Modals } from "../../components/tolva/modals";
 import { Toaster, toast } from "sonner";
 import { isSelectedView, noSelectectView } from "../../constants/boletas";
-import { TableTolva } from "../../components/tolva/table";
+import { TableTolva, TolvaSection } from "../../components/tolva/table";
 import { NoData, Spinner } from "../../components/alerts";
 import { Pagination } from "../../components/buttons";
 
@@ -42,12 +43,14 @@ const DashboardTolva = () => {
   const [formData, setFormData] = useState({ silo: "" });
   const [error, setError] = useState("");
   const [isLoadAsingar, setIsLoadAsingar] = useState(false);
-  const [modeView, setModeView] = useState(false);
+  const [modeView, setModeView] = useState(1);
   const [silosAsignados, setSilosAsignados] = useState([{}])
   const [isLoadingTable, setLoadingTables] = useState(false)
   const [stats, setStats] = useState()
   const [pagination, setPagination] = useState(1)
   const [buscarID, setBuscarID] = useState('')
+  const [tolva, setTolva] = useState({})
+
   const handleImageChange = (event) => {
     const file = event.target.files[0];
 
@@ -182,6 +185,7 @@ const DashboardTolva = () => {
     getDataSelectSilos(setSilos);
     getStatsTolvaDiarias(setStats)
     getDatosUsuarios(setUserData, setIsLoadingUserData)
+    getTolvasDeDescagas(setTolva)
   }, []);
 
   useEffect(() => {
@@ -211,6 +215,26 @@ const DashboardTolva = () => {
     error,
   };
 
+  const dashboardProps = {
+    stats,
+    modeView,
+    setModeView,
+    selectedImage,
+    silosAsignados,
+    isLoadingTable,
+    pagination,
+    setPagination,
+    handlePagination,
+    handleKeyDown,
+    handleChangeForSearch,
+    handleClickSearch,
+    handleImageChange,
+    removeImage,
+    handleScanQr,
+    formatFileSize,
+    tolva, 
+  };
+
   return (
     <div className="min-h-screen">
       <div className="mx-auto">
@@ -232,24 +256,7 @@ const DashboardTolva = () => {
         ) : (
           <>
             {userData?.name && userData?.UsuariosPorTolva ? (
-              <DashboardContent 
-                stats={stats}
-                modeView={modeView}
-                setModeView={setModeView}
-                selectedImage={selectedImage}
-                silosAsignados={silosAsignados}
-                isLoadingTable={isLoadingTable}
-                pagination={pagination}
-                setPagination={setPagination}
-                handlePagination={handlePagination}
-                handleKeyDown={handleKeyDown}
-                handleChangeForSearch={handleChangeForSearch}
-                handleClickSearch={handleClickSearch}
-                handleImageChange={handleImageChange}
-                removeImage={removeImage}
-                handleScanQr={handleScanQr}
-                formatFileSize={formatFileSize}
-              />
+              <DashboardContent {...dashboardProps}/>
             ) : (
               <NoTolvaAssignedMessage />
             )}
@@ -283,7 +290,8 @@ function DashboardContent({
   handleImageChange,
   removeImage,
   handleScanQr,
-  formatFileSize
+  formatFileSize, 
+  tolva, 
 }) {
   const isSelectedView = "bg-[#725033] text-white px-4 py-2 rounded-lg font-medium transition-all duration-200";
   const noSelectectView = "bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-300 transition-all duration-200";
@@ -317,6 +325,7 @@ function DashboardContent({
         removeImage={removeImage}
         handleScanQr={handleScanQr}
         formatFileSize={formatFileSize}
+        tolva={tolva}
       />
     </>
   );
@@ -368,18 +377,24 @@ function StatsCards({ stats }) {
 // Componente para alternar entre modos de vista
 function ViewModeToggle({ modeView, setModeView, isSelectedView, noSelectectView }) {
   return (
-    <div className="filtros grid grid-rows-1 grid-flow-col my-4">
+    <div className="filtros grid grid-rows-1 grid-flow-col my-4 max-sm:grid-rows-3 gap-0.5">
       <button
-        onClick={() => setModeView(false)}
-        className={modeView === false ? isSelectedView : noSelectectView}
+        onClick={() => setModeView(1)}
+        className={modeView === 1 ? isSelectedView : noSelectectView}
       >
         Escanear QR
       </button>
       <button
-        onClick={() => setModeView(true)}
-        className={modeView === true ? isSelectedView : noSelectectView}
+        onClick={() => setModeView(2)}
+        className={modeView === 2 ? isSelectedView : noSelectectView}
       >
-        Asignadas
+        Descargando
+      </button>
+      <button
+        onClick={() => setModeView(3)}
+        className={modeView === 3 ? isSelectedView : noSelectectView}
+      >
+        Finalizadas
       </button>
     </div>
   );
@@ -400,11 +415,12 @@ function MainContentCard({
   handleImageChange,
   removeImage,
   handleScanQr,
-  formatFileSize
+  formatFileSize, 
+  tolva, 
 }) {
   return (
     <div className="bg-white shadow-md rounded-lg border border-gray-200 overflow-hidden min-h-[450px]">
-      {!modeView ? (
+      {modeView ===1 && (
         <QRScannerView 
           selectedImage={selectedImage}
           handleKeyDown={handleKeyDown}
@@ -415,7 +431,11 @@ function MainContentCard({
           handleScanQr={handleScanQr}
           formatFileSize={formatFileSize}
         />
-      ) : (
+      )}
+      {modeView===2 && (
+        <DischargeIntoHopperView tolva={tolva}/>
+      )}
+      {modeView===3 && (
         <AssignedView 
           silosAsignados={silosAsignados}
           isLoadingTable={isLoadingTable}
@@ -732,6 +752,21 @@ function AlertIcon() {
       />
     </svg>
   );
+}
+
+const DischargeIntoHopperView = ({tolva}) => {
+  return(
+    <>
+      <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+        <h2 className="text-xl font-semibold text-gray-800">
+          Descargando actualmente
+        </h2>
+      </div>
+      <div className="">
+        <TolvaSection datos={tolva?.descarga1}/>
+      </div>
+    </>
+  )
 }
 
 export default DashboardTolva;
