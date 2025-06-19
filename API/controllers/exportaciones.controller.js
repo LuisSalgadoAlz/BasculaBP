@@ -18,9 +18,6 @@ const exportToExcel = async (req, res) => {
     const endOfDay = new Date(Date.UTC(y2, m2 - 1, d2 + 1, 6, 0, 0));
 
     const data = await db.boleta.findMany({
-      omit: {
-        numBoleta:true,
-      },
       where: {
         fechaFin: { gte: startOfDay, lte: endOfDay },
         AND: [{estado: {not: "Pendiente"}}, {estado: {not: "Cancelada"}}],
@@ -37,26 +34,45 @@ const exportToExcel = async (req, res) => {
     /**
      * Aqui se ocupa cambiar cuando se implemente la ventana de JAVI
      */
-    // Formateo de datos para el reporte
-    const boletas = data.map((el) => ({
-      Boleta: el.id,
-      Proceso: el.proceso == 0 ? 'Entrada' : 'Salida',
-      Placa: el.placa,
-      Cliente: el.socio,
-      Transporte: el.empresa,
-      Producto: el.producto,
-      Origen: (el.movimiento == 'Traslado Interno' || el.movimiento == 'Traslado Externo') ? el.trasladoOrigen : el.origen,
-      Destino: (el.movimiento == 'Traslado Interno' || el.movimiento == 'Traslado Externo') ? el.trasladoDestino : el.destino,
-      Tara: (el.proceso==0 ? el.pesoFinal : el.pesoInicial) || 0, 
-      PesoBruto: (el.proceso==0 ? el.pesoInicial : el.pesoFinal) || 0, 
-      PesoNeto: el.pesoNeto ? el.pesoNeto : 0,
-      PesoTeorico: el.pesoTeorico ? el.pesoTeorico : 0, 
-      Desviación: el.desviacion ? el.desviacion : 0,
-      Tolerancia: (el.pesoTeorico * 0.005) || 0, 
-      Estado: el.estado,
-      FechaDeEntrada: el.fechaInicio ? el.fechaInicio.toLocaleString() : 'N/A', 
-      FechaFinalizacion: el.fechaFin ? el.fechaFin.toLocaleString() : 'N/A',
-    }));
+    const boletas = data.map((el) => {
+      const fechaInicio = el.fechaInicio ? new Date(el.fechaInicio) : null;
+      const fechaFin = el.fechaFin ? new Date(el.fechaFin) : null;
+
+      const diferenciaMs = fechaInicio && fechaFin ? fechaFin - fechaInicio : null;
+
+      const isEspecialTraslado = el.proceso === 0 && (el.idMovimiento===10 || el.idMovimiento===11)
+
+
+      let diferenciaTiempo = 'N/A';
+      if (diferenciaMs !== null) {
+        const minutos = Math.floor(diferenciaMs / 60000);
+        const horas = Math.floor(minutos / 60);
+        const mins = minutos % 60;
+        diferenciaTiempo = `${horas}h ${mins}m`;
+      }
+
+      return {
+        Boleta: el.numBoleta,
+        Proceso: el.proceso == 0 ? 'Entrada' : 'Salida',
+        Placa: el.placa,
+        Cliente: el.socio,
+        Transporte: el.empresa,
+        Motorista: el.motorista,
+        Producto: el.producto,
+        Origen: (el.movimiento == 'Traslado Interno' || el.movimiento == 'Traslado Externo') ? el.trasladoOrigen : el.origen,
+        Destino: (el.movimiento == 'Traslado Interno' || el.movimiento == 'Traslado Externo') ? el.trasladoDestino : el.destino,
+        Tara: isEspecialTraslado ? el.pesoInicial : ((el.proceso == 0 ? el.pesoFinal : el.pesoInicial) || 0),
+        PesoBruto: isEspecialTraslado ? el.pesoFinal : ((el.proceso == 0 ? el.pesoInicial : el.pesoFinal) || 0),
+        PesoNeto: el.pesoNeto || 0,
+        PesoTeorico: el.pesoTeorico || 0,
+        Desviación: el.desviacion || 0,
+        Tolerancia: (el.pesoTeorico * 0.005) || 0,
+        Estado: el.estado,
+        FechaDeEntrada: fechaInicio ? fechaInicio.toLocaleString() : 'N/A',
+        FechaFinalizacion: fechaFin ? fechaFin.toLocaleString() : 'N/A',
+        TiempoTotal: diferenciaTiempo,
+      };
+    });
 
     // Creación del libro y hoja
     const workbook = new ExcelJS.Workbook();
@@ -244,6 +260,7 @@ const exportToExcel = async (req, res) => {
       { header: 'Placa', width: 15 },
       { header: 'Cliente', width: 30 },
       { header: 'Transporte', width: 30 },
+      { header: 'Motorista', width: 30 },
       { header: 'Producto', width: 30 },
       { header: 'Origen', width: 20 },
       { header: 'Destino', width: 20 },
@@ -253,9 +270,10 @@ const exportToExcel = async (req, res) => {
       { header: 'PesoTeorico', width: 14 },
       { header: 'Desviación', width: 12 },
       { header: 'Tolerado', width: 14 },
-      { header: 'Estado', width: 15 },
+      { header: 'Estado', width: 30 },
       { header: 'FechaDeEntrada', width: 20 },
-      { header: 'FechaFinalizacion', width: 20 }
+      { header: 'FechaFinalizacion', width: 20 },
+      { header: 'TiempoTotal', width: 20 }
     ];
     
     columnWidths.forEach((col, i) => {
@@ -321,27 +339,27 @@ const exportToExcel = async (req, res) => {
       
       // Formato para valores numéricos
       
-      const pesoTaraCell = dataRow.getCell(9); 
+      const pesoTaraCell = dataRow.getCell(10); 
       pesoTaraCell.numFmt = '#,##0.00 "lb"';
       pesoTaraCell.alignment = { horizontal: 'right', vertical: 'middle' };
 
-      const pesoBrutoCell = dataRow.getCell(10); 
+      const pesoBrutoCell = dataRow.getCell(11); 
       pesoBrutoCell.numFmt = '#,##0.00 "lb"';
       pesoBrutoCell.alignment = { horizontal: 'right', vertical: 'middle' };
 
-      const pesoNetoCell = dataRow.getCell(11); 
+      const pesoNetoCell = dataRow.getCell(12); 
       pesoNetoCell.numFmt = '#,##0.00 "lb"';
       pesoNetoCell.alignment = { horizontal: 'right', vertical: 'middle' };
 
-      const pesoTeoricoCell = dataRow.getCell(12); 
+      const pesoTeoricoCell = dataRow.getCell(13); 
       pesoTeoricoCell.numFmt = '#,##0.00 "lb"';
       pesoTeoricoCell.alignment = { horizontal: 'right', vertical: 'middle' };
 
-      const desviacionCell = dataRow.getCell(13);
+      const desviacionCell = dataRow.getCell(14);
       desviacionCell.numFmt = '#,##0.00 "lb"';
       desviacionCell.alignment = { horizontal: 'right', vertical: 'middle' };
 
-      const toleranciaCell = dataRow.getCell(14); 
+      const toleranciaCell = dataRow.getCell(15); 
       toleranciaCell.numFmt = '#,##0.00 "lb"';
       toleranciaCell.alignment = { horizontal: 'right', vertical: 'middle' };
       
@@ -354,7 +372,7 @@ const exportToExcel = async (req, res) => {
       }
       
       // Colorear estado según su valor
-      const estadoCell = dataRow.getCell(15);
+      const estadoCell = dataRow.getCell(16);
       estadoCell.alignment = { horizontal: 'center', vertical: 'middle' };
       
       switch (estadoCell.value) {
@@ -372,9 +390,9 @@ const exportToExcel = async (req, res) => {
       }
       
       // Formato para fechas
-      const fechaIncial = dataRow.getCell(16);
+      const fechaIncial = dataRow.getCell(17);
       fechaIncial.alignment = { horizontal: 'center', vertical: 'middle' };
-      const fechaFinaCell = dataRow.getCell(17);
+      const fechaFinaCell = dataRow.getCell(18);
       fechaFinaCell.alignment = { horizontal: 'center', vertical: 'middle' };
     });
 
@@ -384,36 +402,35 @@ const exportToExcel = async (req, res) => {
     const summaryStartRow = sheet.rowCount + 1;
     
     // Totales de pesos
-    sheet.addRow(['', '', '', '', '', '', '', 'TOTALES:', tara.toFixed(2), pesoBruto.toFixed(2),totalPesoNeto.toFixed(2), 
+    sheet.addRow(['', '', '', '', '', '', '', '','TOTALES:', tara.toFixed(2), pesoBruto.toFixed(2),totalPesoNeto.toFixed(2), 
                   totalPesoTeorico.toFixed(2), totalDesviacion.toFixed(2) ]);
     const totalsRow = sheet.lastRow;
-    totalsRow.getCell(8).style = styles.summary;
-    totalsRow.getCell(9).style = styles.summaryValue;
+    totalsRow.getCell(9).style = styles.summary;
     totalsRow.getCell(10).style = styles.summaryValue;
     totalsRow.getCell(11).style = styles.summaryValue;
     totalsRow.getCell(12).style = styles.summaryValue;
-    totalsRow.getCell(12).style = styles.summaryValue;
     totalsRow.getCell(13).style = styles.summaryValue;
+    totalsRow.getCell(14).style = styles.summaryValue;
     
     // Resumen de estados
     sheet.addRow(['', '', '', '', '', '', '', '','RESUMEN DE ESTADOS:', '', '', '']);
     const statesHeaderRow = sheet.lastRow;
-    statesHeaderRow.getCell(8).style = styles.summary;
+    statesHeaderRow.getCell(9).style = styles.summary;
     
     // Crear una tabla pequeña con los conteos de estados
-    sheet.addRow(['', '', '', '', '', '', '','Completados:', countCompletado, '', '']);
-    sheet.addRow(['', '', '', '', '', '', '','Fuera de tolerancia:', countFueraTol, '', '']);
-    sheet.addRow(['', '', '', '', '', '', '','Otros estados:', countOtros, '', '']);
-    sheet.addRow(['', '', '', '', '', '', '','Total de registros:', boletas.length, '', '']);
+    sheet.addRow(['', '', '', '', '', '', '','','Completados:', countCompletado, '', '']);
+    sheet.addRow(['', '', '', '', '', '', '','','Fuera de tolerancia:', countFueraTol, '', '']);
+    sheet.addRow(['', '', '', '', '', '', '','','Otros estados:', countOtros, '', '']);
+    sheet.addRow(['', '', '', '', '', '', '','','Total de registros:', boletas.length, '', '']);
     
     // Dar formato a la tabla de resumen
     for (let i = 0; i < 4; i++) {
       const row = sheet.getRow(statesHeaderRow.number + 1 + i);
-      row.getCell(8).style = {
+      row.getCell(9).style = {
         font: { name: 'Calibri', size: 11, color: { argb: COLORS.text } },
         alignment: { horizontal: 'right', vertical: 'middle' }
       };
-      row.getCell(9).style = {
+      row.getCell(10).style = {
         font: { name: 'Calibri', bold: true, size: 11, color: { argb: COLORS.text } },
         alignment: { horizontal: 'center', vertical: 'middle' },
         fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.light } },
@@ -425,8 +442,8 @@ const exportToExcel = async (req, res) => {
     
     // Destacar el total de registros
     const totalRegistrosRow = sheet.getRow(statesHeaderRow.number + 4);
-    totalRegistrosRow.getCell(8).style = styles.summary;
-    totalRegistrosRow.getCell(9).style = styles.summaryValue;
+    totalRegistrosRow.getCell(9).style = styles.summary;
+    totalRegistrosRow.getCell(10).style = styles.summaryValue;
     
     // Añadir gráfico circular de estados (opcional)
     if (workbook.xlsx && workbook.xlsx.addChart) {
