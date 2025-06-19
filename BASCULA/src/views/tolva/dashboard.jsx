@@ -11,7 +11,7 @@ import {
   postAnalizarQR,
   updateSilos,
 } from "../../hooks/tolva/formDataTolva";
-import { Modals } from "../../components/tolva/modals";
+import { FinalizarDescarga, Modals } from "../../components/tolva/modals";
 import { Toaster, toast } from "sonner";
 import { isSelectedView, noSelectectView } from "../../constants/boletas";
 import { TableTolva, TolvaSection } from "../../components/tolva/table";
@@ -50,6 +50,7 @@ const DashboardTolva = () => {
   const [pagination, setPagination] = useState(1)
   const [buscarID, setBuscarID] = useState('')
   const [tolva, setTolva] = useState({})
+  const [modalConfirmacion, setModalConfirmacion] = useState(false)
 
   const handleImageChange = (event) => {
     const file = event.target.files[0];
@@ -177,9 +178,33 @@ const DashboardTolva = () => {
       toast.success(response?.msg);
       setModalDeAsignacion(false);
       setFormData("");
+      getTolvasDeDescagas(setTolva)
     }
     if (response?.err) toast.error(response?.err);
   };
+
+  const onFinalizarDescarga = (item) => {
+    const fechaInicio = new Date(item.fechaEntrada)
+    const fechaFinal = new Date()
+
+    const TIEMPOPROCESO = fechaFinal - fechaInicio;
+    const totalSegundos = Math.floor(TIEMPOPROCESO / 1000);
+    const horas = Math.floor(totalSegundos / 3600);
+    const minutos = Math.floor((totalSegundos % 3600) / 60);
+    const segundos = totalSegundos % 60;
+
+    // Mostrar resultado
+    console.log(`Horas: ${horas % 24}, Minutos: ${minutos % 60}`);
+    
+    if(userData?.UsuariosPorTolva?.tolva==1 && ((horas===0 && minutos>15) && (horas===0 && minutos<50))){
+      setModalConfirmacion(true )
+      return
+    }
+    if(userData?.UsuariosPorTolva?.tolva==2 && ((horas===0 && minutos>15) && (horas===0 && minutos<40))){
+      setModalConfirmacion(true)
+      return
+    }
+  }
 
   useEffect(() => {
     getDataSelectSilos(setSilos);
@@ -232,7 +257,8 @@ const DashboardTolva = () => {
     removeImage,
     handleScanQr,
     formatFileSize,
-    tolva, 
+    tolva,
+    onFinalizarDescarga,
   };
 
   return (
@@ -267,6 +293,7 @@ const DashboardTolva = () => {
         position="top-center"
         toastOptions={{ style: { background: "#955e37", color: "white" } }}
       />
+      {modalConfirmacion && <FinalizarDescarga />}
       {modalDeAsignacion && <Modals {...propsModalAsignacion} />}
     </div>
   );
@@ -291,7 +318,8 @@ function DashboardContent({
   removeImage,
   handleScanQr,
   formatFileSize, 
-  tolva, 
+  tolva,
+  onFinalizarDescarga, 
 }) {
   const isSelectedView = "bg-[#725033] text-white px-4 py-2 rounded-lg font-medium transition-all duration-200";
   const noSelectectView = "bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-300 transition-all duration-200";
@@ -326,6 +354,7 @@ function DashboardContent({
         handleScanQr={handleScanQr}
         formatFileSize={formatFileSize}
         tolva={tolva}
+        onFinalizarDescarga={onFinalizarDescarga}
       />
     </>
   );
@@ -416,7 +445,8 @@ function MainContentCard({
   removeImage,
   handleScanQr,
   formatFileSize, 
-  tolva, 
+  tolva,
+  onFinalizarDescarga
 }) {
   return (
     <div className="bg-white shadow-md rounded-lg border border-gray-200 overflow-hidden min-h-[450px]">
@@ -433,7 +463,7 @@ function MainContentCard({
         />
       )}
       {modeView===2 && (
-        <DischargeIntoHopperView tolva={tolva}/>
+        <DischargeIntoHopperView tolva={tolva} onFinalizarDescarga={onFinalizarDescarga}/>
       )}
       {modeView===3 && (
         <AssignedView 
@@ -754,7 +784,7 @@ function AlertIcon() {
   );
 }
 
-const DischargeIntoHopperView = ({tolva}) => {
+const DischargeIntoHopperView = ({tolva, onFinalizarDescarga}) => {
   return(
     <>
       <div className="p-6 border-b border-gray-200 flex justify-between items-center">
@@ -763,7 +793,10 @@ const DischargeIntoHopperView = ({tolva}) => {
         </h2>
       </div>
       <div className="">
-        <TolvaSection datos={tolva?.descarga1}/>
+        <TolvaSection datos={tolva?.descarga1} onFinalizar={onFinalizarDescarga}/>
+      </div>
+      <div className="">
+        <TolvaSection datos={tolva?.descarga2} titulo="Tolva De Descarga #2" onFinalizar={onFinalizarDescarga}/>
       </div>
     </>
   )

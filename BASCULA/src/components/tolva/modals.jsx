@@ -264,3 +264,53 @@ const ModalLoader = () => {
     </div>
   );
 };
+
+export const FinalizarDescarga = ({ hdClose, hdlSubmit, isLoading }) => {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opa-50">
+      <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-md w-full mx-4 border border-gray-100 animate-fadeIn">
+        {/* Header con icono y título */}
+        <div className="flex items-center justify-center gap-3 mb-6">
+          <h2 className="text-2xl font-bold text-green-600 tracking-wide">
+            Finalizar Descarga
+          </h2>
+        </div>
+
+        {/* Contenido del mensaje */}
+        <div className="text-center mb-8">
+          <p className="text-gray-700 text-lg">
+            ¿Está seguro que desea finalizar la descarga?
+          </p>
+        </div>
+
+        {/* Botones de acción */}
+        <div className="flex flex-col sm:flex-row gap-3 justify-end">
+          <button
+            onClick={hdClose}
+            aria-label="Cancelar operación"
+            disabled={isLoading}
+            className="px-6 py-3 w-full text-gray-600 font-medium rounded-lg border border-gray-300 
+                       transition-all duration-200 ease-in-out 
+                       hover:bg-gray-50 hover:border-gray-400 hover:scale-[1.02]
+                       focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2
+                       active:scale-95"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={hdlSubmit}
+            aria-label="Confirmar ingreso sin marchamos"
+            disabled={isLoading}
+            className="px-6 py-3 w-full text-white font-semibold bg-gradient-to-r from-green-600 to-green-700 
+                       rounded-lg shadow-lg transition-all duration-200 ease-in-out 
+                       hover:from-green-700 hover:to-green-800 hover:scale-[1.02] hover:shadow-xl
+                       focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2
+                       active:scale-95"
+          >
+            {isLoading ? 'PROCESANDO...' : 'CONFIRMAR'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};

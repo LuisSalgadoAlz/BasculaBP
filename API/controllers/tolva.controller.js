@@ -340,7 +340,7 @@ const getListUsersForTolva = async(req, res) =>{
 }
 
 /**
- * !Faltan las observaciones
+ * COMPLETO LISTO PARA PRODUCION
  * @param {*} req 
  * @param {*} res 
  */
@@ -398,6 +398,41 @@ const postSiloInBoletas = async(req, res) => {
   }
 }
 
+const updateFinalizarDescart = async(req, res)=>{
+  try{
+    const id = req.params.id;
+
+    const token = req.header('Authorization');
+    
+    if (!token) return res.status(401).send({ error: 'Token no proporcionado' });
+    const verificado = jwt.verify(token, process.env.SECRET_KEY);
+    
+    const usuario = await db.usuarios.findUnique({
+      select: {
+        id:true, 
+        name: true,
+        UsuariosPorTolva: {
+          select: { tolva: true }
+        }
+      },
+      where: { usuarios: verificado["usuarios"] }
+    });
+
+    const updateFinalizarDescarga = await db.tolva.update({
+      data:{
+        fechaSalida: new Date(), 
+        estado: 1, 
+        idUsuarioDeCierre: usuario.id, 
+        usuarioDeCierre: usuario.name
+      }
+    })
+
+    res.status(200).send({msg:'Finalizada correctamente'})
+  }catch(err){
+    console.log(err)
+  }
+}
+
 const getTolvasDeDescargasOcupadas = async(req, res) => {
   try{
     const token = req.header('Authorization');
@@ -423,6 +458,7 @@ const getTolvasDeDescargasOcupadas = async(req, res) => {
       [1, 2].map(num =>
         db.tolva.findMany({
           select: {
+            id:true, 
             idBoleta: true, 
             fechaEntrada: true, 
             usuarioTolva:true, 

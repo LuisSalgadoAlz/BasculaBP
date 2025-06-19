@@ -1,8 +1,7 @@
 import { FiClock, FiUser, FiTool, FiCircle, FiCheck } from 'react-icons/fi';
-import { FaUserTie } from "react-icons/fa";      // Socio
-import { FaMapMarkerAlt } from "react-icons/fa"; // Origen
-import { FaTruck } from "react-icons/fa";        // Placa (camión)
-import { FaIdBadge } from "react-icons/fa";      // Motorista
+import { FaUserTie, FaMapMarkerAlt, FaTruck, FaIdBadge} from "react-icons/fa";      // Socio
+import { PiTruckTrailerLight } from "react-icons/pi";
+import { MdOutlineCancel } from "react-icons/md";
 
 const ALERTS_COLORS = {
   COMPLETO : 'bg-white', 
@@ -86,8 +85,8 @@ const TolvaCards = ({ datos = [], onFinalizar }) => {
   if (!datos || datos.length === 0) {
     return (
       <div className="text-center py-6 text-gray-400">
-        <FiTool className="w-6 h-6 mx-auto mb-2 opacity-50" />
-        <p className="text-sm">Sin registros</p>
+        <PiTruckTrailerLight className="w-6 h-6 mx-auto mb-2 opacity-50" />
+        <p className="text-sm">Disponible</p>
       </div>
     );
   }
@@ -98,14 +97,12 @@ const TolvaCards = ({ datos = [], onFinalizar }) => {
         <div key={item.id} className="bg-white border border-gray-100 rounded-lg p-3 hover:border-gray-200 transition-colors">
           
           {/* Layout Desktop - horizontal */}
-          <div className="hidden lg:flex items-center space-x-6 text-sm">
+          <div className="hidden 2xl:flex items-center justify-between space-x-6 text-sm">
             
             {/* Boleta y Tolva */}
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-1">
               <div className="flex items-center space-x-2">
                 <span className="font-medium text-gray-900">#{item.idBoleta}</span>
-                <span className="text-gray-400">•</span>
-                <span className="text-gray-600">{item.tolvaDescarga}</span>
               </div>
             </div>
 
@@ -139,7 +136,6 @@ const TolvaCards = ({ datos = [], onFinalizar }) => {
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-1">
                 <FiClock className="w-3 h-3 text-gray-400" />
-                <span className="text-xs text-gray-500">Entrada:</span>
                 <span className="text-gray-700">{formatFecha(item.fechaEntrada)}</span>
               </div>
               {item.fechaSalida && (
@@ -155,16 +151,16 @@ const TolvaCards = ({ datos = [], onFinalizar }) => {
               <FiTool className="w-3 h-3 text-gray-400" />
               <div className="flex items-center space-x-1">
                 <span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                  P:{item?.principal?.nombre}
+                  {item?.principal?.nombre}
                 </span>
                 {item.secundario && (
                   <span className="text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded">
-                    S:{item?.secundario?.nombre}
+                    {item?.secundario?.nombre}
                   </span>
                 )}
                 {item.terciario && (
                   <span className="text-xs bg-pink-50 text-pink-700 px-2 py-1 rounded">
-                    T:{item?.terciario?.nombre}
+                    {item?.terciario?.nombre}
                   </span>
                 )}
               </div>
@@ -178,11 +174,19 @@ const TolvaCards = ({ datos = [], onFinalizar }) => {
               </span>
             </div>
 
+            <button
+              onClick={() => handleFinalizar(item)}
+                className="self flex items-center space-x-1 px-3 py-3 bg-green-50 text-green-700 rounded-md hover:bg-green-100 transition-colors text-xs font-medium"
+              >
+              <MdOutlineCancel className="w-3 h-3" />
+              <span>Cancelar</span>
+            </button>
+
             {/* Botón Finalizar */}
             {item.estado === 0 && (
               <button
                 onClick={() => handleFinalizar(item)}
-                className="flex items-center space-x-1 px-3 py-1 bg-green-50 text-green-700 rounded-md hover:bg-green-100 transition-colors text-xs font-medium"
+                className="flex items-center space-x-1 px-3 py-3 bg-green-50 text-green-700 rounded-md hover:bg-green-100 transition-colors text-xs font-medium"
               >
                 <FiCheck className="w-3 h-3" />
                 <span>Finalizar</span>
@@ -192,7 +196,7 @@ const TolvaCards = ({ datos = [], onFinalizar }) => {
           </div>
 
           {/* Layout Mobile/Tablet - vertical */}
-          <div className="lg:hidden space-y-3">
+          <div className="2xl:hidden space-y-3">
             
             {/* Header móvil */}
             <div className="flex justify-between items-center">
@@ -266,16 +270,16 @@ const TolvaCards = ({ datos = [], onFinalizar }) => {
               <span className="text-xs text-gray-500">Silos:</span>
               <div className="flex items-center space-x-1 flex-wrap">
                 <span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                  P:{item?.principal?.nombre}
+                  {item?.principal?.nombre}
                 </span>
                 {item.secundario && (
                   <span className="text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded">
-                    S:{item?.secundario?.nombre}
+                    {item?.secundario?.nombre}
                   </span>
                 )}
                 {item.terciario && (
                   <span className="text-xs bg-pink-50 text-pink-700 px-2 py-1 rounded">
-                    T:{item?.terciario?.nombre}
+                    {item?.terciario?.nombre}
                   </span>
                 )}
               </div>
