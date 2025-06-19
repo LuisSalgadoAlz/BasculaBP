@@ -92,7 +92,7 @@ const alertaDesviacion = (nuevaBoleta, despachador, enviarCorreo) => {
   
   try {
 
-    enviarCorreo('practicas@baprosa.com', asunto, cuerpoMail)
+    enviarCorreo('practicas@baprosa.com, contadorgeneral@baprosa.com, auditorinterno@baprosa.com', asunto, cuerpoMail)
         
     return {
       exito: true,
@@ -186,7 +186,7 @@ const alertaCancelacion = (boletaCancelada, usuario, enviarCorreo) => {
   
   try {
     // Enviar el correo de notificación
-    enviarCorreo('practicas@baprosa.com', asunto, cuerpoMail);
+    enviarCorreo('practicas@baprosa.com, contadorgeneral@baprosa.com, auditorinterno@baprosa.com', asunto, cuerpoMail);
         
     return {
       exito: true,
@@ -278,7 +278,7 @@ const alertaSoporte = (datosFormulario, usuario, enviarCorreo) => {
   
   try {
     // Enviar el correo de notificación
-    enviarCorreo('practicas@baprosa.com', asunto, cuerpoMail);
+    enviarCorreo('practicas@baprosa.com, asanchez@baprosa.com, it@baprosa.com', asunto, cuerpoMail);
         
     return {
       exito: true,
