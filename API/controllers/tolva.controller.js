@@ -248,14 +248,16 @@ const buscarBoleSinQR = async(req, res) => {
     if (!id || id==0) return res.status(200).send({err: 'ID no valida, intente denuevo.'})
     
     const boleta = await db.boleta.findUnique({where:{id:parseInt(id)}})
+    const tolva = await db.tolva.count({where:{idBoleta:parseInt(id)}})
 
     if (!boleta) return res.status(200).send({err: 'Boleta no encontrada'})
     if (boleta.estado !='Pendiente') return res.status(200).send({err: 'Boleta ya finalizada, no puede asignarla.'})
     if (boleta.idProducto !=17 && boleta.idProducto!=18) return res.status(200).send({err: 'Favor, ingresar boletas proporcionadas por su ticket'})
 
     if (boleta.tolvaAsignada!=usuario.UsuariosPorTolva.tolva) return res.status(200).send({err: 'Boleta, no esta asignada a su tolva, favor enviar a la tolva correcta'})
-
-    /* Falta Validacion */
+    if (tolva!=0) return res.status(200).send({err: 'Boleta ya ha sido asignada'})
+    
+      /* Falta Validacion */
     return res.json({ 
       boleta: boleta,
       processingTime: 0, 
@@ -363,6 +365,19 @@ const postSiloInBoletas = async(req, res) => {
       where: { usuarios: verificado["usuarios"] }
     });
 
+    const isEmptyTolva = await db.tolva.count({
+      where: {
+        tolvaDescarga: {
+          contains: `T${usuario.UsuariosPorTolva.tolva}-${tolvaDescarga}`
+        },
+        estado: 0,
+      }
+    });
+
+    if (isEmptyTolva !== 0) {
+      return res.status(200).send({ err: 'Tolva de descarga actualmente en uso, finalice proceso' });
+    }
+
     const updateSiloBoleta = await db.tolva.create({
       data: {
         idBoleta: parseInt(boletaID), 
@@ -376,10 +391,10 @@ const postSiloInBoletas = async(req, res) => {
         tolvaDescarga: `T${usuario.UsuariosPorTolva.tolva}-${tolvaDescarga}`
       }
     })
-    res.status(200).send({msg:'¡Boleta ha sido asignada correctamente!'})
+    return res.status(200).send({msg:'¡Boleta ha sido asignada correctamente!'})
   } catch(err) {
-    res.status(200).send({err:'Intente denuevo'})
     console.log(err)
+    res.status(200).send({err:'Intente denuevo'})
   }
 }
 

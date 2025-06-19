@@ -175,7 +175,7 @@ const DashboardTolva = () => {
       setModalDeAsignacion(false);
       setFormData("");
     }
-    if (response?.err) toast.error("Intente de nuevo");
+    if (response?.err) toast.error(response?.err);
   };
 
   useEffect(() => {
