@@ -184,3 +184,31 @@ export const getTolvasDeDescagas = async (fun) => {
     console.error("Error al obtener los clientes:", error);
   }
 };
+
+export const updateFinalizarDescarga = async (id, setIsLoading, silo) => {
+  try {
+    setIsLoading(true)
+    const response = await fetch(`${URLHOST}tolva/upd/silo/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(silo),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: Cookies.get('token'),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API");
+    }
+
+    const msg = await response.json()
+
+    if (response.ok) {
+      return msg;
+    }
+  } catch (error) {
+    console.error("Error al obtener los datos:", error);
+  } finally {
+    setIsLoading(false)
+  }
+};

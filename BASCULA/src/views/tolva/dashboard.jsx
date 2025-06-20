@@ -9,9 +9,10 @@ import {
   getStatsTolvaDiarias,
   getTolvasDeDescagas,
   postAnalizarQR,
+  updateFinalizarDescarga,
   updateSilos,
 } from "../../hooks/tolva/formDataTolva";
-import { FinalizarDescarga, Modals } from "../../components/tolva/modals";
+import { FinalizarDescarga, FinalizarDescargaConMotivo, Modals } from "../../components/tolva/modals";
 import { Toaster, toast } from "sonner";
 import { isSelectedView, noSelectectView } from "../../constants/boletas";
 import { TableTolva, TolvaSection } from "../../components/tolva/table";
@@ -51,6 +52,9 @@ const DashboardTolva = () => {
   const [buscarID, setBuscarID] = useState('')
   const [tolva, setTolva] = useState({})
   const [modalConfirmacion, setModalConfirmacion] = useState(false)
+  const [selectedTolva, setSeletedTolva] = useState()
+  const [isConfirmarLoading, setIsConfirmarLoading] = useState(false)
+  const [modalConfirmacionTime, setModalConfirmacionTime] = useState(false)
 
   const handleImageChange = (event) => {
     const file = event.target.files[0];
@@ -121,6 +125,8 @@ const DashboardTolva = () => {
   const handleCloseModalAsignacion = () => {
     setModalDeAsignacion(false);
     setData("");
+    setFormData("")
+    setError("")
   };
 
   const handleChange = (e) => {
@@ -170,15 +176,25 @@ const DashboardTolva = () => {
       toast.error('Los silos no deben de ser iguales.');
       return;
     }
+
+    if(!formData?.tolvaDescarga) {
+      toast.error('Debe selecionar una tolva de descarga.')
+      return
+    }
     setError("");
     const response = await updateSilos(formData, data?.id, setIsLoadAsingar);
     if (response?.msg) {
-      getDataAsign(setSilosAsignados, setLoadingTables)
       getStatsTolvaDiarias(setStats)
       toast.success(response?.msg);
       setModalDeAsignacion(false);
       setFormData("");
       getTolvasDeDescagas(setTolva)
+      if (selectedImage) {
+        URL.revokeObjectURL(selectedImage.url);
+        setSelectedImage(null);
+        document.getElementById("fileInput").value = "";
+      }
+      return
     }
     if (response?.err) toast.error(response?.err);
   };
@@ -195,15 +211,34 @@ const DashboardTolva = () => {
 
     // Mostrar resultado
     console.log(`Horas: ${horas % 24}, Minutos: ${minutos % 60}`);
-    
+    setSeletedTolva(item.id)
+
     if(userData?.UsuariosPorTolva?.tolva==1 && ((horas===0 && minutos>15) && (horas===0 && minutos<50))){
-      setModalConfirmacion(true )
+      setModalConfirmacion(true)
       return
     }
     if(userData?.UsuariosPorTolva?.tolva==2 && ((horas===0 && minutos>15) && (horas===0 && minutos<40))){
       setModalConfirmacion(true)
       return
     }
+    setModalConfirmacion(true)
+  }
+
+  const hdlConfirmarFinalizacionCorrecta = async() => {
+    console.log(selectedTolva)
+    const response = await updateFinalizarDescarga(selectedTolva, setIsConfirmarLoading, {})
+    if(response?.msg){
+      toast.success(response?.msg);
+      getTolvasDeDescagas(setTolva)
+      setModalConfirmacion(false)
+      getDataAsign(setSilosAsignados, setLoadingTables)
+
+    }
+  }
+
+  const hdlCancelConfirmacion = async() =>{
+    setModalConfirmacion(false)
+    setModalConfirmacionTime(false)
   }
 
   useEffect(() => {
@@ -261,6 +296,12 @@ const DashboardTolva = () => {
     onFinalizarDescarga,
   };
 
+  const propsModalConfirmacion = {
+    hdlSubmit: hdlConfirmarFinalizacionCorrecta,
+    isLoading: isConfirmarLoading, 
+    hdClose: hdlCancelConfirmacion
+  }
+
   return (
     <div className="min-h-screen">
       <div className="mx-auto">
@@ -291,9 +332,21 @@ const DashboardTolva = () => {
       </div>
       <Toaster
         position="top-center"
-        toastOptions={{ style: { background: "#955e37", color: "white" } }}
+        toastOptions={{
+          style: {
+            background: '#333', // estilo general
+            color: 'white',
+          },
+          error: {
+            style: {
+              background: '#ff4d4f', // rojo fuerte
+              color: '#fff',
+            },
+          },
+        }}
       />
-      {modalConfirmacion && <FinalizarDescarga />}
+      {modalConfirmacion && <FinalizarDescarga {...propsModalConfirmacion}/>}
+      {modalConfirmacionTime && <FinalizarDescargaConMotivo hdClose={hdlCancelConfirmacion}/>}
       {modalDeAsignacion && <Modals {...propsModalAsignacion} />}
     </div>
   );

@@ -271,7 +271,7 @@ export const FinalizarDescarga = ({ hdClose, hdlSubmit, isLoading }) => {
       <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-md w-full mx-4 border border-gray-100 animate-fadeIn">
         {/* Header con icono y título */}
         <div className="flex items-center justify-center gap-3 mb-6">
-          <h2 className="text-2xl font-bold text-green-600 tracking-wide">
+          <h2 className="text-2xl font-bold text-[#5A3F27] tracking-wide">
             Finalizar Descarga
           </h2>
         </div>
@@ -301,10 +301,73 @@ export const FinalizarDescarga = ({ hdClose, hdlSubmit, isLoading }) => {
             onClick={hdlSubmit}
             aria-label="Confirmar ingreso sin marchamos"
             disabled={isLoading}
-            className="px-6 py-3 w-full text-white font-semibold bg-gradient-to-r from-green-600 to-green-700 
+            className="px-6 py-3 w-full text-white font-semibold bg-gradient-to-r from-[#5A3F27] to-[#5A3F27]
                        rounded-lg shadow-lg transition-all duration-200 ease-in-out 
-                       hover:from-green-700 hover:to-green-800 hover:scale-[1.02] hover:shadow-xl
-                       focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2
+                       hover:from-[#5A3F27] hover:to-[#5A3F27] hover:scale-[1.02] hover:shadow-xl
+                       focus:outline-none focus:ring-2 focus:ring-[#5A3F27] focus:ring-offset-2
+                       active:scale-95"
+          >
+            {isLoading ? 'PROCESANDO...' : 'CONFIRMAR'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const FinalizarDescargaConMotivo = ({ hdClose, hdlSubmit, isLoading, time, setMotivo }) => {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opa-50">
+      <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-md w-full mx-4 border border-gray-100 animate-fadeIn">
+        {/* Header con icono y título */}
+        <div className="flex items-center justify-center gap-3 mb-3">
+          <h2 className="text-2xl font-bold text-[amber-600] tracking-wide">
+            {time ? 'Tiempo de finalización demasiado corto' : 'Limite de tiempo excedido'}
+          </h2>
+        </div>
+
+        {/* Contenido del mensaje */}
+        <div className="w-full">
+          <label 
+            htmlFor="motivo" 
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
+            <span>Por favor, indique el motivo de este caso:</span>
+          </label>
+          <textarea
+            id="motivo"
+            name="motivo"
+            onChange={(e)=>setMotivo(e.target.value)}
+            rows={4}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm 
+                      focus:outline-none focus:ring-2 focus:ring-[#5A3F27] focus:border-[#5A3F27]
+                      placeholder-gray-400 text-gray-900 resize-vertical resize-none max-sm:text-sm"
+            placeholder="Ingrese el motivo detalladamente..."
+          />
+        </div>
+
+        {/* Botones de acción */}
+        <div className="flex flex-col sm:flex-row gap-3 justify-end">
+          <button
+            onClick={hdClose}
+            aria-label="Cancelar operación"
+            disabled={isLoading}
+            className="px-6 py-3 w-full text-gray-600 font-medium rounded-lg border border-gray-300 
+                       transition-all duration-200 ease-in-out 
+                       hover:bg-gray-50 hover:border-gray-400 hover:scale-[1.02]
+                       focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2
+                       active:scale-95"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={hdlSubmit}
+            aria-label="Confirmar ingreso sin marchamos"
+            disabled={isLoading}
+            className="px-6 py-3 w-full text-white font-semibold bg-gradient-to-r from-[#5A3F27] to-[#5A3F27] 
+                       rounded-lg shadow-lg transition-all duration-200 ease-in-out 
+                       hover:from-[#5A3F27] hover:to-[#5A3F27] hover:scale-[1.02] hover:shadow-xl
+                       focus:outline-none focus:ring-2 focus:ring-[#5A3F27] focus:ring-offset-2
                        active:scale-95"
           >
             {isLoading ? 'PROCESANDO...' : 'CONFIRMAR'}

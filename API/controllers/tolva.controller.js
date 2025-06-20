@@ -6,6 +6,8 @@ const jimp = require('jimp');
 const sharp = require('sharp');
 const jwt = require("jsonwebtoken");
 
+const TYPES_OF_STATES = ['PENDIENTE', 'COMPLETO', 'CANCELADO', 'FUERA DE TIEMPO']
+
 const analyzeQRWithSharp = async (imageBuffer) => {
   try {
     if (!imageBuffer || imageBuffer.length === 0) {
@@ -17,28 +19,17 @@ const analyzeQRWithSharp = async (imageBuffer) => {
     // Obtener metadatos una sola vez
     const metadata = await sharp(imageBuffer).metadata();
     
-    // Calcular tamaño objetivo más agresivo para obtener mas velocidad
+    // Calcular múltiples tamaños objetivo
     let targetWidth = metadata.width;
     let targetHeight = metadata.height;
     
-    const maxDimension = 800; // Reducido a 800 para mayor velocidad
+    const maxDimension = 800;
     if (Math.max(targetWidth, targetHeight) > maxDimension) {
       const ratio = maxDimension / Math.max(targetWidth, targetHeight);
       targetWidth = Math.round(targetWidth * ratio);
       targetHeight = Math.round(targetHeight * ratio);
     }
 
-    const processStart = Date.now();
-    const processedImage = await sharp(imageBuffer)
-      .resize(targetWidth, targetHeight, { 
-        kernel: sharp.kernel.nearest,
-        fit: 'fill'
-      })
-      .greyscale()
-      .normalize()
-      .png({ compressionLevel: 1 })
-      .toBuffer();
-    
     // Función helper para crear imageData más eficientemente
     const createImageData = async (image) => {
       const { data, info } = await sharp(image)
@@ -48,17 +39,34 @@ const analyzeQRWithSharp = async (imageBuffer) => {
       return { data: new Uint8ClampedArray(data), width: info.width, height: info.height };
     };
 
-    // Intentos optimizados - solo los más efectivos
+    // Función para aplicar rotación
+    const rotateImage = async (image, angle) => {
+      return await sharp(image)
+        .rotate(angle, { background: { r: 255, g: 255, b: 255, alpha: 1 } })
+        .toBuffer();
+    };
+
+    // Intentos optimizados y expandidos
     const attempts = [
       // Intento 1: Imagen normal (más probable que funcione)
       async () => {
+        const processedImage = await sharp(imageBuffer)
+          .resize(targetWidth, targetHeight, { 
+            kernel: sharp.kernel.nearest,
+            fit: 'fill'
+          })
+          .greyscale()
+          .normalize()
+          .png({ compressionLevel: 1 })
+          .toBuffer();
+        
         const imgData = await createImageData(processedImage);
         return jsQR(imgData.data, imgData.width, imgData.height, {
           inversionAttempts: "attemptBoth"
         });
       },
 
-      // Intento 2: Solo si el primero falla - imagen más pequeña y rápida
+      // Intento 2: Imagen más pequeña para casos difíciles
       async () => {
         const quickImage = await sharp(imageBuffer)
           .resize(400, 400, { fit: 'inside', kernel: sharp.kernel.nearest })
@@ -73,47 +81,234 @@ const analyzeQRWithSharp = async (imageBuffer) => {
         });
       },
 
-      // Intento 3: Solo para casos difíciles - con contraste
+      // Intento 3: Con contraste aumentado
       async () => {
-        const contrastImage = await sharp(processedImage)
-          .linear(1.3, -30) // Contraste más suave pero efectivo
+        const contrastImage = await sharp(imageBuffer)
+          .resize(targetWidth, targetHeight, { fit: 'fill' })
+          .greyscale()
+          .linear(1.5, -40) // Contraste más agresivo
           .toBuffer();
         
         const imgData = await createImageData(contrastImage);
         return jsQR(imgData.data, imgData.width, imgData.height, {
           inversionAttempts: "attemptBoth"
         });
+      },
+
+      // Intento 4: Con threshold binario
+      async () => {
+        const binaryImage = await sharp(imageBuffer)
+          .resize(targetWidth, targetHeight, { fit: 'fill' })
+          .greyscale()
+          .threshold(128) // Convierte a blanco y negro puro
+          .toBuffer();
+        
+        const imgData = await createImageData(binaryImage);
+        return jsQR(imgData.data, imgData.width, imgData.height, {
+          inversionAttempts: "attemptBoth"
+        });
+      },
+
+      // Intento 5: Con blur para reducir ruido
+      async () => {
+        const blurredImage = await sharp(imageBuffer)
+          .resize(targetWidth, targetHeight, { fit: 'fill' })
+          .greyscale()
+          .blur(0.5) // Blur muy ligero para reducir ruido
+          .normalize()
+          .toBuffer();
+        
+        const imgData = await createImageData(blurredImage);
+        return jsQR(imgData.data, imgData.width, imgData.height, {
+          inversionAttempts: "attemptBoth"
+        });
+      },
+
+      // Intento 6: Imagen más grande para casos con QR pequeños
+      async () => {
+        const largeImage = await sharp(imageBuffer)
+          .resize(1200, 1200, { fit: 'inside', kernel: sharp.kernel.lanczos3 })
+          .greyscale()
+          .normalize()
+          .toBuffer();
+        
+        const imgData = await createImageData(largeImage);
+        return jsQR(imgData.data, imgData.width, imgData.height, {
+          inversionAttempts: "attemptBoth"
+        });
+      },
+
+      // Intento 7: Rotación 90 grados
+      async () => {
+        const baseImage = await sharp(imageBuffer)
+          .resize(targetWidth, targetHeight, { fit: 'fill' })
+          .greyscale()
+          .normalize()
+          .toBuffer();
+        
+        const rotatedImage = await rotateImage(baseImage, 90);
+        const imgData = await createImageData(rotatedImage);
+        return jsQR(imgData.data, imgData.width, imgData.height, {
+          inversionAttempts: "attemptBoth"
+        });
+      },
+
+      // Intento 8: Rotación 180 grados
+      async () => {
+        const baseImage = await sharp(imageBuffer)
+          .resize(targetWidth, targetHeight, { fit: 'fill' })
+          .greyscale()
+          .normalize()
+          .toBuffer();
+        
+        const rotatedImage = await rotateImage(baseImage, 180);
+        const imgData = await createImageData(rotatedImage);
+        return jsQR(imgData.data, imgData.width, imgData.height, {
+          inversionAttempts: "attemptBoth"
+        });
+      },
+
+      // Intento 9: Rotación 270 grados
+      async () => {
+        const baseImage = await sharp(imageBuffer)
+          .resize(targetWidth, targetHeight, { fit: 'fill' })
+          .greyscale()
+          .normalize()
+          .toBuffer();
+        
+        const rotatedImage = await rotateImage(baseImage, 270);
+        const imgData = await createImageData(rotatedImage);
+        return jsQR(imgData.data, imgData.width, imgData.height, {
+          inversionAttempts: "attemptBoth"
+        });
+      },
+
+      // Intento 10: Gamma correction
+      async () => {
+        const gammaImage = await sharp(imageBuffer)
+          .resize(targetWidth, targetHeight, { fit: 'fill' })
+          .greyscale()
+          .gamma(2.2) // Gamma correction
+          .normalize()
+          .toBuffer();
+        
+        const imgData = await createImageData(gammaImage);
+        return jsQR(imgData.data, imgData.width, imgData.height, {
+          inversionAttempts: "attemptBoth"
+        });
+      },
+
+      // Intento 11: Sharpening para mejorar bordes
+      async () => {
+        const sharpImage = await sharp(imageBuffer)
+          .resize(targetWidth, targetHeight, { fit: 'fill' })
+          .greyscale()
+          .sharpen({ sigma: 1, flat: 1, jagged: 2 })
+          .normalize()
+          .toBuffer();
+        
+        const imgData = await createImageData(sharpImage);
+        return jsQR(imgData.data, imgData.width, imgData.height, {
+          inversionAttempts: "attemptBoth"
+        });
+      },
+
+      // Intento 12: Combinación de técnicas (contraste + threshold)
+      async () => {
+        const combinedImage = await sharp(imageBuffer)
+          .resize(targetWidth, targetHeight, { fit: 'fill' })
+          .greyscale()
+          .linear(1.3, -20) // Contraste moderado
+          .threshold(120) // Threshold más suave
+          .toBuffer();
+        
+        const imgData = await createImageData(combinedImage);
+        return jsQR(imgData.data, imgData.width, imgData.height, {
+          inversionAttempts: "attemptBoth"
+        });
+      },
+
+      // Intento 13: Imagen original sin procesar (por si acaso)
+      async () => {
+        const originalImage = await sharp(imageBuffer)
+          .toBuffer();
+        
+        const imgData = await createImageData(originalImage);
+        return jsQR(imgData.data, imgData.width, imgData.height, {
+          inversionAttempts: "attemptBoth"
+        });
+      },
+
+      // Intento 14: Crop central (enfoque en el centro)
+      async () => {
+        const cropSize = Math.min(targetWidth, targetHeight) * 0.8;
+        const croppedImage = await sharp(imageBuffer)
+          .resize(targetWidth, targetHeight, { fit: 'fill' })
+          .extract({
+            left: Math.round((targetWidth - cropSize) / 2),
+            top: Math.round((targetHeight - cropSize) / 2),
+            width: Math.round(cropSize),
+            height: Math.round(cropSize)
+          })
+          .greyscale()
+          .normalize()
+          .toBuffer();
+        
+        const imgData = await createImageData(croppedImage);
+        return jsQR(imgData.data, imgData.width, imgData.height, {
+          inversionAttempts: "attemptBoth"
+        });
+      },
+
+      // Intento 15: Filtro de mediana (para reducir ruido tipo sal y pimienta)
+      async () => {
+        const medianImage = await sharp(imageBuffer)
+          .resize(targetWidth, targetHeight, { fit: 'fill' })
+          .greyscale()
+          .median(3) // Filtro de mediana
+          .normalize()
+          .toBuffer();
+        
+        const imgData = await createImageData(medianImage);
+        return jsQR(imgData.data, imgData.width, imgData.height, {
+          inversionAttempts: "attemptBoth"
+        });
       }
     ];
 
-    // Timeout para evitar procesos colgados
+    // Ejecutar intentos con timeout más largo para dar tiempo a las rotaciones
     for (let i = 0; i < attempts.length; i++) {
       const attemptStart = Date.now();      
       try {
-        // Timeout de 1 segundo por intento
+        console.log(`Ejecutando intento ${i + 1}/${attempts.length}`);
+        
+        // Timeout de 2 segundos por intento (más tiempo para rotaciones)
         const code = await Promise.race([
           attempts[i](),
           new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Timeout')), 1000)
+            setTimeout(() => reject(new Error('Timeout')), 2000)
           )
         ]);
         
         if (code) {
+          console.log(`¡QR encontrado en intento ${i + 1}! Tiempo: ${Date.now() - attemptStart}ms`);
           return {
             found: true,
             data: code.data,
-            processingTime: Date.now() - startTime
+            processingTime: Date.now() - startTime,
+            attemptUsed: i + 1
           };
         }
       } catch (error) {
-        console.warn(`Intento ${i + 1} falló: ${error.message}`);
+        console.warn(`Intento ${i + 1} falló: ${error.message} (${Date.now() - attemptStart}ms)`);
       }
     }
 
     return {
       found: false,
-      error: 'QR no encontrado',
-      processingTime: Date.now() - startTime
+      error: 'QR no encontrado después de 15 intentos',
+      processingTime: Date.now() - startTime,
+      attemptsUsed: attempts.length
     };
 
   } catch (error) {
@@ -169,8 +364,9 @@ const analizadorQR = async (req, res) => {
     // Intentar análisis rápido primero
     let result = await quickQRAnalysis(req.file.buffer);
     
-    // Si el análisis rápido falla, usar el completo
+    // Si el análisis rápido falla, usar el completo con más intentos
     if (!result) {
+      console.log('Análisis rápido falló, iniciando análisis completo...');
       result = await analyzeQRWithSharp(req.file.buffer);
     }
 
@@ -179,7 +375,8 @@ const analizadorQR = async (req, res) => {
     if (!result || !result.found) {
       return res.status(200).json({
         err: result?.error || 'QR no detectado',
-        processingTime: totalTime
+        processingTime: totalTime,
+        attemptsUsed: result?.attemptsUsed || 0
       });
     }
 
@@ -196,6 +393,23 @@ const analizadorQR = async (req, res) => {
         where: { id: idBolQR }
       });
 
+      const tolva = await db.tolva.count({where:{idBoleta:parseInt(idBolQR)}})
+
+      const token = req.header('Authorization');
+    
+      if (!token) return res.status(401).send({ error: 'Token no proporcionado' });
+      const verificado = jwt.verify(token, process.env.SECRET_KEY);
+      
+      const usuario = await db.usuarios.findUnique({
+        select: {
+          name: true,
+          UsuariosPorTolva: {
+            select: { tolva: true }
+          }
+        },
+        where: { usuarios: verificado["usuarios"] }
+      });
+
       if (!boleta) {
         return res.status(200).json({err: 'Boleta no encontrada'});
       }
@@ -203,10 +417,15 @@ const analizadorQR = async (req, res) => {
       if(boleta.estado !='Pendiente') {
         return res.status(200).json({err: 'Boleta ya finalizada, no puede asignarla.'});
       }
+          
+      if (boleta.idProducto !=17 && boleta.idProducto!=18) return res.status(200).send({err: 'Favor, ingresar boletas proporcionadas por su ticket'})
+      if (boleta.tolvaAsignada!=usuario.UsuariosPorTolva.tolva) return res.status(200).send({err: 'Boleta, no esta asignada a su tolva, favor enviar a la tolva correcta'})
+      if (tolva!=0) return res.status(200).send({err: 'Boleta ya ha sido asignada'})
 
       return res.json({ 
         boleta: boleta,
-        processingTime: totalTime 
+        processingTime: totalTime,
+        attemptUsed: result.attemptUsed || 'quick'
       });
 
     } catch (err) {
@@ -398,7 +617,7 @@ const postSiloInBoletas = async(req, res) => {
   }
 }
 
-const updateFinalizarDescart = async(req, res)=>{
+const updateFinalizarDescarga = async(req, res)=>{
   try{
     const id = req.params.id;
 
@@ -424,10 +643,13 @@ const updateFinalizarDescart = async(req, res)=>{
         estado: 1, 
         idUsuarioDeCierre: usuario.id, 
         usuarioDeCierre: usuario.name
+      }, 
+      where:{
+        id: parseInt(id)
       }
     })
 
-    res.status(200).send({msg:'Finalizada correctamente'})
+    return res.status(200).send({msg:'Finalizada correctamente'})
   }catch(err){
     console.log(err)
   }
@@ -498,7 +720,7 @@ const getTolvasDeDescargasOcupadas = async(req, res) => {
 }
 
 /**
- * ! ERROR ARREGLAR
+ * CONTROLADOR LISTO PARA PRODUCCION
  * @param {*} req 
  * @param {*} res 
  */
@@ -511,57 +733,80 @@ const getAsignForDay = async(req, res) => {
     startOfDay = new Date(Date.UTC(year, month, day, 6, 0, 0));
     endOfDay = new Date(Date.UTC(year, month, day + 1, 5, 59, 59, 999));
 
-    const fechaTolva = { gte: startOfDay, lte: endOfDay }
+    const fechaSalida = { gte: startOfDay, lte: endOfDay }
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 15;
     const skip = (page - 1) * limit;
 
-    /* const where = {
-      siloID: { not: null },
-      idProducto : {in:[17, 18]},
-      fechaTolva, 
+    const where = {
+      estado: {in:[1, 2, 3]},
+      fechaSalida, 
     }
     
-    const silos = await db.silos.findMany({select:{id: true, nombre:true}})
-    const newSilos = Object.fromEntries(silos.map(silo => [silo.id, silo.nombre]));
-    const data = await db.boleta.findMany({
+    const data = await db.tolva.findMany({
       select: {
-        id: true,
-        socio: true,
-        empresa:true,
-        motorista: true,
-        producto: true,
-        origen: true, 
+        id:true, 
+        idBoleta: true, 
+        fechaSalida: true,
+        fechaEntrada: true,  
+        usuarioDeCierre: true, 
+        tolvaDescarga:true,
+        estado: true,
+        boleta: {
+          select:{
+            socio:true, 
+            placa:true, 
+            motorista:true, 
+            origen: true, 
+          }
+        },
+        principal: {
+          select: {nombre:true,}
+        },
+        secundario: {
+          select:{nombre:true}
+        },
+        terciario:{
+          select:{nombre:true}
+        }, 
       }, 
       where, 
       orderBy:{
-        fechaTolva: 'desc'
+        fechaSalida: 'desc'
       },  
       skip: skip,
       take: limit,
     })
 
-    const totalData = await db.boleta.count({ where, })
+    const totalData = await db.tolva.count({ where, })
 
     const refactorData = data.map((prev) => {
-      const { boletasXsilos, silo2, silo3, ...rest } = prev;
-      const siloNombre = [
-        boletasXsilos?.nombre,
-        newSilos[prev.silo2],
-        newSilos[prev.silo3],
-      ].filter(Boolean).join(' / ');
+      const { boleta, principal, secundario, terciario, fechaEntrada,fechaSalida,idBoleta,estado,id,...rest } = prev;
+      const siloNombre = [principal?.nombre, secundario?.nombre, terciario?.nombre].filter(Boolean).join(' / ');
+      const TIEMPOPROCESO = prev.fechaSalida - prev.fechaEntrada;
+      const totalSegundos = Math.floor(TIEMPOPROCESO / 1000);
+      const horas = Math.floor(totalSegundos / 3600);
+      const minutos = Math.floor((totalSegundos % 3600) / 60);
+      const segundos = totalSegundos % 60;
+      const TIEMPOESTADIA = `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
 
       return {
         Silo: siloNombre,
+        boleta: prev.idBoleta, 
+        Socio: boleta.socio, 
+        Origen: boleta.origen,
+        Placa: boleta.placa,
+        Estado: TYPES_OF_STATES[prev.estado],  
+        Motorista: boleta.motorista, 
         ...rest,
-        fechaTolva: new Date(prev.fechaTolva).toLocaleString(),
+        TIEMPOS: TIEMPOESTADIA,
       };
-    }); */
+    });
     res.status(200).send( {
-      data: null, 
+      data: refactorData, 
       pagination: {
-        totalData:0, 
-        totalPages: Math.ceil(0 / limit),
+        totalData: totalData, 
+        totalPages: Math.ceil(totalData / limit),
         currentPage: page,
         limit,
       }
@@ -605,5 +850,6 @@ module.exports = {
   getStatsForTolva, 
   buscarBoleSinQR, 
   getListUsersForTolva, 
-  getTolvasDeDescargasOcupadas
+  getTolvasDeDescargasOcupadas, 
+  updateFinalizarDescarga
 };
