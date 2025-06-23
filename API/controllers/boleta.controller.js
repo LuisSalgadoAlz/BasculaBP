@@ -1328,7 +1328,7 @@ const getReimprimirTicket = async (req, res) => {
     });
     const despachador = await db.usuarios.findUnique({where: {usuarios:boleta.usuario}})
     try {
-      reImprimirTikets(boleta, despachador.name)
+      imprimirQRTolva(boleta)
       res.send({ msg: "Impresion correcta" });
     }catch(err) {
       console.log(`Error al reimprimir ticket de tolva`)
