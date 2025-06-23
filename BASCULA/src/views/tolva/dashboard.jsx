@@ -177,7 +177,7 @@ const DashboardTolva = () => {
       return;
     }
 
-    if(!formData?.tolvaDescarga) {
+    if(!formData?.tolvaDescarga || formData?.tolvaDescarga==0) {
       toast.error('Debe selecionar una tolva de descarga.')
       return
     }
