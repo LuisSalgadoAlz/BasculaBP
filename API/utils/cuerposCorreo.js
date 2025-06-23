@@ -1,4 +1,5 @@
 const { footerImgage } = require("../lib/image");
+const dotenv = require("dotenv");
 
 /**
  * Función para generar alertas por correo electrónico cuando se detectan desviaciones en el peso
@@ -92,7 +93,7 @@ const alertaDesviacion = (nuevaBoleta, despachador, enviarCorreo) => {
   
   try {
 
-    enviarCorreo('practicas@baprosa.com, contadorgeneral@baprosa.com, auditorinterno@baprosa.com', asunto, cuerpoMail)
+    enviarCorreo(process.env.END_MAILS, asunto, cuerpoMail)
         
     return {
       exito: true,
@@ -186,7 +187,7 @@ const alertaCancelacion = (boletaCancelada, usuario, enviarCorreo) => {
   
   try {
     // Enviar el correo de notificación
-    enviarCorreo('practicas@baprosa.com, contadorgeneral@baprosa.com, auditorinterno@baprosa.com', asunto, cuerpoMail);
+    enviarCorreo(process.env.END_MAILS, asunto, cuerpoMail);
         
     return {
       exito: true,
@@ -278,7 +279,7 @@ const alertaSoporte = (datosFormulario, usuario, enviarCorreo) => {
   
   try {
     // Enviar el correo de notificación
-    enviarCorreo('practicas@baprosa.com, asanchez@baprosa.com, it@baprosa.com', asunto, cuerpoMail);
+    enviarCorreo(process.env.SUPORT_MAILS, asunto, cuerpoMail);
         
     return {
       exito: true,
