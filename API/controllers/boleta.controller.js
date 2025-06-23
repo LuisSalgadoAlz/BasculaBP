@@ -525,9 +525,10 @@ const postClientePlacaMoto = async (req, res) => {
       },
     });
 
-    /* if(idProducto===17 || idProducto===18) {
-      imprimirTikets(newBol, despachador['name'])
-    }  */
+    if(idProducto===17 || idProducto===18) {
+      imprimirQRTolva(newBol)
+      /* imprimirTikets(newBol, despachador['name']) */
+    }
     setLogger('BOLETA', 'AGREGAR BOLETA (ENTRADA DE DATOS)', req, null, 1, newBol.id)  
 
     res
@@ -618,9 +619,10 @@ const postClientePlacaMotoComodin = async (req, res) => {
       },
     });
 
-    /* if(idProducto===17 || idProducto===18) {
-      imprimirTikets(newBol, despachador['name'])
-    } */
+    if(idProducto===17 || idProducto===18) {
+      imprimirQRTolva(newBol)
+      /* imprimirTikets(newBol, despachador['name']) */
+    }
 
     setLogger('BOLETA', 'AGREGAR BOLETA (ENTRADA DE DATOS | COMODIN)', req, null, 1, newBol.id)  
 
