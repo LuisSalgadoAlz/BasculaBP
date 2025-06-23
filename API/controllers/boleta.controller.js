@@ -636,13 +636,13 @@ const postClientePlacaMotoComodin = async (req, res) => {
 };
 
 const postBoleta = async (req, res) => {
-  const { idCliente, idPlaca } = req.body;
+  const { idCliente } = req.body;
   try{
-    const countPlacas = await db.boleta.count({ where:{ estado: 'Pendiente', placa: idPlaca, }})
+    /* const countPlacas = await db.boleta.count({ where:{ estado: 'Pendiente', placa: idPlaca, }})
 
     if(countPlacas!=0) {
       return res.status(200).send({err: 'Placa ya esta ingresada en pendientes, complete su proceso o cancele la boleta.'})
-    }
+    } */
 
     if (idCliente == -998 || idCliente == -999) {
       return postClientePlacaMotoComodin(req, res);
