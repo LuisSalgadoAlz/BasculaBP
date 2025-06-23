@@ -66,7 +66,7 @@ const exportToExcel = async (req, res) => {
         PesoNeto: el.pesoNeto || 0,
         PesoTeorico: el.pesoTeorico || 0,
         Desviación: el.desviacion || 0,
-        Tolerancia: (el.pesoTeorico * 0.005) || 0,
+        Tolerancia: (el.pesoTeorico * el.porTolerancia) || 0,
         Estado: el.estado,
         FechaDeEntrada: fechaInicio ? fechaInicio.toLocaleString() : 'N/A',
         FechaFinalizacion: fechaFin ? fechaFin.toLocaleString() : 'N/A',
