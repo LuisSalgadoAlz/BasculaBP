@@ -1396,6 +1396,7 @@ const getTimeLineForComponent = async (req, res) => {
       title: el.placa,
       start_time: el.fechaInicio,
       end_time: el.fechaFin,
+      estado:el.estado
     }));
 
     res.send({ groups, items });
