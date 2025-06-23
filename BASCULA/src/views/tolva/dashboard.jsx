@@ -206,6 +206,7 @@ const DashboardTolva = () => {
       setModalDeAsignacion(false);
       setFormData("");
       getTolvasDeDescagas(setTolva)
+      getStatsTolvaDiarias(setStats)
       setModeView(2)
       enfocarYScrollear()
       if (selectedImage) {
@@ -247,6 +248,7 @@ const DashboardTolva = () => {
     const response = await updateFinalizarDescarga(selectedTolva, setIsConfirmarLoading, {})
     if(response?.msg){
       toast.success(response?.msg, {style:{background:'#4CAF50'}});
+      getStatsTolvaDiarias(setStats)
       getTolvasDeDescagas(setTolva)
       setModalConfirmacion(false)
       getDataAsign(setSilosAsignados, setLoadingTables)
@@ -263,6 +265,7 @@ const DashboardTolva = () => {
     const response = await updateFinalizarDescarga(selectedTolva, setIsConfirmarLoading, {motivo: observacionLimite})
     if(response?.msg){
       toast.success(response?.msg, {style:{background:'#4CAF50'}});
+      getStatsTolvaDiarias(setStats)
       getTolvasDeDescagas(setTolva)
       setModalConfirmacionTime(false)
       getDataAsign(setSilosAsignados, setLoadingTables)

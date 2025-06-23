@@ -620,6 +620,7 @@ const postSiloInBoletas = async(req, res) => {
 const updateFinalizarDescarga = async(req, res)=>{
   try{
     const id = req.params.id;
+    const { motivo } = req.body
 
     const token = req.header('Authorization');
     
@@ -642,7 +643,8 @@ const updateFinalizarDescarga = async(req, res)=>{
         fechaSalida: new Date(), 
         estado: 1, 
         idUsuarioDeCierre: usuario.id, 
-        usuarioDeCierre: usuario.name
+        usuarioDeCierre: usuario.name, 
+        ...(motivo ? { observacionTiempo: motivo } : {})
       }, 
       where:{
         id: parseInt(id)
@@ -828,13 +830,39 @@ const getStatsForTolva = async(req, res) =>{
     startOfDay = new Date(Date.UTC(year, month, day, 6, 0, 0));
     endOfDay = new Date(Date.UTC(year, month, day + 1, 5, 59, 59, 999));
 
-    const fechaTolva = { gte: startOfDay, lte: endOfDay }
+    const fechaSalida = { gte: startOfDay, lte: endOfDay }
 
     const [total, pendientes, gamericana, gnacional] = await Promise.all([
-      0, 
-      0, 
-      0, 
-      0
+      db.tolva.count({
+        where:{
+          estado: 1, 
+          fechaSalida, 
+        }
+      }), 
+      db.boleta.count({
+        where:{
+          estado: 'Pendiente', 
+          tolva : {
+            none:{}
+          }, 
+        }
+      }), 
+      db.tolva.count({
+        where:{
+          estado: 1, 
+          boleta:{
+            idProducto: {in:[18]}
+          }
+        }
+      }), 
+      db.tolva.count({
+        where:{
+          estado: 1, 
+          boleta:{
+            idProducto: {in:[17]}
+          }
+        }
+      })
     ])
     res.status(200).send({total, pendientes, gamericana, gnacional})
   }catch(err){
