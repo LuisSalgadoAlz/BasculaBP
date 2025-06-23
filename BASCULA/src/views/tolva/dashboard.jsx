@@ -21,12 +21,12 @@ import { Pagination } from "../../components/buttons";
 
 const StatCard = ({ icon, title, value, color }) => {
   return (
-    <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 transition-all duration-300 hover:shadow-lg">
+    <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 max-sm:p-3 transition-all duration-300 hover:shadow-lg">
       <div className="flex items-center">
-        <div className={`p-3 rounded-full ${color} mr-4`}>{icon}</div>
+        <div className={`p-3 rounded-full ${color} mr-4 max-sm:hidden`}>{icon}</div>
         <div>
-          <p className="text-sm font-medium text-gray-500">{title}</p>
-          <h4 className="text-2xl font-bold text-gray-800">{value}</h4>
+          <p className="text-sm font-medium text-gray-500 max-sm:text-sm">{title}</p>
+          <h4 className="text-2xl font-bold text-gray-800 max-sm:text-sm">{value}</h4>
         </div>
       </div>
     </div>
@@ -466,7 +466,7 @@ function StatsCards({ stats }) {
   const statsData = [
     {
       icon: <FiCalendar size={24} className="text-white" />,
-      title: "Total Boletas(hoy)",
+      title: "Total (hoy)",
       value: stats?.total || 0,
       color: "bg-blue-500"
     },
@@ -491,7 +491,7 @@ function StatsCards({ stats }) {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-3 max-sm:hidden">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-sm:gap-2 mb-3 max-sm:grid-cols-2">
       {statsData.map((stat, index) => (
         <StatCard
           key={index}
