@@ -85,7 +85,7 @@ export const Calendario = () => {
   };
 
   return (
-    <div className="p-6 relative min-h-[700px]">
+    <div className="p-6 relative min-h-[600px]">
       {isLoadData && !dateBolCalendar && <BigSpinner />}
       <AnimatePresence mode="wait">
         {currentView !== 'timeGridDay' ? (
@@ -113,7 +113,7 @@ export const Calendario = () => {
               eventClick={handleEventClick}
               datesSet={handleEventButtons}
               viewDidMount={handleViewChange}
-              height="700px"
+              height="550px"
               dayCellClassNames={() => ['custom-day-cell']}
               eventContent={(arg) => (
                 <div style={{ textAlign: 'center',}}>
