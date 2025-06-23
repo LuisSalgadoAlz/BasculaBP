@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { FiCalendar, FiClock } from "react-icons/fi";
 import { FaBox } from "react-icons/fa";
 import {
@@ -55,6 +55,22 @@ const DashboardTolva = () => {
   const [selectedTolva, setSeletedTolva] = useState()
   const [isConfirmarLoading, setIsConfirmarLoading] = useState(false)
   const [modalConfirmacionTime, setModalConfirmacionTime] = useState(false)
+  const viewElementRef = useRef(null)
+
+  const enfocarYScrollear = () => {
+    const elemento = viewElementRef.current;
+    if (elemento) {
+      // Hacer scroll hacia el elemento
+      elemento.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+      });
+      // Enfocar después de un pequeño delay para que termine el scroll
+      setTimeout(() => {
+        elemento.focus();
+      }, 300);
+    }
+  };
 
   const handleImageChange = (event) => {
     const file = event.target.files[0];
@@ -189,6 +205,8 @@ const DashboardTolva = () => {
       setModalDeAsignacion(false);
       setFormData("");
       getTolvasDeDescagas(setTolva)
+      setModeView(2)
+      enfocarYScrollear()
       if (selectedImage) {
         URL.revokeObjectURL(selectedImage.url);
         setSelectedImage(null);
@@ -232,7 +250,8 @@ const DashboardTolva = () => {
       getTolvasDeDescagas(setTolva)
       setModalConfirmacion(false)
       getDataAsign(setSilosAsignados, setLoadingTables)
-
+      setModeView(3)
+      enfocarYScrollear()
     }
   }
 
@@ -294,6 +313,7 @@ const DashboardTolva = () => {
     formatFileSize,
     tolva,
     onFinalizarDescarga,
+    viewElementRef, 
   };
 
   const propsModalConfirmacion = {
@@ -372,7 +392,8 @@ function DashboardContent({
   handleScanQr,
   formatFileSize, 
   tolva,
-  onFinalizarDescarga, 
+  onFinalizarDescarga,
+  viewElementRef, 
 }) {
   const isSelectedView = "bg-[#725033] text-white px-4 py-2 rounded-lg font-medium transition-all duration-200";
   const noSelectectView = "bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-300 transition-all duration-200";
@@ -408,6 +429,7 @@ function DashboardContent({
         formatFileSize={formatFileSize}
         tolva={tolva}
         onFinalizarDescarga={onFinalizarDescarga}
+        viewElementRef={viewElementRef}
       />
     </>
   );
@@ -499,10 +521,11 @@ function MainContentCard({
   handleScanQr,
   formatFileSize, 
   tolva,
-  onFinalizarDescarga
+  onFinalizarDescarga, 
+  viewElementRef,
 }) {
   return (
-    <div className="bg-white shadow-md rounded-lg border border-gray-200 overflow-hidden min-h-[450px]">
+    <div ref={viewElementRef} className="bg-white shadow-md rounded-lg border border-gray-200 overflow-hidden min-h-[450px]">
       {modeView ===1 && (
         <QRScannerView 
           selectedImage={selectedImage}
