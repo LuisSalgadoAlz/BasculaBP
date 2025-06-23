@@ -458,7 +458,6 @@ const postClientePlacaMoto = async (req, res) => {
       tolvaAsignada, 
     } = req.body;
 
-    console.log(req.body)
     const empresa = await db.empresa.findUnique({
       where: { id: parseInt(idEmpresa) },
     });
@@ -635,12 +634,21 @@ const postClientePlacaMotoComodin = async (req, res) => {
 };
 
 const postBoleta = async (req, res) => {
-  const { idCliente } = req.body;
+  const { idCliente, idPlaca } = req.body;
+  try{
+    const countPlacas = await db.boleta.count({ where:{ estado: 'Pendiente', placa: idPlaca, }})
 
-  if (idCliente == -998 || idCliente == -999) {
-    return postClientePlacaMotoComodin(req, res);
-  } else {
-    return postClientePlacaMoto(req, res);
+    if(countPlacas!=0) {
+      return res.status(200).send({err: 'Placa ya esta ingresada en pendientes, complete su proceso o cancele la boleta.'})
+    }
+
+    if (idCliente == -998 || idCliente == -999) {
+      return postClientePlacaMotoComodin(req, res);
+    } else {
+      return postClientePlacaMoto(req, res);
+    }
+  }catch(err){
+    console.log(err)
   }
 };
 

@@ -41,7 +41,7 @@ export const postBoletasNormal = async (boleta, setIsLoading) => {
     }
 
     const data = await response.json();
-    console.log(data);
+    return data;
   } catch (error) {
     console.error("Error al obtener los datos:", error);
   } finally {

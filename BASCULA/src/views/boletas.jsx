@@ -145,8 +145,14 @@ const Boletas = () => {
     const response = formaterDataNewPlaca(formBoletas, marchamos)
     const isCorrect = verificarDataNewPlaca(setErr,response, setMsg, marchamos)
     if (isCorrect) {
-      await postBoletasNormal(response, setIsLoading)
+      const state = await postBoletasNormal(response, setIsLoading)
+      if(state?.err){
+        setMsg(state?.err)
+        setErr(true)
+        return
+      }
       setSuccess(true)
+      console.log(state?.msg)
       setMsg('agregar nueva boleta')
       setAddMarchamos([])
       setOpenModalForm(false)
