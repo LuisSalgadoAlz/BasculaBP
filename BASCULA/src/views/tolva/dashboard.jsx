@@ -108,13 +108,13 @@ const DashboardTolva = () => {
 
   const handleScanQr = async () => {
     if (isToLarge(selectedImage.size)) {
-      toast.error("Imagen demasido grande, tamaño debe ser menor a 10MB");
+      toast.error("Imagen demasido grande, tamaño debe ser menor a 10MB", {style:{background:'#ff4d4f'}});
       return;
     }
     setModalDeAsignacion(true);
     const response = await postAnalizarQR(selectedImage, setIsLoadingImage);
     if (response?.err) {
-      toast.error(response?.err);
+      toast.error(response?.err, {style:{background:'#ff4d4f'}});
       setData("");
       setModalDeAsignacion(false);
       return;
@@ -153,7 +153,7 @@ const DashboardTolva = () => {
     setModalDeAsignacion(true);
     const response = await getBoletaSinQR(buscarID, setIsLoadingImage)
     if (response?.err) {
-      toast.error(response?.err);
+      toast.error(response?.err, {style:{background:'#ff4d4f'}});
       setData("");
       setModalDeAsignacion(false);
       return;
@@ -173,19 +173,19 @@ const DashboardTolva = () => {
     const uniqueSilos = new Set(filledSilos);
 
     if (filledSilos.length !== uniqueSilos.size) {
-      toast.error('Los silos no deben de ser iguales.');
+      toast.error('Los silos no deben de ser iguales.', {style:{background:'#ff4d4f'}});
       return;
     }
 
     if(!formData?.tolvaDescarga || formData?.tolvaDescarga==0) {
-      toast.error('Debe selecionar una tolva de descarga.')
+      toast.error('Debe selecionar una tolva de descarga.', {style:{background:'#ff4d4f'}})
       return
     }
     setError("");
     const response = await updateSilos(formData, data?.id, setIsLoadAsingar);
     if (response?.msg) {
       getStatsTolvaDiarias(setStats)
-      toast.success(response?.msg);
+      toast.success(response?.msg, {style:{background:'#4CAF50'}});
       setModalDeAsignacion(false);
       setFormData("");
       getTolvasDeDescagas(setTolva)
@@ -196,7 +196,7 @@ const DashboardTolva = () => {
       }
       return
     }
-    if (response?.err) toast.error(response?.err);
+    if (response?.err) toast.error(response?.err, {style:{background:'#ff4d4f'}});
   };
 
   const onFinalizarDescarga = (item) => {
@@ -228,7 +228,7 @@ const DashboardTolva = () => {
     console.log(selectedTolva)
     const response = await updateFinalizarDescarga(selectedTolva, setIsConfirmarLoading, {})
     if(response?.msg){
-      toast.success(response?.msg);
+      toast.success(response?.msg, {style:{background:'#4CAF50'}});
       getTolvasDeDescagas(setTolva)
       setModalConfirmacion(false)
       getDataAsign(setSilosAsignados, setLoadingTables)
