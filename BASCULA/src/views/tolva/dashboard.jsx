@@ -55,6 +55,7 @@ const DashboardTolva = () => {
   const [selectedTolva, setSeletedTolva] = useState()
   const [isConfirmarLoading, setIsConfirmarLoading] = useState(false)
   const [modalConfirmacionTime, setModalConfirmacionTime] = useState(false)
+  const [observacionLimite, setObservacionLimite] = useState('')
   const viewElementRef = useRef(null)
 
   const enfocarYScrollear = () => {
@@ -231,19 +232,18 @@ const DashboardTolva = () => {
     console.log(`Horas: ${horas % 24}, Minutos: ${minutos % 60}`);
     setSeletedTolva(item.id)
 
-    if(userData?.UsuariosPorTolva?.tolva==1 && ((horas===0 && minutos>15) && (horas===0 && minutos<50))){
-      setModalConfirmacion(true)
+    if(userData?.UsuariosPorTolva?.tolva==1 && ((horas===0 && minutos>50) || (horas!=0))){
+      setModalConfirmacionTime(true)
       return
     }
-    if(userData?.UsuariosPorTolva?.tolva==2 && ((horas===0 && minutos>15) && (horas===0 && minutos<40))){
-      setModalConfirmacion(true)
+    if(userData?.UsuariosPorTolva?.tolva==2 && ((horas===0 && minutos>40) || (horas!=0))){
+      setModalConfirmacionTime(true)
       return
     }
     setModalConfirmacion(true)
   }
 
   const hdlConfirmarFinalizacionCorrecta = async() => {
-    console.log(selectedTolva)
     const response = await updateFinalizarDescarga(selectedTolva, setIsConfirmarLoading, {})
     if(response?.msg){
       toast.success(response?.msg, {style:{background:'#4CAF50'}});
@@ -253,6 +253,23 @@ const DashboardTolva = () => {
       setModeView(3)
       enfocarYScrollear()
     }
+  }
+
+  const hdlConfirmarFinalizacionCorrectaConObservacion = async() => {
+    if(!observacionLimite || observacionLimite.trim()==='') {
+      toast.error('Debe ingresar un motivo.', {style:{background:'#ff4d4f'}});
+      return
+    }
+    const response = await updateFinalizarDescarga(selectedTolva, setIsConfirmarLoading, {motivo: observacionLimite})
+    if(response?.msg){
+      toast.success(response?.msg, {style:{background:'#4CAF50'}});
+      getTolvasDeDescagas(setTolva)
+      setModalConfirmacionTime(false)
+      getDataAsign(setSilosAsignados, setLoadingTables)
+      setModeView(3)
+      enfocarYScrollear()
+    }
+    setObservacionLimite('')
   }
 
   const hdlCancelConfirmacion = async() =>{
@@ -322,6 +339,13 @@ const DashboardTolva = () => {
     hdClose: hdlCancelConfirmacion
   }
 
+  const propsModalConfirmacionTime = {
+    hdClose: hdlCancelConfirmacion, 
+    setMotivo: setObservacionLimite,
+    hdlSubmit: hdlConfirmarFinalizacionCorrectaConObservacion,
+    isLoading: isConfirmarLoading,   
+  }
+
   return (
     <div className="min-h-screen">
       <div className="mx-auto">
@@ -366,7 +390,7 @@ const DashboardTolva = () => {
         }}
       />
       {modalConfirmacion && <FinalizarDescarga {...propsModalConfirmacion}/>}
-      {modalConfirmacionTime && <FinalizarDescargaConMotivo hdClose={hdlCancelConfirmacion}/>}
+      {modalConfirmacionTime && <FinalizarDescargaConMotivo {...propsModalConfirmacionTime} />}
       {modalDeAsignacion && <Modals {...propsModalAsignacion} />}
     </div>
   );

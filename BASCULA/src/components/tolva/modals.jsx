@@ -75,6 +75,9 @@ export const Modals = (props) => {
                     <p className="text-sm font-medium text-gray-800">
                       {data?.empresa || "No especificado"}
                     </p>
+                    <p className="text-sm font-medium text-gray-800">
+                      Placa - {data?.placa || "No especificado"}
+                    </p>
                   </div>
                 </div>
 
@@ -315,14 +318,14 @@ export const FinalizarDescarga = ({ hdClose, hdlSubmit, isLoading }) => {
   );
 };
 
-export const FinalizarDescargaConMotivo = ({ hdClose, hdlSubmit, isLoading, time, setMotivo }) => {
+export const FinalizarDescargaConMotivo = ({ hdClose, hdlSubmit, isLoading, setMotivo }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opa-50">
       <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-md w-full mx-4 border border-gray-100 animate-fadeIn">
         {/* Header con icono y título */}
         <div className="flex items-center justify-center gap-3 mb-3">
           <h2 className="text-2xl font-bold text-[amber-600] tracking-wide">
-            {time ? 'Tiempo de finalización demasiado corto' : 'Limite de tiempo excedido'}
+            Limite de tiempo excedido
           </h2>
         </div>
 
