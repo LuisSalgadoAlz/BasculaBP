@@ -289,7 +289,7 @@ export const ModalNormal = ({ hdlClose, hdlChange, fillData, formBol, boletas, h
                 }
                 {(boletas?.Producto ===18 && boletas?.Movimiento==2) &&(
                   <>
-                    <div className="grid grid-cols-2 gap-3 mt-2 mb-4">
+                    <div className="grid grid-cols-3 gap-3 mt-2 mb-4">
                       <div>
                         <label htmlFor="NSalida" className="block text-sm text-gray-600"># Salida</label>
                         <input name="NSalida" onChange={hdlChange} className={claseFormInputs} value={boletas?.NSalida} />
@@ -298,7 +298,18 @@ export const ModalNormal = ({ hdlClose, hdlChange, fillData, formBol, boletas, h
                         <label htmlFor="NViajes" className="block text-sm text-gray-600"># Viaje</label>
                         <input name="NViajes" onChange={hdlChange} className={claseFormInputs} value={boletas?.NViajes}/>
                       </div>
-                      <div className="col-span-2">
+                      <div>
+                        <label htmlFor="NViajes" className="block text-sm text-gray-600"># Bodega</label>
+                        <input name="NViajes" onChange={hdlChange} className={claseFormInputs} value={boletas?.NViajes}/>
+                      </div>
+                      <div className="col-span-1.5">
+                        <select name="TolvaAsignada" className={`${claseFormInputs} p-3`} onChange={hdlChange} value={boletas?.TolvaAsignada}>
+                          <option value={null}>Seleccione una tolva</option>
+                          <option value={1}>Tolva 1</option>
+                          <option value={2}>Tolva 2</option>
+                        </select>
+                      </div>
+                      <div className="col-span-1.5">
                         <select name="TolvaAsignada" className={`${claseFormInputs} p-3`} onChange={hdlChange} value={boletas?.TolvaAsignada}>
                           <option value={null}>Seleccione una tolva</option>
                           <option value={1}>Tolva 1</option>
