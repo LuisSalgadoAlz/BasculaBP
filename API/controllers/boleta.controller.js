@@ -991,7 +991,7 @@ const updateBoletaOut = async (req, res) => {
     });
       
 
-    if (nuevaBoleta.desviacion > 200 || nuevaBoleta.estado=='Completo(Fuera de tolerancia)') {
+    if (nuevaBoleta.desviacion > 200 || nuevaBoleta.estado=='Completo(Fuera de tolerancia)' || nuevaBoleta.desviacion < -200) {
       const stmpMail = alertaDesviacion(nuevaBoleta, despachador, enviarCorreo)
       console.log(stmpMail)
     }
