@@ -455,6 +455,7 @@ const postClientePlacaMoto = async (req, res) => {
       sello4, 
       sello5, 
       sello6, 
+      tolvaAsignada, 
     } = req.body;
 
     const empresa = await db.empresa.findUnique({
@@ -514,7 +515,8 @@ const postClientePlacaMoto = async (req, res) => {
           }), 
           ...(idProducto === 18 && {
             Nviajes: parseInt(NViajes), 
-            NSalida: parseInt(NSalida), 
+            NSalida: parseInt(NSalida),
+            tolvaAsignada: parseInt(tolvaAsignada), 
           }),
           ...((idMovimiento==2) && {
             sello1, sello2, sello3, sello4, sello5, sello6, 
@@ -524,8 +526,9 @@ const postClientePlacaMoto = async (req, res) => {
     });
 
     if(idProducto===17 || idProducto===18) {
-      imprimirTikets(newBol, despachador['name'])
-    } 
+      imprimirQRTolva(newBol)
+      /* imprimirTikets(newBol, despachador['name']) */
+    }
     setLogger('BOLETA', 'AGREGAR BOLETA (ENTRADA DE DATOS)', req, null, 1, newBol.id)  
 
     res
@@ -564,7 +567,8 @@ const postClientePlacaMotoComodin = async (req, res) => {
       sello3, 
       sello4, 
       sello5, 
-      sello6, 
+      sello6,
+      tolvaAsignada, 
     } = req.body;
 
     const verificado = jwt.verify(idUsuario, process.env.SECRET_KEY);
@@ -605,7 +609,8 @@ const postClientePlacaMotoComodin = async (req, res) => {
           }), 
           ...(idProducto === 18 && {
             Nviajes: parseInt(NViajes), 
-            NSalida: parseInt(NSalida), 
+            NSalida: parseInt(NSalida),
+            tolvaAsignada: parseInt(tolvaAsignada), 
           }),
           ...((idMovimiento==2) && {
             sello1, sello2, sello3, sello4, sello5, sello6, 
@@ -615,7 +620,8 @@ const postClientePlacaMotoComodin = async (req, res) => {
     });
 
     if(idProducto===17 || idProducto===18) {
-      imprimirTikets(newBol, despachador['name'])
+      imprimirQRTolva(newBol)
+      /* imprimirTikets(newBol, despachador['name']) */
     }
 
     setLogger('BOLETA', 'AGREGAR BOLETA (ENTRADA DE DATOS | COMODIN)', req, null, 1, newBol.id)  
@@ -631,11 +637,20 @@ const postClientePlacaMotoComodin = async (req, res) => {
 
 const postBoleta = async (req, res) => {
   const { idCliente } = req.body;
+  try{
+    /* const countPlacas = await db.boleta.count({ where:{ estado: 'Pendiente', placa: idPlaca, }})
 
-  if (idCliente == -998 || idCliente == -999) {
-    return postClientePlacaMotoComodin(req, res);
-  } else {
-    return postClientePlacaMoto(req, res);
+    if(countPlacas!=0) {
+      return res.status(200).send({err: 'Placa ya esta ingresada en pendientes, complete su proceso o cancele la boleta.'})
+    } */
+
+    if (idCliente == -998 || idCliente == -999) {
+      return postClientePlacaMotoComodin(req, res);
+    } else {
+      return postClientePlacaMoto(req, res);
+    }
+  }catch(err){
+    console.log(err)
   }
 };
 
@@ -1313,7 +1328,7 @@ const getReimprimirTicket = async (req, res) => {
     });
     const despachador = await db.usuarios.findUnique({where: {usuarios:boleta.usuario}})
     try {
-      reImprimirTikets(boleta, despachador.name)
+      imprimirQRTolva(boleta)
       res.send({ msg: "Impresion correcta" });
     }catch(err) {
       console.log(`Error al reimprimir ticket de tolva`)
@@ -1391,6 +1406,7 @@ const getTimeLineForComponent = async (req, res) => {
       title: el.placa,
       start_time: el.fechaInicio,
       end_time: el.fechaFin,
+      estado:el.estado
     }));
 
     res.send({ groups, items });

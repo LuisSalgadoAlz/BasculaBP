@@ -1,6 +1,29 @@
 import {URLHOST} from '../../constants/global'
 import Cookies from 'js-cookie'
 
+export const getDatosUsuarios = async (fun, setIsLoading) => {
+  try {
+    setIsLoading(true)
+    const response = await fetch(`${URLHOST}tolva/tipoUsuario`, {
+      method: "GET",
+      headers: {
+        Authorization: Cookies.get('token'),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API");
+    }
+
+    const data = await response.json();
+    fun(data);
+  } catch (error) {
+    console.error("Error al obtener los clientes:", error);
+  } finally{
+    setIsLoading(false)
+  }
+};
+
 export const postAnalizarQR = async (img, setIsLoading) => {
   try {
     setIsLoading(true)
@@ -140,4 +163,52 @@ export const getStatsTolvaDiarias = async (fun) => {
   } catch (error) {
     console.error("Error al obtener los clientes:", error);
   } 
+};
+
+export const getTolvasDeDescagas = async (fun) => {
+  try {
+    const response = await fetch(`${URLHOST}tolva/tolvas-de-descargas`, {
+      method: "GET",
+      headers: {
+        Authorization: Cookies.get('token'),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API");
+    }
+
+    const data = await response.json();
+    fun(data);
+  } catch (error) {
+    console.error("Error al obtener los clientes:", error);
+  }
+};
+
+export const updateFinalizarDescarga = async (id, setIsLoading, silo) => {
+  try {
+    setIsLoading(true)
+    const response = await fetch(`${URLHOST}tolva/upd/silo/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(silo),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: Cookies.get('token'),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API");
+    }
+
+    const msg = await response.json()
+
+    if (response.ok) {
+      return msg;
+    }
+  } catch (error) {
+    console.error("Error al obtener los datos:", error);
+  } finally {
+    setIsLoading(false)
+  }
 };

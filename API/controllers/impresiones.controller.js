@@ -488,7 +488,7 @@ const imprimirQRTolva = (boleta) => {
           .then(() => {
             printer.qrimage(qrUrl, {
               type: 'png',
-              size: 2,
+              size: 3,
               mode: 'dhdw'
             }, function(err) {
               if (err) {
@@ -506,7 +506,7 @@ const imprimirQRTolva = (boleta) => {
               this.text(' ')
                   .size(0, 0.5)
                   .text(`${fecha}`)
-                  .text(`${boleta.placa} | ${boleta.id}`)
+                  .text(`${boleta.placa} | ${boleta.id} | ${boleta.tolvaAsignada}`)
                   .size(0, 0.5)
                   .text('--------------------------------')
                   .text('Gracias por su visita')

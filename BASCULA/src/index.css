@@ -198,7 +198,7 @@ a.active {
 /* Header (fechas y barra superior) */
 .react-calendar-timeline .rct-header-root {
   background-color: white !important;
-  border: 2px solid hsl(var(--sidebar)) !important;
+  /* border: 2px solid hsl(var(--sidebar)) !important; */
   font-weight: 600 !important;
 }
 
@@ -224,8 +224,12 @@ a.active {
   transition: background-color 0.3s ease !important;
 }
 
-.item-normal{
-  background: #4b2e1c!important;
+.item-completado {
+   background: #4b2e1c!important; /* Verde éxito */
+}
+
+.item-cancelada {
+  background: #9e9e9e !important; /* Gris medio */
 }
 
 .item-red{
@@ -262,4 +266,31 @@ a.active {
   top: 0;
   z-index: 999; /* Aumenta para asegurar que se superponga */
   background: white;
+}
+
+.rct-sidebar-row{
+  display: flex;
+  align-items: center; 
+  height: 50px!important;
+}
+
+[data-testid="sidebarHeader"]{
+  height: 50px!important;
+  width: 148px!important;
+}
+.react-calendar-timeline .rct-calendar-header {
+  border: none!important;
+  background: white!important;
+}
+
+.rct-dateHeader {
+  background: white!important;
+}
+
+.rct-sidebar-row-odd{
+  background: white!important;
+}
+
+.rct-dateHeader-primary span{
+  font-size: 1.3rem!important;
 }

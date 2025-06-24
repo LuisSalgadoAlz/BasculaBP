@@ -298,6 +298,13 @@ export const ModalNormal = ({ hdlClose, hdlChange, fillData, formBol, boletas, h
                         <label htmlFor="NViajes" className="block text-sm text-gray-600"># Viaje</label>
                         <input name="NViajes" onChange={hdlChange} className={claseFormInputs} value={boletas?.NViajes}/>
                       </div>
+                      <div className="col-span-2">
+                        <select name="TolvaAsignada" className={`${claseFormInputs} p-3`} onChange={hdlChange} value={boletas?.TolvaAsignada}>
+                          <option value={null}>Seleccione una tolva</option>
+                          <option value={1}>Tolva 1</option>
+                          <option value={2}>Tolva 2</option>
+                        </select>
+                      </div>
                     </div>
                   </>
                 )}
@@ -596,7 +603,7 @@ export const VisualizarBoletas = (props) => {
                 <hr className="text-gray-400 my-4"/>
                 <span className="text-md font-bold text-gray-700">Tiempos:</span>
                 <span className="text-md text-gray-700">Fecha Inicial: {boletas?.fechaInicio ? new Date(boletas?.fechaInicio).toLocaleString(): isNullData}</span>
-                <span className="text-md text-gray-700">Fecha Inicial: {boletas?.fechaInicio ? new Date(boletas?.fechaFin).toLocaleString(): isNullData}</span>
+                <span className="text-md text-gray-700">Fecha Final: {boletas?.fechaInicio ? new Date(boletas?.fechaFin).toLocaleString(): isNullData}</span>
                 <span className="text-md text-gray-700">Duracion del proceso: {tiempoDeEstadia()}</span>
                 <hr className="text-gray-400 my-4"/>
                 <span className="text-md font-bold text-gray-700">Marchamos:</span>

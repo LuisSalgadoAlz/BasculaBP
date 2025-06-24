@@ -1,9 +1,11 @@
 model Silos {
-    id Int @id @default(autoincrement())
-    nombre String
-    capacidad Float?
-    estado Boolean?
-
-    silosXboletas Boleta[]
+  id             Int      @id @default(autoincrement())
+  nombre         String
+  capacidad      Float?
+  estado         Boolean?
+  nivelTolvaPermitida Int? /* 1 Solo tolva, 2 solo tolva 2, 3 todos */
+  // Inverse relations
+  principalDe    Tolva[]  @relation("PrincipalSilo")
+  secundarioDe   Tolva[]  @relation("SecundarioSilo")
+  terciarioDe    Tolva[]  @relation("TerciarioSilo")
 }
-

@@ -44,16 +44,14 @@ model Boleta {
     fechaInicio DateTime
     fechaFin DateTime?
     porTolerancia Float?
-    siloID Int?
-    silo2 Int?
-    silo3 Int?
-    fechaTolva DateTime?
     sello1 String?
     sello2 String?
     sello3 String?
     sello4 String?
     sello5 String?
     sello6 String?
+    
+    tolvaAsignada Int?
 
     /* Relaciones dentro de la boleta */
     placasBoletas Vehiculo? @relation(fields: [idPlaca], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -63,5 +61,38 @@ model Boleta {
     tipoDeProductoBoleta Producto? @relation(fields: [idProducto], references: [id])
     motoristaBoleta Motoristas? @relation(fields: [idMotorista], references: [id], onDelete: NoAction, onUpdate: NoAction)
     boletasMovimientos Movimientos? @relation(fields: [idMovimiento], references: [id])
-    boletasXsilos Silos? @relation(fields: [siloID], references: [id], onDelete: NoAction, onUpdate: NoAction)
+    
+    tolva Tolva[]
+}
+
+model Tolva {
+  id             Int     @id @default(autoincrement())
+  idBoleta       Int 
+  fechaEntrada   DateTime
+  fechaSalida    DateTime?
+  idUsuarioTolva Int
+  usuarioTolva   String
+  tolvaDescarga  String
+  siloPrincipal  Int
+  siloSecundario Int?
+  SiloTerciario  Int?
+  estado Int?
+  idUsuarioDeCierre Int?
+  usuarioDeCierre String?
+  observacionDeCancelacion String?
+  observacionTiempo String?
+
+  // lrelacion de los silos
+  principal      Silos   @relation("PrincipalSilo", fields: [siloPrincipal], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  secundario     Silos?  @relation("SecundarioSilo", fields: [siloSecundario], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  terciario      Silos?  @relation("TerciarioSilo", fields: [SiloTerciario], references: [id], onUpdate: NoAction, onDelete: NoAction)
+
+  boleta         Boleta  @relation(fields: [idBoleta], references: [id])
+}
+
+model UsuariosPorTolva {
+  id        Int      @id @default(autoincrement())
+  idUsuario Int?     @unique
+  usuario   Usuarios? @relation(fields: [idUsuario], references: [id])
+  tolva     Int
 }

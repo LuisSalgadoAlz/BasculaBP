@@ -41,7 +41,7 @@ export const postBoletasNormal = async (boleta, setIsLoading) => {
     }
 
     const data = await response.json();
-    console.log(data);
+    return data;
   } catch (error) {
     console.error("Error al obtener los datos:", error);
   } finally {
@@ -140,7 +140,8 @@ export const formaterDataNewPlaca = (formBoletas, marchamos) => {
         idOrigen: formBoletas?.Origen || null, 
       }),
       NSalida: formBoletas?.NSalida || null, 
-      NViajes:  formBoletas.NViajes  || null, 
+      NViajes:  formBoletas.NViajes  || null,
+      tolvaAsignada: formBoletas?.TolvaAsignada || null,  
       ...(formBoletas?.Movimiento==2 && {
         sello1 : marchamos[0] || null,
         sello2 : marchamos[1] || null,
@@ -495,6 +496,7 @@ export const verificarDataNewPlaca = (funError, data, setMsg, marchamos) => {
     NViajes, 
     NSalida, 
     idTrasladoOrigen,
+    tolvaAsignada, 
   } = data 
 
   /* pesoInicial */
@@ -528,6 +530,13 @@ export const verificarDataNewPlaca = (funError, data, setMsg, marchamos) => {
     setMsg('Por favor, ingresar numero de viaje y de salida')
     return false
   }
+
+  if(idProducto===18 && idMovimiento === 2 && (!tolvaAsignada)) {
+    funError(true)
+    setMsg('Por favor, ingresar una tolva de destino')
+    return false
+  }
+
 
   if (!regexPlca.test(idPlaca) && (idCliente ==-998 || idCliente ==-999)) {
     funError(true)

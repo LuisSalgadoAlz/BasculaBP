@@ -11,10 +11,21 @@ import Timeline from 'react-calendar-timeline';
 import {BigSpinner, NoData, Spinner} from '../alerts'
 import 'react-calendar-timeline/style.css';
 import moment from 'moment';
-import 'moment/locale/es'; // Asegúrate de importar el idioma
+import 'moment/locale/es';
 
 moment.locale('es'); // Establecer idioma a español
 
+const CONFIG_COLORS = {
+  'Completado': 'item-completado', // Verde oscuro elegante
+  'Completo(Fuera de tolerancia)': 'item-completado', // Amarillo suave
+  'Cancelada': 'item-cancelada' // Gris neutro
+}
+
+const CONFIG_COLORS_LABELS = {
+  'Completado': '#4b2e1c', // Verde oscuro elegante
+  'Completo(Fuera de tolerancia)': '#4b2e1c', // Amarillo suave
+  'Cancelada': '#9e9e9e' // Gris neutro
+}
 
 export const Calendario = () => {
   const [dateBolCalendar, setDateBolCalendar] = useState();
@@ -122,7 +133,7 @@ export const Calendario = () => {
           >
             <motion.button 
               onClick={handleCloseExpanded}
-              className="mb-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              className="mb-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -141,7 +152,7 @@ export const Calendario = () => {
                     <NoData />
                   </div>
                 ) : (
-                  <div className="max-h-[82vh] mt-2 bg-gray-50 overflow-y-auto">
+                  <div className="max-h-[89vh] overflow-y-auto rounded-2xl [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-100  [&::-webkit-scrollbar-thumb]:bg-gray-300">
                     <TimelineComponent 
                       groups={detailsDaySeletect.groups} 
                       items={detailsDaySeletect.items} 
@@ -193,7 +204,7 @@ const TimelineComponent = ({groups, items, defaultTime}) => {
  const itemRenderer = ({ item, itemContext, getItemProps }) => { 
 
   const itemProps = getItemProps({
-    className: item.isDefaultEndTime ? "item-red transition-transform duration-300 ease-in-out hover:scale-105" : "item-normal transition-transform duration-300 ease-in-out hover:scale-105", 
+    className: item.isDefaultEndTime ? "item-red transition-transform duration-300 ease-in-out hover:scale-105" : `${CONFIG_COLORS[item.estado]} transition-transform duration-300 ease-in-out hover:scale-105`, 
     style: {
       color: "white",
       borderRadius: "4px",
@@ -226,11 +237,11 @@ const TimelineComponent = ({groups, items, defaultTime}) => {
       }}>
         {/* Título principal del evento */}
         <div style={{ fontWeight: "bold" }}>
-          {item.title}
+          {item.title}  
         </div>
         
         {/* Tooltip SOLO para elementos sin fecha de fin */}
-        {item.isDefaultEndTime && (
+        {item.isDefaultEndTime ? (
           <div className="timeline-tooltip" style={{ 
             position: "absolute",
             top: "0",
@@ -249,6 +260,26 @@ const TimelineComponent = ({groups, items, defaultTime}) => {
             alignItems: "center"
           }}>
             {tooltipText}
+          </div>
+        ): (
+          <div className="timeline-tooltip" style={{ 
+            position: "absolute",
+            top: "0",
+            left: "calc(100% + 1rem)", // 1rem de separación
+            backgroundColor: `${CONFIG_COLORS_LABELS[item.estado]}`,
+            color: "white", 
+            padding: "2px 6px",
+            borderRadius: "3px",
+            fontSize: "11px",
+            whiteSpace: "nowrap",
+            zIndex: 1000,
+            boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+            pointerEvents: "none",
+            height: "100%",
+            display: "flex",
+            alignItems: "center"
+          }}>
+            {item.estado}
           </div>
         )}
       </div>
