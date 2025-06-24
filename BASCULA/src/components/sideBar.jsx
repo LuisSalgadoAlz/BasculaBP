@@ -153,6 +153,7 @@ export const SideBar = ({ modo = "extendido", altura = 500 }) => {
               <h1 className="px-3 text-sm text-gray-300 mt-2">Reportes</h1>
               <NavLink
                 to="/informes"
+                end
                 className="flex items-center gap-x-3 rounded-md px-3 py-2 text-sm font-medium text-white"
               >
                 <span className="text-lg">
@@ -162,16 +163,10 @@ export const SideBar = ({ modo = "extendido", altura = 500 }) => {
               </NavLink>
               <ul className="pl-5 border-l border-gray-500 ml-5">
                 <NavLink
-                  to="/informes/diarios"
-                  className="flex items-center gap-x-1 rounded-md py-2 text-sm font-medium text-white"
+                  to="/informes/importaciones"
+                  className="flex items-center gap-x-1 px-3 rounded-md py-2 text-sm font-medium text-white"
                 >
-                  <span className="flex-1">Informes Diarios</span>
-                </NavLink>
-                <NavLink
-                  to="/informes/semanales"
-                  className="flex items-center gap-x-1 rounded-md py-2 text-sm font-medium text-white"
-                >
-                  <span className="flex-1">Informes Semanal</span>
+                  <span className="flex-1 text-sm">Importacion: Granza</span>
                 </NavLink>
               </ul>
               <hr className="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700" />

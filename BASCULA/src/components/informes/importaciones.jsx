@@ -1,0 +1,44 @@
+const Importaciones = () => {
+  return (
+    <div className="flex justify-between w-full gap-5 max-sm:flex-col max-md:flex-col mb-4">
+      <div className="parte-izq">
+        <h1 className="text-3xl font-bold titulo">Importacion: Granza</h1>
+        <h1 className="text-gray-600 max-sm:text-sm">
+          {" "}
+          Análisis detallado de importaciones - Período Actual {new Date().getFullYear()}
+        </h1>
+      </div>
+      <div className="parte-der flex items-center justify-center gap-3 max-sm:text-sm max-sm:flex-col">
+        <div className="flex gap-4 items-end">
+            <div className="flex-1">
+            <div className="relative">
+                <select 
+                name="socio" 
+                className="appearance-none w-full bg-white text-gray-900 border border-gray-300 rounded-lg py-3 pl-4 pr-10 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#955e37] focus:border-[#955e37 ] hover:border-gray-400 transition-colors duration-200"
+                >
+                <option value="">Seleccione un buque</option>
+                <option value="lanna-naree">Buque Lanna Naree</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+                </div>
+            </div>
+            </div>
+            
+            <button className="bg-gradient-to-r from-[#955e37] to-[#804e2b] text-white font-medium py-3 px-8 rounded-lg shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]">
+            <span className="flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+                Aplicar
+            </span>
+            </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Importaciones;
