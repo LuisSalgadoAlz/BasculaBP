@@ -42,8 +42,8 @@ const getAllData = async (req, res) => {
       Producto,
       MovimientosE,
       MovimientosS,
-      TransladosI,
-      TransladosE,
+      TI,
+      TE,
     ] = await Promise.all([
       db.socios.findMany({
         select: { id: true, nombre: true },
@@ -157,11 +157,11 @@ const getAllData = async (req, res) => {
         select: { id: true, nombre: true },
       }),
       db.translado.findMany({
-        select: { id: true, nombre: true },
+        select: { id: true, nombre: true, code:true },
         where: { tipo: 0 },
       }),
       db.translado.findMany({
-        select: { id: true, nombre: true },
+        select: { id: true, nombre: true, code:true },
       }),
     ]);
     const Placa = Vehiculo.map((el) => ({
@@ -172,6 +172,9 @@ const getAllData = async (req, res) => {
       { id: -998, nombre: "Cliente X" },
       { id: -999, nombre: "Proveedor X" }
     );
+
+    const TransladosI = TI.map((item)=>({...item, nombre: `${item.nombre} (${item.code})`}))
+    const TransladosE = TE.map((item)=>({...item, nombre: `${item.nombre} (${item.code})`}))
     const Flete = MovimientosE;
     const FleteS = MovimientosS;
     res.status(200).json({
@@ -455,7 +458,9 @@ const postClientePlacaMoto = async (req, res) => {
       sello4, 
       sello5, 
       sello6, 
-      tolvaAsignada, 
+      tolvaAsignada,
+      Nbodega,
+      FechaPuerto, 
     } = req.body;
 
     const empresa = await db.empresa.findUnique({
@@ -516,6 +521,8 @@ const postClientePlacaMoto = async (req, res) => {
           ...(idProducto === 18 && {
             Nviajes: parseInt(NViajes), 
             NSalida: parseInt(NSalida),
+            bodegaPuerto: Nbodega, 
+            fechaDespachoPuerto: FechaPuerto ? new Date(FechaPuerto) : null,
             tolvaAsignada: parseInt(tolvaAsignada), 
           }),
           ...((idMovimiento==2) && {
@@ -525,10 +532,11 @@ const postClientePlacaMoto = async (req, res) => {
       },
     });
 
-    if(idProducto===17 || idProducto===18) {
+    const debeImprimirQR = (idProducto === 17 && idMovimiento === 1) || (idProducto === 18 && idMovimiento === 2);
+    if(debeImprimirQR) {
       imprimirQRTolva(newBol)
-      /* imprimirTikets(newBol, despachador['name']) */
     }
+    
     setLogger('BOLETA', 'AGREGAR BOLETA (ENTRADA DE DATOS)', req, null, 1, newBol.id)  
 
     res
@@ -568,7 +576,9 @@ const postClientePlacaMotoComodin = async (req, res) => {
       sello4, 
       sello5, 
       sello6,
-      tolvaAsignada, 
+      tolvaAsignada,
+      Nbodega,
+      FechaPuerto,  
     } = req.body;
 
     const verificado = jwt.verify(idUsuario, process.env.SECRET_KEY);
@@ -610,6 +620,8 @@ const postClientePlacaMotoComodin = async (req, res) => {
           ...(idProducto === 18 && {
             Nviajes: parseInt(NViajes), 
             NSalida: parseInt(NSalida),
+            bodegaPuerto: Nbodega, 
+            fechaDespachoPuerto: FechaPuerto ? new Date(FechaPuerto) : null,
             tolvaAsignada: parseInt(tolvaAsignada), 
           }),
           ...((idMovimiento==2) && {
@@ -619,9 +631,9 @@ const postClientePlacaMotoComodin = async (req, res) => {
       },
     });
 
-    if(idProducto===17 || idProducto===18) {
+    const debeImprimirQR = (idProducto === 17 && idMovimiento === 1) || (idProducto === 18 && idMovimiento === 2);
+    if(debeImprimirQR) {
       imprimirQRTolva(newBol)
-      /* imprimirTikets(newBol, despachador['name']) */
     }
 
     setLogger('BOLETA', 'AGREGAR BOLETA (ENTRADA DE DATOS | COMODIN)', req, null, 1, newBol.id)  

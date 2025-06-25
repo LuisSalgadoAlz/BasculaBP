@@ -53,6 +53,26 @@ const alertaDesviacion = (nuevaBoleta, despachador, enviarCorreo) => {
           <td style="padding: 8px; border-bottom: 1px solid #eee;">${nuevaBoleta.empresa || 'N/A'}</td>
         </tr>
         <tr>
+          <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Placa:</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee;">${nuevaBoleta.placa || 'N/A'}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Placa:</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee;">${nuevaBoleta.motorista || 'N/A'}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Manifiesto:</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee;">${nuevaBoleta.manifiesto || 'N/A'}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Orden de compra:</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee;">${nuevaBoleta.ordenDeCompra || 'N/A'}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Orden de transferencia:</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee;">${nuevaBoleta.ordenDeTransferencia || 'N/A'}</td>
+        </tr>
+        <tr>
           <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Usuario de Báscula:</td>
           <td style="padding: 8px; border-bottom: 1px solid #eee;">${despachador.name || 'N/A'}</td>
         </tr>
@@ -147,6 +167,10 @@ const alertaCancelacion = (boletaCancelada, usuario, enviarCorreo) => {
         <tr>
           <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Transporte:</td>
           <td style="padding: 8px; border-bottom: 1px solid #eee;">${boletaCancelada.empresa || 'N/A'}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Placa:</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee;">${boletaCancelada.placa || 'N/A'}</td>
         </tr>
         <tr>
           <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Usuario que cancela:</td>

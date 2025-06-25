@@ -141,6 +141,8 @@ export const formaterDataNewPlaca = (formBoletas, marchamos) => {
       }),
       NSalida: formBoletas?.NSalida || null, 
       NViajes:  formBoletas.NViajes  || null,
+      Nbodega: formBoletas?.Nbodega || null,
+      FechaPuerto: formBoletas?.FechaPuerto || null,
       tolvaAsignada: formBoletas?.TolvaAsignada || null,  
       ...(formBoletas?.Movimiento==2 && {
         sello1 : marchamos[0] || null,
@@ -496,67 +498,80 @@ export const verificarDataNewPlaca = (funError, data, setMsg, marchamos) => {
     NViajes, 
     NSalida, 
     idTrasladoOrigen,
-    tolvaAsignada, 
-  } = data 
+    tolvaAsignada,
+    Nbodega,
+    FechaPuerto
+  } = data;
 
-  /* pesoInicial */
+  const mostrarError = (mensaje) => {
+    funError(true);
+    setMsg(mensaje);
+    return false;
+  };
 
   if (!idCliente || !idUsuario || !idMotorista || !idPlaca || !idEmpresa) {
-    funError(true)
-    setMsg('Por favor, complete todos los campos antes de continuar.')
-    return false
+    return mostrarError('Por favor, complete todos los campos antes de continuar. (Cliente, Motorista, Placa y Empresa)');
   }
 
-  if(proceso==0 && (!idMovimiento || !idProducto)) {
-    funError(true)
-    setMsg('Por favor, complete todos los campos de detalles de entrada.')
-    return false
+  if (proceso === 0) {
+    if (!idMovimiento || !idProducto) {
+      return mostrarError('Por favor, complete todos los campos de detalles de entrada. (Movimiento, Producto)');
+    }
+
+    const esMovimientoTraslado = idMovimiento === 10 || idMovimiento === 11;
+    if (esMovimientoTraslado && !idTrasladoOrigen) {
+      return mostrarError('Por favor, ingrese un origen de traslado.');
+    }
+
+    if (!esMovimientoTraslado && !idOrigen) {
+      return mostrarError('Por favor, complete todos los campos de detalles de entrada. (Origen)');
+    }
   }
 
-  if(proceso==0 && ((idMovimiento===10 || idMovimiento===11) && (!idTrasladoOrigen))) {
-    funError(true)
-    setMsg('Por favor, ingrese un origen de traslado.')
-    return false
+  // Validaciones específicas para Granza importada
+  const esImportacionProducto18 = idProducto === 18 && idMovimiento === 2;
+  if (esImportacionProducto18) {
+    if (!NSalida || !NViajes) {
+      return mostrarError('Por favor, ingresar numero de viaje y de salida');
+    }
+
+    if (isNaN(NViajes) || NViajes <= 0) {
+      return mostrarError('El número de viajes debe ser un valor numérico positivo.');
+    }
+
+    if (isNaN(NSalida) || NSalida <= 0) {
+      return mostrarError('El número de salida debe ser un valor numérico positivo.');
+    }
+
+    if (!tolvaAsignada) {
+      return mostrarError('Por favor, ingresar una tolva de destino');
+    }
+
+    if (!Nbodega) {
+      return mostrarError('Por favor, ingresar el # de bodega del puerto');
+    }
+
+    if (!FechaPuerto) {
+      return mostrarError('Por favor, ingresar la fecha de salida del puerto');
+    }
   }
 
-  if(proceso==0 && ((idMovimiento!=10 && idMovimiento!=11) && (!idOrigen))) {
-    funError(true)
-    setMsg('Por favor, complete todos los campos de detalles de entrada.')
-    return false
-  }
-  
-  if(idProducto===18 && idMovimiento === 2 && (!NSalida || !NViajes)) {
-    funError(true)
-    setMsg('Por favor, ingresar numero de viaje y de salida')
-    return false
+  const esClienteEspecial = idCliente === -998 || idCliente === -999;
+  if (esClienteEspecial && !regexPlca.test(idPlaca)) {
+    return mostrarError(
+      'Placa inválida. Formatos válidos: Honduras (ABC1234 o C123456), El Salvador y Nicaragua (una letra seguida de 6 números, como M123456), Guatemala (123ABC o P123ABC).'
+    );
   }
 
-  if(idProducto===18 && idMovimiento === 2 && (!tolvaAsignada)) {
-    funError(true)
-    setMsg('Por favor, ingresar una tolva de destino')
-    return false
+  if (parseFloat(pesoInicial) <= 0) {
+    return mostrarError('Por favor, el peso inicial no debe de ser menor o igual a 0');
   }
 
-
-  if (!regexPlca.test(idPlaca) && (idCliente ==-998 || idCliente ==-999)) {
-    funError(true)
-    setMsg('placa invalida. Formatos validos (particulares: 3 letras y 4 números | comerciales: 1 letra C, O o D + 6 números).')
-    return false
-  }
-  
-  if (parseFloat(pesoInicial) <= 0 ) {
-    funError(true)
-    setMsg('Por favor, el peso inicial no debe de ser menor o igual a 0')
-    return false
-  }  
-
-  if(idMovimiento==2 && marchamos.length ==0){
-    funError(true)
-    setMsg('Las importaciones deben de llevar al menos 1 marchamo.')
-    return false
+  if (idMovimiento === 2 && marchamos.length === 0) {
+    return mostrarError('Las importaciones deben de llevar al menos 1 marchamo.');
   }
 
-  return true
+  return true;
 };
 
 export const verificarDataCompleto = (funError, data, setMsg, pesoIn) => {

@@ -844,12 +844,23 @@ const getStatsForTolva = async(req, res) =>{
           estado: 'Pendiente', 
           tolva : {
             none:{}
-          }, 
+          },
+          OR:[
+            {
+              idProducto: 18,
+              idMovimiento: 2, 
+            },
+            {
+              idProducto: 17, 
+              idMovimiento: 1, 
+            }
+          ]
         }
       }), 
       db.tolva.count({
         where:{
-          estado: 1, 
+          estado: 1,
+          fechaSalida,  
           boleta:{
             idProducto: {in:[18]}
           }
@@ -857,7 +868,8 @@ const getStatsForTolva = async(req, res) =>{
       }), 
       db.tolva.count({
         where:{
-          estado: 1, 
+          estado: 1,
+          fechaSalida, 
           boleta:{
             idProducto: {in:[17]}
           }

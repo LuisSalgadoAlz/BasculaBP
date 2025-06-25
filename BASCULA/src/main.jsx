@@ -20,6 +20,8 @@ const Clientes = lazy(()=>import('./views/clientes'))
 const EditClientes = lazy(()=>import('./components/clientes/editClientes'))
 const EditTransporte = lazy(()=>import('./components/transporte/editEmpresa'))
 const Informes = lazy(()=>import('./views/informes'))
+const Importaciones = lazy(()=>import('./components/informes/importaciones'))
+
 const navRutas = createBrowserRouter([
   {
     path: "/",
@@ -89,7 +91,7 @@ const navRutas = createBrowserRouter([
         element: <Informes />,
       },
       {
-        path: "/informes/mensual",
+        path: "/informes/importaciones",
         element: <ViewDisabled />,
       },
       {
