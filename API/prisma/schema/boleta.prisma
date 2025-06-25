@@ -52,7 +52,7 @@ model Boleta {
     sello6 String?
     
     tolvaAsignada Int?
-    bodegaPuerto Int?
+    bodegaPuerto String?
     fechaDespachoPuerto DateTime?
 
     /* Relaciones dentro de la boleta */
