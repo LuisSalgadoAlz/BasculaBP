@@ -14,6 +14,7 @@ const admin = require('./routes/admin.routes')
 const soporte = require("./routes/soporte.route")
 const setupWebSocket = require("./sockets/websocketPeso");
 const boletas = require("./routes/boleta.routes");
+const informes = require("./routes/informes.routes")
 const tolva = require("./routes/tolva.routes");
 const path = require("path");
 
@@ -36,6 +37,7 @@ app.use('/api/boletas', boletas)
 app.use('/api/admin', admin)
 app.use('/api/soporte', soporte)
 app.use('/api/tolva/', tolva)
+app.use('/api/informes/', informes)
 
 const distPath = path.join(__dirname, "../bascula/dist");
 
