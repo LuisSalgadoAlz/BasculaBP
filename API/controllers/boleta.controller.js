@@ -42,8 +42,8 @@ const getAllData = async (req, res) => {
       Producto,
       MovimientosE,
       MovimientosS,
-      TransladosI,
-      TransladosE,
+      TI,
+      TE,
     ] = await Promise.all([
       db.socios.findMany({
         select: { id: true, nombre: true },
@@ -157,11 +157,11 @@ const getAllData = async (req, res) => {
         select: { id: true, nombre: true },
       }),
       db.translado.findMany({
-        select: { id: true, nombre: true },
+        select: { id: true, nombre: true, code:true },
         where: { tipo: 0 },
       }),
       db.translado.findMany({
-        select: { id: true, nombre: true },
+        select: { id: true, nombre: true, code:true },
       }),
     ]);
     const Placa = Vehiculo.map((el) => ({
@@ -172,6 +172,9 @@ const getAllData = async (req, res) => {
       { id: -998, nombre: "Cliente X" },
       { id: -999, nombre: "Proveedor X" }
     );
+
+    const TransladosI = TI.map((item)=>({...item, nombre: `${item.nombre} (${item.code})`}))
+    const TransladosE = TE.map((item)=>({...item, nombre: `${item.nombre} (${item.code})`}))
     const Flete = MovimientosE;
     const FleteS = MovimientosS;
     res.status(200).json({
