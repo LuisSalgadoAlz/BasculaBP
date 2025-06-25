@@ -1,6 +1,6 @@
 const informes = require('express').Router();
-const { testingApi } = require('../controllers/informes.controller');
+const { buquesBoletas } = require('../controllers/informes.controller');
 
-informes.get('/data', testingApi)
+informes.get('/data', buquesBoletas)
 
 module.exports = informes;

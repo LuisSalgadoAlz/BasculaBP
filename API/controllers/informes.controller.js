@@ -2,7 +2,7 @@ const db = require("../lib/prisma");
 const dotenv = require("dotenv");
 const jwt = require("jsonwebtoken");
 
-const testingApi = async(req, res) => {
+const buquesBoletas = async(req, res) => {
     try{
         const resultado = await db.boleta.groupBy({
             by: ['socio', 'idSocio'], 
@@ -23,5 +23,5 @@ const testingApi = async(req, res) => {
 }
 
 module.exports = {
-    testingApi
+    buquesBoletas
 }
