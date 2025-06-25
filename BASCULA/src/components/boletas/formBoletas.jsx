@@ -205,6 +205,13 @@ export const ModalNormal = ({ hdlClose, hdlChange, fillData, formBol, boletas, h
     }));
   };
 
+  const handleKeyDown = (e) => {
+    const forbiddenKeys = ['e', 'E', '+', '-', '.', ','];
+    if (forbiddenKeys.includes(e.key)) {
+      e.preventDefault();
+    }
+  };
+
   useEffect(() => {
     const socket = new WebSocket(URLWEBSOCKET);
     socket.onmessage = (event) => {
@@ -289,29 +296,27 @@ export const ModalNormal = ({ hdlClose, hdlChange, fillData, formBol, boletas, h
                 }
                 {(boletas?.Producto ===18 && boletas?.Movimiento==2) &&(
                   <>
-                    <div className="grid grid-cols-3 gap-3 mt-2 mb-4">
-                      <div>
+                    <div className="grid grid-cols-6 gap-3 mt-2 mb-4 bg-gray-50 p-4 rounded-2xl max-sm:grid-cols-2 max-sm:gap-1 shadow">
+                      <div className="col-span-2">
                         <label htmlFor="NSalida" className="block text-sm text-gray-600"># Salida</label>
-                        <input name="NSalida" onChange={hdlChange} className={claseFormInputs} value={boletas?.NSalida} />
+                        <input type="number" name="NSalida" onChange={hdlChange} onKeyDown={handleKeyDown} className={claseFormInputs} value={boletas?.NSalida} />
                       </div>
-                      <div>
+                      <div className="col-span-2">
                         <label htmlFor="NViajes" className="block text-sm text-gray-600"># Viaje</label>
-                        <input name="NViajes" onChange={hdlChange} className={claseFormInputs} value={boletas?.NViajes}/>
+                        <input type="number" name="NViajes" onChange={hdlChange} onKeyDown={handleKeyDown} className={claseFormInputs} value={boletas?.NViajes}/>
                       </div>
-                      <div>
-                        <label htmlFor="NViajes" className="block text-sm text-gray-600"># Bodega</label>
-                        <input name="NViajes" onChange={hdlChange} className={claseFormInputs} value={boletas?.NViajes}/>
+                      <div className="col-span-2">
+                        <label htmlFor="Nbodega" className="block text-sm text-gray-600"># Bodega</label>
+                        <input type="text" name="Nbodega" onChange={hdlChange} className={claseFormInputs} value={boletas?.Nbodega}/>
                       </div>
-                      <div className="col-span-1.5">
+                      <div className="col-span-3 max-sm:col-span-2">
+                        <label htmlFor="FechaPuerto" className="block text-sm text-gray-600">Fecha: Puerto</label>
+                        <input name="FechaPuerto" max={new Date().toISOString().split("T")[0]} onChange={hdlChange} type="date" className={`${claseFormInputs} p-3`} value={boletas?.FechaPuerto}/>
+                      </div>
+                      <div className="col-span-3 max-sm:col-span-2">
+                        <label htmlFor="TolvaAsignada" className="block text-sm text-gray-600"># Tolva</label>
                         <select name="TolvaAsignada" className={`${claseFormInputs} p-3`} onChange={hdlChange} value={boletas?.TolvaAsignada}>
-                          <option value={null}>Seleccione una tolva</option>
-                          <option value={1}>Tolva 1</option>
-                          <option value={2}>Tolva 2</option>
-                        </select>
-                      </div>
-                      <div className="col-span-1.5">
-                        <select name="TolvaAsignada" className={`${claseFormInputs} p-3`} onChange={hdlChange} value={boletas?.TolvaAsignada}>
-                          <option value={null}>Seleccione una tolva</option>
+                          <option value=''>Seleccione una tolva</option>
                           <option value={1}>Tolva 1</option>
                           <option value={2}>Tolva 2</option>
                         </select>
@@ -335,7 +340,7 @@ export const ModalNormal = ({ hdlClose, hdlChange, fillData, formBol, boletas, h
         </div>
 
         {/* Botones */}
-        <div className="grid grid-cols-3 gap-3 text-sm mt-4">
+        <div className="grid grid-cols-3 gap-3 text-sm mt-4 max-sm:grid-cols-1">
           <button onClick={hdlClean} className={buttonClean} disabled={isLoading}>Limpiar</button>
           <button onClick={hdlClose} className={buttonCancel} disabled={isLoading}>Cancelar</button>
           <button onClick={hdlSubmit} className={buttonSave} disabled={isLoading}>
