@@ -228,7 +228,7 @@ const analyzeQRWithSharp = async (imageBuffer) => {
         });
       },
 
-      // Intento 13: Imagen original sin procesar (por si acaso)
+/*       // Intento 13: Imagen original sin procesar (por si acaso)
       async () => {
         const originalImage = await sharp(imageBuffer)
           .toBuffer();
@@ -237,7 +237,7 @@ const analyzeQRWithSharp = async (imageBuffer) => {
         return jsQR(imgData.data, imgData.width, imgData.height, {
           inversionAttempts: "attemptBoth"
         });
-      },
+      }, */
 
       // Intento 14: Crop central (enfoque en el centro)
       async () => {
