@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:tolva": "vite build --outDir disttolva",
     "lint": "eslint .",
     "preview": "vite preview",
     "host": "vite --host"

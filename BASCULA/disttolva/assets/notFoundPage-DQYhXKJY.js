@@ -1,0 +1,1 @@
+import{j as e}from"./index-DqpGZtZS.js";const t=()=>e.jsx(e.Fragment,{children:e.jsxs("div",{className:"justify-center items-center w-screen text-center min-h-screen flex gap-6",children:[e.jsx("h1",{className:"text-8xl font-bold",children:"404"}),e.jsx("h1",{className:"mt-2",children:"Página fuera del sistema de Baprosa"})]})});export{t as default};

@@ -39,7 +39,7 @@ app.use('/api/soporte', soporte)
 app.use('/api/tolva/', tolva)
 app.use('/api/informes/', informes)
 
-const distPath = path.join(__dirname, "../bascula/dist");
+const distPath = path.join(__dirname, process.env.DIST_PATH || "../bascula/dist");
 
 app.use(express.static(distPath));
 
