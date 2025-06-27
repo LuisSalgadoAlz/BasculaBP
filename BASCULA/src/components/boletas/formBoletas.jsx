@@ -511,7 +511,7 @@ export const VisualizarBoletas = (props) => {
   const [isLoadingGreen, setIsLoadingGreen] = useState(false)
   const [isLoadingPink, setIsLoadingPink] = useState(false)
   const opt = ['Entrada de material', 'Salida de material']
-  const isNullData =  'Vacio'
+  const isNullData =  'N/A'
   const pesoTolerado = boletas?.pesoTeorico * boletas?.porTolerancia
 
   const handleConvertPdf = async() => {
@@ -603,7 +603,17 @@ export const VisualizarBoletas = (props) => {
                 <span className="text-md text-gray-700">Origen : {boletas?.trasladoOrigen ? boletas?.trasladoOrigen : isNullData}</span>
                 <span className="text-md text-gray-700">Destino: {boletas?.trasladoDestino ? boletas?.trasladoDestino : isNullData}</span>
                 <span className="text-md text-gray-700">Orden de transferencia: {boletas?.ordenDeTransferencia ? boletas?.ordenDeTransferencia : isNullData}</span>
-
+              </div>
+              <div className="flex flex-col gap-1 mt-5">
+                <span className="text-md font-bold text-gray-700">Datos de Tolva</span>
+                <hr className="text-gray-400 mb-2" />
+                <span className="text-md text-gray-700">Tolva : {boletas?.tolvaAsignada || 'N/A'}</span>
+                <span className="text-md text-gray-700">Silos :{' '}
+                  {[boletas?.tolva[0]?.siloPrincipal, boletas?.tolva[0]?.siloSecundario, boletas?.tolva[0]?.SiloTerciario]
+                  .filter(Boolean)
+                  .join(', ') || 'N/A'
+                  }
+                </span> 
               </div>
             </div>
           
@@ -621,6 +631,10 @@ export const VisualizarBoletas = (props) => {
                 <span className="text-md text-gray-700">Fecha Inicial: {boletas?.fechaInicio ? new Date(boletas?.fechaInicio).toLocaleString(): isNullData}</span>
                 <span className="text-md text-gray-700">Fecha Final: {boletas?.fechaInicio ? new Date(boletas?.fechaFin).toLocaleString(): isNullData}</span>
                 <span className="text-md text-gray-700">Duracion del proceso: {tiempoDeEstadia()}</span>
+                <hr className="text-gray-400 my-4"/>
+                <span className="text-md font-bold text-gray-700">Datos Puerto:</span>
+                <span className="text-md text-gray-700">Bodega: {boletas?.bodegaPuerto || 'N/A'}</span>
+                <span className="text-md text-gray-700">Fecha de despacho: {boletas?.fechaDespachoPuerto ? new Date(boletas?.fechaDespachoPuerto).toLocaleDateString() : 'N/A'}</span>
                 <hr className="text-gray-400 my-4"/>
                 <span className="text-md font-bold text-gray-700">Marchamos:</span>
                 <span className="text-md text-gray-700 bg-gray-200 p-2 rounded-sm shadow-2xl">

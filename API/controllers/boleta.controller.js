@@ -717,6 +717,13 @@ const getBoletaID = async (req, res) => {
             tipo: true,
           },
         },
+        tolva: {
+          select:{
+            siloPrincipal: true, 
+            siloSecundario:true, 
+            SiloTerciario: true, 
+          }
+        }, 
       },
     });
 
