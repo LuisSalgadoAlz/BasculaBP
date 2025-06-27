@@ -719,9 +719,15 @@ const getBoletaID = async (req, res) => {
         },
         tolva: {
           select:{
-            siloPrincipal: true, 
-            siloSecundario:true, 
-            SiloTerciario: true, 
+            principal: {
+              select: {nombre:true}
+            }, 
+            secundario:{
+              select: {nombre:true}
+            }, 
+            terciario: {
+              select: {nombre: true}
+            }, 
           }
         }, 
       },

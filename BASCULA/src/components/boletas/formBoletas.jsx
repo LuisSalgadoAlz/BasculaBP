@@ -609,7 +609,7 @@ export const VisualizarBoletas = (props) => {
                 <hr className="text-gray-400 mb-2" />
                 <span className="text-md text-gray-700">Tolva : {boletas?.tolvaAsignada || 'N/A'}</span>
                 <span className="text-md text-gray-700">Silos :{' '}
-                  {[boletas?.tolva[0]?.siloPrincipal, boletas?.tolva[0]?.siloSecundario, boletas?.tolva[0]?.SiloTerciario]
+                  {[boletas?.tolva[0]?.principal?.nombre, boletas?.tolva[0]?.secundario?.nombre, boletas?.tolva[0]?.terciario?.nombre]
                   .filter(Boolean)
                   .join(', ') || 'N/A'
                   }
