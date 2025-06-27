@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { ButtonAdd, Pagination } from "../buttons";
 import { TableComponent } from "./tableClientes";
 import { NoData, Spinner } from "../alerts";
@@ -10,6 +10,7 @@ import {
 } from "../../hooks/formClientes";
 import { ModalClientes } from "./modal";
 import { ModalSuccess, ModalErr } from "../alerts";
+import debounce from 'lodash/debounce';
 
 const Search = ({ sts }) => {
   const [isLoadClientes, setIsloadClientes] = useState(false)
@@ -91,9 +92,17 @@ const Search = ({ sts }) => {
     setPagination(1)
   }
 
+  const handleSearchDebounced = useMemo(
+    () =>
+      debounce((value) => {
+        setSearch(value)
+      }, 300), // 300 ms de espera
+    []
+  );
+
   const handleSearch = (e) => {
     const {value} = e.target
-    setSearch(value)
+    handleSearchDebounced(value)
   }
 
   const handleFilterType = (e) => {
