@@ -1,4 +1,20 @@
+import { useCallback, useEffect } from "react";
+import { useState } from "react";
+import { getDataForSelect } from "../../hooks/informes/granza";
+
 const Importaciones = () => {
+  const [buques, setBuques] = useState([])
+  const [isLoadingBuques, setIsLoadingBuques] = useState(false)
+  
+  const fetchBuques = useCallback(()=>{
+    getDataForSelect(setBuques, setIsLoadingBuques)
+  }, [])
+
+  useEffect(()=>{
+    fetchBuques()
+  }, [fetchBuques])
+  
+
   return (
     <div className="flex justify-between w-full gap-5 max-sm:flex-col max-md:flex-col mb-4">
       <div className="parte-izq">
@@ -13,11 +29,14 @@ const Importaciones = () => {
             <div className="flex-1">
             <div className="relative">
                 <select 
-                name="socio" 
+                name="socio"
+                disabled={isLoadingBuques} 
                 className="appearance-none w-full bg-white text-gray-900 border border-gray-300 rounded-lg py-3 pl-4 pr-10 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#955e37] focus:border-[#955e37 ] hover:border-gray-400 transition-colors duration-200"
                 >
-                <option value="">Seleccione un buque</option>
-                <option value="lanna-naree">Buque Lanna Naree</option>
+                <option value="">{isLoadingBuques ? 'Cargando...' : 'Seleccione un buque'}</option>
+                {buques.map((item)=>(
+                  <option key={item?.idSocio} value={item?.idSocio}>{item?.socio}</option>
+                ))}
                 </select>
                 <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                 <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
