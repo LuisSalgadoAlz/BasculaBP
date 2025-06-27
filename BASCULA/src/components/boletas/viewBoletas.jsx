@@ -1,8 +1,9 @@
 import { ButtonAdd, Pagination } from "../buttons";
 import { NoData, Spinner } from "../alerts";
 import { TableBoletas } from "./tableBoletas";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { isSelectedView, noSelectectView } from "../../constants/boletas";
+import debounce from 'lodash/debounce';
 
 const ViewBoletas = (props) => {
   const {
@@ -23,9 +24,16 @@ const ViewBoletas = (props) => {
   } = props;
 
   const [modeViewComplete, setModeViewComplete] = useState(false);
+  const handleSearchDebounced = useMemo(
+    () =>
+      debounce((value) => {
+        setSearch(value);
+        setPagination(1);
+      }, 300), 
+    []
+  );
   const handleSearch = (e) => {
-    setSearch(e.target.value);
-    setPagination(1);
+    handleSearchDebounced(e.target.value);
   };
   const handleSearchDate = (e) => {
     setSearchDate(e.target.value);
