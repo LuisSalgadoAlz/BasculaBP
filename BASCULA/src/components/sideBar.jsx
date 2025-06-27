@@ -163,7 +163,7 @@ export const SideBar = ({ modo = "extendido", altura = 500 }) => {
               </NavLink>
               <ul className="pl-5 border-l border-gray-500 ml-5">
                 <NavLink
-                  to="/informes/importaciones"
+                  to="/informes/importaciones-granza"
                   className="flex items-center gap-x-1 px-3 rounded-md py-2 text-sm font-medium text-white"
                 >
                   <span className="flex-1 text-sm">Importacion: Granza</span>
