@@ -634,7 +634,7 @@ export const VisualizarBoletas = (props) => {
                 <hr className="text-gray-400 my-4"/>
                 <span className="text-md font-bold text-gray-700">Datos Puerto:</span>
                 <span className="text-md text-gray-700">Bodega: {boletas?.bodegaPuerto || 'N/A'}</span>
-                <span className="text-md text-gray-700">Fecha de despacho: {boletas?.fechaDespachoPuerto ? new Date(boletas?.fechaDespachoPuerto).toLocaleDateString() : 'N/A'}</span>
+                <span className="text-md text-gray-700">Fecha de despacho: {boletas?.fechaDespachoPuerto ? boletas?.fechaDespachoPuerto.split("T")[0] : 'N/A'}</span>
                 <hr className="text-gray-400 my-4"/>
                 <span className="text-md font-bold text-gray-700">Marchamos:</span>
                 <span className="text-md text-gray-700 bg-gray-200 p-2 rounded-sm shadow-2xl">
