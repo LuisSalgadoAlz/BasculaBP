@@ -24,6 +24,7 @@
     "@tanstack/react-query": "^5.74.4",
     "dotenv": "^16.4.7",
     "js-cookie": "^3.0.5",
+    "lodash": "^4.17.21",
     "moment": "^2.30.1",
     "motion": "^12.9.2",
     "react": "^19.0.0",
