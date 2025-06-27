@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { ButtonAdd, Pagination } from "../buttons";
 import { TableEmpresas } from "./tables";
 import { getEmpresas, postEmpresas, getStatsEmpresas, verificarData } from "../../hooks/formDataEmpresas";
 import {ModalEmpresas} from "./modal";
 import { ModalErr, ModalSuccess, NoData, Spinner } from '../alerts'
+import debounce from 'lodash/debounce';
 
 const Search = ({ sts }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -72,12 +73,19 @@ const Search = ({ sts }) => {
   /**
    * 
    * @param {*} e 
-   * guarda el valor actual del textbox de busqueda para que en cuanto se actualice el GET con los 
-   * parametros busque
    */
+
+  const handleSearchDebounced = useMemo(
+    () =>
+      debounce((value) => {
+        setSearch(value)
+      }, 350), // 300 ms de espera
+    []
+  );
+  
   const hanldeSearch = (e) => {
     const {value} = e.target
-    setSearch(value)
+    handleSearchDebounced(value)
   }
 
   const handleFilterState = (e) => {

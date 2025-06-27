@@ -96,7 +96,7 @@ const Search = ({ sts }) => {
     () =>
       debounce((value) => {
         setSearch(value)
-      }, 300), // 300 ms de espera
+      }, 350), // 300 ms de espera
     []
   );
 

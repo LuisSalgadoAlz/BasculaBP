@@ -29,7 +29,7 @@ const ViewBoletas = (props) => {
       debounce((value) => {
         setSearch(value);
         setPagination(1);
-      }, 300), 
+      }, 350), 
     []
   );
   const handleSearch = (e) => {
