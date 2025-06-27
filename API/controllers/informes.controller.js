@@ -14,7 +14,10 @@ const buquesBoletas = async(req, res) => {
                         in: ['Pendiente', 'Cancelada'],
                     },
                 }
-            }, 
+            },
+            orderBy:{
+                idSocio: 'asc'
+            } 
         })
         res.send(resultado)
     }catch(err){
