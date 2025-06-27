@@ -23,3 +23,49 @@ export const getDataForSelect = async (fun, setIsLoading) => {
     setIsLoading(false)
   }
 };
+
+export const getResumenBFH = async (fun, setIsLoading) => {
+  try {
+    setIsLoading(true)
+    const response = await fetch(`${URLHOST}informes/resumenBFH`, {
+      method: "GET",
+      headers: {
+        Authorization: Cookies.get('token'),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API");
+    }
+
+    const data = await response.json();
+    fun(data);
+  } catch (error) {
+    console.error("Error al obtener los clientes:", error);
+  } finally{
+    setIsLoading(false)
+  }
+};
+
+export const getBuquesDetalles = async (fun, setIsLoading) => {
+  try {
+    setIsLoading(true)
+    const response = await fetch(`${URLHOST}informes/buquedetalles`, {
+      method: "GET",
+      headers: {
+        Authorization: Cookies.get('token'),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API");
+    }
+
+    const data = await response.json();
+    fun(data);
+  } catch (error) {
+    console.error("Error al obtener los clientes:", error);
+  } finally{
+    setIsLoading(false)
+  }
+};
