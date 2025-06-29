@@ -1,6 +1,6 @@
 import {FormClientes, FormDirecciones, FormDireccionesEdit} from "./formClientes";
 
-export const ModalClientes = ({ hdlData, hdlSubmit, tglModal }) => {
+export const ModalClientes = ({ hdlData, hdlSubmit, tglModal, isLoading }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-opa-50">
       <div className="bg-white p-8 rounded-2xl shadow-xl max-w-sm border border-gray-300">
@@ -19,9 +19,10 @@ export const ModalClientes = ({ hdlData, hdlSubmit, tglModal }) => {
           </button>
           <button
             onClick={hdlSubmit}
+            disabled={isLoading}
             className="px-6 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700 transition duration-300 ease-in-out transform hover:scale-105"
           >
-            Agregar
+            {isLoading ? 'Agregando...' : 'Agregar'}
           </button>
         </div>
       </div>
