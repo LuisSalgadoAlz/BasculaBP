@@ -36,7 +36,7 @@ export const ModalEmpresas = ({hdlData, hdlSubmit, tglModal, frDta, isLoading}) 
 /**
  * TODO: Modal para el form de agregar motoristas
  */
-export const ModalVehiculos = ({hdlData, hdlSubmit, tglModal, frDta}) => {
+export const ModalVehiculos = ({hdlData, hdlSubmit, tglModal, frDta, isLoading}) => {
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-opa-50">
       <div className="bg-white p-8 rounded-2xl shadow-xl max-w-sm border border-gray-300">
@@ -55,9 +55,10 @@ export const ModalVehiculos = ({hdlData, hdlSubmit, tglModal, frDta}) => {
           </button>
           <button
             onClick={hdlSubmit}
+            disabled={isLoading}
             className="px-6 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700 transition duration-300 ease-in-out transform hover:scale-105"
           >
-            Agregar
+            {isLoading ? 'Agregando...' : 'Agregar'}
           </button>
         </div>
       </div>
@@ -100,7 +101,7 @@ export const ModalVehiculosEdit = ({hdlData, hdlSubmit, tglModal, frDta}) => {
 /**
  * TODO: Modal para el form de motoristas
  */
-export const ModalMotoristas = ({hdlData, hdlSubmit, tglModal}) => {
+export const ModalMotoristas = ({hdlData, hdlSubmit, tglModal, isLoading}) => {
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-opa-50">
       <div className="bg-white p-8 rounded-2xl shadow-xl max-w-sm border border-gray-300">
@@ -119,9 +120,10 @@ export const ModalMotoristas = ({hdlData, hdlSubmit, tglModal}) => {
           </button>
           <button
             onClick={hdlSubmit}
+            disabled={isLoading}
             className="px-6 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700 transition duration-300 ease-in-out transform hover:scale-105"
           >
-            Agregar
+            {isLoading ? 'Agregando...' : 'Agregar'}
           </button>
         </div>
       </div>
@@ -129,7 +131,7 @@ export const ModalMotoristas = ({hdlData, hdlSubmit, tglModal}) => {
   );
 };
 
-export const ModalMotoristasEdit = ({hdlData, hdlSubmit, tglModal, frDta}) => {
+export const ModalMotoristasEdit = ({hdlData, hdlSubmit, tglModal, frDta, isLoading}) => {
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-opa-50">
       <div className="bg-white p-8 rounded-2xl shadow-xl max-w-sm border border-gray-300">
@@ -148,9 +150,10 @@ export const ModalMotoristasEdit = ({hdlData, hdlSubmit, tglModal, frDta}) => {
           </button>
           <button
             onClick={hdlSubmit}
+            disabled={isLoading}
             className="px-6 py-2 text-white bg-yellow-600 rounded-lg hover:bg-yellow-600 transition duration-300 ease-in-out transform hover:scale-105"
           >
-            Modificar
+            {isLoading ? 'Modificando...' : 'Modificar'}
           </button>
         </div>
       </div>
