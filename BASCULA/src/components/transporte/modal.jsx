@@ -3,7 +3,7 @@ import { FormEmpresa, FormMotoristas, FormMotoristasEdit, FormVehiculos, FormVeh
 /**
  * TODO: Modal para el form de agregar empresas
  */
-export const ModalEmpresas = ({hdlData, hdlSubmit, tglModal, frDta}) => {
+export const ModalEmpresas = ({hdlData, hdlSubmit, tglModal, frDta, isLoading}) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-opa-50">
       <div className="bg-white p-8 rounded-2xl shadow-xl max-w-sm border border-gray-300">
@@ -22,9 +22,10 @@ export const ModalEmpresas = ({hdlData, hdlSubmit, tglModal, frDta}) => {
           </button>
           <button
             onClick={hdlSubmit}
+            disabled={isLoading}
             className="px-6 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700 transition duration-300 ease-in-out transform hover:scale-105"
           >
-            Agregar
+            {isLoading ? 'Agregando...' : 'Agregar'}
           </button>
         </div>
       </div>

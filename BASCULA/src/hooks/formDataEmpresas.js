@@ -46,7 +46,8 @@ export const getSociosParaSelect = async (fun) => {
 };
 
 
-export const postEmpresas = async (empresa) => {
+export const postEmpresas = async (empresa, setIsloading) => {
+  setIsloading(true)
   try {
     const response = await fetch(`${URLHOST}empresas/`, {
       method: "POST",
@@ -64,6 +65,8 @@ export const postEmpresas = async (empresa) => {
     const data = await response.json();
   } catch (error) {
     console.error("Error al obtener los datos:", error);
+  } finally{
+    setIsloading(false)
   }
 };
 
