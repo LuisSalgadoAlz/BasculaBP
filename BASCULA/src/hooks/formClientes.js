@@ -153,7 +153,8 @@ export const getStatsSocios = async (fun) => {
  * funcion que actualiza por id un socio
  */
 
-export const updateSocios = async (socio, id) => {
+export const updateSocios = async (socio, id, setIsLoading) => {
+  setIsLoading(true)
   try {
     const response = await fetch(`${URLHOST}socios/${id}`, {
       method: "PUT",
@@ -175,6 +176,8 @@ export const updateSocios = async (socio, id) => {
     }
   } catch (error) {
     console.error("Error al obtener los datos:", error);
+  } finally {
+    setIsLoading(false)
   }
 };
 

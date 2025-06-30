@@ -20,6 +20,7 @@ const EditClientes = () => {
   /* Estados / Datos del aplicativo */
   const [isLoadDireccion, setIsLoadDireccion] = useState(false)
   const [isLoadingSaveDirection, setIsLoadingSaveDirection] = useState(false)
+  const [isLoadingUpdateSocios, setIsLoadingUpdateSocios] = useState(false)
   const [isLoadingUpdateDirection, setIsLoadingUpdateDirection] = useState(false)
   const [success, setSuccess] = useState(false);
   const [errorModal, setErrorModal] = useState(false);
@@ -78,9 +79,10 @@ const EditClientes = () => {
   };
 
   const handleSave = async () => {
+    if(isLoadingUpdateSocios) return
     const response = verificarData(setSuccess, setErrorModal, sc, setMsg);
     if (response) {
-      const callApi = await updateSocios(sc, id);
+      const callApi = await updateSocios(sc, id, setIsLoadingUpdateSocios);
       if (!callApi.msgErr) {
         setMsg('guardar los datos')
         setSuccess(true);
@@ -246,7 +248,7 @@ const EditClientes = () => {
           </div>
         </div>
         <div className="mt-7 place-self-end max-sm:place-self-center">
-          <ButtonSave name={"Guardar Cambios"} fun={handleSave} />
+          <ButtonSave name={`${isLoadingUpdateSocios ? 'Guardando Cambios...' : 'Guardar Cambios'}`} fun={handleSave} />
         </div>
         <hr className="text-gray-400 mt-7" />
         <div className="flex justify-between gap-5 mt-7 max-sm:flex-col">
