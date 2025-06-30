@@ -185,7 +185,8 @@ export const updateSocios = async (socio, id) => {
  * funcion para guardar direcciones
  */
 
-export const postDirecciones = async (direccion) => {
+export const postDirecciones = async (direccion, setIsLoading) => {
+  setIsLoading(true)
   try {
     const response = await fetch(`${URLHOST}socios/direcciones`, {
       method: "POST",
@@ -204,6 +205,8 @@ export const postDirecciones = async (direccion) => {
     console.log(data);
   } catch (error) {
     console.error("Error al obtener los datos:", error);
+  } finally {
+    setIsLoading(false)
   }
 };
 
@@ -243,7 +246,8 @@ export const getDireccionesPorID = async (fun, id) => {
  * funcion para actualizar direccoines
  */
 
-export const updateDireccionesPorID = async (direccion) => {
+export const updateDireccionesPorID = async (direccion, setIsLoading) => {
+  setIsLoading(true)
   try {
     const response = await fetch(`${URLHOST}socios/direcciones/pt/`, {
       method: "PUT",
@@ -263,6 +267,8 @@ export const updateDireccionesPorID = async (direccion) => {
     }
   } catch (error) {
     console.error("Error al obtener los datos:", error);
+  } finally{
+    setIsLoading(false)
   }
 };
 
