@@ -32,6 +32,7 @@ const typesOfUsers = {
   CONTABILIDAD: 2,
   TOLVA: 3,
   ADMINISTRADOR: 4,
+  GUARDIA: 5, 
 };
 const typesOfState = { Activo: 1, Inactivo: 2 };
 
@@ -329,6 +330,7 @@ const Users = () => {
                   <option value={2}>Bascula</option>
                   <option value={3}>Tolva</option>
                   <option value={4}>Contabilidad</option>
+                  <option value={5}>Guardia</option>
                 </select>
               </div>
 
