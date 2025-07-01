@@ -516,7 +516,7 @@ export const ReportesBascula = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('Esta semana');
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen">
       {/* Dashboard Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <div>
