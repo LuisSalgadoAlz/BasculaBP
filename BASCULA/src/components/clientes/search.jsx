@@ -4,7 +4,7 @@ import { TableComponent } from "./tableClientes";
 import { NoData, Spinner } from "../alerts";
 import {
   getClientes,
-  postEmpresas,
+  postSocios,
   getStatsSocios,
   verificarData,
 } from "../../hooks/formClientes";
@@ -14,6 +14,7 @@ import debounce from 'lodash/debounce';
 
 const Search = ({ sts }) => {
   const [isLoadClientes, setIsloadClientes] = useState(false)
+  const [isLoadingSaveSocio, setIsLoadingSaveSocio] = useState(false)
   const [pagination, setPagination] = useState(1)
   const [tipo, setTipo] = useState()
   const [estado, setEstado] = useState()
@@ -55,9 +56,10 @@ const Search = ({ sts }) => {
   };
 
   const handleSubmit = async () => {
+    if(isLoadingSaveSocio) return
     const isValid = verificarData(setSuccess, setErr, formData, setMsg, "");
     if (isValid) {
-      const response = await postEmpresas(formData);
+      const response = await postSocios(formData, setIsLoadingSaveSocio);
       if(!response.msgErr) {
         setIsOpen(false);
         fetchData();
@@ -173,6 +175,7 @@ const Search = ({ sts }) => {
           hdlData={handleData}
           hdlSubmit={handleSubmit}
           tglModal={toggleClose}
+          isLoading={isLoadingSaveSocio}
         />
       )}
       {success && (

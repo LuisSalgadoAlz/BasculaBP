@@ -8,6 +8,7 @@ import debounce from 'lodash/debounce';
 
 const Search = ({ sts }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoadingSave, setIsLoadingSave] = useState(false)
   const [msg, setMsg] = useState('')
   const [err, setErr] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -59,9 +60,10 @@ const Search = ({ sts }) => {
    */
 
   const handleSubmit = async () => {
+    if(isLoadingSave) return
     const isValid = verificarData(setErr, formData, setMsg)
     if(isValid){
-      await postEmpresas(formData);
+      await postEmpresas(formData, setIsLoadingSave);
       setIsOpen(false);
       setMsg('agregar nueva empresa')
       setSuccess(true)
@@ -144,7 +146,7 @@ const Search = ({ sts }) => {
         {datos && datos.pagination.totalPages > 1 && <Pagination pg={pagination} sp={setPagination} hp={handlePagination} dt={datos}/>}
       </div>
 
-      {isOpen && <ModalEmpresas hdlData={handleData} hdlSubmit={handleSubmit} tglModal={toggleModalClose} frDta={formData}/>}
+      {isOpen && <ModalEmpresas isLoading={isLoadingSave} hdlData={handleData} hdlSubmit={handleSubmit} tglModal={toggleModalClose} frDta={formData}/>}
       {err && <ModalErr name={msg} hdClose={handleClose} />}
       {success && <ModalSuccess name={msg} hdClose={handleClose} />}
     </>

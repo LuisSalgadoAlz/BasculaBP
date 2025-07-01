@@ -14,7 +14,6 @@ import {
 } from "../../hooks/tolva/formDataTolva";
 import { FinalizarDescarga, FinalizarDescargaConMotivo, Modals } from "../../components/tolva/modals";
 import { Toaster, toast } from "sonner";
-import { isSelectedView, noSelectectView } from "../../constants/boletas";
 import { TableTolva, TolvaSection } from "../../components/tolva/table";
 import { NoData, Spinner } from "../../components/alerts";
 import { Pagination } from "../../components/buttons";
@@ -179,6 +178,7 @@ const DashboardTolva = () => {
   }
 
   const hdlSubmit = async () => {
+    if(isLoadAsingar) return
     const { silo, silo2, silo3 } = formData || {};
 
     if (!silo) {
@@ -312,6 +312,7 @@ const DashboardTolva = () => {
     silos,
     handleChange,
     error,
+    isLoadAsingar,
   };
 
   const dashboardProps = {

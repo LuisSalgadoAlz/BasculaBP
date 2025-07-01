@@ -46,7 +46,8 @@ export const getSociosParaSelect = async (fun) => {
 };
 
 
-export const postEmpresas = async (empresa) => {
+export const postEmpresas = async (empresa, setIsloading) => {
+  setIsloading(true)
   try {
     const response = await fetch(`${URLHOST}empresas/`, {
       method: "POST",
@@ -64,6 +65,8 @@ export const postEmpresas = async (empresa) => {
     const data = await response.json();
   } catch (error) {
     console.error("Error al obtener los datos:", error);
+  } finally{
+    setIsloading(false)
   }
 };
 
@@ -108,7 +111,8 @@ export const getEmpresasPorId = async (fun, id) => {
 };
 
 
-export const updateEmpresas = async (empresa, id) => {
+export const updateEmpresas = async (empresa, id, setIsloading) => {
+  setIsloading(true)
   try {
     const response = await fetch(`${URLHOST}empresas/${id}`, {
       method: "PUT",
@@ -128,6 +132,8 @@ export const updateEmpresas = async (empresa, id) => {
     }
   } catch (error) {
     console.error("Error al obtener los datos:", error);
+  } finally {
+    setIsloading(false)
   }
 };
 
@@ -247,7 +253,8 @@ export const getMotoristasPorEmpresas = async (fun, id, setIsloading)=>{
  * TODO: Parte de motoristas
  */
 
-export const postMotoristasDeLaEmpresa = async (motoristas) => {
+export const postMotoristasDeLaEmpresa = async (motoristas, setIsloading) => {
+  setIsloading(true)
   try {
     const response = await fetch(`${URLHOST}empresas/motoristas`, {
       method: "POST",
@@ -266,11 +273,14 @@ export const postMotoristasDeLaEmpresa = async (motoristas) => {
     return data
   } catch (error) {
     console.error("Error al obtener los datos:", error);
+  } finally {
+    setIsloading(false)
   }
 };
 
 
-export const updateMotoristasPorEmpresa = async (motoristas, idEmpresa) => {
+export const updateMotoristasPorEmpresa = async (motoristas, idEmpresa, setIsloading) => {
+  setIsloading(true)
   try {
     const response = await fetch(`${URLHOST}empresas/motoristas/${idEmpresa}`, {
       method: "PUT",
@@ -291,6 +301,8 @@ export const updateMotoristasPorEmpresa = async (motoristas, idEmpresa) => {
     }
   } catch (error) {
     console.error("Error al obtener los datos:", error);
+  } finally {
+    setIsloading(false)
   }
 };
 

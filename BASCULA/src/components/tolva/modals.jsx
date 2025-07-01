@@ -10,7 +10,7 @@ import {
 import { MdOutlinePlace, MdOutlineSecurity } from "react-icons/md";
 
 export const Modals = (props) => {
-  const { hdlClose, hdlSubmit, isLoadingImage, data, silos, handleChange, error} = props
+  const { hdlClose, hdlSubmit, isLoadingImage, data, silos, handleChange, error, isLoadAsingar } = props
 
   if (data.err) {
     return;
@@ -203,8 +203,9 @@ export const Modals = (props) => {
               <button
                 onClick={hdlSubmit}
                 className="w-full sm:w-full px-6 py-3 text-white bg-[#5A3F27] rounded-lg hover:bg-[#4a3420] transition-all duration-200 hover:scale-105"
+                disabled={isLoadAsingar}
               >
-                Asignar a Silo
+                {isLoadAsingar ? 'Asignando...' : 'Asignar un Silo'}
               </button>
             </div>
           </>

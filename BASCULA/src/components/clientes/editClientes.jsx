@@ -19,6 +19,9 @@ import { ModalDirecciones, ModalDireccionesEdit } from "./modal";
 const EditClientes = () => {
   /* Estados / Datos del aplicativo */
   const [isLoadDireccion, setIsLoadDireccion] = useState(false)
+  const [isLoadingSaveDirection, setIsLoadingSaveDirection] = useState(false)
+  const [isLoadingUpdateSocios, setIsLoadingUpdateSocios] = useState(false)
+  const [isLoadingUpdateDirection, setIsLoadingUpdateDirection] = useState(false)
   const [success, setSuccess] = useState(false);
   const [errorModal, setErrorModal] = useState(false);
   const [msg, setMsg] = useState();
@@ -76,9 +79,10 @@ const EditClientes = () => {
   };
 
   const handleSave = async () => {
+    if(isLoadingUpdateSocios) return
     const response = verificarData(setSuccess, setErrorModal, sc, setMsg);
     if (response) {
-      const callApi = await updateSocios(sc, id);
+      const callApi = await updateSocios(sc, id, setIsLoadingUpdateSocios);
       if (!callApi.msgErr) {
         setMsg('guardar los datos')
         setSuccess(true);
@@ -104,10 +108,11 @@ const EditClientes = () => {
 
   /* Metodos put y post de direcciones */
   const handleSaveDirecciones = async () => {
+    if(isLoadingSaveDirection) return
     const arr = { ...formData, id };
     const isValid = verificarDirecciones(setErrorModal, arr, setMsg);
     if (isValid) {
-      await postDirecciones(arr);
+      await postDirecciones(arr, setIsLoadingSaveDirection);
       getDireccionesPorSocios(setDirecciones, id, setIsLoadDireccion);
       setModalDirecciones(false);
       setMsg('agregar direccion')
@@ -117,11 +122,11 @@ const EditClientes = () => {
   };
 
   const handleUpdateDireccionFinish = async () => {
-    /* Falta validar */
+    if(isLoadingUpdateDirection) return
     const isValid = verificarDirecciones(setErrorModal, dataDireccion, setMsg);
     console.log(isValid);
     if (isValid) {
-      await updateDireccionesPorID(dataDireccion);
+      await updateDireccionesPorID(dataDireccion, setIsLoadingUpdateDirection);
       getDireccionesPorSocios(setDirecciones, id, setIsLoadDireccion);
       setModalDireccionesEdit(false);
       setMsg('modificar direccion')
@@ -164,7 +169,7 @@ const EditClientes = () => {
             <ButtonVolver name={"Volver"} fun={handleClik} />
           </div>
         </div>
-        <div className="container grid grid-cols-2 gap-2 max-md:grid-cols-1">
+        <div className="w-full grid grid-cols-2 gap-2 max-md:grid-cols-1">
           <div className="mt-5">
             <label className="block mb-2 text-sm font-medium text-gray-900 ">
               Nombre
@@ -243,7 +248,7 @@ const EditClientes = () => {
           </div>
         </div>
         <div className="mt-7 place-self-end max-sm:place-self-center">
-          <ButtonSave name={"Guardar Cambios"} fun={handleSave} />
+          <ButtonSave name={`${isLoadingUpdateSocios ? 'Guardando Cambios...' : 'Guardar Cambios'}`} fun={handleSave} />
         </div>
         <hr className="text-gray-400 mt-7" />
         <div className="flex justify-between gap-5 mt-7 max-sm:flex-col">
@@ -282,6 +287,7 @@ const EditClientes = () => {
           tglModal={handleClose}
           hdlData={handleDataDirecciones}
           hdlSubmit={handleSaveDirecciones}
+          isLoading={isLoadingSaveDirection}
         />
       )}
       {modalDireccionesEdit && (
@@ -290,6 +296,7 @@ const EditClientes = () => {
           hdlData={handleDataDirecciones}
           hdlSubmit={handleUpdateDireccionFinish}
           dtDir={dataDireccion}
+          isLoading={isLoadingUpdateDirection}
         />
       )}
     </>

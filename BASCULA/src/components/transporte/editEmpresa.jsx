@@ -28,6 +28,10 @@ const EditTransporte = () => {
   const [success, setSuccess] = useState();
   const [isLoadMotorista, setIsloadMotorista] = useState(false)
   const [isLoadVehiculos, setIsLoadVehiculos] = useState(false)
+  const [isLoadingUpdate, setIsLoadingUpdate] = useState(false)
+  const [isLoadingSaveVehicle, setIsLoadingSaveVehicle] = useState(false)
+  const [isLoadingSaveMotorista, setIsLoadingSaveMotorista] = useState(false)
+  const [isLoadingUpdateMoto, setIsLoadingUpdateMoto] = useState(false)
   const [msg, setMsg] = useState();
   const [vehiculos, setVehiculos] = useState();
   const [mdlVehiculos, setMdlVehiculos] = useState();
@@ -80,13 +84,14 @@ const EditTransporte = () => {
    * Funcion para actualizar la empresa actual
    */
 
-  const handleUpdate = () => {
+  const handleUpdate = async() => {
     /**
      * Verifica la info valida
      */
+    if(isLoadingUpdate) return
     const isValid = verificarData(setErr, empresa, setMsg);
     if (isValid) {
-      updateEmpresas(empresa, id);
+      await updateEmpresas(empresa, id, setIsLoadingUpdate);
       setSuccess(true);
       setMsg("modificar empresa.");
     }
@@ -137,24 +142,32 @@ const EditTransporte = () => {
   };
 
   const handleSaveVehiculos = async () => {
-    /**
-     * Validacion de datos
-     */
-    const isValid = verificarDataVehiculos(setErr, formVehiculos, setMsg);
-    if (isValid) {
-      const {msgList, existHere} = await verificarListadoDeVehiculos(formVehiculos.placa, id);
-      if (existHere) {
-        setMsg('placa ya existe en esta empresa.')
-        setErr(true)
-        return
+    if(isLoadingSaveVehicle) return
+    setIsLoadingSaveVehicle(true)
+    try{
+      /**
+       * Validacion de datos
+       */
+      const isValid = verificarDataVehiculos(setErr, formVehiculos, setMsg);
+      if (isValid) {
+        const {msgList, existHere} = await verificarListadoDeVehiculos(formVehiculos.placa, id);
+        if (existHere) {
+          setMsg('placa ya existe en esta empresa.')
+          setErr(true)
+          return
+        }
+        
+        if (!msgList){
+          await addVehiculoPorEmpresa()
+          return
+        }
+        setMsg(msgList)
+        setMdlVehiculoDuplicado(true)
       }
-      
-      if (!msgList){
-        addVehiculoPorEmpresa()
-        return
-      }
-      setMsg(msgList)
-      setMdlVehiculoDuplicado(true)
+    }catch(err){
+      console.log(err)
+    } finally{
+      setIsLoadingSaveVehicle(false)
     }
   };
 
@@ -243,9 +256,10 @@ const EditTransporte = () => {
   }
 
   const handleSaveMotoristas = async () => {
+    if (isLoadingSaveMotorista) return
     const isValid = verificarDataDeMotoristas(setErr, formMotoristas, setMsg)
     if (isValid) {
-      const { msgErr } = await postMotoristasDeLaEmpresa(formMotoristas)
+      const { msgErr } = await postMotoristasDeLaEmpresa(formMotoristas, setIsLoadingSaveMotorista)
       if (!msgErr) {
         fetchData()
         setModalMotoristas(false)
@@ -265,9 +279,10 @@ const EditTransporte = () => {
   }
 
   const handleUpdateMotoristas = async () => {
+    if(isLoadingUpdateMoto) return
     const isValid = verificarDataDeMotoristas(setErr, formMotoristas, setMsg)
     if (isValid){
-      const { msgErr } = await updateMotoristasPorEmpresa(formMotoristas, id)
+      const { msgErr } = await updateMotoristasPorEmpresa(formMotoristas, id, setIsLoadingUpdateMoto)
       if(!msgErr){
         setMsg('modificar usuario')
         setSuccess(true)
@@ -316,7 +331,7 @@ const EditTransporte = () => {
             <ButtonVolver name={"Volver"} fun={handleClik} />
           </div>
         </div>
-        <div className="container grid grid-cols-2 gap-2 max-md:grid-cols-1">
+        <div className="w-full grid grid-cols-2 gap-2 max-md:grid-cols-1">
           <div className="mt-5">
             <label className="block mb-2 text-sm font-medium text-gray-900 ">
               Nombre:
@@ -401,7 +416,7 @@ const EditTransporte = () => {
           </div>
         </div>
         <div className="mt-7 place-self-end max-sm:place-self-center">
-          <ButtonSave name={"Guardar Cambios"} fun={handleUpdate} />
+          <ButtonSave name={`${isLoadingUpdate ? 'Guardando Cambios...' : 'Guardar Cambios'}`} fun={handleUpdate} />
         </div>
 
         {/* Esta parte despues */}
@@ -452,7 +467,7 @@ const EditTransporte = () => {
       {success && <ModalSuccess name={msg} hdClose={handleCloseSuccess} />}
 
       {/* Modals de agregar */}
-      {mdlVehiculos && ( <ModalVehiculos tglModal={handleCancelModalVehiculos} hdlData={handleChangeFormVehiculos} hdlSubmit={handleSaveVehiculos} />)}
+      {mdlVehiculos && ( <ModalVehiculos isLoading={isLoadingSaveVehicle} tglModal={handleCancelModalVehiculos} hdlData={handleChangeFormVehiculos} hdlSubmit={handleSaveVehiculos} />)}
       
       {/* Modals del apartado de vehiculos */}
       {mdlVehiculoDuplicadoEdit && <ModalVehiculoDuplicadoEdit name={msg} hdClose={handleCancelAdvertencia} hdlSubmit={editVehiculoEmpresa}/>}
@@ -460,8 +475,8 @@ const EditTransporte = () => {
       {modalVehiculosEdit && <ModalVehiculosEdit hdlSubmit={handleSubmitEditFinish} hdlData={handleChangeFormVehiculos} frDta={formVehiculos} tglModal={handleCloseModalVehiculosEdit} />}
       
       {/* Modals del apartado de motoristas */}
-      {modalMotoristas && <ModalMotoristas hdlData={handleChangeFormMotoristas} tglModal={handleToggleModalMotoristas} hdlSubmit={handleSaveMotoristas}/>}
-      {modalMotoristasEdit && <ModalMotoristasEdit hdlData={handleChangeFormMotoristas} tglModal={handleToggleModalMotoristas} hdlSubmit={handleUpdateMotoristas} frDta={formMotoristas} />}
+      {modalMotoristas && <ModalMotoristas isLoading={isLoadingSaveMotorista} hdlData={handleChangeFormMotoristas} tglModal={handleToggleModalMotoristas} hdlSubmit={handleSaveMotoristas}/>}
+      {modalMotoristasEdit && <ModalMotoristasEdit isLoading={isLoadingUpdateMoto} hdlData={handleChangeFormMotoristas} tglModal={handleToggleModalMotoristas} hdlSubmit={handleUpdateMotoristas} frDta={formMotoristas} />}
     </>
   );
 };

@@ -91,8 +91,8 @@ const navRutas = createBrowserRouter([
         element: <Informes />,
       },
       {
-        path: "/informes/importaciones",
-        element: <ViewDisabled />,
+        path: "/informes/importaciones-granza",
+        element: <Importaciones />,
       },
       {
         path: "/informes/diarios",

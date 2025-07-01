@@ -94,7 +94,8 @@ export const getDireccionesPorSocios = async (fun, id, setIsLoading) => {
  * @param {*} socio obj que contiene los datos
  */
 
-export const postEmpresas = async (socio) => {
+export const postSocios = async (socio, setIsLoading) => {
+  setIsLoading(true)
   try {
     const response = await fetch(`${URLHOST}socios/`, {
       method: "POST",
@@ -113,6 +114,8 @@ export const postEmpresas = async (socio) => {
     return data
   } catch (error) {
     console.error("Error al obtener los datos:", error);
+  } finally {
+    setIsLoading(false)
   }
 };
 
@@ -150,7 +153,8 @@ export const getStatsSocios = async (fun) => {
  * funcion que actualiza por id un socio
  */
 
-export const updateSocios = async (socio, id) => {
+export const updateSocios = async (socio, id, setIsLoading) => {
+  setIsLoading(true)
   try {
     const response = await fetch(`${URLHOST}socios/${id}`, {
       method: "PUT",
@@ -172,6 +176,8 @@ export const updateSocios = async (socio, id) => {
     }
   } catch (error) {
     console.error("Error al obtener los datos:", error);
+  } finally {
+    setIsLoading(false)
   }
 };
 
@@ -182,7 +188,8 @@ export const updateSocios = async (socio, id) => {
  * funcion para guardar direcciones
  */
 
-export const postDirecciones = async (direccion) => {
+export const postDirecciones = async (direccion, setIsLoading) => {
+  setIsLoading(true)
   try {
     const response = await fetch(`${URLHOST}socios/direcciones`, {
       method: "POST",
@@ -201,6 +208,8 @@ export const postDirecciones = async (direccion) => {
     console.log(data);
   } catch (error) {
     console.error("Error al obtener los datos:", error);
+  } finally {
+    setIsLoading(false)
   }
 };
 
@@ -240,7 +249,8 @@ export const getDireccionesPorID = async (fun, id) => {
  * funcion para actualizar direccoines
  */
 
-export const updateDireccionesPorID = async (direccion) => {
+export const updateDireccionesPorID = async (direccion, setIsLoading) => {
+  setIsLoading(true)
   try {
     const response = await fetch(`${URLHOST}socios/direcciones/pt/`, {
       method: "PUT",
@@ -260,6 +270,8 @@ export const updateDireccionesPorID = async (direccion) => {
     }
   } catch (error) {
     console.error("Error al obtener los datos:", error);
+  } finally{
+    setIsLoading(false)
   }
 };
 
