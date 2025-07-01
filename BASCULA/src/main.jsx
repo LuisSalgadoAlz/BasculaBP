@@ -21,96 +21,50 @@ const EditClientes = lazy(()=>import('./components/clientes/editClientes'))
 const EditTransporte = lazy(()=>import('./components/transporte/editEmpresa'))
 const Informes = lazy(()=>import('./views/informes'))
 const Importaciones = lazy(()=>import('./components/informes/importaciones'))
+const Guardia = lazy(()=>import('./views/guardia/guardia'))
 
 const navRutas = createBrowserRouter([
-  {
-    path: "/",
-    element: <Login />,
-    errorElement: <NotFoundPage />,
-  },
+  { path: "/", element: <Login />, errorElement: <NotFoundPage />, },
   {
     element: <VerificarLog userType='ADMINISTRADOR' />,
     children: [
-      {
-        path: '/admin/dashboard',
-        element: <DashboardAdmin />
-      },
-      {
-        path: '/admin/usuarios',
-        element: <Users />
-      }, 
-      {
-        path: '/admin/logs',
-        element: <Logs />
-      }, 
+      { path: '/admin/dashboard', element: <DashboardAdmin /> },
+      { path: '/admin/usuarios', element: <Users /> }, 
+      { path: '/admin/logs', element: <Logs /> }, 
     ]
   },
   {
     element: <VerificarLog userType='TOLVA' />,
     children: [
-      {
-        path: '/tolva/dashboard',
-        element: <DashboardTolva />
-      }, 
+      { path: '/tolva/dashboard', element: <DashboardTolva /> }, 
     ]
   },
   {
     element: <VerificarLog userType='CONTABILIDAD' />,
     children: [
-      {
-        path: '/contabilidad/dashboard',
-        element: <DashboardAdmin />
-      }, 
+      { path: '/contabilidad/dashboard', element: <DashboardAdmin /> }, 
+    ]
+  },
+  {
+    element: <VerificarLog userType='GUARDIA' />,
+    children: [
+      { path: '/guardia', element: <Guardia />}
     ]
   },
   {
     element: <VerificarLog userType='BASCULA' />,
     children: [
-      {
-        path: "/Dashboard",
-        element: <Dashboard />,
-      },
-      {
-        path: "/Boletas",
-        element: <Boletas />,
-      },
-      {
-        path: "/Empresas",
-        element: <Empresa />,
-      },
-      {
-        path: "/socios",
-        element: <Clientes />,
-      },
-      {
-        path: "/calendario",
-        element: <CalendarioView />,
-      },
-      {
-        path: "/informes",
-        element: <Informes />,
-      },
-      {
-        path: "/informes/importaciones-granza",
-        element: <Importaciones />,
-      },
-      {
-        path: "/informes/diarios",
-        element: <ViewDisabled />,
-      },
-      {
-        path: "/informes/semanales",
-        element: <ViewDisabled />,
-      },
-      {
-        path: "/socios/:id",
-        element: <EditClientes />,
-        errorElement: <NoFoundData />
-      },
-      {
-        path: "/empresas/:id",
-        element: <EditTransporte />,
-        errorElement: <NoFoundData />
+      { path: "/Dashboard", element: <Dashboard />, },
+      { path: "/Boletas", element: <Boletas />, },
+      { path: "/Empresas", element: <Empresa />, },
+      { path: "/socios", element: <Clientes />, },
+      { path: "/calendario", element: <CalendarioView />, },
+      { path: "/informes", element: <Informes />, },
+      { path: "/informes/importaciones-granza", element: <Importaciones />, },
+      { path: "/informes/diarios", element: <ViewDisabled />, },
+      { path: "/informes/semanales", element: <ViewDisabled />, },
+      { path: "/socios/:id", element: <EditClientes />, errorElement: <NoFoundData /> },
+      { path: "/empresas/:id", element: <EditTransporte />, errorElement: <NoFoundData />
       },
     ],
   },
