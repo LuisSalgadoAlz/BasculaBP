@@ -460,7 +460,8 @@ const postClientePlacaMoto = async (req, res) => {
       sello6, 
       tolvaAsignada,
       Nbodega,
-      FechaPuerto, 
+      FechaPuerto,
+      manifiesto,  
     } = req.body;
 
     const empresa = await db.empresa.findUnique({
@@ -513,6 +514,7 @@ const postClientePlacaMoto = async (req, res) => {
           ...((idMovimiento==10 || idMovimiento==11) && {
             idTrasladoOrigen, 
             trasladoOrigen: trasladoOrigen.nombre,
+            manifiesto: manifiesto == 0 ? null :  parseInt(manifiesto)
           }), 
           ...((idMovimiento!=10 && idMovimiento!=11) && {
             idOrigen, 
@@ -857,11 +859,37 @@ const getBoletasCompletadasDiarias = async (req, res) => {
 };
 
 /**
- *  Aqui se puso el generador (updateBoletaOut)
+ * Generador de pases de salida
  * @param {*} req 
  * @param {*} res 
  */
 
+const createPaseDeSalida = async(boleta) =>{
+  try {
+    const ultimoPase = await db.PasesDeSalida.findFirst({
+      orderBy: { numPaseSalida: 'desc' },
+      select: { numPaseSalida: true },
+    });
+
+    const createPase = await db.PasesDeSalida.create({
+      data: {
+        idBoleta:parseInt(boleta.id),
+        numPaseSalida: (ultimoPase?.numPaseSalida || 0) + 1,
+        estado: false, 
+      }
+    })
+    return true
+  }catch(err) {
+    console.log(err)
+    return false
+  }
+}
+
+/**
+ *  Aqui se puso el generador (updateBoletaOut)
+ * @param {*} req 
+ * @param {*} res 
+ */
 const updateBoletaOut = async (req, res) => {
   try {
     const {
@@ -1029,8 +1057,8 @@ const updateBoletaOut = async (req, res) => {
 
     setLogger('BOLETA', 'MODIFICAR BOLETA (SALIDA DE BOLETA)', req, null, 1, nuevaBoleta.id)  
 
-    /* Imprimir Boleta */
-
+    /* Imprimir Boleta y Pase de salida*/
+    const crearPase = await createPaseDeSalida(nuevaBoleta)
     const response = await imprimirWorkForce(nuevaBoleta)
     
     if (response) {

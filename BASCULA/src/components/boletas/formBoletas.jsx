@@ -283,7 +283,10 @@ export const ModalNormal = ({ hdlClose, hdlChange, fillData, formBol, boletas, h
                   <SelectFormBoletas classCss={classFormSelct} name="Movimiento" data={fillData['Flete']} fun={hdlChange} val={boletas?.Movimiento}/>
 
                   {(boletas?.Movimiento === 10 || boletas?.Movimiento===11) ? (
-                    <SelectFormBoletas classCss={classFormSelct} name="Traslado Origen" data={boletas?.Movimiento===10 ? fillData['TransladosI'] : fillData['TransladosE']} fun={hdlChange} val={boletas['Traslado Origen']}/>
+                    <>
+                      <InputsFormBoletas data={claseFormInputs} name={'Documento'} val={boletas['Documento']} fun={hdlChange} />
+                      <SelectFormBoletas classCss={classFormSelct} name="Traslado Origen" data={boletas?.Movimiento===10 ? fillData['TransladosI'] : fillData['TransladosE']} fun={hdlChange} val={boletas['Traslado Origen']}/>
+                    </>
                   ) : ( 
                     <SelectFormBoletas classCss={classFormSelct} name="Origen" data={tipoDeSocioOrigen()} fun={hdlChange} val={boletas?.Origen}/>
                   )}
@@ -473,7 +476,34 @@ export const ModalOut = (props) => {
                 )}
                 <PartPesosDeSalida fun={getPesoOut} hdlChange={hdlChange} val={boletas} />
                 <InputsFormBoletas data={claseFormInputs} name={'Peso Teorico'} fun={hdlChange} />
-                {typeStructure == 0 ? typeBol==0 ? <InputsFormBoletas data={claseFormInputs} name={'Orden de compra'} fun={hdlChange} val={boletas['Orden de compra']} /> : <InputsFormBoletas data={claseFormInputs} name={'Documento'} val={boletas['Documento']} fun={hdlChange} />:  ''}
+                {typeStructure == 0 ? (
+                  typeBol == 0 ? (
+                    move == "Traslado Interno" || move == "Traslado Externo" ? (
+                      <InputsFormBoletas
+                        data={claseFormInputs}
+                        name={"Documento"}
+                        val={boletas["Documento"]}
+                        fun={hdlChange}
+                      />
+                    ) : (
+                      <InputsFormBoletas
+                        data={claseFormInputs}
+                        name={"Orden de compra"}
+                        fun={hdlChange}
+                        val={boletas["Orden de compra"]}
+                      />
+                    )
+                  ) : (
+                    <InputsFormBoletas
+                      data={claseFormInputs}
+                      name={"Documento"}
+                      val={boletas["Documento"]}
+                      fun={hdlChange}
+                    />
+                  )
+                ) : (
+                  ""
+                )}
                 {(move == 'Traslado Interno' || move == 'Traslado Externo') ? <InputsFormBoletas data={claseFormInputs} name={'Orden de Transferencia'} fun={hdlChange} /> : ''}
                 <InputsFormBoletas data={claseFormInputs} name={'Observaciones'} fun={hdlChange} />
               </div>

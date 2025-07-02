@@ -135,6 +135,7 @@ export const formaterDataNewPlaca = (formBoletas, marchamos) => {
       idMovimiento: formBoletas?.Movimiento ||  null,
       ...((formBoletas?.Movimiento==10 || formBoletas?.Movimiento==11) && {
         idTrasladoOrigen: formBoletas['Traslado Origen'],
+        manifiesto: formBoletas?.Documento,
       }),
       ...((formBoletas?.Movimiento!=10 && formBoletas?.Movimiento!=11) && {
         idOrigen: formBoletas?.Origen || null, 
@@ -201,6 +202,7 @@ export const getDataParaForm = async (setFormBoletas, data, setMove, setIsLoadin
     Origen: response.idOrigen || response.origen, 
     'Traslado origen' : response.idTrasladoOrigen,
     Transportes: response.idEmpresa ?? response.empresa,
+    Documento: response.manifiesto || '',
     Estado: 0,
     pesoIn: response.pesoInicial,
     pesoOut: 0,
