@@ -16,6 +16,7 @@ const setupWebSocket = require("./sockets/websocketPeso");
 const boletas = require("./routes/boleta.routes");
 const informes = require("./routes/informes.routes")
 const tolva = require("./routes/tolva.routes");
+const guardia = require("./routes/guardia.routes");
 const path = require("path");
 
 const server = http.createServer(app);
@@ -37,6 +38,7 @@ app.use('/api/boletas', boletas)
 app.use('/api/admin', admin)
 app.use('/api/soporte', soporte)
 app.use('/api/tolva/', tolva)
+app.use('/api/guardia/', guardia)
 app.use('/api/informes/', informes)
 
 const distPath = path.join(__dirname, process.env.DIST_PATH || "../bascula/dist");
