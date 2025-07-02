@@ -65,6 +65,7 @@ model Boleta {
     boletasMovimientos Movimientos? @relation(fields: [idMovimiento], references: [id])
     
     tolva Tolva[]
+    paseDeSalida PasesDeSalida?
 }
 
 model Tolva {
@@ -97,4 +98,15 @@ model UsuariosPorTolva {
   idUsuario Int?     @unique
   usuario   Usuarios? @relation(fields: [idUsuario], references: [id])
   tolva     Int
+}
+
+model PasesDeSalida {
+  id          Int      @id @default(autoincrement())
+  idBoleta    Int      @unique
+  numPaseSalida   Int?
+  fechaSalida DateTime?
+  observaciones String?
+  estado Boolean?
+
+  boleta Boleta @relation(fields: [idBoleta], references: [id])
 }
