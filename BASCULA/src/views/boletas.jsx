@@ -378,11 +378,13 @@ const Boletas = () => {
   }
 
   const fetchData = useCallback(() => {
-    getAllDataForSelect(modalEspecial ? 1 : '', plc, formBoletas.Socios, formBoletas.Transportes, formBoletas.Motoristas, setDataSelects);
-    getDataBoletas(setDataTable, setSsLoadTable, search, searchDate, pagination);
     getStatsBoletas(setStats);
-  }, [plc, formBoletas.Socios, formBoletas.Transportes, formBoletas.Motoristas, modalEspecial]);
-    
+  }, []);
+  
+  const fetchDataForSelect = useCallback(() => {
+    getAllDataForSelect(modalEspecial ? 1 : '', plc, formBoletas.Socios, formBoletas.Transportes, formBoletas.Motoristas, setDataSelects, formBoletas?.Proceso);
+  }, [plc, formBoletas.Socios, formBoletas.Transportes, formBoletas.Motoristas, modalEspecial])
+  
   const fechDataSeaSearch = useCallback(() => {
     getDataBoletas(setDataTable, setSsLoadTable, search, searchDate, pagination);
     getDataBoletasCompletadas(setDataTableCompletadas, setIsLoadCompletadas, search, searchDate, pagination)
@@ -396,6 +398,9 @@ const Boletas = () => {
     fetchData()
   }, [fetchData]);
 
+  useEffect(() => {
+    fetchDataForSelect()
+  }, [fetchDataForSelect])
 
   /**
    * Todo : area de lass props
