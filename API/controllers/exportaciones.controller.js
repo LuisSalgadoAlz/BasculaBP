@@ -18,6 +18,15 @@ const exportToExcel = async (req, res) => {
     const endOfDay = new Date(Date.UTC(y2, m2 - 1, d2 + 1, 6, 0, 0));
 
     const data = await db.boleta.findMany({
+      include: {
+        tolva: {
+          include:{
+            principal:true,
+            secundario: true,
+            terciario: true, 
+          }
+        },
+      },
       where: {
         fechaFin: { gte: startOfDay, lte: endOfDay },
         AND: [{estado: {not: "Pendiente"}}, {estado: {not: "Cancelada"}}],
@@ -71,6 +80,17 @@ const exportToExcel = async (req, res) => {
         FechaDeEntrada: fechaInicio ? fechaInicio.toLocaleString() : 'N/A',
         FechaFinalizacion: fechaFin ? fechaFin.toLocaleString() : 'N/A',
         TiempoTotal: diferenciaTiempo,
+        Bodega: el.bodegaPuerto,
+        TolvaAsiganda: el.tolvaAsignada,
+        SiloPrincipal: el.tolva[0]?.principal?.nombre || '-',
+        SiloSecundario: el.tolva[0]?.secundario?.nombre || '-', 
+        SiloTerciario: el.tolva[0]?.terciario?.nombre || '-',
+        Sello1: el.sello1 || '-', 
+        Sello2: el.sello2 || '-',
+        Sello3: el.sello3 || '-',
+        Sello4: el.sello4 || '-',
+        Sello5: el.sello5 || '-',
+        Sello6: el.sello6 || '-', 
       };
     });
 
@@ -273,8 +293,19 @@ const exportToExcel = async (req, res) => {
       { header: 'Estado', width: 30 },
       { header: 'FechaDeEntrada', width: 20 },
       { header: 'FechaFinalizacion', width: 20 },
-      { header: 'TiempoTotal', width: 20 }
+      { header: 'TiempoTotal', width: 20 },
+      { header: 'TolvaAsiganda', width: 25 },
+      { header: 'SiloPrincipal', width: 25 },
+      { header: 'SiloSecundario', width: 25 },
+      { header: 'SiloTerciario', width: 25 },
+      { header: 'Sello1', width: 10 },
+      { header: 'Sello2', width: 10 },
+      { header: 'Sello3', width: 10 },
+      { header: 'Sello4', width: 10 },
+      { header: 'Sello5', width: 10 },
+      { header: 'Sello6', width: 10 }
     ];
+
     
     columnWidths.forEach((col, i) => {
       sheet.getColumn(i + 1).width = col.width;
@@ -290,7 +321,6 @@ const exportToExcel = async (req, res) => {
     let tara = 0
     let pesoBruto = 0
 
-    console.log(boletas)
     boletas.forEach((boleta, index) => {
       const dataRow = sheet.addRow(Object.values(boleta));
       dataRow.height = 22;
