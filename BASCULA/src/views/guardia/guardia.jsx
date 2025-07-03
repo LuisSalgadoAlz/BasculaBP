@@ -10,6 +10,7 @@ import {
   FiX,
   FiEye,
 } from "react-icons/fi";
+import { MdFilterListAlt } from "react-icons/md";
 import { FaBalanceScale } from "react-icons/fa";
 import { getDataPlaca } from "../../hooks/guardia/formDataGuardia";
 
@@ -126,7 +127,8 @@ const ManifestModal = ({ data, closeModal }) => {
 
   const fechaInicio = formatDate(new Date(data?.fechaInicio));
   const fechaFin = formatDate(new Date(data?.fechaFin));
-  const fechaGuardia = formatDate(new Date());
+  /*   const fechaTolva = formatDate(new Date(data?.tolva[0].fechaSalida))
+   */ const fechaGuardia = formatDate(new Date());
   const duracionGuardia = Math.round(
     (new Date() - new Date(data?.fechaFin)) / (1000 * 60 * 60)
   );
@@ -250,144 +252,179 @@ const ManifestModal = ({ data, closeModal }) => {
               ></div>
 
               {/* Primer punto */}
-              <div
-                className="relative flex items-start mb-8"
-                style={{
-                  animation: "slideLeft 0.6s ease-out 1s both",
-                }}
-              >
-                <div className="flex-shrink-0 w-16 h-16 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
-                  <FaBalanceScale className="w-6 h-6 text-white" />
-                </div>
-                <div className="ml-6 bg-green-50 rounded-lg p-4 flex-grow border-l-4 border-green-500">
-                  <h3 className="font-semibold text-green-800 mb-2">
-                    Primer proceso de Bascula
-                  </h3>
-                  <p className="text-green-700 font-medium">
-                    {fechaInicio.date}
-                  </p>
-                  <p className="text-green-600 text-sm">
-                    Hora: {fechaInicio.time}
-                  </p>
-                </div>
-              </div>
+              <LineItems
+                title={"Primer proceso de bascula"}
+                fecha={fechaInicio.date}
+                hora={fechaInicio.time}
+                Icon={FaBalanceScale}
+                color={"green"}
+                time={0.2}
+              />
+
+              {/* Punto intermedio */}
+              {data?.producto == "GRANZA" &&
+                data?.movimiento == "Flete de Importación" &&
+                (data?.tolva.length != 0 && data?.tolva[0]?.fechaSalida ? (
+                  <LineItems
+                    fecha={fechaTolva.date}
+                    Icon={MdFilterListAlt}
+                    hora={fechaTolva.time}
+                    title={"Descarga en tolva"}
+                    color={"orange"}
+                    time={0.5}
+                  />
+                ) : (
+                  <LinePendiente
+                    title={"Descarga en tolva Pendiente"}
+                    subtitle={"Proceso Pendiente"}
+                    details={"Aún no ha completado su proceso"}
+                    Icon={FiClock}
+                    time={0.5}
+                  />
+                ))}
 
               {/* Segundo punto */}
               {data?.fechaFin ? (
-                <div 
-                  className="relative flex items-start mb-8"
-                  style={{ animation: "slideLeft 0.6s ease-out 1.4s both" }}
-                >
-                  <div className="flex-shrink-0 w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center shadow-lg">
-                    <FiCalendar className="w-6 h-6 text-white" />
-                  </div>
-                  
-                  <div className="ml-6 bg-purple-50 rounded-lg p-4 flex-grow border-l-4 border-purple-500">
-                    <h3 className="font-semibold text-purple-800 mb-2">
-                      Segundo Proceso Báscula
-                    </h3>
-                    
-                    <div className="mb-3">
-                      <p className="text-purple-700 font-medium">
-                        {fechaFin.date}
-                      </p>
-                      <p className="text-purple-600 text-sm">
-                        Hora: {fechaFin.time}
-                      </p>
-                    </div>
-                    
-                    <div className="space-y-3 text-sm grid grid-cols-2">                      
-                      <div>
-                        <span className="font-medium text-purple-700">
-                          Nº Boleta:
-                        </span>
-                        <p className="text-purple-600 mt-1">
-                          {data?.numBoleta || "No generado"}
-                        </p>
-                      </div>
-                      
-                      <div>
-                        <span className="font-medium text-purple-700">
-                          Pase de Salida:
-                        </span>
-                        <p className="text-purple-600 mt-1">
-                          {data?.paseDeSalida?.numPaseSalida 
-                            ? `# ${data.paseDeSalida.numPaseSalida}${
-                                data.paseDeSalida.estado ? " - Ya efectuado" : " - Válido"
-                              }`
-                            : "No ha completado su proceso"
-                          }
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                data?.paseDeSalida ? (
-                  <div 
+                data?.estado != "Cancelada" ? (
+                  <div
                     className="relative flex items-start mb-8"
                     style={{ animation: "slideLeft 0.6s ease-out 1.4s both" }}
                   >
-                    <div className="flex-shrink-0 w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center shadow-lg">
-                      <FiMapPin className="w-6 h-6 text-white" />
+                    <div className="flex-shrink-0 w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center shadow-lg">
+                      <FiCalendar className="w-6 h-6 text-white" />
                     </div>
-                    
-                    <div className="ml-6 bg-orange-50 rounded-lg p-4 flex-grow border-l-4 border-orange-500">
-                      <h3 className="font-semibold text-orange-800 mb-2">
-                        Traslado de Origen
+
+                    <div className="ml-6 bg-purple-50 rounded-lg p-4 flex-grow border-l-4 border-purple-500">
+                      <h3 className="font-semibold text-purple-800 mb-2">
+                        Segundo Proceso Báscula
                       </h3>
-                      
-                      <div className="space-y-3 text-sm">
+
+                      <div className="mb-3">
+                        <p className="text-purple-700 font-medium">
+                          {fechaFin.date}
+                        </p>
+                        <p className="text-purple-600 text-sm">
+                          Hora: {fechaFin.time}
+                        </p>
+                      </div>
+
+                      <div className="space-y-3 text-sm grid grid-cols-2">
                         <div>
-                          <span className="font-medium text-orange-700">
-                            Dirección de Origen:
+                          <span className="font-medium text-purple-700">
+                            Nº Boleta:
                           </span>
-                          <p className="text-orange-600 mt-1">
-                            {data?.trasladoOrigen || "No especificado"}
+                          <p className="text-purple-600 mt-1">
+                            {data?.numBoleta || "No generado"}
                           </p>
                         </div>
-                        
+
                         <div>
-                          <span className="font-medium text-orange-700">
+                          <span className="font-medium text-purple-700">
                             Pase de Salida:
                           </span>
-                          <p className="text-orange-600 mt-1">
-                            {data?.paseDeSalida?.numPaseSalida 
+                          <p className="text-purple-600 mt-1">
+                            {data?.paseDeSalida?.numPaseSalida
                               ? `# ${data.paseDeSalida.numPaseSalida}${
-                                  data.paseDeSalida.estado ? " - Ya efectuado" : " - Válido"
+                                  data.paseDeSalida.estado
+                                    ? " - Ya efectuado"
+                                    : " - Válido"
                                 }`
-                              : "No generado"
-                            }
+                              : "No ha completado su proceso"}
                           </p>
                         </div>
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <div 
+                  <div
                     className="relative flex items-start mb-8"
                     style={{ animation: "slideLeft 0.6s ease-out 1.4s both" }}
                   >
                     <div className="flex-shrink-0 w-16 h-16 bg-gray-400 rounded-full flex items-center justify-center shadow-lg">
                       <FiClock className="w-6 h-6 text-white" />
                     </div>
-                    
+
                     <div className="ml-6 bg-gray-50 rounded-lg p-4 flex-grow border-l-4 border-gray-400">
                       <h3 className="font-semibold text-gray-700 mb-2">
-                        Segundo Proceso Báscula
+                        BOLETA CANCELADA!
                       </h3>
-                      
+
                       <div className="text-sm">
                         <p className="text-gray-600 font-medium">
-                          Proceso Pendiente
+                          Proceso Cancelado
                         </p>
                         <p className="text-gray-500 text-sm mt-1">
-                          Aún no ha completado su proceso
+                          Ultima boleta cancelada. Comunicarse con Bascula.
                         </p>
                       </div>
                     </div>
                   </div>
                 )
+              ) : data?.paseDeSalida ? (
+                <div
+                  className="relative flex items-start mb-8"
+                  style={{ animation: "slideLeft 0.6s ease-out 1.4s both" }}
+                >
+                  <div className="flex-shrink-0 w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center shadow-lg">
+                    <FiMapPin className="w-6 h-6 text-white" />
+                  </div>
+
+                  <div className="ml-6 bg-orange-50 rounded-lg p-4 flex-grow border-l-4 border-orange-500">
+                    <h3 className="font-semibold text-orange-800 mb-2">
+                      Traslado de Origen
+                    </h3>
+
+                    <div className="space-y-3 text-sm">
+                      <div>
+                        <span className="font-medium text-orange-700">
+                          Dirección de Origen:
+                        </span>
+                        <p className="text-orange-600 mt-1">
+                          {data?.trasladoOrigen || "No especificado"}
+                        </p>
+                      </div>
+
+                      <div>
+                        <span className="font-medium text-orange-700">
+                          Pase de Salida:
+                        </span>
+                        <p className="text-orange-600 mt-1">
+                          {data?.paseDeSalida?.numPaseSalida
+                            ? `# ${data.paseDeSalida.numPaseSalida}${
+                                data.paseDeSalida.estado
+                                  ? " - Ya efectuado"
+                                  : " - Válido"
+                              }`
+                            : "No generado"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div
+                  className="relative flex items-start mb-8"
+                  style={{ animation: "slideLeft 0.6s ease-out 1.4s both" }}
+                >
+                  <div className="flex-shrink-0 w-16 h-16 bg-gray-400 rounded-full flex items-center justify-center shadow-lg">
+                    <FiClock className="w-6 h-6 text-white" />
+                  </div>
+
+                  <div className="ml-6 bg-gray-50 rounded-lg p-4 flex-grow border-l-4 border-gray-400">
+                    <h3 className="font-semibold text-gray-700 mb-2">
+                      Segundo Proceso Báscula
+                    </h3>
+
+                    <div className="text-sm">
+                      <p className="text-gray-600 font-medium">
+                        Proceso Pendiente
+                      </p>
+                      <p className="text-gray-500 text-sm mt-1">
+                        Aún no ha completado su proceso
+                      </p>
+                    </div>
+                  </div>
+                </div>
               )}
 
               {/* Guardia */}
@@ -438,6 +475,142 @@ const ManifestModal = ({ data, closeModal }) => {
         </div>
       </div>
     </div>
+  );
+};
+
+const HeaderTimeLines = ({data, closeModal, Icon1 = FiFileText, Icon2 = FiPackage, Icon3 = FiTruck}) => {
+  return (
+    <>
+      <div className="bg-gradient-to-r bg-[#5a3f27] text-white p-6 sticky top-0 z-10 max-sm:pt-10">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div
+              className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center"
+              style={{
+                animation: "bounceIn 0.6s ease-out 0.2s both",
+              }}
+            >
+              <Icon1 className="w-5 h-5" />
+            </div>
+            <div>
+              <h1
+                className="text-2xl font-bold max-sm:text-sm"
+                style={{
+                  animation: "slideRight 0.5s ease-out 0.3s both",
+                }}
+              >
+                {data?.manifiesto
+                  ? `Manifiesto: # ${data?.manifiesto}`
+                  : data?.ordenDeCompra
+                  ? `Orden De Compra: #${data?.ordenDeCompra}`
+                  : "Sin Documentos"}
+              </h1>
+              <div
+                className="flex items-center gap-4 text-blue-100 mt-1"
+                style={{
+                  animation: "slideRight 0.5s ease-out 0.4s both",
+                }}
+              >
+                <span className="flex items-center gap-1">
+                  <Icon2 className="w-4 h-4" />
+                  ID: {data?.id}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Icon3 className="w-4 h-4" />
+                  {data?.placa}
+                </span>
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={closeModal}
+            className="p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-colors duration-200"
+            style={{
+              animation: "fadeIn 0.5s ease-out 0.5s both",
+            }}
+          >
+            <FiX className="w-6 h-6" />
+          </button>
+        </div>
+
+        <div
+          className="mt-4"
+          style={{
+            animation: "slideUp 0.5s ease-out 0.6s both",
+          }}
+        >
+          <span
+            className={`px-3 py-1 rounded-full text-sm font-medium ${
+              data?.paseDeSalida
+                ? data?.paseDeSalida?.estado === false
+                  ? "bg-green-500 text-white"
+                  : "bg-yellow-500 text-white"
+                : "bg-red-500"
+            }`}
+          >
+            {data?.paseDeSalida
+              ? data?.paseDeSalida?.estado
+                ? "Salida ya registrada"
+                : "Valida"
+              : "No ha completado su proceso"}
+          </span>
+        </div>
+      </div>
+    </>
+  );
+};
+
+const LineItems = ({ fecha, hora, color, Icon, title, time }) => {
+  return (
+    <>
+      <div
+        className="relative flex items-start mb-8"
+        style={{ animation: `slideLeft ${time}s ease-out 1.4s both` }}
+      >
+        <div
+          className={`flex-shrink-0 w-16 h-16 bg-${color}-500 rounded-full flex items-center justify-center shadow-lg`}
+        >
+          <Icon className="w-6 h-6 text-white" />
+        </div>
+
+        <div
+          className={`ml-6 bg-${color}-50 rounded-lg p-4 flex-grow border-l-4 border-${color}-500`}
+        >
+          <h3 className={`font-semibold text-${color}-800 mb-2`}>{title}</h3>
+
+          <div className="space-y-3 text-sm">
+            <div className="mb-3">
+              <p className={`text-${color}-700 font-medium`}>{fecha}</p>
+              <p className={`text-${color}-600 text-sm`}>Hora: {hora}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+const LinePendiente = ({ title, subtitle, details, Icon }) => {
+  return (
+    <>
+      <div
+        className="relative flex items-start mb-8"
+        style={{ animation: "slideLeft 0.6s ease-out 1.4s both" }}
+      >
+        <div className="flex-shrink-0 w-16 h-16 bg-gray-400 rounded-full flex items-center justify-center shadow-lg">
+          <Icon className="w-6 h-6 text-white" />
+        </div>
+
+        <div className="ml-6 bg-gray-50 rounded-lg p-4 flex-grow border-l-4 border-gray-400">
+          <h3 className="font-semibold text-gray-700 mb-2">{title}</h3>
+
+          <div className="text-sm">
+            <p className="text-gray-600 font-medium">{subtitle}</p>
+            <p className="text-gray-500 text-sm mt-1">{details}</p>
+          </div>
+        </div>
+      </div>
+    </>
   );
 };
 
