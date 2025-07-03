@@ -32,6 +32,8 @@ const getAllData = async (req, res) => {
     const motorista =
       req.query.motorista != undefined ? parseFloat(req.query.motorista) : null;
 
+    const proceso = parseInt(req.query.proceso) || 0;
+
     const [
       Clientes,
       Origen,
@@ -151,10 +153,12 @@ const getAllData = async (req, res) => {
         select: { id: true, nombre: true },
       }),
       db.movimientos.findMany({
-        select: { id: true, nombre: true },
+        select: { id: true, nombre: true }, 
+        where: {estado: true, place: { in: [proceso, 2]}}
       }),
       db.movimientos.findMany({
-        select: { id: true, nombre: true },
+        select: { id: true, nombre: true }, 
+        where: {estado: true, place: { in: [proceso, 2]}}
       }),
       db.translado.findMany({
         select: { id: true, nombre: true, code:true },
@@ -341,73 +345,48 @@ const getDataBoletas = async (req, res) => {
     const limit = parseInt(req.query.limit) || 7;
     const skip = (page - 1) * limit;
 
-    const [year, month, day] = searchDate.split("-").map(Number);
-    const startOfDay = new Date(Date.UTC(year, month - 1, day, 0, 0, 0));
-    const endOfDay = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
+    let dateFilter = {};
+    if (searchDate) {
+      const [year, month, day] = searchDate.split("-").map(Number);
+      const startOfDay = new Date(Date.UTC(year, month - 1, day, 0, 0, 0));
+      const endOfDay = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
+      dateFilter = { fechaInicio: { gte: startOfDay, lte: endOfDay } };
+    }
 
-    const data = await db.boleta.findMany({
-      select: {
-        id: true,
-        estado: true,
-        proceso: true,
-        empresa: true,
-        motorista: true,
-        socio: true,
-        placa: true,
-        producto: true, 
-        fechaInicio: true,
-        proceso: true
-      },
-      where: {
-        estado: "Pendiente",
-        ...(searchDate
-          ? { fechaInicio: { gte: startOfDay, lte: endOfDay } }
-          : {}),
-        OR: [
-          {
-            placa: { contains: search },
-          },
-          {
-            empresa: { contains: search },
-          },
-          {
-            motorista: { contains: search },
-          },
-          {
-            socio: { contains: search },
-          },
-        ],
-      },
-      skip: skip,
-      take: limit,
-    });
+    const baseWhere = {
+      estado: "Pendiente",
+      ...dateFilter,
+      OR: [
+        { placa: { contains: search } },
+        { empresa: { contains: search } },
+        { motorista: { contains: search } },
+        { socio: { contains: search } },
+      ],
+    };
 
-    const totalData = await db.boleta.count({
-      where: {
-        estado: "Pendiente",
-        ...(searchDate
-          ? { fechaInicio: { gte: startOfDay, lte: endOfDay } }
-          : {}),
-        OR: [
-          {
-            placa: { contains: search },
-          },
-          {
-            empresa: { contains: search },
-          },
-          {
-            motorista: { contains: search },
-          },
-          {
-            socio: { contains: search },
-          },
-        ],
-      },
-    });
+    const [data, totalData] = await Promise.all([
+      db.boleta.findMany({
+        select: {
+          id: true,
+          estado: true,
+          proceso: true,
+          empresa: true,
+          motorista: true,
+          socio: true,
+          placa: true,
+          producto: true,
+          fechaInicio: true,
+        },
+        where: baseWhere,
+        skip,
+        take: limit,
+      }),
+      db.boleta.count({ where: baseWhere }),
+    ]);
 
     const dataUTCHN = data.map((el) => ({
       Id: el.id,
-      Proceso: el.proceso === 0 ? 'Entrada': 'Salida', 
+      Proceso: el.proceso === 0 ? 'Entrada' : 'Salida',
       Placa: el.placa,
       Cliente: el.socio,
       Transporte: el.empresa,
@@ -426,10 +405,12 @@ const getDataBoletas = async (req, res) => {
       },
     });
   } catch (err) {
-    setLogger('BOLETA', 'OBTENER BOLETAS PENDIENTES', req, null, 3)  
-    console.log(err);
+    setLogger('BOLETA', 'OBTENER BOLETAS PENDIENTES', req, null, 3);
+    console.error(err);
+    res.status(500).send({ error: 'Error al obtener boletas' });
   }
 };
+
 
 /**
  * !Imporante, falta probar
@@ -464,88 +445,107 @@ const postClientePlacaMoto = async (req, res) => {
       manifiesto,  
     } = req.body;
 
-    const empresa = await db.empresa.findUnique({
-      where: { id: parseInt(idEmpresa) },
-    });
-    const motorista = await db.motoristas.findUnique({
-      where: { id: parseInt(idMotorista) },
-    });
-    const socio = await db.socios.findUnique({
-      where: { id: parseInt(idCliente) },
-    });
-    const placaData = await db.vehiculo.findFirst({
-      select: { id: true, placa: true },
-      where: { placa: idPlaca, rEmpresaVehiculo: { id: idEmpresa } },
-    });
-    
-    const producto = proceso === 0 && await db.producto.findUnique({where:{id:idProducto}})
-    const origen = (proceso === 0 && (idMovimiento!=10 && idMovimiento!=11)) && await db.direcciones.findUnique({where: {id:idOrigen}})
-    const movimiento = proceso===0 && await db.movimientos.findUnique({where: {id: idMovimiento}})
-    const trasladoOrigen = (proceso === 0 &&(idMovimiento==10||idMovimiento==11)) && await db.translado.findUnique({where: {id: idTrasladoOrigen}})
-    const verificado = jwt.verify(idUsuario, process.env.SECRET_KEY);
-    const despachador = await db.usuarios.findUnique({
-      where: {
-        usuarios: verificado["usuarios"],
-      },
-    });
+    const [
+      empresa,
+      motorista,
+      socio,
+      placaData,
+      producto,
+      origen,
+      movimiento,
+      trasladoOrigen,
+      despachador
+    ] = await Promise.all([
+      db.empresa.findUnique({ where: { id: parseInt(idEmpresa) } }),
+      db.motoristas.findUnique({ where: { id: parseInt(idMotorista) } }),
+      db.socios.findUnique({ where: { id: parseInt(idCliente) } }),
+      db.vehiculo.findFirst({
+        select: { id: true, placa: true },
+        where: { placa: idPlaca, rEmpresaVehiculo: { id: idEmpresa } },
+      }),
+      proceso === 0 ? db.producto.findUnique({ where: { id: idProducto } }) : null,
+      (proceso === 0 && (idMovimiento != 10 && idMovimiento != 11)) ? 
+        db.direcciones.findUnique({ where: { id: idOrigen } }) : null,
+      proceso === 0 ? db.movimientos.findUnique({ where: { id: idMovimiento } }) : null,
+      (proceso === 0 && (idMovimiento == 10 || idMovimiento == 11)) ? 
+        db.translado.findUnique({ where: { id: idTrasladoOrigen } }) : null,
+      (async () => {
+        const verificado = jwt.verify(idUsuario, process.env.SECRET_KEY);
+        return db.usuarios.findUnique({ where: { usuarios: verificado["usuarios"] } });
+      })()
+    ]);
 
-    const newBol = await db.boleta.create({
-      data: {
-        idSocio: parseInt(idCliente),
-        placa: placaData.placa,
-        empresa: empresa.nombre,
-        motorista: motorista.nombre,
-        socio: socio.nombre,
-        boletaType: 0,
-        estado: "Pendiente",
-        idUsuario: parseFloat(despachador["id"]),
-        usuario: despachador["usuarios"],
-        idMotorista: parseInt(idMotorista),
-        fechaInicio: new Date(),
-        pesoInicial: parseFloat(pesoInicial),
-        idPlaca: placaData.id,
-        idEmpresa: parseInt(idEmpresa),
-        proceso, 
-        ...(proceso==0 && { 
-          movimiento: movimiento.nombre, 
-          idProducto, 
-          idMovimiento, 
-          producto: producto.nombre, 
-          ...((idMovimiento==10 || idMovimiento==11) && {
-            idTrasladoOrigen, 
-            trasladoOrigen: trasladoOrigen.nombre,
-            manifiesto: manifiesto == 0 ? null :  parseInt(manifiesto)
-          }), 
-          ...((idMovimiento!=10 && idMovimiento!=11) && {
-            idOrigen, 
-            origen: origen.nombre,
-          }), 
-          ...(idProducto === 18 && {
-            Nviajes: parseInt(NViajes), 
-            NSalida: parseInt(NSalida),
-            bodegaPuerto: Nbodega, 
-            fechaDespachoPuerto: FechaPuerto ? new Date(FechaPuerto) : null,
-            tolvaAsignada: parseInt(tolvaAsignada), 
-          }),
-          ...((idMovimiento==2) && {
-            sello1, sello2, sello3, sello4, sello5, sello6, 
-          }) 
-        })
-      },
-    });
+    const baseData = {
+      idSocio: parseInt(idCliente),
+      placa: placaData.placa,
+      empresa: empresa.nombre,
+      motorista: motorista.nombre,
+      socio: socio.nombre,
+      boletaType: 0,
+      estado: "Pendiente",
+      idUsuario: parseFloat(despachador["id"]),
+      usuario: despachador["usuarios"],
+      idMotorista: parseInt(idMotorista),
+      fechaInicio: new Date(),
+      pesoInicial: parseFloat(pesoInicial),
+      idPlaca: placaData.id,
+      idEmpresa: parseInt(idEmpresa),
+      proceso
+    };
+
+    if (proceso === 0) {
+      Object.assign(baseData, {
+        movimiento: movimiento.nombre,
+        idProducto,
+        idMovimiento,
+        producto: producto.nombre
+      });
+
+      if (idMovimiento == 10 || idMovimiento == 11) {
+        Object.assign(baseData, {
+          idTrasladoOrigen,
+          trasladoOrigen: trasladoOrigen.nombre,
+          manifiesto: manifiesto == 0 ? null : parseInt(manifiesto)
+        });
+      } else {
+        Object.assign(baseData, {
+          idOrigen,
+          origen: origen.nombre
+        });
+      }
+
+      if (idProducto === 18) {
+        Object.assign(baseData, {
+          Nviajes: parseInt(NViajes),
+          NSalida: parseInt(NSalida),
+          bodegaPuerto: Nbodega,
+          fechaDespachoPuerto: FechaPuerto ? new Date(FechaPuerto) : null,
+          tolvaAsignada: parseInt(tolvaAsignada)
+        });
+      }
+
+      // Datos específicos para movimiento 2
+      if (idMovimiento == 2) {
+        Object.assign(baseData, {
+          sello1, sello2, sello3, sello4, sello5, sello6
+        });
+      }
+    }
+
+    const newBol = await db.boleta.create({ data: baseData });
 
     const debeImprimirQR = (idProducto === 17 && idMovimiento === 1) || (idProducto === 18 && idMovimiento === 2);
     if(debeImprimirQR) {
-      imprimirQRTolva(newBol)
+      imprimirQRTolva(newBol);
     }
     
-    setLogger('BOLETA', 'AGREGAR BOLETA (ENTRADA DE DATOS)', req, null, 1, newBol.id)  
+    setLogger('BOLETA', 'AGREGAR BOLETA (ENTRADA DE DATOS)', req, null, 1, newBol.id);
 
     res
       .status(201)
       .send({ msg: "Boleta creada en estado pendiente", Bol: newBol });
   } catch (err) {
-    setLogger('BOLETA', 'AGREGAR BOLETA (ENTRADA DE DATOS)', req, null, 3)  
+    setLogger('BOLETA', 'AGREGAR BOLETA (ENTRADA DE DATOS)', req, null, 3);
     console.log(err);
   }
 };
@@ -580,71 +580,92 @@ const postClientePlacaMotoComodin = async (req, res) => {
       sello6,
       tolvaAsignada,
       Nbodega,
-      FechaPuerto,  
+      FechaPuerto,
+      manifiesto,  
     } = req.body;
 
-    const verificado = jwt.verify(idUsuario, process.env.SECRET_KEY);
-    const despachador = await db.usuarios.findUnique({
-      where: {
-        usuarios: verificado["usuarios"],
-      },
-    });
-    
-    const producto = proceso === 0 && await db.producto.findUnique({where:{id:idProducto}})
-    const movimiento = proceso===0 && await db.movimientos.findUnique({where: {id: idMovimiento}})
-    const trasladoOrigen = (proceso === 0 && (idMovimiento==10||idMovimiento==11)) && await db.translado.findUnique({where: {id: idTrasladoOrigen}})
-    const newBol = await db.boleta.create({
-      data: {
-        placa: idPlaca,
-        proceso,  
-        empresa: idEmpresa,
-        motorista: idMotorista,
-        socio: idCliente == -998 ? socio : socio,
-        boletaType: 0,
-        estado: "Pendiente",
-        idUsuario: parseFloat(despachador["id"]),
-        usuario: despachador["usuarios"],
-        fechaInicio: new Date(),
-        pesoInicial: parseFloat(pesoInicial),
-        boletaType: idCliente == -998 ? 3 : 4,
-        ...(proceso==0 && { 
-          movimiento: movimiento.nombre, 
-          idProducto, 
-          idMovimiento, 
-          producto: producto.nombre, 
-          ...((idMovimiento==10 || idMovimiento==11) && {
-            idTrasladoOrigen, 
-            trasladoOrigen: trasladoOrigen.nombre,
-          }), 
-          ...((idMovimiento!=10 && idMovimiento!=11) && {
-            origen: idOrigen,
-          }), 
-          ...(idProducto === 18 && {
-            Nviajes: parseInt(NViajes), 
-            NSalida: parseInt(NSalida),
-            bodegaPuerto: Nbodega, 
-            fechaDespachoPuerto: FechaPuerto ? new Date(FechaPuerto) : null,
-            tolvaAsignada: parseInt(tolvaAsignada), 
-          }),
-          ...((idMovimiento==2) && {
-            sello1, sello2, sello3, sello4, sello5, sello6, 
-          }) 
-        })
-      },
-    });
+    const [
+      despachador,
+      producto,
+      movimiento,
+      trasladoOrigen
+    ] = await Promise.all([
+      (async () => {
+        const verificado = jwt.verify(idUsuario, process.env.SECRET_KEY);
+        return db.usuarios.findUnique({ where: { usuarios: verificado["usuarios"] } });
+      })(),
+      // Consultas condicionales
+      proceso === 0 ? db.producto.findUnique({ where: { id: idProducto } }) : null,
+      proceso === 0 ? db.movimientos.findUnique({ where: { id: idMovimiento } }) : null,
+      (proceso === 0 && (idMovimiento == 10 || idMovimiento == 11)) ? 
+        db.translado.findUnique({ where: { id: idTrasladoOrigen } }) : null
+    ]);
+
+    const baseData = {
+      placa: idPlaca,
+      proceso,
+      empresa: idEmpresa,
+      motorista: idMotorista,
+      socio: idCliente == -998 ? socio : socio,
+      boletaType: idCliente == -998 ? 3 : 4,
+      estado: "Pendiente",
+      idUsuario: parseFloat(despachador["id"]),
+      usuario: despachador["usuarios"],
+      fechaInicio: new Date(),
+      pesoInicial: parseFloat(pesoInicial)
+    };
+
+    if (proceso === 0) {
+      Object.assign(baseData, {
+        movimiento: movimiento.nombre,
+        idProducto,
+        idMovimiento,
+        producto: producto.nombre
+      });
+
+      if (idMovimiento == 10 || idMovimiento == 11) {
+        Object.assign(baseData, {
+          idTrasladoOrigen,
+          trasladoOrigen: trasladoOrigen.nombre,
+          manifiesto: manifiesto == 0 ? null : parseInt(manifiesto)
+        });
+      } else {
+        Object.assign(baseData, {
+          origen: idOrigen
+        });
+      }
+
+      if (idProducto === 18) {
+        Object.assign(baseData, {
+          Nviajes: parseInt(NViajes),
+          NSalida: parseInt(NSalida),
+          bodegaPuerto: Nbodega,
+          fechaDespachoPuerto: FechaPuerto ? new Date(FechaPuerto) : null,
+          tolvaAsignada: parseInt(tolvaAsignada)
+        });
+      }
+
+      if (idMovimiento == 2) {
+        Object.assign(baseData, {
+          sello1, sello2, sello3, sello4, sello5, sello6
+        });
+      }
+    }
+
+    const newBol = await db.boleta.create({ data: baseData });
 
     const debeImprimirQR = (idProducto === 17 && idMovimiento === 1) || (idProducto === 18 && idMovimiento === 2);
     if(debeImprimirQR) {
-      imprimirQRTolva(newBol)
+      imprimirQRTolva(newBol);
     }
 
-    setLogger('BOLETA', 'AGREGAR BOLETA (ENTRADA DE DATOS | COMODIN)', req, null, 1, newBol.id)  
+    setLogger('BOLETA', 'AGREGAR BOLETA (ENTRADA DE DATOS | COMODIN)', req, null, 1, newBol.id);
 
     res
       .status(201)
       .send({ msg: "Boleta creada en estado pendiente", Bol: newBol });
   } catch (err) {
-    setLogger('BOLETA', 'AGREGAR BOLETA (ENTRADA DE DATOS | COMODIN)', req, null, 3)  
+    setLogger('BOLETA', 'AGREGAR BOLETA (ENTRADA DE DATOS | COMODIN)', req, null, 3);
     console.log(err);
   }
 };
@@ -755,80 +776,58 @@ const getBoletasCompletadasDiarias = async (req, res) => {
     const limit = parseInt(req.query.limit) || 7;
     const skip = (page - 1) * limit;
 
+    let startOfDay, endOfDay;
     if (searchDate !== "") {
       const [year, month, day] = searchDate.split("-").map(Number);
       startOfDay = new Date(Date.UTC(year, month - 1, day, 6, 0, 0));
       endOfDay = new Date(Date.UTC(year, month - 1, day + 1, 5, 59, 59, 999));
     } else {
       const now = new Date();
-      const year = now.getFullYear(); // Año local
-      const month = now.getMonth(); // Mes local (0 = enero)
-      const day = now.getDate(); // Día local
+      const year = now.getFullYear();
+      const month = now.getMonth();
+      const day = now.getDate();
       startOfDay = new Date(Date.UTC(year, month, day, 6, 0, 0));
       endOfDay = new Date(Date.UTC(year, month, day + 1, 5, 59, 59, 999));
     }
 
-    const data = await db.boleta.findMany({
-      select: {
-        id: true,
-        numBoleta: true, 
-        estado: true,
-        proceso: true,
-        empresa: true,
-        motorista: true,
-        empresa: true,
-        socio: true,
-        placa: true,
-        pesoNeto: true,
-        desviacion: true,
-        fechaFin: true,
-        estado: true,
-      },
-      where: {
-        estado: { not: "Pendiente" },
-        fechaFin: { gte: startOfDay, lte: endOfDay },
-        OR: [
-          {
-            placa: { contains: search },
-          },
-          {
-            empresa: { contains: search },
-          },
-          {
-            motorista: { contains: search },
-          },
-          {
-            socio: { contains: search },
-          },
-        ],
-      },
-      orderBy:{
-        numBoleta:'desc'
-      }, 
-      skip: skip,
-      take: limit,
-    });
+    // Optimiza el filtro OR para reusarlo
+    const filterOR = search
+      ? [
+          { placa: { contains: search } },
+          { empresa: { contains: search } },
+          { motorista: { contains: search } },
+          { socio: { contains: search } },
+        ]
+      : undefined;
 
-    const totalData = await db.boleta.count({
-      where: {
-        estado: { not: "Pendiente" },
-        fechaFin: { gte: startOfDay, lte: endOfDay },
-        OR: [
-          {
-            placa: { contains: search },
-          },
-          {
-            empresa: { contains: search },
-          },
-          {
-            motorista: { contains: search },
-          },
-          {
-            socio: { contains: search },
-          },
-        ],
-      },
-    });
+    const whereClause = {
+      estado: { not: "Pendiente" },
+      fechaFin: { gte: startOfDay, lte: endOfDay },
+      ...(filterOR && { OR: filterOR }),
+    };
+
+    const [data, totalData] = await Promise.all([
+      db.boleta.findMany({
+        select: {
+          id: true,
+          numBoleta: true,
+          estado: true,
+          proceso: true,
+          empresa: true,
+          motorista: true,
+          socio: true,
+          placa: true,
+          pesoNeto: true,
+          desviacion: true,
+          fechaFin: true,
+        },
+        where: whereClause,
+        orderBy: { numBoleta: "desc" },
+        skip,
+        take: limit,
+      }),
+      db.boleta.count({ where: whereClause }),
+    ]);
 
     const dataUTCHN = data.map((el) => ({
       Id: el.id,
@@ -840,7 +839,7 @@ const getBoletasCompletadasDiarias = async (req, res) => {
       PesoNeto: el.pesoNeto,
       Desviacion: el.desviacion,
       estado: el.estado,
-      fecha: el.fechaFin.toLocaleString(),
+      fecha: el.fechaFin.toLocaleString("es-HN", { timeZone: "America/Tegucigalpa" }),
     }));
 
     res.send({
@@ -853,10 +852,12 @@ const getBoletasCompletadasDiarias = async (req, res) => {
       },
     });
   } catch (err) {
-    setLogger('BOLETA', 'OBTENER BOLETAS COMPLETADAS POR FECHA', req, null, 3)  
-    console.log("Error en el api", err);
+    setLogger("BOLETA", "OBTENER BOLETAS COMPLETADAS POR FECHA", req, null, 3);
+    console.error("Error en el API:", err);
+    res.status(500).send({ err: "Error interno del servidor" });
   }
 };
+
 
 /**
  * Generador de pases de salida
@@ -921,154 +922,170 @@ const updateBoletaOut = async (req, res) => {
 
     const verificado = jwt.verify(idUsuario, process.env.SECRET_KEY);
 
-    const despachador = await db.usuarios.findUnique({
-      where: {
-        usuarios: verificado["usuarios"],
-      },
-    });
-
-    const placaData = await db.vehiculo.findFirst({
-      select: {
-        id: true,
-        placa: true,
-      },
-      where: {
-        placa: idPlaca,
-        rEmpresaVehiculo: {
-          id: idEmpresa,
+    const [
+      despachador,
+      placaData,
+      empresa,
+      motorista,
+      socio,
+      producto,
+      move,
+      numBoleta,
+      porTolerancia
+    ] = await Promise.all([
+      db.usuarios.findUnique({
+        where: { usuarios: verificado["usuarios"] },
+      }),
+      db.vehiculo.findFirst({
+        select: { id: true, placa: true },
+        where: {
+          placa: idPlaca,
+          rEmpresaVehiculo: { id: idEmpresa },
         },
-      },
-    });
+      }),
+      db.empresa.findUnique({
+        where: { id: parseInt(idEmpresa) },
+      }),
+      db.motoristas.findUnique({
+        where: { id: parseInt(idMotorista) },
+      }),
+      db.socios.findUnique({
+        where: { id: parseInt(idCliente) },
+      }),
+      db.producto.findUnique({
+        where: { id: parseInt(idProducto) },
+      }),
+      db.movimientos.findUnique({
+        where: { id: parseInt(idMovimiento) },
+      }),
+      generarNumBoleta(),
+      toleranciaPermititda()
+    ]);
 
-    const empresa = await db.empresa.findUnique({
-      where: { id: parseInt(idEmpresa) },
-    });
-    const motorista = await db.motoristas.findUnique({
-      where: { id: parseInt(idMotorista) },
-    });
-    const socio = await db.socios.findUnique({
-      where: { id: parseInt(idCliente) },
-    });
-    const producto = await db.producto.findUnique({
-      where: { id: parseInt(idProducto) },
-    });
-    const move = await db.movimientos.findUnique({
-      where: { id: parseInt(idMovimiento) },
-    });
+    const isTraslado = move.nombre === "Traslado Interno" || move.nombre === "Traslado Externo";
 
-    const isTraslado =
-      move.nombre == "Traslado Interno" || move.nombre == "Traslado Externo"
-        ? true
-        : false;
-
-    const origen =
-      !isTraslado &&
-      proceso == 0 &&
-      (await db.direcciones.findUnique({ where: { id: parseInt(idOrigen) } }));
-    const destino =
-      !isTraslado &&
-      proceso == 1 &&
-      (await db.direcciones.findUnique({ where: { id: parseInt(idDestino) } }));
-    const transladoOrigen =
-      isTraslado &&
-      (await db.translado.findUnique({
-        where: { id: parseInt(idTrasladoOrigen) },
-      }));
-    const transladoDestino =
-      isTraslado &&
-      (await db.translado.findUnique({
-        where: { id: parseInt(idTrasladoDestino) },
-      }));
-
-    const numBoleta = await generarNumBoleta();
+    // Consultas condicionales para origen, destino y traslados
+    const consultasCondicionales = [];
     
-    const porTolerancia = await toleranciaPermititda()
+    // Solo consultar origen si no es traslado y proceso es 0
+    if (!isTraslado && proceso == 0) {
+      consultasCondicionales.push(
+        db.direcciones.findUnique({ where: { id: parseInt(idOrigen) } })
+      );
+    } else {
+      consultasCondicionales.push(Promise.resolve(null));
+    }
+    
+    // Solo consultar destino si no es traslado y proceso es 1
+    if (!isTraslado && proceso == 1) {
+      consultasCondicionales.push(
+        db.direcciones.findUnique({ where: { id: parseInt(idDestino) } })
+      );
+    } else {
+      consultasCondicionales.push(Promise.resolve(null));
+    }
+    
+    // Solo consultar traslados si es traslado
+    if (isTraslado) {
+      consultasCondicionales.push(
+        db.translado.findUnique({ where: { id: parseInt(idTrasladoOrigen) } }),
+        db.translado.findUnique({ where: { id: parseInt(idTrasladoDestino) } })
+      );
+    } else {
+      consultasCondicionales.push(Promise.resolve(null), Promise.resolve(null));
+    }
+
+    const [origen, destino, transladoOrigen, transladoDestino] = await Promise.all(consultasCondicionales);
+
+    // Preparar datos para la actualización
+    const updateData = {
+      idSocio: parseInt(idCliente),
+      numBoleta,
+      placa: placaData.placa,
+      empresa: empresa.nombre,
+      motorista: motorista.nombre,
+      socio: socio.nombre,
+      boletaType: parseInt(boletaType),
+      pesoTeorico: parseFloat(pesoTeorico),
+      estado,
+      idUsuario: parseFloat(despachador["id"]),
+      usuario: despachador["usuarios"],
+      idMotorista: parseInt(idMotorista),
+      fechaFin,
+      pesoFinal: parseFloat(pesoFinal),
+      idPlaca: placaData.id,
+      idEmpresa: parseInt(idEmpresa),
+      idMovimiento: parseInt(idMovimiento),
+      movimiento: move.nombre,
+      idProducto: parseInt(idProducto),
+      producto: producto.nombre,
+      observaciones,
+      proceso,
+      pesoNeto: parseFloat(pesoNeto),
+      desviacion: parseFloat(desviacion),
+      porTolerancia,
+      ...allSellos
+    };
+
+    // Agregar campos condicionales
+    if (!isTraslado) {
+      updateData.origen = proceso == 0 ? origen?.nombre : "Baprosa";
+      updateData.destino = proceso == 1 ? destino?.nombre : "Baprosa";
+      updateData.idOrigen = proceso == 0 ? parseInt(idOrigen) : null;
+      updateData.idDestino = proceso == 1 ? parseInt(idDestino) : null;
+      updateData.manifiesto = proceso == 1 ? parseInt(manifiesto) : null;
+      updateData.ordenDeCompra = proceso == 0 ? parseInt(ordenDeCompra) : null;
+      updateData.idTrasladoOrigen = null;
+      updateData.idTrasladoDestino = null;
+      updateData.trasladoOrigen = null;
+      updateData.trasladoDestino = null;
+      updateData.ordenDeTransferencia = null;
+    } else {
+      updateData.origen = null;
+      updateData.destino = null;
+      updateData.idOrigen = null;
+      updateData.idDestino = null;
+      updateData.manifiesto = null;
+      updateData.ordenDeCompra = null;
+      updateData.idTrasladoOrigen = parseInt(idTrasladoOrigen);
+      updateData.idTrasladoDestino = parseInt(idTrasladoDestino);
+      updateData.trasladoOrigen = transladoOrigen?.nombre;
+      updateData.trasladoDestino = transladoDestino?.nombre;
+      updateData.ordenDeTransferencia = parseInt(ordenDeTransferencia);
+    }
 
     const nuevaBoleta = await db.boleta.update({
-      where: {
-        id: parseInt(req.params.id),
-      },
-      data: {
-        idSocio: parseInt(idCliente),
-        numBoleta, 
-        placa: placaData.placa,
-        empresa: empresa.nombre,
-        motorista: motorista.nombre,
-        socio: socio.nombre,
-        origen: !isTraslado ? (proceso == 0 ? origen.nombre : "Baprosa") : null,
-        destino: !isTraslado
-          ? proceso == 1
-            ? destino.nombre
-            : "Baprosa"
-          : null,
-        boletaType: parseInt(boletaType),
-        idOrigen: !isTraslado
-          ? proceso == 0
-            ? parseInt(idOrigen)
-            : null
-          : null,
-        idDestino: !isTraslado
-          ? proceso == 1
-            ? parseInt(idDestino)
-            : null
-          : null,
-        manifiesto: proceso == 1 ? parseInt(manifiesto) : null,
-        pesoTeorico: parseFloat(pesoTeorico),
-        estado: estado,
-        idUsuario: parseFloat(despachador["id"]),
-        usuario: despachador["usuarios"],
-        idMotorista: parseInt(idMotorista),
-        fechaFin: fechaFin,
-        pesoFinal: parseFloat(pesoFinal),
-        idPlaca: placaData.id,
-        idEmpresa: parseInt(idEmpresa),
-        idMovimiento: parseInt(idMovimiento),
-        movimiento: move.nombre,
-        idProducto: parseInt(idProducto),
-        producto: producto.nombre,
-        observaciones,
-        idTrasladoOrigen: isTraslado ? parseInt(idTrasladoOrigen) : null,
-        idTrasladoDestino: isTraslado ? parseInt(idTrasladoDestino) : null,
-        trasladoOrigen: transladoOrigen.nombre,
-        trasladoDestino: transladoDestino.nombre,
-        proceso,
-        pesoNeto: parseFloat(pesoNeto),
-        desviacion: parseFloat(desviacion),
-        porTolerancia,
-        ...allSellos,
-        ordenDeCompra: proceso == 0 ? parseInt(ordenDeCompra) : null,
-        ordenDeTransferencia: isTraslado
-          ? parseInt(ordenDeTransferencia)
-          : null,
-      },
+      where: { id: parseInt(req.params.id) },
+      data: updateData,
     });
-      
 
-    if (nuevaBoleta.desviacion > 200 || nuevaBoleta.estado=='Completo(Fuera de tolerancia)' || nuevaBoleta.desviacion < -200) {
-      const stmpMail = alertaDesviacion(nuevaBoleta, despachador, enviarCorreo)
-      console.log(stmpMail)
-    }
-    
-    /* IMPRESION DE COMPROBANTE PARA MOTORISTA */
-
-    if (idProducto===18) {
-      comprobanteDeCarga(nuevaBoleta, despachador['name'])
+    // Verificar desviación y enviar alerta si es necesario
+    if (nuevaBoleta.desviacion > 200 || nuevaBoleta.estado === 'Completo(Fuera de tolerancia)' || nuevaBoleta.desviacion < -200) {
+      const stmpMail = alertaDesviacion(nuevaBoleta, despachador, enviarCorreo);
+      console.log(stmpMail);
     }
 
-    setLogger('BOLETA', 'MODIFICAR BOLETA (SALIDA DE BOLETA)', req, null, 1, nuevaBoleta.id)  
-
-    /* Imprimir Boleta y Pase de salida*/
-    const crearPase = await createPaseDeSalida(nuevaBoleta)
-    const response = await imprimirWorkForce(nuevaBoleta)
-    
-    if (response) {
-      return res.status(201).json({ msg: "Boleta creado exitosamente e impresa con exito" });
+    // Generar comprobante para producto específico
+    if (idProducto === 18) {
+      comprobanteDeCarga(nuevaBoleta, despachador['name']);
     }
-    
-    return res.status(201).json({ msg: "Boleta creado exitosamente, pero revise su impresora" });
-  
+
+    setLogger('BOLETA', 'MODIFICAR BOLETA (SALIDA DE BOLETA)', req, null, 1, nuevaBoleta.id);
+
+    // Crear pase de salida e imprimir en paralelo
+    const [crearPase, response] = await Promise.all([
+      createPaseDeSalida(nuevaBoleta),
+      imprimirWorkForce(nuevaBoleta)
+    ]);
+
+    const message = response 
+      ? "Boleta creado exitosamente e impresa con exito"
+      : "Boleta creado exitosamente, pero revise su impresora";
+
+    return res.status(201).json({ msg: message });
+
   } catch (error) {
-    setLogger('BOLETA', 'MODIFICAR BOLETA (SALIDA DE BOLETA)', req, null, 3)  
+    setLogger('BOLETA', 'MODIFICAR BOLETA (SALIDA DE BOLETA)', req, null, 3);
     res.status(500).json({ msg: `Error al crear usuario: ${error.message}` });
   }
 };
@@ -1110,103 +1127,122 @@ const updateBoletaOutComdin = async (req, res) => {
 
     const verificado = jwt.verify(idUsuario, process.env.SECRET_KEY);
 
-    const despachador = await db.usuarios.findUnique({
-      where: {
-        usuarios: verificado["usuarios"],
-      },
-    });
+    // Realizar todas las consultas base en paralelo
+    const [
+      despachador,
+      producto,
+      move,
+      numBoleta,
+      porTolerancia
+    ] = await Promise.all([
+      db.usuarios.findUnique({
+        where: { usuarios: verificado["usuarios"] },
+      }),
+      db.producto.findUnique({
+        where: { id: parseInt(idProducto) },
+      }),
+      db.movimientos.findUnique({
+        where: { id: parseInt(idMovimiento) },
+      }),
+      generarNumBoleta(),
+      toleranciaPermititda()
+    ]);
 
-    const producto = await db.producto.findUnique({
-      where: { id: parseInt(idProducto) },
-    });
-    const move = await db.movimientos.findUnique({
-      where: { id: parseInt(idMovimiento) },
-    });
+    const isTraslado = move.nombre === "Traslado Interno" || move.nombre === "Traslado Externo";
 
-    const isTraslado =
-      move.nombre == "Traslado Interno" || move.nombre == "Traslado Externo"
-        ? true
-        : false;
+    // Consultas condicionales para traslados
+    const consultasTraslado = [];
+    
+    if (isTraslado) {
+      consultasTraslado.push(
+        db.translado.findUnique({ where: { id: parseInt(idTrasladoOrigen) } }),
+        db.translado.findUnique({ where: { id: parseInt(idTrasladoDestino) } })
+      );
+    } else {
+      consultasTraslado.push(Promise.resolve(null), Promise.resolve(null));
+    }
 
+    const [transladoOrigen, transladoDestino] = await Promise.all(consultasTraslado);
+
+    // Variables para origen y destino (mantener lógica original)
     const origen = !isTraslado && idOrigen;
     const destino = !isTraslado && idDestino;
-    const transladoOrigen =
-      isTraslado &&
-      (await db.translado.findUnique({
-        where: { id: parseInt(idTrasladoOrigen) },
-      }));
-    const transladoDestino =
-      isTraslado &&
-      (await db.translado.findUnique({
-        where: { id: parseInt(idTrasladoDestino) },
-      }));
 
-    const numBoleta = await generarNumBoleta();
+    // Preparar datos para la actualización
+    const updateData = {
+      placa: idPlaca,
+      numBoleta,
+      empresa: idEmpresa,
+      motorista: idMotorista,
+      idOrigen: null,
+      idDestino: null,
+      pesoTeorico: parseFloat(pesoTeorico),
+      estado,
+      idUsuario: parseFloat(despachador["id"]),
+      usuario: despachador["usuarios"],
+      idMotorista: null,
+      fechaFin,
+      pesoFinal: parseFloat(pesoFinal),
+      idPlaca: null,
+      idEmpresa: null,
+      idMovimiento: parseInt(idMovimiento),
+      movimiento: move.nombre,
+      idProducto: parseInt(idProducto),
+      producto: producto.nombre,
+      observaciones,
+      proceso,
+      pesoNeto: parseFloat(pesoNeto),
+      desviacion: parseFloat(desviacion),
+      porTolerancia,
+      ...allSellos
+    };
 
-    const porTolerancia = await toleranciaPermititda();
+    // Agregar campos condicionales
+    if (!isTraslado) {
+      updateData.origen = proceso == 0 ? origen : "Baprosa";
+      updateData.destino = proceso == 1 ? destino : "Baprosa";
+      updateData.manifiesto = proceso == 1 ? parseInt(manifiesto) : null;
+      updateData.ordenDeCompra = proceso == 0 ? parseInt(ordenDeCompra) : null;
+      updateData.idTrasladoOrigen = null;
+      updateData.idTrasladoDestino = null;
+      updateData.trasladoOrigen = null;
+      updateData.trasladoDestino = null;
+      updateData.ordenDeTransferencia = null;
+    } else {
+      updateData.origen = null;
+      updateData.destino = null;
+      updateData.manifiesto = null;
+      updateData.ordenDeCompra = null;
+      updateData.idTrasladoOrigen = parseInt(idTrasladoOrigen);
+      updateData.idTrasladoDestino = parseInt(idTrasladoDestino);
+      updateData.trasladoOrigen = transladoOrigen?.nombre;
+      updateData.trasladoDestino = transladoDestino?.nombre;
+      updateData.ordenDeTransferencia = parseInt(ordenDeTransferencia);
+    }
 
     const nuevaBoleta = await db.boleta.update({
-      where: {
-        id: parseInt(req.params.id),
-      },
-      data: {
-        placa: idPlaca,
-        numBoleta, 
-        empresa: idEmpresa,
-        motorista: idMotorista,
-        origen: !isTraslado ? (proceso == 0 ? origen : "Baprosa") : null,
-        destino: !isTraslado ? (proceso == 1 ? destino : "Baprosa") : null,
-        idOrigen: null,
-        idDestino: null,
-        manifiesto: proceso == 1 ? parseInt(manifiesto) : null,
-        pesoTeorico: parseFloat(pesoTeorico),
-        estado: estado,
-        idUsuario: parseFloat(despachador["id"]),
-        usuario: despachador["usuarios"],
-        idMotorista: null,
-        fechaFin: fechaFin,
-        pesoFinal: parseFloat(pesoFinal),
-        idPlaca: null,
-        idEmpresa: null,
-        idMovimiento: parseInt(idMovimiento),
-        movimiento: move.nombre,
-        idProducto: parseInt(idProducto),
-        producto: producto.nombre,
-        observaciones,
-        idTrasladoOrigen: isTraslado ? parseInt(idTrasladoOrigen) : null,
-        idTrasladoDestino: isTraslado ? parseInt(idTrasladoDestino) : null,
-        trasladoOrigen: transladoOrigen.nombre,
-        trasladoDestino: transladoDestino.nombre,
-        proceso,
-        pesoNeto: parseFloat(pesoNeto),
-        desviacion: parseFloat(desviacion),
-        porTolerancia, 
-        ...allSellos, 
-        ordenDeCompra: proceso == 0 ? parseInt(ordenDeCompra) : null,
-        ordenDeTransferencia: isTraslado
-          ? parseInt(ordenDeTransferencia)
-          : null,
-      },
+      where: { id: parseInt(req.params.id) },
+      data: updateData,
     });
 
-    if (idProducto===18) {
-      comprobanteDeCarga(nuevaBoleta, despachador['name'])
+    // Generar comprobante para producto específico
+    if (idProducto === 18) {
+      comprobanteDeCarga(nuevaBoleta, despachador['name']);
     }
 
-    setLogger('BOLETA', 'MODIFICAR BOLETA (SALIDA DE BOLETA | COMODIN)', req, null, 1, nuevaBoleta.id)  
+    setLogger('BOLETA', 'MODIFICAR BOLETA (SALIDA DE BOLETA | COMODIN)', req, null, 1, nuevaBoleta.id);
 
+    // Imprimir boleta
+    const response = await imprimirWorkForce(nuevaBoleta);
 
-    /* Imprimir Boleta */
-    const response = await imprimirWorkForce(nuevaBoleta)
-    
-    if (response) {
-      return res.status(201).json({ msg: "Boleta creado exitosamente e impresa con exito" });
-    }
-    
-    return res.status(201).json({ msg: "Boleta creado exitosamente, pero revise su impresora" });
-  
+    const message = response 
+      ? "Boleta creado exitosamente e impresa con exito"
+      : "Boleta creado exitosamente, pero revise su impresora";
+
+    return res.status(201).json({ msg: message });
+
   } catch (error) {
-    setLogger('BOLETA', 'MODIFICAR BOLETA (SALIDA DE BOLETA | COMODIN)', req, null, 3)  
+    setLogger('BOLETA', 'MODIFICAR BOLETA (SALIDA DE BOLETA | COMODIN)', req, null, 3);
     res.status(500).json({ msg: `Error al crear usuario: ${error.message}` });
   }
 };
