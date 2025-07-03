@@ -335,30 +335,12 @@ const ManifestModal = ({ data, closeModal }) => {
                       </div>
                     </div>
                   </div>
-                ) : (
-                  <div
-                    className="relative flex items-start mb-8"
-                    style={{ animation: "slideLeft 0.6s ease-out 1.4s both" }}
-                  >
-                    <div className="flex-shrink-0 w-16 h-16 bg-gray-400 rounded-full flex items-center justify-center shadow-lg">
-                      <FiClock className="w-6 h-6 text-white" />
-                    </div>
-
-                    <div className="ml-6 bg-gray-50 rounded-lg p-4 flex-grow border-l-4 border-gray-400">
-                      <h3 className="font-semibold text-gray-700 mb-2">
-                        BOLETA CANCELADA!
-                      </h3>
-
-                      <div className="text-sm">
-                        <p className="text-gray-600 font-medium">
-                          Proceso Cancelado
-                        </p>
-                        <p className="text-gray-500 text-sm mt-1">
-                          Ultima boleta cancelada. Comunicarse con Bascula.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                ) : (                  
+                  <LinePendiente 
+                    title={'BOLETA CANCELADA'} 
+                    subtitle={'Proceso cancelado'}
+                    details={'Boleta cancelada, actualmente no cuenta con un pase de salida'} 
+                  />
                 )
               ) : data?.paseDeSalida ? (
                 <div
@@ -430,28 +412,7 @@ const ManifestModal = ({ data, closeModal }) => {
               {/* Guardia */}
 
               {data?.paseDeSalida && (
-                <div
-                  className="relative flex items-start mb-8"
-                  style={{ animation: "slideLeft 0.6s ease-out 1.4s both" }}
-                >
-                  <div className="flex-shrink-0 w-16 h-16 bg-yellow-500 rounded-full flex items-center justify-center shadow-lg">
-                    <FiCalendar className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="ml-6 bg-purple-50 rounded-lg p-4 flex-grow border-l-4 border-yellow-500">
-                    <h3 className="font-semibold text-yellow-800 mb-2">
-                      Llegada a la guardia
-                    </h3>
-                    <p className="text-yellow-700 font-medium">
-                      {fechaGuardia.date}
-                    </p>
-                    <p className="text-yellow-600 text-sm">
-                      Hora: {fechaGuardia.time}
-                    </p>
-                    <div className="mt-3 p-2 bg-yellow-100 rounded text-sm text-yellow-700">
-                      <strong>Duración total:</strong> {duracionGuardia} horas
-                    </div>
-                  </div>
-                </div>
+                <LineItems Icon={FiCalendar} color={'yellow'} title={'Llegada a la guardia'} fecha={fechaGuardia.date} hora={fechaGuardia.time}/>
               )}
             </div>
           </div>
