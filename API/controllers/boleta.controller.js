@@ -1034,7 +1034,7 @@ const updateBoletaOut = async (req, res) => {
       updateData.idOrigen = proceso == 0 ? parseInt(idOrigen) : null;
       updateData.idDestino = proceso == 1 ? parseInt(idDestino) : null;
       updateData.manifiesto = proceso == 1 ? parseInt(manifiesto) : null;
-      updateData.ordenDeCompra = proceso == 0 ? parseInt(ordenDeCompra) : null;
+      updateData.ordenDeCompra = proceso == 0 ? ordenDeCompra : null;
       updateData.idTrasladoOrigen = null;
       updateData.idTrasladoDestino = null;
       updateData.trasladoOrigen = null;
@@ -1202,7 +1202,7 @@ const updateBoletaOutComdin = async (req, res) => {
       updateData.origen = proceso == 0 ? origen : "Baprosa";
       updateData.destino = proceso == 1 ? destino : "Baprosa";
       updateData.manifiesto = proceso == 1 ? parseInt(manifiesto) : null;
-      updateData.ordenDeCompra = proceso == 0 ? parseInt(ordenDeCompra) : null;
+      updateData.ordenDeCompra = proceso == 0 ? ordenDeCompra : null;
       updateData.idTrasladoOrigen = null;
       updateData.idTrasladoDestino = null;
       updateData.trasladoOrigen = null;
