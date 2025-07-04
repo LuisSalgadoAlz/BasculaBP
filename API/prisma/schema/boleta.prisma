@@ -31,7 +31,7 @@ model Boleta {
     usuario String
     idMotorista Int?
     motorista String
-    ordenDeCompra Int?
+    ordenDeCompra String?
     ordenDeTransferencia Int?
     pesoTeorico Float? 
     pesoNeto Float?
