@@ -310,7 +310,7 @@ const postBoletasNormal = async (req, res) => {
         trasladoOrigen: null,
         trasladoDestino: null,
         proceso,
-        ordenDeCompra: parseInt(ordenDeCompra),
+        ordenDeCompra: ordenDeCompra,
         ordenDeTransferencia: null,
       },
     });
@@ -1008,7 +1008,7 @@ const updateBoletaOut = async (req, res) => {
         desviacion: parseFloat(desviacion),
         porTolerancia,
         ...allSellos,
-        ordenDeCompra: proceso == 0 ? parseInt(ordenDeCompra) : null,
+        ordenDeCompra: proceso == 0 ? ordenDeCompra : null,
         ordenDeTransferencia: isTraslado
           ? parseInt(ordenDeTransferencia)
           : null,
@@ -1154,7 +1154,7 @@ const updateBoletaOutComdin = async (req, res) => {
         desviacion: parseFloat(desviacion),
         porTolerancia, 
         ...allSellos, 
-        ordenDeCompra: proceso == 0 ? parseInt(ordenDeCompra) : null,
+        ordenDeCompra: proceso == 0 ? ordenDeCompra : null,
         ordenDeTransferencia: isTraslado
           ? parseInt(ordenDeTransferencia)
           : null,
