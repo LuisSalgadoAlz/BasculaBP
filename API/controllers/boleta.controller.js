@@ -535,6 +535,10 @@ const postClientePlacaMoto = async (req, res) => {
     const newBol = await db.boleta.create({ data: baseData });
 
     const debeImprimirQR = (idProducto === 17 && idMovimiento === 1) || (idProducto === 18 && idMovimiento === 2);
+    const isTrasladoZip = (newBol?.idMovimiento ==11) && (manifiesto)
+    if (isTrasladoZip) {
+      createPaseDeSalida(newBol)
+    }
     if(debeImprimirQR) {
       imprimirQRTolva(newBol);
     }
