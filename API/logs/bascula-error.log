@@ -1,0 +1,39 @@
+2025-07-07 08:03:25 -06:00: PrismaClientInitializationError: 
+Invalid `prisma.usuarios.findUnique()` invocation:
+
+
+The provided database string is invalid. Error parsing connection string: Conversion error: Invalid JDBC token in database URL. Please refer to the documentation in https://www.prisma.io/docs/reference/database-reference/connection-urls for constructing a correct connection string. In some cases, certain characters must be escaped. Please check the string for any illegal characters.
+    at Un.handleRequestError (C:\Users\BAPROSA\Desktop\Bascula\BasculaBP\api\node_modules\@prisma\client\runtime\library.js:121:7748)
+    at Un.handleAndLogRequestError (C:\Users\BAPROSA\Desktop\Bascula\BasculaBP\api\node_modules\@prisma\client\runtime\library.js:121:6771)
+    at Un.request (C:\Users\BAPROSA\Desktop\Bascula\BasculaBP\api\node_modules\@prisma\client\runtime\library.js:121:6478)
+    at async l (C:\Users\BAPROSA\Desktop\Bascula\BasculaBP\api\node_modules\@prisma\client\runtime\library.js:130:9644)
+    at async loginUsers (C:\Users\BAPROSA\Desktop\Bascula\BasculaBP\api\controllers\login.controller.js:17:25) {
+  clientVersion: '6.4.1',
+  errorCode: undefined
+}
+2025-07-07 08:03:29 -06:00: PrismaClientInitializationError: 
+Invalid `prisma.usuarios.findUnique()` invocation:
+
+
+The provided database string is invalid. Error parsing connection string: Conversion error: Invalid JDBC token in database URL. Please refer to the documentation in https://www.prisma.io/docs/reference/database-reference/connection-urls for constructing a correct connection string. In some cases, certain characters must be escaped. Please check the string for any illegal characters.
+    at Un.handleRequestError (C:\Users\BAPROSA\Desktop\Bascula\BasculaBP\api\node_modules\@prisma\client\runtime\library.js:121:7748)
+    at Un.handleAndLogRequestError (C:\Users\BAPROSA\Desktop\Bascula\BasculaBP\api\node_modules\@prisma\client\runtime\library.js:121:6771)
+    at Un.request (C:\Users\BAPROSA\Desktop\Bascula\BasculaBP\api\node_modules\@prisma\client\runtime\library.js:121:6478)
+    at async l (C:\Users\BAPROSA\Desktop\Bascula\BasculaBP\api\node_modules\@prisma\client\runtime\library.js:130:9644)
+    at async loginUsers (C:\Users\BAPROSA\Desktop\Bascula\BasculaBP\api\controllers\login.controller.js:17:25) {
+  clientVersion: '6.4.1',
+  errorCode: undefined
+}
+2025-07-07 08:03:29 -06:00: PrismaClientInitializationError: 
+Invalid `prisma.usuarios.findUnique()` invocation:
+
+
+The provided database string is invalid. Error parsing connection string: Conversion error: Invalid JDBC token in database URL. Please refer to the documentation in https://www.prisma.io/docs/reference/database-reference/connection-urls for constructing a correct connection string. In some cases, certain characters must be escaped. Please check the string for any illegal characters.
+    at Un.handleRequestError (C:\Users\BAPROSA\Desktop\Bascula\BasculaBP\api\node_modules\@prisma\client\runtime\library.js:121:7748)
+    at Un.handleAndLogRequestError (C:\Users\BAPROSA\Desktop\Bascula\BasculaBP\api\node_modules\@prisma\client\runtime\library.js:121:6771)
+    at Un.request (C:\Users\BAPROSA\Desktop\Bascula\BasculaBP\api\node_modules\@prisma\client\runtime\library.js:121:6478)
+    at async l (C:\Users\BAPROSA\Desktop\Bascula\BasculaBP\api\node_modules\@prisma\client\runtime\library.js:130:9644)
+    at async loginUsers (C:\Users\BAPROSA\Desktop\Bascula\BasculaBP\api\controllers\login.controller.js:17:25) {
+  clientVersion: '6.4.1',
+  errorCode: undefined
+}

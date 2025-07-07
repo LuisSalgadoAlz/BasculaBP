@@ -2,6 +2,8 @@ model Movimientos{
     id Int @id @default(autoincrement())
     nombre String
     tipo Int
+    estado Boolean?
+    place Int? /* 0 Entradas, 1 Salidas, 2 Todos */
 
     /* Relacion con boleta */
     boletasMovimientos Boleta[]

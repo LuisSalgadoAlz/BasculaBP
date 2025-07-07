@@ -109,3 +109,16 @@ export const Pagination = ({ pg, sp, hp, dt }) => {
 };
 
 
+export const StatCard = ({ icon, title, value, color }) => {
+  return (
+    <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 max-sm:p-3 transition-all duration-300 hover:shadow-lg">
+      <div className="flex items-center">
+        <div className={`p-3 rounded-full ${color} mr-4 max-sm:hidden`}>{icon}</div>
+        <div>
+          <p className="text-sm font-medium text-gray-500 max-sm:text-sm">{title}</p>
+          <h4 className="text-2xl font-bold text-gray-800 max-sm:text-sm">{value}</h4>
+        </div>
+      </div>
+    </div>
+  );
+};

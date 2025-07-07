@@ -6,7 +6,7 @@ node_modules
 ./api/dist
 ./api/.env
 ./api/prisma/migrations
-
+./api/logs
 boleta_epson.txt
 
 #VERSION ANTES DE LOS CAMBIOS EN BOLETA

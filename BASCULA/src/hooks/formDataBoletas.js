@@ -2,9 +2,9 @@ import { URLHOST } from "../constants/global";
 import Cookies from 'js-cookie'
 import { regexPlca } from "../constants/regex";
 
-export const getAllDataForSelect = async (tipo, placa, socio, empresa, motorista,fun) => {
+export const getAllDataForSelect = async (tipo, placa, socio, empresa, motorista,fun, proceso) => {
   try {
-    const response = await fetch(`${URLHOST}boletas?tipo=${tipo}&placa=${placa}&socio=${socio}&empresa=${empresa}&motorista=${motorista}`, {
+    const response = await fetch(`${URLHOST}boletas?tipo=${tipo}&placa=${placa}&socio=${socio}&empresa=${empresa}&motorista=${motorista}&proceso=${proceso}`, {
       method: "GET",
       headers: {
         Authorization: Cookies.get('token'),
@@ -135,6 +135,7 @@ export const formaterDataNewPlaca = (formBoletas, marchamos) => {
       idMovimiento: formBoletas?.Movimiento ||  null,
       ...((formBoletas?.Movimiento==10 || formBoletas?.Movimiento==11) && {
         idTrasladoOrigen: formBoletas['Traslado Origen'],
+        manifiesto: formBoletas?.Documento,
       }),
       ...((formBoletas?.Movimiento!=10 && formBoletas?.Movimiento!=11) && {
         idOrigen: formBoletas?.Origen || null, 
@@ -201,6 +202,7 @@ export const getDataParaForm = async (setFormBoletas, data, setMove, setIsLoadin
     Origen: response.idOrigen || response.origen, 
     'Traslado origen' : response.idTrasladoOrigen,
     Transportes: response.idEmpresa ?? response.empresa,
+    Documento: response.manifiesto || '',
     Estado: 0,
     pesoIn: response.pesoInicial,
     pesoOut: 0,
@@ -628,7 +630,7 @@ export const verificarDataCompleto = (funError, data, setMsg, pesoIn) => {
     return false
   }
 
-  if(proceso==0 && !ordenDeCompra){
+  if(proceso==0 && !ordenDeCompra && (idMovimiento!=11 && idMovimiento!=10)){
     setMsg('Por favor, ingresar todos los datos segundo nivel: orden de compra')
     funError(true)
     return false

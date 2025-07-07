@@ -3,7 +3,7 @@ const dotenv = require('dotenv')
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
-const typesOfUsers = ['VACIO','ADMINISTRADOR', 'BASCULA', 'TOLVA', 'CONTABILIDAD']
+const typesOfUsers = ['VACIO','ADMINISTRADOR', 'BASCULA', 'TOLVA', 'CONTABILIDAD', 'GUARDIA']
 const typesOfState = ['VACIO', true, false]
 
 /* Listar usuarios */
