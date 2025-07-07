@@ -4,14 +4,17 @@ import {
   FiCalendar,
   FiClock,
 } from "react-icons/fi";
-import { getDataPlaca } from "../../hooks/guardia/formDataGuardia";
-import { ManifestModal } from "../../components/guardia/elements"
+import { getDataPlaca, updatePaseSalida } from "../../hooks/guardia/formDataGuardia";
+import { ManifestModal, DespacharUnidad } from "../../components/guardia/elements"
+import { Toaster, toast } from "sonner";
 
 const Guardia = () => {
   const [stats, setStats] = useState();
   const [placa, setPlaca] = useState("");
   const [infoPlaca, setInfoPlaca] = useState();
   const [openModal, setOpenModal] = useState(false);
+  const [despacharUnidadModal, setDespacharUnidadModal] = useState(false)
+  const [isLoadingConfirm, setIsLoadingConfirm] = useState(false)
 
   const handleChangePlaca = (e) => {
     const { value } = e.target;
@@ -30,6 +33,25 @@ const Guardia = () => {
   const handleCloseModal = () => {
     setOpenModal(false);
   };
+
+  const handleOpenConfirm = () => {
+    setDespacharUnidadModal(true)
+  }
+
+  const handleCloseConfirm =() => {
+    setDespacharUnidadModal(false)
+  }
+
+  const handleConfirmSalidad = async(data) => {
+    const response = await updatePaseSalida(infoPlaca?.id, setIsLoadingConfirm)
+    if(response?.msg){
+      toast.success(response?.msg, {style:{background:'#4CAF50'}});
+      setOpenModal(false)
+      setDespacharUnidadModal(false)
+      return
+    }
+    toast.error(response?.err , {style:{background:'#ff4d4f'}});
+  }
 
   const statsdata = [
     {
@@ -93,10 +115,20 @@ const Guardia = () => {
 
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto sm:min-w-[300px]">
           {openModal && (
-            <ManifestModal data={infoPlaca} closeModal={handleCloseModal} />
+            <ManifestModal data={infoPlaca} closeModal={handleCloseModal} handleOpenConfirm={handleOpenConfirm}/>
           )}
         </div>
       </div>
+      {despacharUnidadModal && <DespacharUnidad hdClose={handleCloseConfirm} hdlSubmit={handleConfirmSalidad} isLoading={isLoadingConfirm}/>}
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          style: {
+            background: '#333', // estilo general
+            color: 'white',
+          },
+        }}
+      />
     </div>
   );
 };

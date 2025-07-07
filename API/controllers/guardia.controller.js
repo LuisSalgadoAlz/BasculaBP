@@ -33,6 +33,7 @@ const getBuscarPlaca = async(req, res) => {
                     select: {
                         numPaseSalida: true,
                         estado: true,
+                        fechaSalida: true,
                     }
                 }, 
             }, 
@@ -52,6 +53,29 @@ const getBuscarPlaca = async(req, res) => {
     }
 }
 
+const updatePaseDeSalida = async(req, res) => {
+    try{
+        const id = req.params.id || null;
+        if (!id) return res.status(400).send({err: 'No se ingreso una ID'})
+    
+        const updatePaseSalida = await db.pasesDeSalida.update({
+            data: {
+                estado: true,
+                fechaSalida: new Date()
+            }, 
+            where: {
+                idBoleta: parseInt(id),
+            }
+        })
+
+        return res.status(200).send({msg: 'Salida registrada, puede despachar el vehiculo.'})
+    } catch(err){
+        console.log(err)
+        return res.status(500).send({err: 'Error Interno del API'})
+    }
+}
+
 module.exports = {
-    getBuscarPlaca
+    getBuscarPlaca, 
+    updatePaseDeSalida
 }
