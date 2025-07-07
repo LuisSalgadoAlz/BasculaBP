@@ -1049,7 +1049,7 @@ const updateBoletaOut = async (req, res) => {
       updateData.destino = null;
       updateData.idOrigen = null;
       updateData.idDestino = null;
-      updateData.manifiesto = null;
+      updateData.manifiesto = parseInt(manifiesto) || null;
       updateData.ordenDeCompra = null;
       updateData.idTrasladoOrigen = parseInt(idTrasladoOrigen);
       updateData.idTrasladoDestino = parseInt(idTrasladoDestino);
