@@ -535,10 +535,10 @@ const postClientePlacaMoto = async (req, res) => {
     const newBol = await db.boleta.create({ data: baseData });
 
     const debeImprimirQR = (idProducto === 17 && idMovimiento === 1) || (idProducto === 18 && idMovimiento === 2);
-    const isTrasladoZip = (newBol?.idMovimiento ==11) && (manifiesto)
+    /* const isTrasladoZip = (newBol?.idMovimiento ==11) && (manifiesto)
     if (isTrasladoZip) {
       createPaseDeSalida(newBol)
-    }
+    } */
     if(debeImprimirQR) {
       imprimirQRTolva(newBol);
     }
@@ -1077,10 +1077,12 @@ const updateBoletaOut = async (req, res) => {
     setLogger('BOLETA', 'MODIFICAR BOLETA (SALIDA DE BOLETA)', req, null, 1, nuevaBoleta.id);
 
     // Crear pase de salida e imprimir en paralelo
-    const [crearPase, response] = await Promise.all([
+    /* const [crearPase, response] = await Promise.all([
       createPaseDeSalida(nuevaBoleta),
       imprimirWorkForce(nuevaBoleta)
-    ]);
+    ]); */
+
+    imprimirWorkForce(nuevaBoleta)
 
     const message = response 
       ? "Boleta creado exitosamente e impresa con exito"
