@@ -66,6 +66,20 @@ model Boleta {
     
     tolva Tolva[]
     paseDeSalida PasesDeSalida?
+
+    /* Indices */
+    @@index([estado])
+    @@index([fechaInicio])
+    @@index([fechaFin])
+    @@index([placa])
+    @@index([motorista])
+    @@index([empresa])
+
+    /* Indices Compuestos */
+
+    @@index([empresa, fechaInicio]) 
+    @@index([estado, fechaInicio])  
+    @@index([placa, fechaInicio]) 
 }
 
 model Tolva {

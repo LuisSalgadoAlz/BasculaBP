@@ -18,6 +18,7 @@ const informes = require("./routes/informes.routes")
 const tolva = require("./routes/tolva.routes");
 const guardia = require("./routes/guardia.routes");
 const path = require("path");
+const compression = require('compression');
 
 const server = http.createServer(app);
 
@@ -25,7 +26,7 @@ const server = http.createServer(app);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
-
+app.use(compression());
 
 app.use('/api/login/', logUser);
 app.use('/api/usuarios', router);
