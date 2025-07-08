@@ -1,10 +1,10 @@
 import { StatCard } from "../../components/buttons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   FiCalendar,
   FiClock,
 } from "react-icons/fi";
-import { getDataPlaca, updatePaseSalida } from "../../hooks/guardia/formDataGuardia";
+import { getDataPlaca, getStatsGuardia, updatePaseSalida } from "../../hooks/guardia/formDataGuardia";
 import { ManifestModal, DespacharUnidad } from "../../components/guardia/elements"
 import { Toaster, toast } from "sonner";
 
@@ -24,7 +24,8 @@ const Guardia = () => {
   const handleSearchPlaca = async () => {
     const response = await getDataPlaca(setInfoPlaca, placa);
     if (response?.err) {
-      return response?.err;
+      toast.error(response?.err, {style:{background:'#4CAF50'}});
+      return
     }
     setInfoPlaca(response?.data);
     setOpenModal(true);
@@ -48,6 +49,7 @@ const Guardia = () => {
       toast.success(response?.msg, {style:{background:'#4CAF50'}});
       setOpenModal(false)
       setDespacharUnidadModal(false)
+      getStatsGuardia(setStats)
       return
     }
     toast.error(response?.err , {style:{background:'#ff4d4f'}});
@@ -57,16 +59,21 @@ const Guardia = () => {
     {
       icon: <FiCalendar size={24} className="text-white" />,
       title: "Total (hoy)",
-      value: stats?.total || 40,
+      value: stats?.total || 0,
       color: "bg-blue-500",
     },
     {
       icon: <FiClock size={24} className="text-white" />,
       title: "Pendientes(hoy)",
-      value: stats?.pendientes || 20,
+      value: stats?.pendientes || 0,
       color: "bg-amber-500",
     },
   ];
+
+  useEffect(() => {
+    getStatsGuardia(setStats)
+  }, []);
+
 
   return (
     <div className="min-h-[80vh]">

@@ -144,8 +144,13 @@ const TimelineSuccessItem = ({ fecha, hora, color, Icon, title, animationDelay =
       className="relative flex items-start mb-8"
       style={{ animation: `slideLeft ${animationDelay}s ease-out 1.4s both` }}
     >
-      <div className={`flex-shrink-0 w-16 h-16 max-sm:w-12 max-sm:h-12 bg-${color}-500 rounded-full flex items-center justify-center shadow-lg`}>
-        <Icon className="w-6 h-6 text-white max-sm:w-4 max-sm:h-4" />
+      <div className="relative flex-shrink-0">
+        <div className={`w-16 h-16 max-sm:w-12 max-sm:h-12 bg-${color}-500 rounded-full flex items-center justify-center shadow-lg relative z-10`}>
+          <Icon className="w-6 h-6 text-white max-sm:w-4 max-sm:h-4" />
+        </div>
+        {color === 'red' && (
+          <div className="absolute top-0 left-0 w-16 h-16 max-sm:w-12 max-sm:h-12 rounded-full animate-ping bg-red-400 opacity-20"></div>
+        )}
       </div>
 
       <div className={`ml-6 bg-${color}-50 rounded-lg p-4 max-sm:p-2 flex-grow ${borders[color]} border-l-4`}>
@@ -157,9 +162,6 @@ const TimelineSuccessItem = ({ fecha, hora, color, Icon, title, animationDelay =
           </div>
         </div>
       </div>
-      {color === 'red' && (
-        <div className="absolute inset-0 rounded-full animate-ping bg-red-400 opacity-20 w-16 h-16"></div>
-      )}
     </div>
   );
 };
@@ -227,11 +229,11 @@ const OriginTransferItem = ({ data }) => {
       className="relative flex items-start mb-8"
       style={{ animation: "slideLeft 0.6s ease-out 1.4s both" }}
     >
-      <div className="flex-shrink-0 w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center shadow-lg">
+      <div className="flex-shrink-0 w-16 h-16 max-sm:w-12 max-sm:h-12 bg-orange-500 rounded-full flex items-center justify-center shadow-lg">
         <FiMapPin className="w-6 h-6 text-white" />
       </div>
 
-      <div className="ml-6 bg-orange-50 rounded-lg p-4 flex-grow border-l-4 border-orange-500">
+      <div className="ml-6 bg-orange-50 rounded-lg p-4 max-sm:p-2 flex-grow border-l-4 border-orange-500">
         <h3 className="font-semibold text-orange-800 mb-2">Traslado de Origen</h3>
 
         <div className="space-y-3 text-sm">
@@ -261,12 +263,13 @@ const TransportTimeline = ({ data }) => {
   const fechaInicio = formatDate(new Date(data?.fechaInicio));
   const fechaFin = data?.fechaFin ? formatDate(new Date(data?.fechaFin)) : null;
   const fechaGuardia = formatDate(new Date());
+  const fechaSalida = data?.paseDeSalida?.fechaSalida ? formatDate(new Date(data?.paseDeSalida?.fechaSalida)) : null;
 
   let horas = null;
   let minutos = null;
 
   if (data?.fechaFin) {
-    const diferenciaMs = new Date() - new Date(data.fechaFin); // Diferencia en milisegundos
+    const diferenciaMs = (data?.paseDeSalida?.fechaSalida ? new Date(data?.paseDeSalida?.fechaSalida) : new Date()) - new Date(data.fechaFin); // Diferencia en milisegundos
     const diffMin = Math.floor(diferenciaMs / 60000); // A minutos
     horas = Math.floor(diffMin / 60);
     minutos = diffMin % 60;
@@ -351,11 +354,11 @@ const TransportTimeline = ({ data }) => {
         {data?.paseDeSalida && (
           data?.paseDeSalida?.estado===true ? (
             <TimelineSuccessItem
-              title={`Llegada a la guardia: ${(horas>0 && minutos > 15 ) ? 'Tiempo excedido' : 'Sin problema'}`}
-              fecha={fechaGuardia.date}
-              hora={fechaGuardia.time}
+              title={`Llegada a la guardia`}
+              fecha={fechaSalida.date}
+              hora={fechaSalida.time}
               Icon={FiCalendar}
-              color={'gray'}
+              color={(horas>0 && minutos > 15 ) ? 'red' : 'gray'}
             />
           ) : ( 
             <TimelineSuccessItem
