@@ -314,7 +314,6 @@ const postBoletasNormal = async (req, res) => {
         trasladoOrigen: null,
         trasladoDestino: null,
         proceso,
-        ordenDeCompra: ordenDeCompra,
         ordenDeTransferencia: null,
       },
     });
