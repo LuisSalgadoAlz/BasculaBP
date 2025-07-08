@@ -868,24 +868,43 @@ const getBoletasCompletadasDiarias = async (req, res) => {
  * @param {*} res 
  */
 
-const createPaseDeSalida = async(boleta) =>{
+const createPaseDeSalida = async(boleta) => {
   try {
-    const ultimoPase = await db.PasesDeSalida.findFirst({
-      orderBy: { numPaseSalida: 'desc' },
-      select: { numPaseSalida: true },
+    const boletaId = parseInt(boleta.id);
+    
+    // Usar transacción para consistencia y mejor rendimiento
+    const result = await db.$transaction(async (tx) => {
+      // Verificar existencia con findUnique (más eficiente que count)
+      const existe = await tx.PasesDeSalida.findUnique({
+        where: { idBoleta: boletaId },
+        select: { id: true }
+      });
+      
+      if (existe) return false;
+      
+      // Obtener el último número de pase
+      const ultimoPase = await tx.PasesDeSalida.findFirst({
+        orderBy: { numPaseSalida: 'desc' },
+        select: { numPaseSalida: true }
+      });
+      
+      // Crear el nuevo pase
+      await tx.PasesDeSalida.create({
+        data: {
+          idBoleta: boletaId,
+          numPaseSalida: (ultimoPase?.numPaseSalida || 0) + 1,
+          estado: false
+        }
+      });
+      
+      return true;
     });
-
-    const createPase = await db.PasesDeSalida.create({
-      data: {
-        idBoleta:parseInt(boleta.id),
-        numPaseSalida: (ultimoPase?.numPaseSalida || 0) + 1,
-        estado: false, 
-      }
-    })
-    return true
-  }catch(err) {
-    console.log(err)
-    return false
+    
+    return result;
+    
+  } catch(err) {
+    console.error('Error en createPaseDeSalida:', err);
+    return false;
   }
 }
 
