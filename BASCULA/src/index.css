@@ -360,3 +360,12 @@ a.active {
     opacity: 1;
   }
 }
+
+.linea-horinzontal-limite {
+  @media (max-width: 375px) {
+    max-height: calc(100% - 8rem); /* o el valor que necesites */
+  }
+  @media (max-width:  285px) {
+    max-height: calc(100% - 12rem); /* o el valor que necesites */
+  }
+}
