@@ -65,7 +65,7 @@ model Boleta {
     boletasMovimientos Movimientos? @relation(fields: [idMovimiento], references: [id])
     
     tolva Tolva[]
-    paseDeSalida PasesDeSalida?
+    paseDeSalida PasesDeSalida[]
 
     /* Indices */
     @@index([estado])
@@ -116,7 +116,7 @@ model UsuariosPorTolva {
 
 model PasesDeSalida {
   id          Int      @id @default(autoincrement())
-  idBoleta    Int      @unique
+  idBoleta    Int 
   numPaseSalida   Int?
   fechaSalida DateTime?
   observaciones String?
