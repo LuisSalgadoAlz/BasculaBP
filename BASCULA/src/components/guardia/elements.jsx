@@ -1,4 +1,4 @@
-import { MdFilterListAlt } from "react-icons/md";
+import { MdFilterListAlt, MdOutlinePlace  } from "react-icons/md";
 import { FaBalanceScale } from "react-icons/fa";
 import {
   FiCalendar,
@@ -52,7 +52,7 @@ const StatusBadge = ({ paseDeSalida, data }) => {
 
     return {
       text: "Salida ya registrada",
-      className: "bg-yellow-500 text-white"
+      className: "bg-gray-500 text-white"
     };
   };
 
@@ -70,8 +70,8 @@ const StatusBadge = ({ paseDeSalida, data }) => {
 
 const ModalHeader = ({ data, closeModal }) => {
   const getDocumentTitle = () => {
-    if (data?.manifiesto) return `Manifiesto: # ${data.manifiesto}`;
-    if (data?.ordenDeCompra) return `Orden De Compra: #${data.ordenDeCompra}`;
+    if (data?.manifiesto && data?.manifiesto!=0) return `Manifiesto: # ${data.manifiesto}`;
+    if (data?.ordenDeCompra && data?.ordenDeCompra!=0) return `Orden De Compra: #${data.ordenDeCompra}`;
     return "Sin Documentos";
   };
 
@@ -200,23 +200,41 @@ const SecondProcessItem = ({ data, fechaFin }) => {
     );
   }
 
+  // Determinar el color basado en el estado del pase de salida
+  const isCompleted = data?.paseDeSalida?.estado === true;
+  const colorClasses = isCompleted ? {
+    bg: 'bg-gray-500',
+    border: 'border-gray-500',
+    containerBg: 'bg-gray-50',
+    titleText: 'text-gray-800',
+    dateText: 'text-gray-700',
+    timeText: 'text-gray-600'
+  } : {
+    bg: 'bg-purple-500',
+    border: 'border-purple-500',
+    containerBg: 'bg-purple-50',
+    titleText: 'text-purple-800',
+    dateText: 'text-purple-700',
+    timeText: 'text-purple-600'
+  };
+
   return (
     <div
       className="relative flex items-start mb-8"
       style={{ animation: "slideLeft 0.6s ease-out 1.4s both" }}
     >
-      <div className="flex-shrink-0 w-16 h-16 max-sm:w-12 max-sm:h-12 bg-purple-500 rounded-full flex items-center justify-center shadow-lg">
+      <div className={`flex-shrink-0 w-16 h-16 max-sm:w-12 max-sm:h-12 ${colorClasses.bg} rounded-full flex items-center justify-center shadow-lg`}>
         <FiCalendar className="w-6 h-6 max-sm:w-4 max-sm:h-4 text-white" />
       </div>
 
-      <div className="ml-6 bg-purple-50 rounded-lg p-4 flex-grow border-l-4 border-purple-500">
-        <h3 className="font-semibold text-purple-800 mb-2">
+      <div className={`ml-6 ${colorClasses.containerBg} rounded-lg p-4 flex-grow border-l-4 ${colorClasses.border}`}>
+        <h3 className={`font-semibold ${colorClasses.titleText} mb-2`}>
           Segundo Proceso Báscula
         </h3>
 
         <div className="mb-3">
-          <p className="text-purple-700 font-medium">{fechaFin.date}</p>
-          <p className="text-purple-600 text-sm">Hora: {fechaFin.time}</p>
+          <p className={`${colorClasses.dateText} font-medium`}>{fechaFin.date}</p>
+          <p className={`${colorClasses.timeText} text-sm`}>Hora: {fechaFin.time}</p>
         </div>
       </div>
     </div>
@@ -224,27 +242,84 @@ const SecondProcessItem = ({ data, fechaFin }) => {
 };
 
 const OriginTransferItem = ({ data }) => {
+  // Determinar si el estado es true para cambiar los colores
+  const isCompleted = data?.paseDeSalida?.estado === true;
+  
+  // Colores condicionales
+  const iconBgColor = isCompleted ? "bg-gray-500" : "bg-orange-500";
+  const containerBgColor = isCompleted ? "bg-gray-50" : "bg-orange-50";
+  const borderColor = isCompleted ? "border-gray-500" : "border-orange-500";
+  const titleColor = isCompleted ? "text-gray-800" : "text-orange-800";
+  const labelColor = isCompleted ? "text-gray-700" : "text-orange-700";
+  const textColor = isCompleted ? "text-gray-600" : "text-orange-600";
+
   return (
     <div
       className="relative flex items-start mb-8"
       style={{ animation: "slideLeft 0.6s ease-out 1.4s both" }}
     >
-      <div className="flex-shrink-0 w-16 h-16 max-sm:w-12 max-sm:h-12 bg-orange-500 rounded-full flex items-center justify-center shadow-lg">
+      <div className={`flex-shrink-0 w-16 h-16 max-sm:w-12 max-sm:h-12 ${iconBgColor} rounded-full flex items-center justify-center shadow-lg`}>
         <FiMapPin className="w-6 h-6 text-white" />
       </div>
 
-      <div className="ml-6 bg-orange-50 rounded-lg p-4 max-sm:p-2 flex-grow border-l-4 border-orange-500">
-        <h3 className="font-semibold text-orange-800 mb-2">Traslado de Origen</h3>
+      <div className={`ml-6 ${containerBgColor} rounded-lg p-4 max-sm:p-2 flex-grow border-l-4 ${borderColor}`}>
+        <h3 className={`font-semibold ${titleColor} mb-2`}>Realizando un traslado</h3>
 
         <div className="space-y-3 text-sm">
           <div>
-            <span className="font-medium text-orange-700">Dirección de Origen:</span>
-            <p className="text-orange-600 mt-1">{data?.trasladoOrigen || "No especificado"}</p>
+            <span className={`font-medium ${labelColor}`}>Dirección de Origen:</span>
+            <p className={`${textColor} mt-1`}>{data?.trasladoOrigen || "No especificado"}</p>
           </div>
 
           <div>
-            <span className="font-medium text-orange-700">Pase de Salida:</span>
-            <p className="text-orange-600 mt-1">
+            <span className={`font-medium ${labelColor}`}>Pase de Salida:</span>
+            <p className={`${textColor} mt-1`}>
+              {data?.paseDeSalida?.numPaseSalida
+                ? `# ${data.paseDeSalida.numPaseSalida}${
+                    data.paseDeSalida.estado ? " - Ya efectuado" : " - Válido"
+                  }`
+                : "No generado"}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ServicioBascula = ({ data }) => {
+  // Determinar si el estado es true para cambiar los colores
+  const isCompleted = data?.paseDeSalida?.estado === true;
+  
+  // Colores condicionales
+  const iconBgColor = isCompleted ? "bg-gray-500" : "bg-orange-500";
+  const containerBgColor = isCompleted ? "bg-gray-50" : "bg-orange-50";
+  const borderColor = isCompleted ? "border-gray-500" : "border-orange-500";
+  const titleColor = isCompleted ? "text-gray-800" : "text-orange-800";
+  const labelColor = isCompleted ? "text-gray-700" : "text-orange-700";
+  const textColor = isCompleted ? "text-gray-600" : "text-orange-600";
+
+  return (
+    <div
+      className="relative flex items-start mb-8"
+      style={{ animation: "slideLeft 0.6s ease-out 1.4s both" }}
+    >
+      <div className={`flex-shrink-0 w-16 h-16 max-sm:w-12 max-sm:h-12 ${iconBgColor} rounded-full flex items-center justify-center shadow-lg`}>
+        <MdOutlinePlace className="w-6 h-6 text-white" />
+      </div>
+
+      <div className={`ml-6 ${containerBgColor} rounded-lg p-4 max-sm:p-2 flex-grow border-l-4 ${borderColor}`}>
+        <h3 className={`font-semibold ${titleColor} mb-2`}>Servicio de bascula Pendiente</h3>
+
+        <div className="space-y-3 text-sm">
+          <div>
+            <span className={`font-medium ${labelColor}`}>Dirección de Origen:</span>
+            <p className={`${textColor} mt-1`}>{data?.origen || "No especificado"}</p>
+          </div>
+
+          <div>
+            <span className={`font-medium ${labelColor}`}>Pase de Salida:</span>
+            <p className={`${textColor} mt-1`}>
               {data?.paseDeSalida?.numPaseSalida
                 ? `# ${data.paseDeSalida.numPaseSalida}${
                     data.paseDeSalida.estado ? " - Ya efectuado" : " - Válido"
@@ -301,10 +376,17 @@ const TransportTimeline = ({ data }) => {
 
       <div className="relative">
         {/* Línea de tiempo */}
-        <div
-          className="absolute left-8 max-sm:left-6 top-0 bottom-0 max-h-[calc(100%-5rem)] max-sm:max-h-[calc(100%-5rem)] w-0.5 bg-gradient-to-b from-green-400 to-green-600"
-          style={{ animation: "growDown 1s ease-out 0.8s both" }}
-        />
+        {data?.paseDeSalida?.estado ===true ? (
+          <div
+            className="absolute left-8 max-sm:left-6 top-0 bottom-0 max-h-[calc(100%-5rem)] max-sm:max-h-[calc(100%-5rem)] linea-horinzontal-limite w-0.5 bg-gradient-to-b from-gray-400 to-gray-600"
+            style={{ animation: "growDown 1s ease-out 0.8s both" }}
+          />
+        ): (
+          <div
+            className="absolute left-8 max-sm:left-6 top-0 bottom-0 max-h-[calc(100%-5rem)] max-sm:max-h-[calc(100%-5rem)] linea-horinzontal-limite w-0.5 bg-gradient-to-b from-green-400 to-green-600"
+            style={{ animation: "growDown 1s ease-out 0.8s both" }}
+          />
+        )}
 
         {/* Primer proceso de báscula */}
         <TimelineSuccessItem
@@ -312,7 +394,7 @@ const TransportTimeline = ({ data }) => {
           fecha={fechaInicio.date}
           hora={fechaInicio.time}
           Icon={FaBalanceScale}
-          color="green"
+          color={data?.paseDeSalida?.estado===true ? 'gray' : 'green'}
           animationDelay={0.2}
         />
 
@@ -324,7 +406,7 @@ const TransportTimeline = ({ data }) => {
               fecha={formatDate(new Date(data.tolva[0].fechaSalida)).date}
               hora={formatDate(new Date(data.tolva[0].fechaSalida)).time}
               Icon={MdFilterListAlt}
-              color="orange"
+              color={data?.paseDeSalida?.estado===true ? 'gray' : 'orange'}
               animationDelay={0.5}
             />
           ) : (
@@ -341,7 +423,7 @@ const TransportTimeline = ({ data }) => {
         {fechaFin ? (
           <SecondProcessItem data={data} fechaFin={fechaFin} />
         ) : data?.paseDeSalida ? (
-          <OriginTransferItem data={data} />
+          data?.movimiento =='SERVICIO BASCULA' ? <ServicioBascula data={data} />  : <OriginTransferItem data={data} />
         ) : (
           <TimelinePendingItem
             title="Segundo Proceso Báscula"
@@ -358,7 +440,7 @@ const TransportTimeline = ({ data }) => {
               fecha={fechaSalida.date}
               hora={fechaSalida.time}
               Icon={FiCalendar}
-              color={(horas>0 && minutos > 15 ) ? 'red' : 'gray'}
+              color={(horas>0 || minutos > 15 ) ? 'red' : 'gray'}
             />
           ) : ( 
             <TimelineSuccessItem
@@ -366,7 +448,7 @@ const TransportTimeline = ({ data }) => {
               fecha={fechaGuardia.date}
               hora={fechaGuardia.time}
               Icon={FiCalendar}
-              color={(horas>0 && minutos > 15 ) ? 'red' : 'yellow'}
+              color={(horas>0 || minutos > 15 ) ? 'red' : 'yellow'}
             />
           )
         )}
@@ -421,26 +503,47 @@ export const ManifestModal = ({ data, closeModal, handleOpenConfirm }) => {
   );
 };
 
-export const DespacharUnidad = ({ hdClose, hdlSubmit, isLoading }) => {
+export const DespacharUnidad = ({ hdClose, hdlSubmit, isLoading, requiereMotivo=false, motivo='', setMotivo }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opa-50">
       <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-md w-full mx-4 border border-gray-100 animate-fadeIn">
         {/* Header con icono y título */}
         <div className="flex items-center justify-center gap-3 mb-6">
-          <h2 className="text-2xl font-bold text-[#5A3F27] tracking-wide">
+          <h2 className="text-2xl font-bold text-[#5A3F27] tracking-wide max-sm:text-md">
             - Registrar Salida - 
           </h2>
         </div>
 
         {/* Contenido del mensaje */}
         <div className="text-center mb-8">
-          <p className="text-gray-700 text-lg">
+          <p className="text-gray-700 text-lg max-sm:text-sm">
             ¿Está seguro que desea despachar esta unidad?
           </p>
         </div>
+        
+        {requiereMotivo && (
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Motivo de la demora <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              value={motivo}
+              onChange={(e) => setMotivo(e.target.value)}
+              placeholder="Ingrese el motivo por el cual la unidad se tardó más de 15 minutos..."
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none
+                         focus:outline-none focus:ring-2 focus:ring-[#5A3F27] focus:border-transparent
+                         transition-all duration-200 ease-in-out"
+              rows="2"
+              disabled={isLoading}
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Este campo es obligatorio.
+            </p>
+          </div>
+        )}
 
         {/* Botones de acción */}
-        <div className="flex flex-col sm:flex-row gap-3 justify-end">
+        <div className="flex flex-row sm:flex-row gap-3 justify-end">
           <button
             onClick={hdClose}
             aria-label="Cancelar operación"

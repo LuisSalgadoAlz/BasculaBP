@@ -15,6 +15,8 @@ const Guardia = () => {
   const [openModal, setOpenModal] = useState(false);
   const [despacharUnidadModal, setDespacharUnidadModal] = useState(false)
   const [isLoadingConfirm, setIsLoadingConfirm] = useState(false)
+  const [motivo, setMotivo] = useState(false)
+  const [motivoDetails, setMotivoDetails] = useState()
 
   const handleChangePlaca = (e) => {
     const { value } = e.target;
@@ -22,9 +24,10 @@ const Guardia = () => {
   };
 
   const handleSearchPlaca = async () => {
+    if(!placa) return toast.error('No ha ingresado una placa.', {style:{background:'#ff4d4f'}});
     const response = await getDataPlaca(setInfoPlaca, placa);
     if (response?.err) {
-      toast.error(response?.err, {style:{background:'#4CAF50'}});
+      toast.error(response?.err, {style:{background:'#ff4d4f'}});
       return
     }
     setInfoPlaca(response?.data);
@@ -36,6 +39,23 @@ const Guardia = () => {
   };
 
   const handleOpenConfirm = () => {
+    const fechaFin = new Date(infoPlaca?.fechaFin);
+    const fechaActual = new Date();
+
+    const diffMs = fechaActual - fechaFin; // diferencia en milisegundos
+    const diffMin = Math.floor(diffMs / 60000); // minutos
+    const horas = Math.floor(diffMin / 60);
+    const minutos = diffMin % 60;
+
+    // Los únicos sin motivo son: sin fecha final Y no servicio báscula
+    const requiereMotivo = (horas !== 0 || minutos < 15) && 
+                            (infoPlaca?.fechaFin !== null && 
+                            (infoPlaca?.movimiento !== 'SERVICIO BASCULA'));
+
+  if(requiereMotivo) {
+    setMotivo(true)
+  }
+
     setDespacharUnidadModal(true)
   }
 
@@ -44,11 +64,14 @@ const Guardia = () => {
   }
 
   const handleConfirmSalidad = async(data) => {
-    const response = await updatePaseSalida(infoPlaca?.id, setIsLoadingConfirm)
+    if(motivo===true && !motivoDetails) return toast.error('No ha ingresado un motivo.', {style:{background:'#ff4d4f'}});
+    const response = await updatePaseSalida(infoPlaca?.paseDeSalida?.id, setIsLoadingConfirm, motivoDetails)
     if(response?.msg){
       toast.success(response?.msg, {style:{background:'#4CAF50'}});
       setOpenModal(false)
       setDespacharUnidadModal(false)
+      setMotivo(false)
+      setMotivoDetails('')
       getStatsGuardia(setStats)
       return
     }
@@ -126,7 +149,7 @@ const Guardia = () => {
           )}
         </div>
       </div>
-      {despacharUnidadModal && <DespacharUnidad hdClose={handleCloseConfirm} hdlSubmit={handleConfirmSalidad} isLoading={isLoadingConfirm}/>}
+      {despacharUnidadModal && <DespacharUnidad hdClose={handleCloseConfirm} hdlSubmit={handleConfirmSalidad} isLoading={isLoadingConfirm} requiereMotivo={motivo} motivo={motivoDetails} setMotivo={setMotivoDetails} />}
       <Toaster
         position="top-center"
         toastOptions={{

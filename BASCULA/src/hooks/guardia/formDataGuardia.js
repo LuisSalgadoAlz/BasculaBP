@@ -22,11 +22,12 @@ export const getDataPlaca = async (fun, placa) => {
   }
 };
 
-export const updatePaseSalida = async (id, setIsLoading) => {
+export const updatePaseSalida = async (id, setIsLoading, motivo) => {
   setIsLoading(true)
   try {
     const response = await fetch(`${URLHOST}guardia/upd/pase/${id}`, {
       method: "PUT",
+      body: JSON.stringify({obs: motivo}),
       headers: {
         "Content-Type": "application/json",
         Authorization: Cookies.get('token'),
