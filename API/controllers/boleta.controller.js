@@ -5,6 +5,8 @@ const { imprimirEpson, imprimirQRTolva, comprobanteDeCarga, imprimirWorkForce, i
 const enviarCorreo = require("../utils/enviarCorreo");
 const {alertaDesviacion, alertaCancelacion} = require("../utils/cuerposCorreo");
 const {setLogger} = require('../utils/logger');
+const { list_pase_inicial, list_parte_final } = require("../utils/listPaseSalida");
+const { list } = require("pdfkit");
 
 const generarNumBoleta = async () => {
   const ultimo = await db.boleta.findFirst({
@@ -534,8 +536,9 @@ const postClientePlacaMoto = async (req, res) => {
     const newBol = await db.boleta.create({ data: baseData });
 
     const debeImprimirQR = (idProducto === 17 && idMovimiento === 1) || (idProducto === 18 && idMovimiento === 2);
-    const isTrasladoZip = (newBol?.idMovimiento ==11) && (manifiesto)
-    if (isTrasladoZip) {
+    
+    const debeCrearPase = idMovimiento ? list_pase_inicial.includes(idMovimiento) : false
+    if (debeCrearPase) {
       createPaseDeSalida(newBol)
     }
     if(debeImprimirQR) {
@@ -656,6 +659,11 @@ const postClientePlacaMotoComodin = async (req, res) => {
     }
 
     const newBol = await db.boleta.create({ data: baseData });
+
+    const debeCrearPase = list_pase_inicial.includes(idMovimiento);
+    if (debeCrearPase) {
+      createPaseDeSalida(newBol)
+    }
 
     const debeImprimirQR = (idProducto === 17 && idMovimiento === 1) || (idProducto === 18 && idMovimiento === 2);
     if(debeImprimirQR) {
@@ -874,14 +882,6 @@ const createPaseDeSalida = async(boleta) => {
     
     // Usar transacción para consistencia y mejor rendimiento
     const result = await db.$transaction(async (tx) => {
-      // Verificar existencia con findUnique (más eficiente que count)
-      const existe = await tx.PasesDeSalida.findUnique({
-        where: { idBoleta: boletaId },
-        select: { id: true }
-      });
-      
-      if (existe) return false;
-      
       // Obtener el último número de pase
       const ultimoPase = await tx.PasesDeSalida.findFirst({
         orderBy: { numPaseSalida: 'desc' },
@@ -1095,8 +1095,10 @@ const updateBoletaOut = async (req, res) => {
     setLogger('BOLETA', 'MODIFICAR BOLETA (SALIDA DE BOLETA)', req, null, 1, nuevaBoleta.id);
 
     // Crear pase de salida e imprimir en paralelo
+
+    const debeCrearPase = list_parte_final[proceso].includes(idMovimiento);
     const [crearPase, response] = await Promise.all([
-      createPaseDeSalida(nuevaBoleta),
+      debeCrearPase ? createPaseDeSalida(nuevaBoleta) : Promise.resolve(false),
       imprimirWorkForce(nuevaBoleta)
     ]);
 
@@ -1255,7 +1257,11 @@ const updateBoletaOutComdin = async (req, res) => {
     setLogger('BOLETA', 'MODIFICAR BOLETA (SALIDA DE BOLETA | COMODIN)', req, null, 1, nuevaBoleta.id);
 
     // Imprimir boleta
-    const response = await imprimirWorkForce(nuevaBoleta);
+    const debeCrearPase = list_parte_final[proceso].includes(idMovimiento);
+    const [crearPase, response] = await Promise.all([
+      debeCrearPase ? createPaseDeSalida(nuevaBoleta) : Promise.resolve(false),
+      imprimirWorkForce(nuevaBoleta)
+    ])
 
     const message = response 
       ? "Boleta creado exitosamente e impresa con exito"
