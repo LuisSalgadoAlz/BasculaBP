@@ -83,13 +83,13 @@ const Guardia = () => {
   const statsdata = [
     {
       icon: <FiCalendar size={24} className="text-white" />,
-      title: "Total (hoy)",
+      title: "Despachados (hoy)",
       value: stats?.total || 0,
       color: "bg-blue-500",
     },
     {
       icon: <FiClock size={24} className="text-white" />,
-      title: "Pendientes(hoy)",
+      title: "En BAPROSA (hoy)",
       value: stats?.pendientes || 0,
       color: "bg-amber-500",
     },

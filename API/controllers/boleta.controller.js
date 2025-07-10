@@ -1,7 +1,7 @@
 const db = require("../lib/prisma");
 const dotenv = require("dotenv");
 const jwt = require("jsonwebtoken");
-const { imprimirEpson, imprimirQRTolva, comprobanteDeCarga, imprimirWorkForce, imprimirTikets, getReimprimirWorkForce, reImprimirTikets } = require("./impresiones.controller");
+const { imprimirEpson, imprimirQRTolva, comprobanteDeCarga, imprimirWorkForce, imprimirTikets, getReimprimirWorkForce, reImprimirTikets, generarPaseDeSalidaTemporal } = require("./impresiones.controller");
 const enviarCorreo = require("../utils/enviarCorreo");
 const {alertaDesviacion, alertaCancelacion} = require("../utils/cuerposCorreo");
 const {setLogger} = require('../utils/logger');
@@ -539,7 +539,8 @@ const postClientePlacaMoto = async (req, res) => {
     
     const debeCrearPase = idMovimiento ? list_pase_inicial.includes(idMovimiento) : false
     if (debeCrearPase) {
-      createPaseDeSalida(newBol)
+      const newPase = await createPaseDeSalida(newBol)
+      const response = await generarPaseDeSalidaTemporal(newBol, newPase?.numPaseSalida)
     }
     if(debeImprimirQR) {
       imprimirQRTolva(newBol);
@@ -889,7 +890,7 @@ const createPaseDeSalida = async(boleta) => {
       });
       
       // Crear el nuevo pase
-      await tx.PasesDeSalida.create({
+      const PasesDeSalida = await tx.PasesDeSalida.create({
         data: {
           idBoleta: boletaId,
           numPaseSalida: (ultimoPase?.numPaseSalida || 0) + 1,
@@ -897,7 +898,7 @@ const createPaseDeSalida = async(boleta) => {
         }
       });
       
-      return true;
+      return PasesDeSalida;
     });
     
     return result;
@@ -1097,10 +1098,8 @@ const updateBoletaOut = async (req, res) => {
     // Crear pase de salida e imprimir en paralelo
 
     const debeCrearPase = list_parte_final[proceso].includes(idMovimiento);
-    const [crearPase, response] = await Promise.all([
-      debeCrearPase ? createPaseDeSalida(nuevaBoleta) : Promise.resolve(false),
-      imprimirWorkForce(nuevaBoleta)
-    ]);
+    const crearPase = debeCrearPase ? await createPaseDeSalida(nuevaBoleta) : null;
+    const response = await imprimirWorkForce(nuevaBoleta, crearPase?.numPaseSalida);
 
     const message = response 
       ? "Boleta creado exitosamente e impresa con exito"
