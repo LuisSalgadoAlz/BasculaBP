@@ -691,10 +691,10 @@ const comprobanteDeCarga = (boleta, despachador)=> {
     escpos.Image.load(tux, function(image){
       device.open((err) => {
         if (err) {
-          return res.status(500).json({
+          return {
             success: false,
             message: `Error al abrir conexión con la impresora: ${err.message}`
-          });
+          }
         }
       
         // Configurar e imprimir la boleta
