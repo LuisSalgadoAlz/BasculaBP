@@ -210,12 +210,12 @@ const SecondProcessItem = ({ data, fechaFin }) => {
     dateText: 'text-gray-700',
     timeText: 'text-gray-600'
   } : {
-    bg: 'bg-purple-500',
-    border: 'border-purple-500',
-    containerBg: 'bg-purple-50',
-    titleText: 'text-purple-800',
-    dateText: 'text-purple-700',
-    timeText: 'text-purple-600'
+    bg: 'bg-green-500',
+    border: 'border-green-500',
+    containerBg: 'bg-green-50',
+    titleText: 'text-green-800',
+    dateText: 'text-green-700',
+    timeText: 'text-green-600'
   };
 
   return (
@@ -246,12 +246,12 @@ const OriginTransferItem = ({ data }) => {
   const isCompleted = data?.paseDeSalida?.estado === true;
   
   // Colores condicionales
-  const iconBgColor = isCompleted ? "bg-gray-500" : "bg-orange-500";
-  const containerBgColor = isCompleted ? "bg-gray-50" : "bg-orange-50";
-  const borderColor = isCompleted ? "border-gray-500" : "border-orange-500";
-  const titleColor = isCompleted ? "text-gray-800" : "text-orange-800";
-  const labelColor = isCompleted ? "text-gray-700" : "text-orange-700";
-  const textColor = isCompleted ? "text-gray-600" : "text-orange-600";
+  const iconBgColor = isCompleted ? "bg-gray-500" : "bg-green-500";
+  const containerBgColor = isCompleted ? "bg-gray-50" : "bg-green-50";
+  const borderColor = isCompleted ? "border-gray-500" : "border-green-500";
+  const titleColor = isCompleted ? "text-gray-800" : "text-green-800";
+  const labelColor = isCompleted ? "text-gray-700" : "text-green-700";
+  const textColor = isCompleted ? "text-gray-600" : "text-green-600";
 
   return (
     <div
@@ -292,12 +292,12 @@ const ServicioBascula = ({ data }) => {
   const isCompleted = data?.paseDeSalida?.estado === true;
   
   // Colores condicionales
-  const iconBgColor = isCompleted ? "bg-gray-500" : "bg-orange-500";
-  const containerBgColor = isCompleted ? "bg-gray-50" : "bg-orange-50";
-  const borderColor = isCompleted ? "border-gray-500" : "border-orange-500";
-  const titleColor = isCompleted ? "text-gray-800" : "text-orange-800";
-  const labelColor = isCompleted ? "text-gray-700" : "text-orange-700";
-  const textColor = isCompleted ? "text-gray-600" : "text-orange-600";
+  const iconBgColor = isCompleted ? "bg-gray-500" : "bg-green-500";
+  const containerBgColor = isCompleted ? "bg-gray-50" : "bg-green-50";
+  const borderColor = isCompleted ? "border-gray-500" : "border-green-500";
+  const titleColor = isCompleted ? "text-gray-800" : "text-green-800";
+  const labelColor = isCompleted ? "text-gray-700" : "text-green-700";
+  const textColor = isCompleted ? "text-gray-600" : "text-green-600";
 
   return (
     <div
@@ -349,8 +349,8 @@ const TransportTimeline = ({ data }) => {
     horas = Math.floor(diffMin / 60);
     minutos = diffMin % 60;
   } else {
-    horas = 'N/A';
-    minutos = 'N/A';
+    horas = null;
+    minutos = null;
   }
 
 
@@ -406,7 +406,7 @@ const TransportTimeline = ({ data }) => {
               fecha={formatDate(new Date(data.tolva[0].fechaSalida)).date}
               hora={formatDate(new Date(data.tolva[0].fechaSalida)).time}
               Icon={MdFilterListAlt}
-              color={data?.paseDeSalida?.estado===true ? 'gray' : 'orange'}
+              color={data?.paseDeSalida?.estado===true ? 'gray' : 'green'}
               animationDelay={0.5}
             />
           ) : (
@@ -444,11 +444,11 @@ const TransportTimeline = ({ data }) => {
             />
           ) : ( 
             <TimelineSuccessItem
-              title={`Llegada a la guardia: ${(horas>0 && minutos > 15 ) ? 'Tiempo excedido' : 'Sin problema'}`}
+              title={`Llegada a la guardia: ${(horas>0 || minutos > 15 ) ? 'Tiempo excedido' : (horas==null && minutos==null) ? 'N/A': 'Sin Problema'}`}
               fecha={fechaGuardia.date}
               hora={fechaGuardia.time}
               Icon={FiCalendar}
-              color={(horas>0 || minutos > 15 ) ? 'red' : 'yellow'}
+              color={(horas>0 || minutos > 15 ) ? 'red' : 'green'}
             />
           )
         )}
