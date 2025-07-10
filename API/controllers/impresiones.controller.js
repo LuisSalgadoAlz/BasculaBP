@@ -823,7 +823,9 @@ function generarContenidoTercioCarta(copia, esPrimera = false, colors, boleta, d
     { text: 'BENEFICIO DE ARROZ PROGRESO, S.A.', alignment: 'center', bold: true, margin: [0, 15, 0, 0]  },
     { text: [
       { text: `${esPaseSalida ? 'Pase de salida ' : 'Boleta de Peso '}`, bold: true },
-      { text: `No. ${esPaseSalida ? `${addCero(numPaseSalida)} - ${boleta?.id}` : addCero(boleta.numBoleta)}`, color: 'red', bold: true }
+      { text: `No. ${esPaseSalida ? `${addCero(numPaseSalida)}` : addCero(boleta.numBoleta)}`, color: 'red', bold: true }, 
+      { text: `${esPaseSalida && boleta?.numBoleta ? ' Según Boleta de Peso ' : ''}`, bold: true },
+      { text: `${esPaseSalida && boleta?.numBoleta ? `No. ${addCero(boleta?.numBoleta)}` : ''}`, color: 'red', bold: true },
     ], alignment: 'center', bold: true,  margin: [0, 5, 0, 2] },
     { text: `Proceso: ${PROCESO} - ${boleta.movimiento} / Duración del Proceso ${TIEMPOESTADIA}`, alignment: 'center', margin: [0, 1, 0, 15] },
     {

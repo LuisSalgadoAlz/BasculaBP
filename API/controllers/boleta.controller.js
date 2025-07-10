@@ -663,7 +663,8 @@ const postClientePlacaMotoComodin = async (req, res) => {
 
     const debeCrearPase = list_pase_inicial.includes(idMovimiento);
     if (debeCrearPase) {
-      createPaseDeSalida(newBol)
+      const newPase = await createPaseDeSalida(newBol)
+      const response = await generarPaseDeSalidaTemporal(newBol, newPase?.numPaseSalida)
     }
 
     const debeImprimirQR = (idProducto === 17 && idMovimiento === 1) || (idProducto === 18 && idMovimiento === 2);
@@ -1057,7 +1058,7 @@ const updateBoletaOut = async (req, res) => {
       updateData.idOrigen = proceso == 0 ? parseInt(idOrigen) : null;
       updateData.idDestino = proceso == 1 ? parseInt(idDestino) : null;
       updateData.manifiesto = proceso == 1 ? parseInt(manifiesto) : null;
-      updateData.ordenDeCompra = proceso == 0 ? ordenDeCompra : null;
+      updateData.ordenDeCompra = proceso == 0 ? ordenDeCompra || null : null;
       updateData.idTrasladoOrigen = null;
       updateData.idTrasladoDestino = null;
       updateData.trasladoOrigen = null;
@@ -1225,7 +1226,7 @@ const updateBoletaOutComdin = async (req, res) => {
       updateData.origen = proceso == 0 ? origen : "Baprosa";
       updateData.destino = proceso == 1 ? destino : "Baprosa";
       updateData.manifiesto = proceso == 1 ? parseInt(manifiesto) : null;
-      updateData.ordenDeCompra = proceso == 0 ? ordenDeCompra : null;
+      updateData.ordenDeCompra = proceso == 0 ? ordenDeCompra || null : null;
       updateData.idTrasladoOrigen = null;
       updateData.idTrasladoDestino = null;
       updateData.trasladoOrigen = null;
@@ -1257,10 +1258,8 @@ const updateBoletaOutComdin = async (req, res) => {
 
     // Imprimir boleta
     const debeCrearPase = list_parte_final[proceso].includes(idMovimiento);
-    const [crearPase, response] = await Promise.all([
-      debeCrearPase ? createPaseDeSalida(nuevaBoleta) : Promise.resolve(false),
-      imprimirWorkForce(nuevaBoleta)
-    ])
+    const crearPase = debeCrearPase ? await createPaseDeSalida(nuevaBoleta) : null;
+    const response = await imprimirWorkForce(nuevaBoleta, crearPase?.numPaseSalida);
 
     const message = response 
       ? "Boleta creado exitosamente e impresa con exito"
