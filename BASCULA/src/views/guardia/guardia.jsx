@@ -32,6 +32,8 @@ const Guardia = () => {
     }
     setInfoPlaca(response?.data);
     setOpenModal(true);
+    setMotivo(false)
+    setMotivoDetails('')
   };
 
   const handleCloseModal = () => {
@@ -48,13 +50,13 @@ const Guardia = () => {
     const minutos = diffMin % 60;
 
     // Los únicos sin motivo son: sin fecha final Y no servicio báscula
-    const requiereMotivo = (horas !== 0 || minutos < 15) && 
+    const requiereMotivo = (horas !== 0 || minutos > 15) && 
                             (infoPlaca?.fechaFin !== null && 
                             (infoPlaca?.movimiento !== 'SERVICIO BASCULA'));
 
-  if(requiereMotivo) {
-    setMotivo(true)
-  }
+    if(requiereMotivo) {
+      setMotivo(true)
+    }
 
     setDespacharUnidadModal(true)
   }
