@@ -53,6 +53,7 @@ const getBuscarPlaca = async (req, res) => {
 
         // Normalizar paseDeSalida y encontrar el resultado óptimo
         const resultado = findOptimalBoleta(boletas);
+        if(!resultado) return res.send({ err: 'Actualmente no hay boletas activas vinculadas a esta placa.' })
         
         return res.send({ data: resultado });
 
@@ -92,7 +93,7 @@ const findOptimalBoleta = (boletas) => {
     }
 
     // Prioridad 3: Cualquier boleta disponible
-    return boletasNormalizadas[0];
+    return null;
 };
 
 const updatePaseDeSalida = async(req, res) => {
