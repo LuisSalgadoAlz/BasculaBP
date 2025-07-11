@@ -1420,13 +1420,25 @@ const getReimprimir = async (req, res) => {
   try {
     const id = req.params.id;
     const type = req.query.type;
-    const boleta = await db.boleta.findUnique({
-      where: {
-        id: parseInt(id),
-      },
-    });
+    const [boleta, paseDeSalida] = await Promise.all([
+      db.boleta.findUnique({
+        where: {
+          id: parseInt(id),
+        },
+      }), 
+      db.PasesDeSalida.findFirst({
+        select: { numPaseSalida: true },
+        where: {
+          idBoleta: parseInt(id),
+        },
+        orderBy: {
+          numPaseSalida: 'desc'
+        }
+      })
+    ])
+
     const types_colors = {yellow:['y'], pink:['p'], green:['g']}
-    getReimprimirWorkForce(boleta, types_colors[type]);
+    getReimprimirWorkForce(boleta, types_colors[type], paseDeSalida?.numPaseSalida);
     res.send({ msg: "Impresion correcta" });
   } catch (err) {
     console.log(err);
