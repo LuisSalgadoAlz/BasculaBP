@@ -24,10 +24,10 @@ export const getDataForSelect = async (fun, setIsLoading) => {
   }
 };
 
-export const getResumenBFH = async (fun, setIsLoading) => {
+export const getResumenBFH = async (fun, setIsLoading, selected) => {
   try {
     setIsLoading(true)
-    const response = await fetch(`${URLHOST}informes/resumenBFH`, {
+    const response = await fetch(`${URLHOST}informes/resumenBFH?buque=${selected}`, {
       method: "GET",
       headers: {
         Authorization: Cookies.get('token'),

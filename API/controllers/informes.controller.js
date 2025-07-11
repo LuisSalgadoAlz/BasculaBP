@@ -27,11 +27,13 @@ const buquesBoletas = async(req, res) => {
 
 const getResumenBFH = async(req, res) => {
     try{
+        const buque = req.query.buque || null;
+        
         const rawData = await db.boleta.findMany({
             where: {
                 idMovimiento: 2, 
                 idProducto: 18,
-                idSocio: 1036, 
+                idSocio: parseInt(buque), 
                 estado: {
                     not: {
                         in: ['Pendiente', 'Cancelada'],
@@ -73,10 +75,53 @@ const getResumenBFH = async(req, res) => {
         }, {});
 
         const result = Object.values(grouped);
-        res.status(200).send(result);
+        if(result.length==0) return res.status(200).send([{
+            socio: 'No seleccionado',
+            fecha: 'No seleccionado', 
+            total: 'No seleccionado', 
+            pesoNeto: 'No seleccionado',
+            pesoTeorico: 'No seleccionado',
+            desviacion: 'No seleccionado',  
+        }])
+        return res.status(200).send(result);
     } catch(err) {
         console.log(err);
         res.status(500).send({ error: 'Error interno del servidor' });
+    }
+}
+
+const getBuqueStats = async(req, res) => {
+    try{
+        const buque = req.query.buque || null;
+        const total = await db.boleta.groupBy({
+            by: ['idSocio'],
+            where: {
+                idSocio: parseInt(buque), 
+                estado: {
+                    not: {
+                        in: ['Pendiente', 'Cancelada'],
+                    },
+                }, 
+                idMovimiento: 2, 
+                idProducto: 18,
+            }, 
+            _sum:{
+                pesoNeto: true, 
+                pesoTeorico: true, 
+                desviacion: true,
+            }
+        })
+        if(total.length==0) return res.status(200).send({err: 'Buque no seleecionado'})
+        const {_sum} = total[0]
+        const refactorData = {
+            pesoNeto: (_sum.pesoNeto/2204.62).toFixed(2), 
+            pesoTeorico: (_sum.pesoTeorico/2204.62).toFixed(2),
+            desviacion: (_sum.desviacion/2204.62).toFixed(2),
+            porcentaje: ((_sum.desviacion/2204.62).toFixed(2)/(_sum.pesoTeorico/2204.62).toFixed(2)*100).toFixed(2)
+        }
+        return res.status(200).send({refactorData})
+    }catch(err) {
+        console.log(err)
     }
 }
 
@@ -110,5 +155,6 @@ const getBuqueDetalles = async(req, res) =>{
 module.exports = {
     buquesBoletas, 
     getResumenBFH,
-    getBuqueDetalles,  
+    getBuqueDetalles, 
+    getBuqueStats  
 }

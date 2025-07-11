@@ -1,7 +1,7 @@
-import { useCallback, useEffect } from "react";
+import { use, useCallback, useEffect } from "react";
 import { useState } from "react";
 import { getBuquesDetalles, getDataForSelect, getResumenBFH } from "../../hooks/informes/granza";
-import { BuqueDetalles, TablaResumenBFH, TablaResumenBFHLoader } from "./tables";
+import { BuqueDetalles, BuqueDetallesLoader, TablaResumenBFH, TablaResumenBFHLoader } from "./tables";
 
 const Importaciones = () => {
   const [buques, setBuques] = useState([])
@@ -10,7 +10,12 @@ const Importaciones = () => {
   const [resumenBFHLoad, setResumenBFHLoad] = useState(false)
   const [buquesDetails, setBuquesDetails] = useState([{}])
   const [isLoadingBuquesDetails, setIsLoadingBuquesDetails] = useState(false)
+  const [selected, setBuqueSelected] = useState()
   
+  const handleChangeBuque = (e) => {
+    setBuqueSelected(e.target.value)
+  }
+
   const fetchBuques = useCallback(()=>{
     getDataForSelect(setBuques, setIsLoadingBuques)
   }, [])
@@ -21,7 +26,12 @@ const Importaciones = () => {
 
   const fetchBuquesDetalles = useCallback(()=> {
     getBuquesDetalles(setBuquesDetails, setIsLoadingBuquesDetails)
-  })
+  }, [])
+
+  const handleApplicarFiltro = () => {
+    getResumenBFH(setResumenBFH, setResumenBFHLoad, selected)
+    fetchBuquesDetalles()
+  }
 
   useEffect(()=>{
     fetchBuques()
@@ -47,6 +57,8 @@ const Importaciones = () => {
               <div className="relative">
                   <select 
                   name="socio"
+                  onChange={handleChangeBuque}
+                  value={selected}
                   disabled={isLoadingBuques} 
                   className="appearance-none w-full bg-white text-gray-900 border border-gray-300 rounded-lg py-3 pl-4 pr-10 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#955e37] focus:border-[#955e37 ] hover:border-gray-400 transition-colors duration-200"
                   >
@@ -63,7 +75,7 @@ const Importaciones = () => {
               </div>
               </div>
               
-              <button className="bg-gradient-to-r from-[#955e37] to-[#804e2b] text-white font-medium py-3 px-8 rounded-lg shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]">
+              <button onClick={handleApplicarFiltro} className="bg-gradient-to-r from-[#955e37] to-[#804e2b] text-white font-medium py-3 px-8 rounded-lg shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]">
               <span className="flex items-center gap-2">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
@@ -82,7 +94,11 @@ const Importaciones = () => {
         )}
       </div>
       <div>
-        <BuqueDetalles datos={buquesDetails}/>
+        {isLoadingBuquesDetails ? (
+          <BuqueDetallesLoader />
+        ):(
+          <BuqueDetalles datos={buquesDetails} />
+        )}
       </div>
     </>
   );

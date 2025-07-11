@@ -38,18 +38,18 @@ export const TablaResumenBFH = ({datos=[]}) => {
                       {fila.total}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-right font-mono">
-                      {(fila.pesoTeorico/100).toFixed(2)} QQ
+                      {typeof fila?.pesoTeorico === 'number' ? `${(fila.pesoTeorico/2204.62).toFixed(2)} TM` : fila.pesoTeorico}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-right font-mono">
-                      {(fila.pesoNeto/100).toFixed(2)} QQ
+                      {typeof fila?.pesoNeto === 'number' ? `${(fila.pesoNeto/2204.62).toFixed(2)} TM` : fila.pesoNeto}
                     </td>
                     <td className={`px-6 py-4 whitespace-nowrap text-sm text-right font-mono font-medium ${
                       fila.desviacion >= 0 ? 'text-green-600' : 'text-red-600'
                     }`}>
-                      {fila.desviacion >= 0 ? '+' : ''}{fila.desviacion/100} QQ
+                      {typeof fila?.desviacion === 'number' ? `${fila.desviacion >= 0 ? '+' : ''}${(fila.desviacion/2204.62).toFixed(2)} TM` : fila.desviacion}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-right">
-                      {((fila.desviacion/fila.pesoTeorico)*100).toFixed(2)} %
+                      {typeof fila?.desviacion === 'number' ? `${((fila.desviacion/fila.pesoTeorico)*100).toFixed(2)} %` : fila.desviacion}
                     </td>
                   </tr>
                 ))}
@@ -190,6 +190,67 @@ export const BuqueDetalles = ({datos=[]}) => {
         
         <div className="mt-4 text-sm text-gray-600">
           Total de registros: {datos.length}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const BuqueDetallesLoader = () => {
+  const skeletonRows = Array(3).fill(null);
+  return (
+    <div className="mt-10">
+      <div className="mx-auto">
+        <h2 className="text-xl font-bold text-gray-500 mb-2">Detalles</h2>
+        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full table-auto">
+              <thead className="bg-[#725033] text-white">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">
+                    # VIAJE
+                  </th>
+                  <th className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider">
+                    QQ T.E.H
+                  </th>
+                  <th className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider">
+                    PESO NETO QQ
+                  </th>
+                  <th className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider">
+                    DIF. EN PESOS
+                  </th>
+                  <th className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider">
+                    % DIF. EN PESOS
+                  </th> 
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {skeletonRows.map((_, index) => (
+                  <tr key={index} className="animate-pulse">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="h-4 bg-gray-200 rounded w-16"></div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <div className="h-4 bg-gray-200 rounded w-14 ml-auto"></div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <div className="h-4 bg-gray-200 rounded w-14 ml-auto"></div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <div className="h-4 bg-gray-200 rounded w-12 ml-auto"></div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <div className="h-4 bg-gray-200 rounded w-12 ml-auto"></div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <div className="mt-4 text-sm text-gray-600">
+          <div className="h-4 bg-gray-200 rounded w-32 animate-pulse"></div>
         </div>
       </div>
     </div>
