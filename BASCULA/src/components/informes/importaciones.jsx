@@ -86,20 +86,21 @@ const Importaciones = () => {
     {
       id: 2,
       title: "Liquidacion",
-      description: "Liquidacion de importaciones",
+      description: "Liquidacion de importaciones (Desarrollo)",
       icon: AiOutlineDollarCircle,
-      category: "Usuarios",
+      category: "Financiero",
       color: "bg-gray-500"
     },
     {
       id: 3,
       title: "Desviaciones",
-      description: "Camiones arriba de 200 QQ",
+      description: "Camiones arriba de 200 QQ (No desarrollado)",
       icon: IoAlertSharp,
-      category: "Usuarios",
+      category: "Financiero",
       color: "bg-gray-500"
     },
   ];
+  
   const statsdata = [
       {
         icon: <FiCalendar size={24} className="text-white" />,
@@ -125,7 +126,7 @@ const Importaciones = () => {
         value:  stats?.porcentaje || 0,
         color: "bg-amber-500",
       },
-    ];
+  ];
 
   return (
     <>

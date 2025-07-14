@@ -274,8 +274,7 @@ export const ModalReportes=({reports, hdlClose}) => {
 
   const handleGenerateReport = () => {
     if (selectedReport) {
-      alert(`Generando reporte: ${selectedReport.title}`);
-      setIsOpen(false);
+      alert(`Generando reporte: ${selectedReport.id}${selectedReport.title}`);
       setSelectedReport(null);
     }
   };

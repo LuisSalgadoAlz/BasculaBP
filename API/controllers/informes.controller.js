@@ -209,9 +209,42 @@ const getBuqueDetalles = async(req, res) =>{
     }
 }
 
+const exportR1Importaciones =  async(req, res) => {
+  try {
+    const buque = req.query.buque;
+    if(!buque && buque===undefined) return res.send({err: 'No se selecciono buque. Intente denuevo'})
+    
+    const data = await db.boleta.findMany({
+        select:{
+            fechaInicio: true,
+            fechaFin: true,
+            Nviajes: true,
+            NSalida: true,
+        }, 
+        where:{
+        idSocio: parseInt(buque), 
+        idMovimiento: IMPORTACIONES, 
+        idProducto: GRANZA,
+        estado:{
+                not: {
+                    in: ['Pendiente', 'Cancelada'],
+                },
+            }, 
+        }, 
+        orderBy: {
+            Nviajes: 'asc'
+        },
+    })
+    return res.send({msg: data})
+  }catch (err) {
+    console.error("Error generando el reporte Excel R1:", err);
+  }
+}
+
 module.exports = {
     buquesBoletas, 
     getResumenBFH,
     getBuqueDetalles, 
-    getBuqueStats  
+    getBuqueStats,
+    exportR1Importaciones,  
 }
