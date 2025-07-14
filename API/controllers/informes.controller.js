@@ -1,14 +1,15 @@
 const db = require("../lib/prisma");
 const dotenv = require("dotenv");
 const jwt = require("jsonwebtoken");
+const { QUINTALTONELADA, GRANZA, IMPORTACIONES } = require("../utils/variablesInformes");
 
 const buquesBoletas = async(req, res) => {
     try{
         const resultado = await db.boleta.groupBy({
             by: ['socio', 'idSocio'], 
             where:{
-                idMovimiento: 2, 
-                idProducto: 18,
+                idMovimiento: IMPORTACIONES, 
+                idProducto: GRANZA,
                 estado:{
                     not: {
                         in: ['Pendiente', 'Cancelada'],
@@ -31,8 +32,8 @@ const getResumenBFH = async(req, res) => {
         
         const rawData = await db.boleta.findMany({
             where: {
-                idMovimiento: 2, 
-                idProducto: 18,
+                idMovimiento: IMPORTACIONES, 
+                idProducto: GRANZA,
                 idSocio: parseInt(buque), 
                 estado: {
                     not: {
@@ -102,8 +103,8 @@ const getBuqueStats = async(req, res) => {
                         in: ['Pendiente', 'Cancelada'],
                     },
                 }, 
-                idMovimiento: 2, 
-                idProducto: 18,
+                idMovimiento: IMPORTACIONES, 
+                idProducto: GRANZA,
             }, 
             _sum:{
                 pesoNeto: true, 
@@ -114,12 +115,12 @@ const getBuqueStats = async(req, res) => {
         if(total.length==0) return res.status(200).send({err: 'Buque no seleecionado'})
         const {_sum} = total[0]
         const refactorData = {
-            pesoNeto: (_sum.pesoNeto/2204.62).toFixed(2), 
-            pesoTeorico: (_sum.pesoTeorico/2204.62).toFixed(2),
-            desviacion: (_sum.desviacion/2204.62).toFixed(2),
-            porcentaje: ((_sum.desviacion/2204.62).toFixed(2)/(_sum.pesoTeorico/2204.62).toFixed(2)*100).toFixed(2)
+            pesoNeto: (_sum.pesoNeto/QUINTALTONELADA).toFixed(2), 
+            pesoTeorico: (_sum.pesoTeorico/QUINTALTONELADA).toFixed(2),
+            desviacion: (_sum.desviacion/QUINTALTONELADA).toFixed(2),
+            porcentaje: ((_sum.desviacion/QUINTALTONELADA)/(_sum.pesoTeorico/QUINTALTONELADA)*100).toFixed(2)
         }
-        return res.status(200).send({refactorData})
+        return res.status(200).send({...refactorData})
     }catch(err) {
         console.log(err)
     }
@@ -127,26 +128,82 @@ const getBuqueStats = async(req, res) => {
 
 const getBuqueDetalles = async(req, res) =>{
     try{
-        const data = await db.boleta.findMany({
+        const buque = req.query.buque || null;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        if(!buque || buque===undefined) return res.status(200).send({
+            data: [{
+                Nviajes: 'No seleccionado',
+                pesoTeorico: 'No seleccionado', 
+                pesoNeto: 'No seleccionado',
+                desviacion: 'No seleccionado', 
+            }],
+            pagination: {
+                totalData: 1,
+                totalPages: 1,
+                currentPage: 1,
+                limit:1,
+            },
+        })
+        
+        const where = {
+            idSocio: parseInt(buque),
+            idMovimiento: IMPORTACIONES,
+            idProducto: GRANZA,
+            estado: {
+                not: {
+                    in: ['Pendiente', 'Cancelada'],
+                },
+            },  
+        }
+
+        const [data, totalData] = await Promise.all([
+            db.boleta.findMany({
             select:{
                 Nviajes: true,
                 pesoTeorico:true, 
                 pesoNeto: true,
-                desviacion:true, 
+                desviacion:true,
+                bodegaPuerto: true, 
             }, 
-            where:{
-                idSocio: 1036,
-                estado: {
-                    not: {
-                        in: ['Pendiente', 'Cancelada'],
-                    },
-                },  
-            },
+            where, 
             orderBy:{
-                Nviajes: 'asc'
+                Nviajes: 'asc',
+            },
+            skip,
+            take: limit,
+            }), 
+            db.boleta.count({where})
+        ])
+
+        if(data.length==0) return res.status(200).send(
+            {
+                data: [{
+                    Nviajes: 'No seleccionado',
+                    pesoTeorico: 'No seleccionado', 
+                    pesoNeto: 'No seleccionado',
+                    desviacion: 'No seleccionado', 
+                }],
+                pagination: {
+                    totalData: 1,
+                    totalPages: 1,
+                    currentPage: 1,
+                    limit:1,
+                },
             }
-        })
-        res.status(200).send(data)
+        )
+
+        return res.send({
+            data: data,
+            pagination: {
+                totalData,
+                totalPages: Math.ceil(totalData / limit),
+                currentPage: page,
+                limit,
+            },
+        });
     }catch(err) {
         console.log(err)
     }
