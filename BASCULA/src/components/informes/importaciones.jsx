@@ -122,7 +122,7 @@ const Importaciones = () => {
       },
       {
         icon: <FiClock size={24} className="text-white" />,
-        title: "Porcentaje (%)",
+        title: "Desviacion (%)",
         value:  stats?.porcentaje || 0,
         color: "bg-amber-500",
       },
@@ -181,7 +181,7 @@ const Importaciones = () => {
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-4 max-sm:grid-cols-2 max-md:grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
         {statsdata?.map((stat, index) => (
             <StatCard
               key={index}
