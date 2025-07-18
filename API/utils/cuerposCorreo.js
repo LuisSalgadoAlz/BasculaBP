@@ -57,7 +57,7 @@ const alertaDesviacion = (nuevaBoleta, despachador, enviarCorreo) => {
           <td style="padding: 8px; border-bottom: 1px solid #eee;">${nuevaBoleta.placa || 'N/A'}</td>
         </tr>
         <tr>
-          <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Placa:</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Motorista:</td>
           <td style="padding: 8px; border-bottom: 1px solid #eee;">${nuevaBoleta.motorista || 'N/A'}</td>
         </tr>
         <tr>
