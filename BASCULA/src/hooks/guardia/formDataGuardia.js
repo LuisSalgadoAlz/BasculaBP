@@ -2,8 +2,9 @@ import { URLHOST } from '../../constants/global'
 import Cookies from 'js-cookie'
 
 
-export const getDataPlaca = async (fun, placa) => {
+export const getDataPlaca = async (fun, placa, setIsLoading) => {
   try {
+    setIsLoading(true)
     const response = await fetch(`${URLHOST}guardia/buscarPlaca?placa=${placa}`, {
       method: "GET",
       headers: {
@@ -19,6 +20,8 @@ export const getDataPlaca = async (fun, placa) => {
     return data
   } catch (error) {
     console.error("Error al obtener los clientes:", error);
+  }finally{
+    setIsLoading(false)
   }
 };
 

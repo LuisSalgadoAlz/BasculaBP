@@ -17,6 +17,7 @@ const Guardia = () => {
   const [isLoadingConfirm, setIsLoadingConfirm] = useState(false)
   const [motivo, setMotivo] = useState(false)
   const [motivoDetails, setMotivoDetails] = useState()
+  const [isLoadingSearch, setIsLoadingSearch] = useState(false)
 
   const handleChangePlaca = (e) => {
     const { value } = e.target;
@@ -25,7 +26,7 @@ const Guardia = () => {
 
   const handleSearchPlaca = async () => {
     if(!placa) return toast.error('No ha ingresado una placa.', {style:{background:'#ff4d4f'}});
-    const response = await getDataPlaca(setInfoPlaca, placa);
+    const response = await getDataPlaca(setInfoPlaca, placa, setIsLoadingSearch);
     if (response?.err) {
       toast.error(response?.err, {style:{background:'#ff4d4f'}});
       return
@@ -136,12 +137,13 @@ const Guardia = () => {
 
           <button
             onClick={handleSearchPlaca}
+            disabled={isLoadingSearch}
             className="bg-[#725033] hover:bg-[#866548] text-white font-medium 
                       py-2.5 px-6 rounded-lg transition-all duration-200 
                       focus:outline-none focus:ring-2 focus:ring-[#a67c5a] 
                       min-w-[100px]"
           >
-            Buscar
+            {isLoadingSearch ? 'Buscando...' : 'Buscar'}
           </button>
         </div>
 
