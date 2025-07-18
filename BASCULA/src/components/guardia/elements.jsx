@@ -45,7 +45,7 @@ const StatusBadge = ({ paseDeSalida, data, horas, minutos }) => {
     }
     
     if (paseDeSalida.estado === false) {
-      if((horas && minutos) && (horas!==0 || minutos>15)) {
+      if((horas>0 || minutos>15)) {
         return {
           text: "Permitido para salir - Tiempo excedido",
           className: "bg-orange-500 text-white"
@@ -115,7 +115,7 @@ const ModalHeader = ({ data, closeModal }) => {
                   <span className="text-sm font-medium">{data?.placa}</span>
                 </span>
                 
-                {(data?.manifiesto || data?.manifiesto !== 0) && (
+                {(data?.manifiesto !== 0 && data?.manifiesto !== null) && (
                   <span className="flex items-center gap-1 min-w-fit">
                     <FiPackage className="w-4 h-4 flex-shrink-0" />
                     <span className="text-sm">Manifiesto: {data?.manifiesto}</span>
