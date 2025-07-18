@@ -48,7 +48,7 @@ const getBuscarPlaca = async (req, res) => {
         });
 
         if (boletas.length === 0) {
-            return res.send({ err: 'Boleta no encontrada con esa placa.' });
+            return res.send({ err: 'Actualmente no hay boletas activas vinculadas a esta placa.' });
         }
 
         // Normalizar paseDeSalida y encontrar el resultado óptimo
