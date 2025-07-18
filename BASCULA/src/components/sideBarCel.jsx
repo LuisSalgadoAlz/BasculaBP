@@ -8,6 +8,9 @@ import { IoMdClose } from "react-icons/io";
 
 import Cookies from "js-cookie";
 import { AiOutlineFileExclamation } from "react-icons/ai";
+import { SlSupport } from "react-icons/sl";
+import { useState } from "react";
+import { SupportModal } from "./alerts";
 
 const RUTAS_PRINCIPALES = [
   {
@@ -114,8 +117,8 @@ export const BotonesDeAccion = ({ onLogout, onClose }) => (
 );
 
 // Componente atómico para el overlay del modal
-export const ModalOverlay = ({ children }) => (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+export const ModalOverlay = ({ children, typeClase = 'bg-black/40' }) => (
+  <div className={`fixed inset-0 z-50 flex items-center justify-center ${typeClase} backdrop-blur-sm`}>
     <div className="bg-white p-6 rounded-2xl shadow-xl max-w-sm border border-gray-300">
       {children}
     </div>
@@ -134,13 +137,35 @@ export const useLogout = () => {
   return handleLogout;
 };
 
-export const BaseSidebar = ({ routes, onClose }) => {
-  const handleLogout = useLogout();
-  
+const SupportModalButton = ({openModal}) => {
   return (
-    <ModalOverlay>
+    <button
+      onClick={openModal}
+      className="flex items-center rounded-lg px-4 py-3 mt-2 text-sm font-medium text-gray-700 elements-active hover:bg-gray-100 hover:shadow-md w-full active:bg-red-50"
+    >
+      <span className="text-2xl"><SlSupport /></span>
+      <span className="flex-1">Soporte</span>
+    </button>
+  )
+}
+
+export const BaseSidebar = ({ routes, onClose, modalSupport=true }) => {
+  const handleLogout = useLogout();
+  const [modal, setModal]= useState(false) 
+  
+  const openModal = () => {
+    setModal(true)
+  }
+  const closeModal = () => {
+    setModal(false)
+  }
+
+  return (
+    <ModalOverlay typeClase={modal ? 'bg-black/0' : 'bg-black/40'}>
       <NavList routes={routes} />
+      {modalSupport && <SupportModalButton openModal={openModal} />}
       <BotonesDeAccion onLogout={handleLogout} onClose={onClose} />
+      {modal && <SupportModal hdClose={closeModal}/>}
     </ModalOverlay>
   );
 };
