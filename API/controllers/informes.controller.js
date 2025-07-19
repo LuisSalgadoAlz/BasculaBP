@@ -15,7 +15,10 @@ const buquesBoletas = async(req, res) => {
                     not: {
                         in: ['Pendiente', 'Cancelada'],
                     },
-                }
+                },
+                fechaFin: {
+                    gt: new Date('2025-06-25'), // Fecha en la que se empezo a utlizar bien el sistema.
+                },
             },
             orderBy:{
                 idSocio: 'asc'
@@ -31,25 +34,50 @@ const getResumenBFH = async(req, res) => {
     try{
         const buque = req.query.buque || null;
         
-        const rawData = await db.boleta.findMany({
-            where: {
-                idMovimiento: IMPORTACIONES, 
-                idProducto: GRANZA,
-                idSocio: parseInt(buque), 
-                estado: {
-                    not: {
-                        in: ['Pendiente', 'Cancelada'],
-                    },
+        const dataEmpty = [{
+            socio: 'No seleccionado',
+            fecha: 'No seleccionado', 
+            total: 'No seleccionado', 
+            pesoNeto: 'No seleccionado',
+            pesoTeorico: 'No seleccionado',
+            desviacion: 'No seleccionado',  
+        }]
+
+        if(buque==undefined || buque==null || isNaN(Number(buque))) return res.status(200).send(dataEmpty)
+
+        
+        const rawData = await db.$queryRaw`
+        WITH numerados AS (
+            SELECT *,
+                ROW_NUMBER() OVER (PARTITION BY nviajes ORDER BY numBoleta) AS factura
+            FROM boleta
+            WHERE estado != 'Pendiente' AND estado != 'Cancelada' AND idSocio = ${buque} AND idMovimiento = ${IMPORTACIONES} AND idProducto = ${GRANZA} AND Nviajes is not null
+        )
+        SELECT socio, fechaFin, pesoNeto, pesoTeorico, desviacion, factura
+        FROM numerados
+        ORDER BY factura ASC, fechaFin ASC`;
+        
+        /* 
+            const rawData = await db.boleta.findMany({
+                where: {
+                    idMovimiento: IMPORTACIONES, 
+                    idProducto: GRANZA,
+                    idSocio: parseInt(buque), 
+                    estado: {
+                        not: {
+                            in: ['Pendiente', 'Cancelada'],
+                        },
+                    }
+                },
+                select: {
+                    socio: true,
+                    fechaFin: true, 
+                    pesoNeto: true,
+                    pesoTeorico: true,
+                    desviacion: true,   
                 }
-            },
-            select: {
-                socio: true,
-                fechaFin: true, 
-                pesoNeto: true,
-                pesoTeorico: true,
-                desviacion: true,   
-            }
-        });
+            }); 
+        */
 
         const grouped = rawData.reduce((acc, item) => {
             // Convertir fecha UTC a zona horaria de Honduras (UTC-6)
@@ -57,12 +85,13 @@ const getResumenBFH = async(req, res) => {
             const fechaHonduras = new Date(fechaUTC.getTime() - (6 * 60 * 60 * 1000));
             const fechaLocal = fechaHonduras.toISOString().split('T')[0];
             
-            const key = `${item.socio}-${fechaLocal}`;
+            const key = `${item.socio}-${fechaLocal}-${Number(item.factura)}`;
             
             if (!acc[key]) {
                 acc[key] = {
                     socio: item.socio,
                     fecha: fechaLocal,
+                    factura: Number(item.factura),
                     total: 0, 
                     pesoNeto: 0, 
                     pesoTeorico: 0,
@@ -77,14 +106,7 @@ const getResumenBFH = async(req, res) => {
         }, {});
 
         const result = Object.values(grouped);
-        if(result.length==0) return res.status(200).send([{
-            socio: 'No seleccionado',
-            fecha: 'No seleccionado', 
-            total: 'No seleccionado', 
-            pesoNeto: 'No seleccionado',
-            pesoTeorico: 'No seleccionado',
-            desviacion: 'No seleccionado',  
-        }])
+        if(result.length==0) return res.status(200).send(dataEmpty)
         return res.status(200).send(result);
     } catch(err) {
         console.log(err);
@@ -95,7 +117,20 @@ const getResumenBFH = async(req, res) => {
 const getBuqueStats = async(req, res) => {
     try{
         const buque = req.query.buque || null;
-        const total = await db.boleta.groupBy({
+        if (!buque || isNaN(Number(buque))) return res.status(200).json({ error: 'Parámetro buque inválido o no seleccionado' });
+
+        const [facturas, total] = await Promise.all([
+            db.$queryRaw`
+            WITH numerados AS (
+                SELECT *,
+                    ROW_NUMBER() OVER (PARTITION BY nviajes ORDER BY numBoleta) AS factura
+                FROM boleta
+                WHERE estado != 'Pendiente' AND estado != 'Cancelada' AND idSocio = ${buque} AND idMovimiento = ${IMPORTACIONES} AND idProducto = ${GRANZA} AND Nviajes is not null
+            )
+            SELECT count(DISTINCT (factura)) as CantidadFacturas
+            FROM numerados
+            `, 
+            db.boleta.groupBy({
             by: ['idSocio'],
             where: {
                 idSocio: parseInt(buque), 
@@ -113,9 +148,11 @@ const getBuqueStats = async(req, res) => {
                 desviacion: true,
             }
         })
+        ])
         if(total.length==0) return res.status(200).send({err: 'Buque no seleecionado'})
         const {_sum} = total[0]
         const refactorData = {
+            facturas: facturas[0].CantidadFacturas || 1,
             pesoNeto: (_sum.pesoNeto/QUINTALTONELADA).toFixed(2), 
             pesoTeorico: (_sum.pesoTeorico/QUINTALTONELADA).toFixed(2),
             desviacion: (_sum.desviacion/QUINTALTONELADA).toFixed(2),
@@ -134,9 +171,12 @@ const getBuqueDetalles = async(req, res) =>{
         const limit = parseInt(req.query.limit) || 10;
         const skip = (page - 1) * limit;
 
-        if(!buque || buque===undefined) return res.status(200).send({
+        const dataEmpty = {
             data: [{
+                numBoleta:'No seleccionado',
                 Nviajes: 'No seleccionado',
+                factura: 'No seleccionado', 
+                bodegaPuerto: 'No seleccionado',
                 pesoTeorico: 'No seleccionado', 
                 pesoNeto: 'No seleccionado',
                 desviacion: 'No seleccionado', 
@@ -147,12 +187,17 @@ const getBuqueDetalles = async(req, res) =>{
                 currentPage: 1,
                 limit:1,
             },
-        })
+        }
+        
+        if(!buque || buque===undefined || isNaN(Number(buque))) return res.status(200).send(dataEmpty)
         
         const where = {
             idSocio: parseInt(buque),
             idMovimiento: IMPORTACIONES,
             idProducto: GRANZA,
+            Nviajes: {
+                not: null,
+            },
             estado: {
                 not: {
                     in: ['Pendiente', 'Cancelada'],
@@ -161,43 +206,36 @@ const getBuqueDetalles = async(req, res) =>{
         }
 
         const [data, totalData] = await Promise.all([
-            db.boleta.findMany({
-            select:{
-                Nviajes: true,
-                pesoTeorico:true, 
-                pesoNeto: true,
-                desviacion:true,
-                bodegaPuerto: true, 
-            }, 
-            where, 
-            orderBy:{
-                Nviajes: 'asc',
-            },
-            skip,
-            take: limit,
-            }), 
+            db.$queryRaw`
+                WITH numerados AS (
+                    SELECT *,
+                    ROW_NUMBER() OVER (PARTITION BY Nviajes ORDER BY numBoleta) AS factura
+                    FROM boleta
+                    WHERE estado != 'Pendiente' 
+                    AND estado != 'Cancelada' 
+                    AND idSocio = ${buque} 
+                    AND idMovimiento = ${IMPORTACIONES} 
+                    AND idProducto = ${GRANZA} 
+                    AND Nviajes IS NOT NULL
+                )
+                SELECT socio, numBoleta, fechaFin, pesoNeto, pesoTeorico, desviacion, bodegaPuerto, Nviajes, factura
+                FROM numerados
+                ORDER BY factura ASC, Nviajes ASC
+                OFFSET ${skip} ROWS
+                FETCH NEXT ${limit} ROWS ONLY;
+            `, 
             db.boleta.count({where})
         ])
 
-        if(data.length==0) return res.status(200).send(
-            {
-                data: [{
-                    Nviajes: 'No seleccionado',
-                    pesoTeorico: 'No seleccionado', 
-                    pesoNeto: 'No seleccionado',
-                    desviacion: 'No seleccionado', 
-                }],
-                pagination: {
-                    totalData: 1,
-                    totalPages: 1,
-                    currentPage: 1,
-                    limit:1,
-                },
-            }
-        )
+        if(data.length==0) return res.status(200).send(dataEmpty)
+
+        const parsedData = data.map(row => ({
+            ...row,
+            factura: Number(row.factura),
+        }));
 
         return res.send({
-            data: data,
+            data: parsedData,
             pagination: {
                 totalData,
                 totalPages: Math.ceil(totalData / limit),
@@ -213,6 +251,7 @@ const getBuqueDetalles = async(req, res) =>{
 const exportR1Importaciones =  async(req, res) => {
     try{
         const buque = req.query.buque || null;
+        const factura = req.query.factura || 1;
         const where = {
             idSocio: parseInt(buque),
             idMovimiento: IMPORTACIONES,
@@ -223,17 +262,18 @@ const exportR1Importaciones =  async(req, res) => {
                 },
             },  
         }
-        // Obtener datos del resumen BFH
-        const rawData = await db.boleta.findMany({
-            where,
-            select: {
-                socio: true,
-                fechaFin: true, 
-                pesoNeto: true,
-                pesoTeorico: true,
-                desviacion: true,   
-            }
-        });
+        // Obtener datos del resumen BFH por factura correspondiente
+        const rawData = await db.$queryRaw`
+        WITH numerados AS (
+            SELECT *,
+                ROW_NUMBER() OVER (PARTITION BY nviajes ORDER BY numBoleta) AS factura
+            FROM boleta
+            WHERE estado != 'Pendiente' AND estado != 'Cancelada' AND idSocio = ${buque} AND idMovimiento = ${IMPORTACIONES} AND idProducto = ${GRANZA} AND Nviajes is not null
+        )
+        SELECT socio, fechaFin, pesoNeto, pesoTeorico, desviacion, factura
+        FROM numerados
+        where factura = ${factura}
+        ORDER BY factura ASC, fechaFin ASC`;
 
         const grouped = rawData.reduce((acc, item) => {
             // Convertir fecha UTC a zona horaria de Honduras (UTC-6)
@@ -263,20 +303,23 @@ const exportR1Importaciones =  async(req, res) => {
         const result = Object.values(grouped);
         
         // Obtener datos de detalles del buque
-        const buqueDetalles = await db.boleta.findMany({
-            where,
-            select:{
-                numBoleta: true,
-                Nviajes: true,
-                pesoTeorico:true, 
-                pesoNeto: true,
-                desviacion:true,
-                bodegaPuerto: true, 
-            }, 
-            orderBy:{
-                Nviajes: 'asc',
-            },
-        });
+        const buqueDetalles = await db.$queryRaw`
+            WITH numerados AS (
+                SELECT *,
+                ROW_NUMBER() OVER (PARTITION BY Nviajes ORDER BY numBoleta) AS factura
+                FROM boleta
+                WHERE estado != 'Pendiente' 
+                AND estado != 'Cancelada' 
+                AND idSocio = ${buque} 
+                AND idMovimiento = ${IMPORTACIONES} 
+                AND idProducto = ${GRANZA} 
+                AND Nviajes IS NOT NULL
+            )
+            SELECT *
+            FROM numerados
+            WHERE factura = ${factura}
+            ORDER BY factura ASC, Nviajes ASC
+        `
         
         // Verificación de datos del resumen
         if (result.length === 0) {
@@ -427,17 +470,17 @@ const exportR1Importaciones =  async(req, res) => {
         }
 
         // Encabezado del reporte
-        sheet1.mergeCells("B1:I1");
+        sheet1.mergeCells("B1:L1");
         const titleCell = sheet1.getCell("B1");
         titleCell.value = "BAPROSA - Sistema de Gestión de Básculas";
         Object.assign(titleCell.style, styles.title);
         
-        sheet1.mergeCells("B2:I2");
+        sheet1.mergeCells("B2:L2");
         const subtitleCell = sheet1.getCell("B2");
         subtitleCell.value = "RESUMEN BFH - IMPORTACIONES DE GRANZA";
         Object.assign(subtitleCell.style, styles.subtitle);
         
-        sheet1.mergeCells("B3:I3");
+        sheet1.mergeCells("B3:L3");
         const dateCell = sheet1.getCell("B3");
         const now = new Date();
         dateCell.value = `Generado el: ${now.toLocaleDateString('es-ES', { 
@@ -453,171 +496,113 @@ const exportR1Importaciones =  async(req, res) => {
         // Espacio antes de las tablas
         sheet1.addRow([]);
         
-        // ===== SECCIÓN 1: RESUMEN POR FECHAS =====
-        sheet1.mergeCells(`A${sheet1.rowCount + 1}:F${sheet1.rowCount + 1}`);
-        const summarySection = sheet1.getCell(`A${sheet1.rowCount}`);
+        // ===== TÍTULOS DE SECCIONES LADO A LADO =====
+        const sectionTitlesRow = sheet1.addRow([]);
+        const currentRow = sheet1.rowCount;
+        
+        // Título de la primera sección (columnas A-F)
+        sheet1.mergeCells(`A${currentRow}:F${currentRow}`);
+        const summarySection = sheet1.getCell(`A${currentRow}`);
         summarySection.value = "RESUMEN POR FECHAS";
         Object.assign(summarySection.style, styles.sectionTitle);
         
+        // Título de la segunda sección (columnas H-L)
+        sheet1.mergeCells(`H${currentRow}:L${currentRow}`);
+        const detailsSection = sheet1.getCell(`H${currentRow}`);
+        detailsSection.value = "DETALLES POR VIAJE";
+        Object.assign(detailsSection.style, styles.sectionTitle);
+        
         sheet1.addRow([]);
         
-        // Encabezados de columnas para resumen
-        const headers = ['Socio', 'Fecha', 'Total', 'Peso Neto', 'Peso Teórico', 'Desviación'];
-        const headerRow = sheet1.addRow(headers);
-        headerRow.height = 30;
-        headerRow.eachCell((cell) => {
+        // ===== ENCABEZADOS DE COLUMNAS LADO A LADO =====
+        const headersRow = sheet1.addRow([]);
+        const headerRowNum = sheet1.rowCount;
+        
+        // Encabezados de la primera tabla (columnas A-F)
+        const headers1 = ['Socio', 'Fecha', 'Total', 'Peso Neto', 'Peso Teórico', 'Desviación'];
+        headers1.forEach((header, index) => {
+            const cell = sheet1.getCell(headerRowNum, index + 1);
+            cell.value = header;
             Object.assign(cell.style, styles.header);
         });
         
+        // Encabezados de la segunda tabla (columnas H-L)
+        const headers2 = ['N° Viaje', 'Peso Teórico', 'Peso Neto', 'Desviación', 'Bodega Puerto'];
+        headers2.forEach((header, index) => {
+            const cell = sheet1.getCell(headerRowNum, index + 8); // Columna H = 8
+            cell.value = header;
+            Object.assign(cell.style, styles.header);
+        });
+        
+        headersRow.height = 30;
+        
         // Configuración de anchos de columna
-        const columnWidths = [30, 15, 10, 20, 20, 20];
+        const columnWidths = [30, 15, 10, 20, 20, 20, 5, 20, 20, 20, 20, 25]; // Incluye columna G como separador
         columnWidths.forEach((width, i) => {
             sheet1.getColumn(i + 1).width = width;
         });
 
-        // Agregar datos del resumen
+        // ===== CALCULAR TOTALES ANTES DE MOSTRAR LOS DATOS =====
         let totalRecords = 0;
         let totalPesoNeto = 0;
         let totalPesoTeorico = 0;
         let totalDesviacion = 0;
+        
+        let detailTotalPesoNeto = 0;
+        let detailTotalPesoTeorico = 0;
+        let detailTotalDesviacion = 0;
 
-        result.forEach((item, index) => {
-            const dataRow = sheet1.addRow([
-                item.socio,
-                item.fecha,
-                item.total,
-                item.pesoNeto,
-                item.pesoTeorico,
-                item.desviacion
-            ]);
-            dataRow.height = 22;
-            
-            // Actualizar totales si los datos son numéricos
+        // Calcular totales de la primera tabla
+        result.forEach(item => {
             if (typeof item.total === 'number') {
                 totalRecords += item.total;
                 totalPesoNeto += item.pesoNeto;
                 totalPesoTeorico += item.pesoTeorico;
                 totalDesviacion += item.desviacion;
             }
-            
-            // Aplicar estilo alternado
-            if (index % 2 !== 0) {
-                dataRow.eachCell((cell) => {
-                    cell.style = {...styles.data, ...styles.alternateRow};
-                });
-            } else {
-                dataRow.eachCell((cell) => {
-                    Object.assign(cell.style, styles.data);
-                });
-            }
-            
-            // Formato para valores numéricos
-            if (typeof item.pesoNeto === 'number') {
-                const pesoNetoCell = dataRow.getCell(4);
-                pesoNetoCell.numFmt = '#,##0.00 "lb"';
-                pesoNetoCell.alignment = { horizontal: 'right', vertical: 'middle' };
-
-                const pesoTeoricoCell = dataRow.getCell(5);
-                pesoTeoricoCell.numFmt = '#,##0.00 "lb"';
-                pesoTeoricoCell.alignment = { horizontal: 'right', vertical: 'middle' };
-
-                const desviacionCell = dataRow.getCell(6);
-                desviacionCell.numFmt = '#,##0.00 "lb"';
-                desviacionCell.alignment = { horizontal: 'right', vertical: 'middle' };
-                
-                // Colorear desviación según su valor
-                if (item.desviacion > -100 && item.desviacion < 100) {
-                    desviacionCell.font = { name: 'Calibri', bold: true, size: 11, color: { argb: COLORS.success } };
-                } else {
-                    desviacionCell.font = { name: 'Calibri', bold: true, size: 11, color: { argb: COLORS.danger } };
-                }
-            }
-            
-            // Centrar columnas específicas
-            dataRow.getCell(2).alignment = { horizontal: 'center', vertical: 'middle' }; // Fecha
-            dataRow.getCell(3).alignment = { horizontal: 'center', vertical: 'middle' }; // Total
         });
 
-        // Agregar totales solo si hay datos numéricos
-        if (typeof result[0]?.total === 'number') {
-            sheet1.addRow([]);
-            const totalsRow = sheet1.addRow(['', 'TOTALES:', totalRecords, totalPesoNeto.toFixed(2), totalPesoTeorico.toFixed(2), totalDesviacion.toFixed(2)]);
-            totalsRow.getCell(2).style = styles.summary;
-            totalsRow.getCell(3).style = styles.summaryValue;
-            totalsRow.getCell(4).style = styles.summaryValue;
-            totalsRow.getCell(5).style = styles.summaryValue;
-            totalsRow.getCell(6).style = styles.summaryValue;
-        }
-
-        // ===== SECCIÓN 2: DETALLES POR VIAJE =====
-        sheet1.addRow([]);
-        sheet1.addRow([]);
-        
-        sheet1.mergeCells(`H6:L6`);
-        const detailsSection = sheet1.getCell(`H6`);
-        detailsSection.value = "DETALLES POR VIAJE";
-        Object.assign(detailsSection.style, styles.sectionTitle);
-        
-        sheet1.addRow([]);
-        
-        // Encabezados de columnas para detalles
-        const detailHeaders = ['N° Viaje', 'Peso Teórico', 'Peso Neto', 'Desviación', 'Bodega Puerto'];
-        const detailHeaderRow = sheet1.addRow(detailHeaders);
-        detailHeaderRow.height = 30;
-        detailHeaderRow.eachCell((cell) => {
-            Object.assign(cell.style, styles.header);
-        });
-        
-        // Configuración de anchos de columna para la sección de detalles
-        const detailColumnWidths = [20, 20, 20, 20, 25];
-        detailColumnWidths.forEach((width, i) => {
-            sheet1.getColumn(i + 1).width = Math.max(sheet1.getColumn(i + 1).width, width);
-        });
-
-        // Agregar datos de detalles del buque
-        let detailTotalPesoNeto = 0;
-        let detailTotalPesoTeorico = 0;
-        let detailTotalDesviacion = 0;
-
-        buqueDetalles.forEach((item, index) => {
-            const dataRow = sheet1.addRow([
-                item.Nviajes,
-                item.pesoTeorico,
-                item.pesoNeto,
-                item.desviacion,
-                item.bodegaPuerto
-            ]);
-            dataRow.height = 22;
-            
-            // Actualizar totales si los datos son numéricos
+        // Calcular totales de la segunda tabla
+        buqueDetalles.forEach(item => {
             if (typeof item.pesoNeto === 'number') {
                 detailTotalPesoNeto += item.pesoNeto;
                 detailTotalPesoTeorico += item.pesoTeorico;
                 detailTotalDesviacion += item.desviacion;
             }
+        });
+
+        // ===== PRIMERA TABLA: RESUMEN POR FECHAS =====
+        // Llenar datos de la primera tabla
+        for (let i = 0; i < result.length; i++) {
+            const item = result[i];
+            const dataRow = sheet1.addRow([]);
+            const currentRowNum = sheet1.rowCount;
+            dataRow.height = 15;
             
-            // Aplicar estilo alternado
-            if (index % 2 !== 0) {
-                dataRow.eachCell((cell) => {
+            // Llenar datos en columnas A-F
+            [item.socio, item.fecha, item.total, item.pesoNeto, item.pesoTeorico, item.desviacion].forEach((value, colIndex) => {
+                const cell = sheet1.getCell(currentRowNum, colIndex + 1);
+                cell.value = value;
+                
+                // Aplicar estilo alternado
+                if (i % 2 !== 0) {
                     cell.style = {...styles.data, ...styles.alternateRow};
-                });
-            } else {
-                dataRow.eachCell((cell) => {
+                } else {
                     Object.assign(cell.style, styles.data);
-                });
-            }
+                }
+            });
             
             // Formato para valores numéricos
             if (typeof item.pesoNeto === 'number') {
-                const pesoNetoCell = dataRow.getCell(3);
+                const pesoNetoCell = sheet1.getCell(currentRowNum, 4);
                 pesoNetoCell.numFmt = '#,##0.00 "lb"';
                 pesoNetoCell.alignment = { horizontal: 'right', vertical: 'middle' };
 
-                const pesoTeoricoCell = dataRow.getCell(2);
+                const pesoTeoricoCell = sheet1.getCell(currentRowNum, 5);
                 pesoTeoricoCell.numFmt = '#,##0.00 "lb"';
                 pesoTeoricoCell.alignment = { horizontal: 'right', vertical: 'middle' };
 
-                const desviacionCell = dataRow.getCell(4);
+                const desviacionCell = sheet1.getCell(currentRowNum, 6);
                 desviacionCell.numFmt = '#,##0.00 "lb"';
                 desviacionCell.alignment = { horizontal: 'right', vertical: 'middle' };
                 
@@ -630,26 +615,100 @@ const exportR1Importaciones =  async(req, res) => {
             }
             
             // Centrar columnas específicas
-            dataRow.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' }; // N° Viaje
-            dataRow.getCell(5).alignment = { horizontal: 'center', vertical: 'middle' }; // Bodega Puerto
-        });
+            sheet1.getCell(currentRowNum, 2).alignment = { horizontal: 'center', vertical: 'middle' }; // Fecha
+            sheet1.getCell(currentRowNum, 3).alignment = { horizontal: 'center', vertical: 'middle' }; // Total
+        }
 
-        // Agregar totales de detalles solo si hay datos numéricos
+        // ===== TOTALES DE LA PRIMERA TABLA =====
+        if (typeof result[0]?.total === 'number') {
+            const totalsRow1 = sheet1.addRow([]);
+            const totalsRowNum1 = sheet1.rowCount;
+            
+            ['', 'TOTALES:', totalRecords, totalPesoNeto.toFixed(2), totalPesoTeorico.toFixed(2), totalDesviacion.toFixed(2)].forEach((value, colIndex) => {
+                const cell = sheet1.getCell(totalsRowNum1, colIndex + 1);
+                cell.value = value;
+                
+                if (colIndex === 1) {
+                    cell.style = styles.summary;
+                } else if (colIndex > 1) {
+                    cell.style = styles.summaryValue;
+                }
+            });
+        }
+
+        // ===== POSICIONAR LA SEGUNDA TABLA =====
+        // Volver al inicio para la segunda tabla (columnas H-L)
+        let currentRowForTable2 = headerRowNum + 1; // Empezar después del encabezado
+        
+        // ===== SEGUNDA TABLA: DETALLES POR VIAJE =====
+        // Llenar datos de la segunda tabla
+        for (let i = 0; i < buqueDetalles.length; i++) {
+            const item = buqueDetalles[i];
+            
+            // Llenar datos en columnas H-L
+            [item.Nviajes, item.pesoTeorico, item.pesoNeto, item.desviacion, item.bodegaPuerto].forEach((value, colIndex) => {
+                const cell = sheet1.getCell(currentRowForTable2, colIndex + 8); // Columna H = 8
+                cell.value = value;
+                
+                // Aplicar estilo alternado
+                if (i % 2 !== 0) {
+                    cell.style = {...styles.data, ...styles.alternateRow};
+                } else {
+                    Object.assign(cell.style, styles.data);
+                }
+            });
+            
+            // Formato para valores numéricos
+            if (typeof item.pesoNeto === 'number') {
+                const pesoNetoCell = sheet1.getCell(currentRowForTable2, 10);
+                pesoNetoCell.numFmt = '#,##0.00 "lb"';
+                pesoNetoCell.alignment = { horizontal: 'right', vertical: 'middle' };
+
+                const pesoTeoricoCell = sheet1.getCell(currentRowForTable2, 9);
+                pesoTeoricoCell.numFmt = '#,##0.00 "lb"';
+                pesoTeoricoCell.alignment = { horizontal: 'right', vertical: 'middle' };
+
+                const desviacionCell = sheet1.getCell(currentRowForTable2, 11);
+                desviacionCell.numFmt = '#,##0.00 "lb"';
+                desviacionCell.alignment = { horizontal: 'right', vertical: 'middle' };
+                
+                // Colorear desviación según su valor
+                if (item.desviacion < -200) {
+                    desviacionCell.font = { name: 'Calibri', bold: true, size: 11, color: { argb: COLORS.danger } }; // Rojo fuerte
+                } else if (item.desviacion < 0) {
+                    desviacionCell.font = { name: 'Calibri', bold: true, size: 11, color: { argb: COLORS.warning } }; // Amarillo
+                } else {
+                    desviacionCell.font = { name: 'Calibri', bold: true, size: 11, color: { argb: COLORS.success } }; // Verde
+                }
+
+            }
+            
+            // Centrar columnas específicas
+            sheet1.getCell(currentRowForTable2, 8).alignment = { horizontal: 'center', vertical: 'middle' }; // N° Viaje
+            sheet1.getCell(currentRowForTable2, 12).alignment = { horizontal: 'center', vertical: 'middle' }; // Bodega Puerto
+            
+            currentRowForTable2++;
+        }
+
+        // ===== TOTALES DE LA SEGUNDA TABLA =====
         if (typeof buqueDetalles[0]?.pesoNeto === 'number') {
-            sheet1.addRow([]);
-            const detailTotalsRow = sheet1.addRow(['TOTALES:', detailTotalPesoTeorico.toFixed(2), detailTotalPesoNeto.toFixed(2), detailTotalDesviacion.toFixed(2), '']);
-            detailTotalsRow.getCell(1).style = styles.summary;
-            detailTotalsRow.getCell(2).style = styles.summaryValue;
-            detailTotalsRow.getCell(3).style = styles.summaryValue;
-            detailTotalsRow.getCell(4).style = styles.summaryValue;
-            detailTotalsRow.getCell(5).style = styles.summaryValue;
+            ['TOTALES:', detailTotalPesoTeorico.toFixed(2), detailTotalPesoNeto.toFixed(2), detailTotalDesviacion.toFixed(2), ''].forEach((value, colIndex) => {
+                const cell = sheet1.getCell(currentRowForTable2, colIndex + 8);
+                cell.value = value;
+                
+                if (colIndex === 0) {
+                    cell.style = styles.summary;
+                } else if (colIndex > 0 && colIndex < 4) {
+                    cell.style = styles.summaryValue;
+                }
+            });
         }
 
         // Pie de página
         sheet1.addRow([]);
         sheet1.addRow([]);
         const footerRow = sheet1.rowCount + 1;
-        sheet1.mergeCells(`A${footerRow}:I${footerRow}`);
+        sheet1.mergeCells(`A${footerRow}:L${footerRow}`);
         const footerCell = sheet1.getCell(`A${footerRow}`);
         footerCell.value = 'BAPROSA - Sistema de Gestión de Básculas © ' + new Date().getFullYear();
         Object.assign(footerCell.style, styles.footer);
