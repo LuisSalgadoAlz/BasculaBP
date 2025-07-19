@@ -323,7 +323,9 @@ const postBoletasNormal = async (req, res) => {
     setLogger('BOLETA', 'AGREGAR BOLETA CASULLA', req, null, 1, nuevaBoleta.id)  
 
     /* Imprimir Boleta */
-    const response = await imprimirWorkForce(nuevaBoleta)
+    const debeCrearPase = list_parte_final[proceso].includes(idMovimiento);
+    const crearPase = debeCrearPase ? await createPaseDeSalida(nuevaBoleta) : null;
+    const response = await imprimirWorkForce(nuevaBoleta, crearPase?.numPaseSalida);
     
     if (response) {
       return res.status(201).json({ msg: "Boleta creado exitosamente e impresa con exito" });
