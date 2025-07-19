@@ -18,6 +18,9 @@ export const TablaResumenBFH = ({datos=[]}) => {
                     FECHA
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">
+                    Factura
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">
                     # VIAJE TEH
                   </th>
                   <th className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider">
@@ -39,6 +42,9 @@ export const TablaResumenBFH = ({datos=[]}) => {
                   <tr key={index} className="hover:bg-gray-50 transition-colors duration-200">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {fila.fecha}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      # Fact. {fila.factura}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                       {fila.total}
@@ -151,7 +157,13 @@ export const BuqueDetalles = ({datos=[]}) => {
               <thead className="bg-[#725033] text-white">
                 <tr>
                   <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">
+                    # Boleta
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">
                     # VIAJE
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">
+                    # Factura
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">
                     # Bodega
@@ -174,7 +186,13 @@ export const BuqueDetalles = ({datos=[]}) => {
                 {datos.map((fila, index) => (
                   <tr key={index} className="hover:bg-gray-50 transition-colors duration-200">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {fila.numBoleta}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {fila.Nviajes}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      # Fact. {fila.factura}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {fila.bodegaPuerto}

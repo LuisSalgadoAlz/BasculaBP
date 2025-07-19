@@ -30,6 +30,7 @@ const Importaciones = () => {
   
   const handleChangeBuque = (e) => {
     setBuqueSelected(e.target.value)
+    setPagination(1)
   }
 
   const fetchBuques = useCallback(()=>{
@@ -126,6 +127,12 @@ const Importaciones = () => {
         value:  stats?.porcentaje || 0,
         color: "bg-amber-500",
       },
+      {
+        icon: <FiClock size={24} className="text-white" />,
+        title: "Facturas",
+        value:  stats?.facturas || 0,
+        color: "bg-amber-500",
+      },
   ];
 
   return (
@@ -181,7 +188,7 @@ const Importaciones = () => {
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-2">
         {statsdata?.map((stat, index) => (
             <StatCard
               key={index}
