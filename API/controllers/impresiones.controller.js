@@ -834,7 +834,7 @@ function generarContenidoTercioCartaReimpresion(copia, esPrimera = false, colors
     { text: 'BENEFICIO DE ARROZ PROGRESO, S.A.', alignment: 'center', bold: true, margin: [0, 15, 0, 0]  },
     { text: [
       { text: `${esPaseSalida ? 'PASE DE SALIDA ' : 'Boleta de Peso '}`, bold: true, ...(esPaseSalida ? { fontSize: 10 } : {}) },
-      { text: `No. ${esPaseSalida ? `${addCero(numPaseSalida)}` : addCero(boleta.numBoleta)}`, color: 'red', bold: true, ...(esPaseSalida ? { fontSize: 10 } : {})  }, 
+      { text: `No. ${esPaseSalida ? `${numPaseSalida ? addCero(numPaseSalida) : 'S/N'}` : addCero(boleta.numBoleta)}`, color: 'red', bold: true, ...(esPaseSalida ? { fontSize: 10 } : {})  }, 
       { text: `${esPaseSalida && boleta?.numBoleta ? ' SEGÚN BOLETA DE PESO ' : ''}`, bold: true, ...(esPaseSalida ? { fontSize: 10 } : {}) },
       { text: `${esPaseSalida && boleta?.numBoleta ? `No. ${addCero(boleta?.numBoleta)}` : ''}`, color: 'red', bold: true, ...(esPaseSalida ? { fontSize: 10 } : {}) },
     ], alignment: 'center', bold: true,  margin: [0, 5, 0, 2] },
