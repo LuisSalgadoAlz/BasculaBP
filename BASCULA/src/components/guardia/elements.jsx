@@ -45,7 +45,7 @@ const StatusBadge = ({ paseDeSalida, data, horas, minutos }) => {
     }
     
     if (paseDeSalida.estado === false) {
-      if((horas>0 || minutos>15)) {
+      if((horas>0 || minutos>15) && data?.movimiento !== 'Carga Doble Detalle') {
         return {
           text: "Permitido para salir - Tiempo excedido",
           className: "bg-orange-500 text-white"
@@ -465,14 +465,24 @@ const TransportTimeline = ({ data }) => {
               Icon={FiCalendar}
               color={(horas>0 || minutos > 15 ) ? 'red' : 'gray'}
             />
-          ) : ( 
-            <TimelineSuccessItem
-              title={`Llegada a la guardia: ${(horas>0 || minutos > 15 ) ? 'Tiempo excedido' : (horas==null && minutos==null) ? 'N/A': 'Sin Problema'}`}
-              fecha={fechaGuardia.date}
-              hora={fechaGuardia.time}
-              Icon={FiCalendar}
-              color={(horas>0 || minutos > 15 ) ? 'red' : 'green'}
-            />
+          ) : (
+            data?.movimiento !== 'Carga Doble Detalle' ? (
+              <TimelineSuccessItem
+                title={`Llegada a la guardia: ${(horas>0 || minutos > 15 ) ? 'Tiempo excedido' : (horas==null && minutos==null) ? 'N/A': 'Sin Problema'}`}
+                fecha={fechaGuardia.date}
+                hora={fechaGuardia.time}
+                Icon={FiCalendar}
+                color={(horas>0 || minutos > 15 ) ? 'red' : 'green'}
+              />
+            ) : (
+              <TimelineSuccessItem
+                title={`Llegada a la guardia: Sin Problemas`}
+                fecha={fechaGuardia.date}
+                hora={fechaGuardia.time}
+                Icon={FiCalendar}
+                color={'green'}
+              />
+            )
           )
         )}
       </div>

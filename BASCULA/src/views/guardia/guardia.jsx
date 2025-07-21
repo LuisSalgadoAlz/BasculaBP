@@ -53,7 +53,8 @@ const Guardia = () => {
     // Los únicos sin motivo son: sin fecha final Y no servicio báscula
     const requiereMotivo = (horas !== 0 || minutos > 15) && 
                             (infoPlaca?.fechaFin !== null && 
-                            (infoPlaca?.movimiento !== 'SERVICIO BASCULA'));
+                            (infoPlaca?.movimiento !== 'SERVICIO BASCULA') &&
+                            (infoPlaca?.movimiento !== 'Carga Doble Detalle'));
 
     if(requiereMotivo) {
       setMotivo(true)
