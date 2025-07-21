@@ -12,101 +12,6 @@ const ipp = require('ipp');
 const { print } = require('pdf-to-printer');
 const PdfPrinter = require('pdfmake');
 
-const imprimirEpson = (boleta) => {
-  const filePath = 'boleta_epson.txt';
-  
-  const INIT = '\x1B@';              // Initialize printer
-  const BOLD_ON = '\x1B!\x08';       // Turn bold on
-  const BOLD_OFF = '\x1B!\x00';      // Turn bold off
-  const DOUBLE_WIDTH = '\x1B!\x20';  // Double width text
-  const DOUBLE_HEIGHT = '\x1B!\x10'; // Double height text
-  const DOUBLE_SIZE = '\x1B!\x30';   // Double width and height
-  const UNDERLINE = '\x1B-\x01';     // Turn underline on
-  const NO_UNDERLINE = '\x1B-\x00';  // Turn underline off
-  const CENTER = '\x1Ba\x01';        // Center alignment
-  const LEFT = '\x1Ba\x00';          // Left alignment
-  const RIGHT = '\x1Ba\x02';         // Right alignment
-  const FORM_FEED = '\x0C';          // Form feed - Eject page
-  const BOLD_CENTERED_BIG = CENTER + BOLD_ON + DOUBLE_SIZE;
-  const BOLD_CENTERED = CENTER + BOLD_ON;
-
-  const LINE = '________________________________________________________________________________'; 
-  
-    // Comandos para marca de agua
-    const COLOR_LIGHT = '\x1Br\x01';   // Selecciona color más claro (reducción de intensidad)
-    const COLOR_NORMAL = '\x1Br\x00';  // Vuelve al color normal
-    const NORMAL_SIZE = '\x1B!\x00';    // Tamaño normal
-    const WATERMARK_FORMAT = CENTER + COLOR_LIGHT ; // Formato de marca de agua
-    const WATERMARK_RESET = NORMAL_SIZE + COLOR_NORMAL + LEFT 
-  /**
-   * ? Variables de la boleta
-   */
-  const LABEL = boleta.proceso == 0 ? 'Proveedor     :' : 'Cliente       :';
-  const LABELSINSPACE = boleta.proceso == 0 ? 'Entrada' : 'Salida';
-  const TIEMPOPROCESO = boleta.fechaFin - boleta.fechaInicio;
-  const totalSegundos = Math.floor(TIEMPOPROCESO / 1000);
-  const horas = Math.floor(totalSegundos / 3600);
-  const minutos = Math.floor((totalSegundos % 3600) / 60);
-  const segundos = totalSegundos % 60;
-  const TIEMPOESTADIA = `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
-
-
-  const isTraslado = boleta.movimiento.includes('Traslado');
-  const origen = isTraslado ? boleta.trasladoOrigen : boleta.origen;
-  const destino = isTraslado ? boleta.trasladoDestino : boleta.destino;
-  const fueraTol = boleta.estado === 'Completo(Fuera de tolerancia)';
-  const msg = fueraTol ? `${BOLD_CENTERED} *****  F U E R A  D E  T O L E R A N C I A  ***** ${LEFT}` : '';
-
-
-  /**
-   * IDENTIFICADOR DE TARA Y PESO BRUTO
-   */
-  const TARA = boleta.proceso == 0 ? boleta.pesoFinal : boleta.pesoInicial
-  const PESOBRUTO = boleta.proceso == 0 ? boleta.pesoInicial : boleta.pesoFinal
-
-  /**
-   * Detecion de reimprisiones
-   */
-  const isOriginal = boleta.impreso == null
-  const WATERMARK_MSG = isOriginal ? "" : `${BOLD_CENTERED}***** C O P I A  |  C O P I A  |  C O P I A *****${LEFT}` ;
-  const LABEL_COPIA = isOriginal ? 
-  `${BOLD_ON}Fecha         :${BOLD_OFF} ${stringtruncado(new Date().toLocaleString('es-ES'), 27)}` 
-  : `${BOLD_ON}Reimpreso     :${BOLD_OFF} ${stringtruncado(new Date().toLocaleString('es-ES'), 27)}${BOLD_ON}Impreso         :${BOLD_OFF} ${boleta.impreso.toLocaleString('es-ES')}`
-  
-
-  const contenido = `
-${INIT}${BOLD_CENTERED_BIG}BAPROSA${BOLD_OFF}
-${BOLD_CENTERED}Boleta de Peso No. ${boleta.numBoleta}${LEFT}${BOLD_CENTERED}Proceso: ${LABELSINSPACE} - ${quitarAcentos(boleta.movimiento)} / Duracion del Proceso: ${TIEMPOESTADIA}${LEFT}
-${LABEL_COPIA}
-${BOLD_ON}${LABEL}${BOLD_OFF} ${quitarAcentos(boleta.socio)}               
-${BOLD_ON}Placa         :${BOLD_OFF} ${stringtruncado(boleta.placa, 27)}${BOLD_ON}Hora de Entrada :${BOLD_OFF} ${boleta.fechaInicio.toLocaleTimeString()}
-${BOLD_ON}Motorista     :${BOLD_OFF} ${stringtruncado(quitarAcentos(boleta.motorista), 27)}${BOLD_ON}Hora de Salida  :${BOLD_OFF} ${boleta.fechaFin.toLocaleTimeString()}
-${BOLD_ON}Transporte    :${BOLD_OFF} ${quitarAcentos(boleta.empresa)}
-${BOLD_ON}Origen        :${BOLD_OFF} ${quitarAcentos(origen)}       
-${BOLD_ON}Destino       :${BOLD_OFF} ${quitarAcentos(destino)}                       
-${BOLD_ON}Producto      :${BOLD_OFF} ${quitarAcentos(boleta.producto)}
-${WATERMARK_MSG}${LINE}
-
-${BOLD_ON}Peso Tara     :${BOLD_OFF} ${stringtruncado(`${TARA} lb`, 27)}${BOLD_ON}Peso Teorico  :${BOLD_OFF} ${String(boleta.pesoTeorico).trim()} lb ${BOLD_ON}
-${BOLD_ON}Peso Bruto    :${BOLD_OFF} ${stringtruncado(`${PESOBRUTO} lb`, 27)}${BOLD_ON}Desviacion    :${BOLD_OFF} ${String(boleta.desviacion).trim()} lb ${BOLD_ON}
-${BOLD_ON}Peso Neto     :${BOLD_OFF} ${stringtruncado(`${String(boleta.pesoNeto).trim()} lb`, 27)} ${BOLD_ON}                  
-${msg}${LINE}
-
-${BOLD_ON}Pesador       :${BOLD_OFF} ${stringtruncado(quitarAcentos(boleta.usuario), 27)}${BOLD_ON}Firma         :${BOLD_OFF} ________________
-
-${CENTER} www.baprosa.com | (504) 2222-2222 ${LEFT}`;
-  
-  fs.writeFileSync(filePath, contenido);
-
-exec(`print /D:"\\\\localhost\\BASCULA" ${filePath}`, (err, stdout, stderr) => {
-    if (err) {
-      console.error('Error al imprimir:', err);
-      return;
-    }
-    
-    actualizarImpresion(boleta.id)
-  });
-};
 
 const stringtruncado = (str, len) => {
   return str.length > len
@@ -118,24 +23,6 @@ const quitarAcentos = (str) => {
   return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 };
 
-const actualizarImpresion = async (id) => {
-  try{
-    const updateBoletaImpresion = await db.boleta.update({
-      where : {
-        id : parseInt(id)
-      }, 
-      data : {
-        impreso : new Date()
-      }
-    })
-  }catch (err) {
-    console.log(err)
-  }
-}
-
-function formatearHora(fecha) {
-  return new Date(fecha).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-}
 
 const imprimirPDF = async (req, res) => {
   try {
@@ -766,14 +653,22 @@ const addCero = (str) => {
   return String(str).padStart(7, '0')
 }
 
-function generarContenidoTercioCarta(copia, esPrimera = false, colors, boleta, despachador) {
+function generarContenidoTercioCarta(copia, esPrimera = false, colors, boleta, despachador, numPaseSalida) {
   
-  const TIEMPOPROCESO = boleta.fechaFin - boleta.fechaInicio;
-  const totalSegundos = Math.floor(TIEMPOPROCESO / 1000);
-  const horas = Math.floor(totalSegundos / 3600);
-  const minutos = Math.floor((totalSegundos % 3600) / 60);
-  const segundos = totalSegundos % 60;
-  const TIEMPOESTADIA = `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
+  // Verificar si es pase de salida (antes de fechaFin)
+  const esPaseSalida = copia === 'y';
+  
+  // Cálculo de tiempo solo si hay fechaFin
+  let TIEMPOESTADIA = 'En proceso';
+  if (boleta.fechaFin) {
+    const TIEMPOPROCESO = boleta.fechaFin - boleta.fechaInicio;
+    const totalSegundos = Math.floor(TIEMPOPROCESO / 1000);
+    const horas = Math.floor(totalSegundos / 3600);
+    const minutos = Math.floor((totalSegundos % 3600) / 60);
+    const segundos = totalSegundos % 60;
+    TIEMPOESTADIA = `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
+  }
+  
   const TYPEOFUSER = boleta.proceso == 0 ? 'Proveedor    ' : 'Cliente      ';
 
   /**
@@ -786,14 +681,16 @@ function generarContenidoTercioCarta(copia, esPrimera = false, colors, boleta, d
   /**
    * Identificador de proceso
    */
-
   const PROCESO = boleta.proceso===0 ? 'Entrada' : 'Salida'
 
-  
+  /* SALIDA DE DOCUMENTO */
+  const manifiesto = boleta?.manifiesto ? `Manifiesto_${boleta.manifiesto}` : null;
+  const ordenCompra = boleta?.ordenDeCompra ? `OrdenCompra_${boleta.ordenDeCompra}` : null;
+  const ultimoDocumento = manifiesto || ordenCompra || 'N/A';
+
   /**
    * Identificador de fuera de tolerancia
    */
-
   const fueraTol = boleta.estado === 'Completo(Fuera de tolerancia)';
 
   const contenido = [
@@ -802,18 +699,20 @@ function generarContenidoTercioCarta(copia, esPrimera = false, colors, boleta, d
     { canvas: [ { type: 'rect', x: 0, y: 0, w: 10, h: 250, color: colors[copia] }], absolutePosition: { x: 98, y: 2 } },
     { canvas: [ { type: 'rect', x: 0, y: 0, w: 608, h: 10, color: colors[copia], }], absolutePosition: { x: 2, y: 252 } },
     {
-      text: 'O R I G I N A L',
+      text: esPaseSalida ? 'P A S E  D E  S A L I D A' : 'O R I G I N A L',
       color: 'gray',
-      opacity: 0.2  ,
+      opacity: 0.2,
       bold: true,
       italics: true,
-      fontSize: 40,
-      absolutePosition: { x: 120, y: 130 },
+      fontSize: esPaseSalida ? 30 : 40,
+      absolutePosition: { x: (esPaseSalida ? 70 : 120), y: 130 },
     },
     { text: 'BENEFICIO DE ARROZ PROGRESO, S.A.', alignment: 'center', bold: true, margin: [0, 15, 0, 0]  },
     { text: [
-      { text: 'Boleta de Peso ', bold: true },
-      { text: `No. ${addCero(boleta.numBoleta)}`, color: 'red', bold: true }
+      { text: `${esPaseSalida ? 'PASE DE SALIDA ' : 'Boleta de Peso '}`, bold: true, ...(esPaseSalida ? { fontSize: 11 } : {})},
+      { text: `No. ${esPaseSalida ? `${addCero(numPaseSalida)}` : addCero(boleta.numBoleta)}`, color: 'red', bold: true, ...(esPaseSalida ? { fontSize: 11 } : {})}, 
+      { text: `${esPaseSalida && boleta?.numBoleta ? ' SEGÚN BOLETA DE PESO ' : ''}`, bold: true, ...(esPaseSalida ? { fontSize: 11 } : {})},
+      { text: `${esPaseSalida && boleta?.numBoleta ? `No. ${addCero(boleta?.numBoleta)}` : ''}`, color: 'red', bold: true, ...(esPaseSalida ? { fontSize: 11 } : {})},
     ], alignment: 'center', bold: true,  margin: [0, 5, 0, 2] },
     { text: `Proceso: ${PROCESO} - ${boleta.movimiento} / Duración del Proceso ${TIEMPOESTADIA}`, alignment: 'center', margin: [0, 1, 0, 15] },
     {
@@ -828,11 +727,11 @@ function generarContenidoTercioCarta(copia, esPrimera = false, colors, boleta, d
       body: [
           [`Fecha        : ${new Date().toLocaleString()}`, ''],
           [`${TYPEOFUSER}: ${boleta.socio}`, `Hora Entrada     : ${boleta.fechaInicio.toLocaleString()}`],
-          [`Placa        : ${boleta.placa}`, `Hora de Salida   : ${boleta.fechaFin.toLocaleString()}`],
-          [`Motorista    : ${boleta.motorista}`, ''],
-          [`Transporte   : ${boleta.empresa}`, `Marchamos: ${[boleta?.sello1, boleta?.sello2, boleta?.sello3, boleta?.sello4, boleta?.sello5, boleta?.sello6].filter(Boolean).join(', ') || 'N/A'}`],
+          [`Placa        : ${boleta.placa}`, `Hora de Salida   : ${boleta.fechaFin ? boleta.fechaFin.toLocaleString() : 'Pendiente'}`],
+          [`Motorista    : ${boleta.motorista}`, `Documento        : ${ultimoDocumento}`],
+          [`Transporte   : ${boleta.empresa}`, `Marchamos        : ${[boleta?.sello1, boleta?.sello2, boleta?.sello3, boleta?.sello4, boleta?.sello5, boleta?.sello6].filter(Boolean).join(', ') || 'N/A'}`],
           [`Origen       : ${boleta.origen || boleta.trasladoOrigen}`, ''],
-          [`Destino      : ${boleta.destino || boleta.trasladoDestino}`, ''],
+          [`Destino      : ${boleta.destino || boleta.trasladoDestino || 'Pendiente'}`, ''],
           [`Producto     : ${boleta.producto}`, ''],
         ]
       }
@@ -847,10 +746,10 @@ function generarContenidoTercioCarta(copia, esPrimera = false, colors, boleta, d
       table: {
         widths: ['*', '*'],
         body: [
-          [`Peso Tara    : ${TARA}`, `Peso Teórico     : ${boleta.pesoTeorico}`],
-          [`Peso Bruto   : ${PESOBRUTO}`, `Desviación       : ${boleta.desviacion}`],
+          [`Peso Tara    : ${TARA || 0}`, `Peso Teórico     : ${boleta.pesoTeorico ||0}`],
+          [`Peso Bruto   : ${PESOBRUTO || 0}`, `Desviación       : ${boleta.desviacion ||0}`],
           [
-            `Peso Neto    : ${boleta.pesoNeto}`,
+            `Peso Neto    : ${boleta.pesoNeto || 0}`,
             fueraTol
               ? { text: 'FUERA DE TOLERANCIA', color: 'red', bold: true }
               : ''
@@ -878,14 +777,22 @@ function generarContenidoTercioCarta(copia, esPrimera = false, colors, boleta, d
   return contenido.filter(Boolean);
 }
 
-function generarContenidoTercioCartaReimpresion(copia, esPrimera = false, colors, boleta, despachador, isPrint, datePrint) {
+function generarContenidoTercioCartaReimpresion(copia, esPrimera = false, colors, boleta, despachador, isPrint, datePrint, numPaseSalida) {
   
-  const TIEMPOPROCESO = boleta.fechaFin - boleta.fechaInicio;
-  const totalSegundos = Math.floor(TIEMPOPROCESO / 1000);
-  const horas = Math.floor(totalSegundos / 3600);
-  const minutos = Math.floor((totalSegundos % 3600) / 60);
-  const segundos = totalSegundos % 60;
-  const TIEMPOESTADIA = `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
+  // Verificar si es pase de salida (antes de fechaFin)
+  const esPaseSalida = copia === 'y';
+  
+  // Cálculo de tiempo solo si hay fechaFin
+  let TIEMPOESTADIA = 'En proceso';
+  if (boleta.fechaFin) {
+    const TIEMPOPROCESO = boleta.fechaFin - boleta.fechaInicio;
+    const totalSegundos = Math.floor(TIEMPOPROCESO / 1000);
+    const horas = Math.floor(totalSegundos / 3600);
+    const minutos = Math.floor((totalSegundos % 3600) / 60);
+    const segundos = totalSegundos % 60;
+    TIEMPOESTADIA = `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
+  }
+  
   const TYPEOFUSER = boleta.proceso == 0 ? 'Proveedor    ' : 'Cliente      ';
 
   /**
@@ -898,14 +805,16 @@ function generarContenidoTercioCartaReimpresion(copia, esPrimera = false, colors
   /**
    * Identificador de proceso
    */
-
   const PROCESO = boleta.proceso===0 ? 'Entrada' : 'Salida'
 
-  
+  /* SALIDA DE DOCUMENTO */
+  const manifiesto = boleta?.manifiesto ? `Manifiesto_${boleta.manifiesto}` : null;
+  const ordenCompra = boleta?.ordenDeCompra ? `OrdenCompra_${boleta.ordenDeCompra}` : null;
+  const ultimoDocumento = manifiesto || ordenCompra || 'N/A';
+
   /**
    * Identificador de fuera de tolerancia
    */
-
   const fueraTol = boleta.estado === 'Completo(Fuera de tolerancia)';
 
   const contenido = [
@@ -914,18 +823,20 @@ function generarContenidoTercioCartaReimpresion(copia, esPrimera = false, colors
     { canvas: [ { type: 'rect', x: 0, y: 0, w: 10, h: 250, color: colors[copia] }], absolutePosition: { x: 98, y: 2 } },
     { canvas: [ { type: 'rect', x: 0, y: 0, w: 608, h: 10, color: colors[copia], }], absolutePosition: { x: 2, y: 252 } },
     {
-      text: isPrint ? "R E I M P R E S I O N" : "O R I G I N A L",
+      text: (isPrint ? "R E I M P R E S I O N" : esPaseSalida ? 'P A S E  D E  S A L I D A' : 'O R I G I N A L'),
       color: 'gray',
-      opacity: 0.2  ,
+      opacity: 0.2,
       bold: true,
       italics: true,
-      fontSize: isPrint ? 35 : 40,
-      absolutePosition: { x: isPrint ? 80 : 120, y: 130 },
+      fontSize: (isPrint ? 35 : 40),
+      absolutePosition: { x: (isPrint ? 70 : 120), y: 130 },
     },
     { text: 'BENEFICIO DE ARROZ PROGRESO, S.A.', alignment: 'center', bold: true, margin: [0, 15, 0, 0]  },
     { text: [
-      { text: 'Boleta de Peso ', bold: true },
-      { text: `No. ${addCero(boleta.numBoleta)}`, color: 'red', bold: true }
+      { text: `${esPaseSalida ? 'PASE DE SALIDA ' : 'Boleta de Peso '}`, bold: true, ...(esPaseSalida ? { fontSize: 10 } : {}) },
+      { text: `No. ${esPaseSalida ? `${numPaseSalida ? addCero(numPaseSalida) : 'S/N'}` : addCero(boleta.numBoleta)}`, color: 'red', bold: true, ...(esPaseSalida ? { fontSize: 10 } : {})  }, 
+      { text: `${esPaseSalida && boleta?.numBoleta ? ' SEGÚN BOLETA DE PESO ' : ''}`, bold: true, ...(esPaseSalida ? { fontSize: 10 } : {}) },
+      { text: `${esPaseSalida && boleta?.numBoleta ? `No. ${addCero(boleta?.numBoleta)}` : ''}`, color: 'red', bold: true, ...(esPaseSalida ? { fontSize: 10 } : {}) },
     ], alignment: 'center', bold: true,  margin: [0, 5, 0, 2] },
     { text: `Proceso: ${PROCESO} - ${boleta.movimiento} / Duración del Proceso ${TIEMPOESTADIA}`, alignment: 'center', margin: [0, 1, 0, 15] },
     {
@@ -940,11 +851,11 @@ function generarContenidoTercioCartaReimpresion(copia, esPrimera = false, colors
       body: [
           [`Fecha        : ${isPrint ? new Date(datePrint).toLocaleString() : new Date().toLocaleString()}`, isPrint ? `Reimpresión      : ${new Date().toLocaleString()}`: ''],
           [`${TYPEOFUSER}: ${boleta.socio}`, `Hora Entrada     : ${boleta.fechaInicio.toLocaleString()}`],
-          [`Placa        : ${boleta.placa}`, `Hora de Salida   : ${boleta.fechaFin.toLocaleString()}`],
-          [`Motorista    : ${boleta.motorista}`, ''],
-          [`Transporte   : ${boleta.empresa}`, `Marchamos: ${[boleta?.sello1, boleta?.sello2, boleta?.sello3, boleta?.sello4, boleta?.sello5, boleta?.sello6].filter(Boolean).join(', ') || 'N/A'}`],
+          [`Placa        : ${boleta.placa}`, `Hora de Salida   : ${boleta.fechaFin ? boleta.fechaFin.toLocaleString() : 'Pendiente'}`],
+          [`Motorista    : ${boleta.motorista}`, `Documento        : ${ultimoDocumento}`],
+          [`Transporte   : ${boleta.empresa}`, `Marchamos        : ${[boleta?.sello1, boleta?.sello2, boleta?.sello3, boleta?.sello4, boleta?.sello5, boleta?.sello6].filter(Boolean).join(', ') || 'N/A'}`],
           [`Origen       : ${boleta.origen || boleta.trasladoOrigen}`, ''],
-          [`Destino      : ${boleta.destino || boleta.trasladoDestino}`, ''],
+          [`Destino      : ${boleta.destino || boleta.trasladoDestino || 'Pendiente'}`, ''],
           [`Producto     : ${boleta.producto}`, ''],
         ]
       }
@@ -959,10 +870,10 @@ function generarContenidoTercioCartaReimpresion(copia, esPrimera = false, colors
       table: {
         widths: ['*', '*'],
         body: [
-          [`Peso Tara    : ${TARA}`, `Peso Teórico     : ${boleta.pesoTeorico}`],
-          [`Peso Bruto   : ${PESOBRUTO}`, `Desviación       : ${boleta.desviacion}`],
+          [`Peso Tara    : ${TARA || 0}`, `Peso Teórico     : ${boleta.pesoTeorico ||0}`],
+          [`Peso Bruto   : ${PESOBRUTO || 0}`, `Desviación       : ${boleta.desviacion ||0}`],
           [
-            `Peso Neto    : ${boleta.pesoNeto}`,
+            `Peso Neto    : ${boleta.pesoNeto || 0}`,
             fueraTol
               ? { text: 'FUERA DE TOLERANCIA', color: 'red', bold: true }
               : ''
@@ -985,117 +896,12 @@ function generarContenidoTercioCartaReimpresion(copia, esPrimera = false, colors
       }
     }
   ];
-  return contenido.filter(Boolean);
-}
-
-function generarContenidoMediaCarta(copia, esPrimera = false, colors, boleta, despachador) {
-  
-  const TIEMPOPROCESO = boleta.fechaFin - boleta.fechaInicio;
-  const totalSegundos = Math.floor(TIEMPOPROCESO / 1000);
-  const horas = Math.floor(totalSegundos / 3600);
-  const minutos = Math.floor((totalSegundos % 3600) / 60);
-  const segundos = totalSegundos % 60;
-  const TIEMPOESTADIA = `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
-  
-
-  /**
-   * IDENTIFICADOR DE TARA Y PESO BRUTO
-   */
-  const TARA = boleta.proceso == 0 ? boleta.pesoFinal : boleta.pesoInicial
-  const PESOBRUTO = boleta.proceso == 0 ? boleta.pesoInicial : boleta.pesoFinal
-
-  /**
-   * Identificador de proceso
-   */
-
-  const PROCESO = boleta.proceso===0 ? 'Entrada' : 'Salida'
-
-  /**
-   * Identificador de fuera de tolerancia
-   */
-
-  const fueraTol = boleta.estado === 'Completo(Fuera de tolerancia)';
-
-  const contenido = [
-    !esPrimera ? { text: '', pageBreak: 'before' } : null,
-    { canvas: [ { type: 'rect', x: 0, y: 0, w: 608, h: 15, color: colors[copia], }], absolutePosition: { x: 2, y: 2 } },
-    { canvas: [ { type: 'rect', x: 0, y: 0, w: 15, h: 380, color: colors[copia] }], absolutePosition: { x: 120, y: 2 } },
-    { canvas: [ { type: 'rect', x: 0, y: 0, w: 608, h: 15, color: colors[copia], }], absolutePosition: { x: 2, y: 378 } },
-    {
-      text: esPrimera ? '' : "C O P I A",
-      color: 'gray',
-      opacity: 0.2  ,
-      bold: true,
-      italics: true,
-      fontSize: 60,
-      absolutePosition: { x: 140, y: 150 }, 
-    },
-    { text: 'BENEFICIO DE ARROZ PROGRESO, S.A.', alignment: 'center', bold: true, margin: [0, 25, 0, 0], fontSize: 14 },
-    { text: `Boleta de Peso No. ${addCero(boleta.numBoleta)}`, alignment: 'center', bold: true, margin: [0, 10, 0, 5], fontSize: 13 },
-    { text: `Proceso: ${PROCESO} - ${boleta.movimiento} / Duración del Proceso ${TIEMPOESTADIA}`, alignment: 'center', margin: [0, 8, 0, 15], fontSize: 11 },
-    {
-      canvas: [{ type: 'line', x1: 36, y1: 0, x2: 576, y2: 0, lineWidth: 0.5 }]
-    },
-    {
-      margin: [36, 10, 36, 0],
-      layout: 'noBorders',
-      watermark: {text: copia.toUpperCase(), color: 'blue', opacity: 0.3, bold: true, italics: false},
-      table: {
-      widths: ['*', '*'],
-      body: [
-          [`Fecha        : ${new Date().toLocaleString()}`, ''],
-          [`Cliente      : ${boleta.socio}`, `Hora Entrada     : ${boleta.fechaInicio.toLocaleString()}`],
-          [`Placa        : ${boleta.placa}`, `Hora de Salida   : ${boleta.fechaFin.toLocaleString()}`],
-          [`Motorista    : ${boleta.motorista}`, ''],
-          [`Transporte   : ${boleta.empresa}`, ''],
-          [`Origen       : ${boleta.origen || boleta.trasladoOrigen}`, ''],
-          [`Destino      : ${boleta.destino || boleta.trasladoDestino}`, ''],
-          [`Producto     : ${boleta.producto}`, ''],
-        ]
-      }
-    },
-    {
-      margin: [36, 10, 36, 0],
-      canvas: [{ type: 'line', x1: 0, y1: 0, x2: 540, y2: 0, lineWidth: 0.5 }]
-    },
-    {
-      margin: [36, 10, 36, 0],
-      layout: 'noBorders',
-      table: {
-        widths: ['*', '*'],
-        body: [
-          [`Peso Tara    : ${TARA}`, `Peso Teórico     : ${boleta.pesoTeorico}`],
-          [`Peso Bruto   : ${PESOBRUTO}`, `Desviación       : ${boleta.desviacion}`],
-          [
-            `Peso Neto    : ${boleta.pesoNeto}`,
-            fueraTol
-              ? { text: 'FUERA DE TOLERANCIA', color: 'red', bold: true }
-              : ''
-          ]
-        ]
-      }
-    },
-    {
-      margin: [36, 10, 36, 0],
-      canvas: [{ type: 'line', x1: 0, y1: 0, x2: 540, y2: 0, lineWidth: 0.5 }]
-    },
-    {
-      margin: [36, 10, 36, 0],
-      layout: 'noBorders',
-      table: {
-        widths: ['*', '*'],
-        body: [
-          [{ text: `Pesador      : ${despachador}` }, 'Autorizado  : '],
-        ]
-      }
-    }
-  ];
 
   // Elimina el null del principio si es la primera copia
   return contenido.filter(Boolean);
 }
 
-const generarCantidadCopias = (boleta) => {
+const generarCantidadCopias = (boleta, numPaseSalida) => {
   const { idMovimiento, idProducto, boletaType, idEmpresa, idSocio, } = boleta
   const arrContenerizados =  [4, 5, 6, 15, 16]
   const arrSubproductos = [2, 7, 8, 9, 10]
@@ -1104,50 +910,57 @@ const generarCantidadCopias = (boleta) => {
   const todasLasCopias = [11, 17, 21, 35, 36]
   const paseDeSalida = [18, 23]
 
+  const filtrarCopias = (copias) => {
+    if (numPaseSalida === undefined || numPaseSalida === null) {
+      return copias.filter(copia => copia !== 'y')
+    }
+    return copias
+  }
+
   if (arrTraslados.includes(idMovimiento)) {
-    return ['o', 'p']
+    return filtrarCopias(['o', 'p', 'y'])
   }
 
   if (idMovimiento==13){
-    return ['o', 'y']
+    return filtrarCopias(['o', 'y'])
   }
 
   /* Servcio Contratado de Baprosa */
   if (idSocio==1 && (idEmpresa !=1 && idEmpresa !=1015 && idEmpresa!=1014) ) {
-    return ['o', 'g', 'y']
+    return filtrarCopias(['o', 'g', 'y'])
   }
 
   if(arrExtras.includes(idProducto)){
-    return ['o']
+    return filtrarCopias(['o', 'y'])
   }
 
   if (paseDeSalida.includes(idProducto)) {
-    return ['o', 'y']
+    return filtrarCopias(['o', 'y'])
   }
 
   if(arrContenerizados.includes(idProducto)) {
-    return ['o', 'y', 'p']
+    return filtrarCopias(['o', 'y', 'p'])
   }
 
   if(arrSubproductos.includes(idProducto)) {
-    return ['o', 'g', 'p']
+    return filtrarCopias(['o', 'g', 'p'])
   }
 
   if (todasLasCopias.includes(idProducto)) {
-    return ['o', 'g', 'p', 'y']
+    return filtrarCopias(['o', 'g', 'p', 'y'])
   }
 
   /* Clientes Planta */
   if ((boletaType==3 || boletaType==4) && (idProducto !=24 && idProducto!=25 && idMovimiento!=12)){
-    return ['o']
+    return filtrarCopias(['o', 'y'])
   }
 
   /* Servicio Bascula */
   if (idMovimiento==12){
-    return ['o', 'g', 'y']
+    return filtrarCopias(['o', 'g', 'y'])
   }
 
-  return ['o'];
+  return filtrarCopias(['o', 'y']);
 }
 
 
@@ -1155,12 +968,12 @@ const generarCantidadCopias = (boleta) => {
  *  TODO - > 1/3 de carta pageSize: { width: 612, height: 264 } font 9 
  *  TODO - > 1/2 de carta pageSize: { width: 612, height: 396 }
  */
-const imprimirWorkForce = async(boleta) => {
+const imprimirWorkForce = async(boleta, numPaseSalida) => {
   try{
     const colors = {o:'white', g: '#98FB98', p: 'pink', y:'yellow'}
     const datePrint = new Date()
     const despachador = await db.usuarios.findUnique({where: {usuarios:boleta.usuario}})
-    const copias = generarCantidadCopias(boleta); /* Genera Arreglo de Copias ['o', 'g', 'p', 'y'] puede ser ['o', 'g', 'y']  segun el caso*/
+    const copias = generarCantidadCopias(boleta, numPaseSalida); /* Genera Arreglo de Copias ['o', 'g', 'p', 'y'] puede ser ['o', 'g', 'y']  segun el caso*/
 
     const saveDatePrints =  await db.boleta.update({
       where : {
@@ -1193,7 +1006,7 @@ const imprimirWorkForce = async(boleta) => {
         font: 'Courier',
         fontSize: 8
       },	
-      content: copias.flatMap((copia, i) => generarContenidoTercioCarta(copia, i === 0, colors, boleta, despachador.name))
+      content: copias.flatMap((copia, i) => generarContenidoTercioCarta(copia, i === 0, colors, boleta, despachador.name, numPaseSalida))
     };
 
     const pdfDoc = printer.createPdfKitDocument(docDefinition);
@@ -1220,7 +1033,7 @@ const imprimirWorkForce = async(boleta) => {
  * Reimpresiones
  */
 
-const getReimprimirWorkForce = async(boleta, type) => {
+const getReimprimirWorkForce = async(boleta, type, numPaseSalida) => {
   try{
     const colors = {o:'white', g: '#98FB98', p: 'pink', y:'yellow'}
     const datePrint = new Date()
@@ -1265,7 +1078,7 @@ const getReimprimirWorkForce = async(boleta, type) => {
         font: 'Courier',
         fontSize: 8
       },	
-      content: copias.flatMap((copia, i) => generarContenidoTercioCartaReimpresion(copia, i === 0, colors, boleta, despachador.name, isPrint, estadoCopias[type]))
+      content: copias.flatMap((copia, i) => generarContenidoTercioCartaReimpresion(copia, i === 0, colors, boleta, despachador.name, isPrint, estadoCopias[type], numPaseSalida))
     };
 
     const pdfDoc = printer.createPdfKitDocument(docDefinition);
@@ -1288,13 +1101,62 @@ const getReimprimirWorkForce = async(boleta, type) => {
   }
 };
 
+const generarPaseDeSalidaTemporal = async(boleta, numPaseSalida) => {
+  try{
+    const colors = {o:'white', g: '#98FB98', p: 'pink', y:'yellow'}
+    const datePrint = new Date()
+    const despachador = await db.usuarios.findUnique({where: {usuarios:boleta.usuario}})
+    const copias = ['y']; /* Genera Arreglo de Copias ['o', 'g', 'p', 'y'] puede ser ['o', 'g', 'y']  segun el caso */
+
+    const fonts = {
+      Courier: {
+        normal: 'Courier',
+        bold: 'Courier-Bold',
+        italics: 'Courier-Oblique',
+        bolditalics: 'Courier-BoldOblique'
+      }
+    };
+
+    const printer = new PdfPrinter(fonts);
+    const filePath = 'boleta_epson.pdf';
+
+    const docDefinition = {
+      pageSize: { width: 612, height: 264 },
+      pageMargins: [2, 2, 2, 2],
+      defaultStyle: {
+        font: 'Courier',
+        fontSize: 8
+      },	
+      content: copias.flatMap((copia, i) => generarContenidoTercioCarta(copia, i === 0, colors, boleta, despachador.name, numPaseSalida))
+    };
+
+    const pdfDoc = printer.createPdfKitDocument(docDefinition);
+    const writeStream = fs.createWriteStream(filePath);
+
+    pdfDoc.pipe(writeStream);
+    pdfDoc.end();
+
+    writeStream.on('finish', () => {
+      print(filePath, { printer: `WFBASCULA` })
+      .then(() => {
+          console.log('Imprimiendo...') 
+      })
+      .catch(error => {
+          return true
+      })
+    });
+  }catch(err){
+    console.log(err)
+  }
+}
+
 module.exports = {
-  imprimirEpson, 
   imprimirPDF, 
   imprimirQRTolva,
   comprobanteDeCarga,  
   imprimirWorkForce, 
   imprimirTikets, 
   getReimprimirWorkForce,
-  reImprimirTikets
+  reImprimirTikets,
+  generarPaseDeSalidaTemporal,
 };

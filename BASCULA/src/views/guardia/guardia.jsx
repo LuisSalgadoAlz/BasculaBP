@@ -17,6 +17,7 @@ const Guardia = () => {
   const [isLoadingConfirm, setIsLoadingConfirm] = useState(false)
   const [motivo, setMotivo] = useState(false)
   const [motivoDetails, setMotivoDetails] = useState()
+  const [isLoadingSearch, setIsLoadingSearch] = useState(false)
 
   const handleChangePlaca = (e) => {
     const { value } = e.target;
@@ -25,7 +26,7 @@ const Guardia = () => {
 
   const handleSearchPlaca = async () => {
     if(!placa) return toast.error('No ha ingresado una placa.', {style:{background:'#ff4d4f'}});
-    const response = await getDataPlaca(setInfoPlaca, placa);
+    const response = await getDataPlaca(setInfoPlaca, placa, setIsLoadingSearch);
     if (response?.err) {
       toast.error(response?.err, {style:{background:'#ff4d4f'}});
       return
@@ -52,7 +53,8 @@ const Guardia = () => {
     // Los únicos sin motivo son: sin fecha final Y no servicio báscula
     const requiereMotivo = (horas !== 0 || minutos > 15) && 
                             (infoPlaca?.fechaFin !== null && 
-                            (infoPlaca?.movimiento !== 'SERVICIO BASCULA'));
+                            (infoPlaca?.movimiento !== 'SERVICIO BASCULA') &&
+                            (infoPlaca?.movimiento !== 'Carga Doble Detalle'));
 
     if(requiereMotivo) {
       setMotivo(true)
@@ -83,13 +85,13 @@ const Guardia = () => {
   const statsdata = [
     {
       icon: <FiCalendar size={24} className="text-white" />,
-      title: "Total (hoy)",
+      title: "Despachados (hoy)",
       value: stats?.total || 0,
       color: "bg-blue-500",
     },
     {
       icon: <FiClock size={24} className="text-white" />,
-      title: "Pendientes(hoy)",
+      title: "En BAPROSA (hoy)",
       value: stats?.pendientes || 0,
       color: "bg-amber-500",
     },
@@ -136,12 +138,13 @@ const Guardia = () => {
 
           <button
             onClick={handleSearchPlaca}
+            disabled={isLoadingSearch}
             className="bg-[#725033] hover:bg-[#866548] text-white font-medium 
                       py-2.5 px-6 rounded-lg transition-all duration-200 
                       focus:outline-none focus:ring-2 focus:ring-[#a67c5a] 
                       min-w-[100px]"
           >
-            Buscar
+            {isLoadingSearch ? 'Buscando...' : 'Buscar'}
           </button>
         </div>
 

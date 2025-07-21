@@ -1,7 +1,7 @@
 const db = require("../lib/prisma");
 const dotenv = require("dotenv");
 const jwt = require("jsonwebtoken");
-const { imprimirEpson, imprimirQRTolva, comprobanteDeCarga, imprimirWorkForce, imprimirTikets, getReimprimirWorkForce, reImprimirTikets } = require("./impresiones.controller");
+const { imprimirEpson, imprimirQRTolva, comprobanteDeCarga, imprimirWorkForce, imprimirTikets, getReimprimirWorkForce, reImprimirTikets, generarPaseDeSalidaTemporal } = require("./impresiones.controller");
 const enviarCorreo = require("../utils/enviarCorreo");
 const {alertaDesviacion, alertaCancelacion} = require("../utils/cuerposCorreo");
 const {setLogger} = require('../utils/logger');
@@ -323,7 +323,9 @@ const postBoletasNormal = async (req, res) => {
     setLogger('BOLETA', 'AGREGAR BOLETA CASULLA', req, null, 1, nuevaBoleta.id)  
 
     /* Imprimir Boleta */
-    const response = await imprimirWorkForce(nuevaBoleta)
+    const debeCrearPase = list_parte_final[proceso].includes(idMovimiento);
+    const crearPase = debeCrearPase ? await createPaseDeSalida(nuevaBoleta) : null;
+    const response = await imprimirWorkForce(nuevaBoleta, crearPase?.numPaseSalida);
     
     if (response) {
       return res.status(201).json({ msg: "Boleta creado exitosamente e impresa con exito" });
@@ -539,7 +541,8 @@ const postClientePlacaMoto = async (req, res) => {
     
     const debeCrearPase = idMovimiento ? list_pase_inicial.includes(idMovimiento) : false
     if (debeCrearPase) {
-      createPaseDeSalida(newBol)
+      const newPase = await createPaseDeSalida(newBol)
+      const response = await generarPaseDeSalidaTemporal(newBol, newPase?.numPaseSalida)
     }
     if(debeImprimirQR) {
       imprimirQRTolva(newBol);
@@ -662,7 +665,8 @@ const postClientePlacaMotoComodin = async (req, res) => {
 
     const debeCrearPase = list_pase_inicial.includes(idMovimiento);
     if (debeCrearPase) {
-      createPaseDeSalida(newBol)
+      const newPase = await createPaseDeSalida(newBol)
+      const response = await generarPaseDeSalidaTemporal(newBol, newPase?.numPaseSalida)
     }
 
     const debeImprimirQR = (idProducto === 17 && idMovimiento === 1) || (idProducto === 18 && idMovimiento === 2);
@@ -889,7 +893,7 @@ const createPaseDeSalida = async(boleta) => {
       });
       
       // Crear el nuevo pase
-      await tx.PasesDeSalida.create({
+      const PasesDeSalida = await tx.PasesDeSalida.create({
         data: {
           idBoleta: boletaId,
           numPaseSalida: (ultimoPase?.numPaseSalida || 0) + 1,
@@ -897,7 +901,7 @@ const createPaseDeSalida = async(boleta) => {
         }
       });
       
-      return true;
+      return PasesDeSalida;
     });
     
     return result;
@@ -1056,7 +1060,7 @@ const updateBoletaOut = async (req, res) => {
       updateData.idOrigen = proceso == 0 ? parseInt(idOrigen) : null;
       updateData.idDestino = proceso == 1 ? parseInt(idDestino) : null;
       updateData.manifiesto = proceso == 1 ? parseInt(manifiesto) : null;
-      updateData.ordenDeCompra = proceso == 0 ? ordenDeCompra : null;
+      updateData.ordenDeCompra = proceso == 0 ? ordenDeCompra || null : null;
       updateData.idTrasladoOrigen = null;
       updateData.idTrasladoDestino = null;
       updateData.trasladoOrigen = null;
@@ -1097,10 +1101,8 @@ const updateBoletaOut = async (req, res) => {
     // Crear pase de salida e imprimir en paralelo
 
     const debeCrearPase = list_parte_final[proceso].includes(idMovimiento);
-    const [crearPase, response] = await Promise.all([
-      debeCrearPase ? createPaseDeSalida(nuevaBoleta) : Promise.resolve(false),
-      imprimirWorkForce(nuevaBoleta)
-    ]);
+    const crearPase = debeCrearPase ? await createPaseDeSalida(nuevaBoleta) : null;
+    const response = await imprimirWorkForce(nuevaBoleta, crearPase?.numPaseSalida);
 
     const message = response 
       ? "Boleta creado exitosamente e impresa con exito"
@@ -1226,7 +1228,7 @@ const updateBoletaOutComdin = async (req, res) => {
       updateData.origen = proceso == 0 ? origen : "Baprosa";
       updateData.destino = proceso == 1 ? destino : "Baprosa";
       updateData.manifiesto = proceso == 1 ? parseInt(manifiesto) : null;
-      updateData.ordenDeCompra = proceso == 0 ? ordenDeCompra : null;
+      updateData.ordenDeCompra = proceso == 0 ? ordenDeCompra || null : null;
       updateData.idTrasladoOrigen = null;
       updateData.idTrasladoDestino = null;
       updateData.trasladoOrigen = null;
@@ -1258,10 +1260,8 @@ const updateBoletaOutComdin = async (req, res) => {
 
     // Imprimir boleta
     const debeCrearPase = list_parte_final[proceso].includes(idMovimiento);
-    const [crearPase, response] = await Promise.all([
-      debeCrearPase ? createPaseDeSalida(nuevaBoleta) : Promise.resolve(false),
-      imprimirWorkForce(nuevaBoleta)
-    ])
+    const crearPase = debeCrearPase ? await createPaseDeSalida(nuevaBoleta) : null;
+    const response = await imprimirWorkForce(nuevaBoleta, crearPase?.numPaseSalida);
 
     const message = response 
       ? "Boleta creado exitosamente e impresa con exito"
@@ -1422,13 +1422,25 @@ const getReimprimir = async (req, res) => {
   try {
     const id = req.params.id;
     const type = req.query.type;
-    const boleta = await db.boleta.findUnique({
-      where: {
-        id: parseInt(id),
-      },
-    });
+    const [boleta, paseDeSalida] = await Promise.all([
+      db.boleta.findUnique({
+        where: {
+          id: parseInt(id),
+        },
+      }), 
+      db.PasesDeSalida.findFirst({
+        select: { numPaseSalida: true },
+        where: {
+          idBoleta: parseInt(id),
+        },
+        orderBy: {
+          numPaseSalida: 'desc'
+        }
+      })
+    ])
+
     const types_colors = {yellow:['y'], pink:['p'], green:['g']}
-    getReimprimirWorkForce(boleta, types_colors[type]);
+    getReimprimirWorkForce(boleta, types_colors[type], paseDeSalida?.numPaseSalida);
     res.send({ msg: "Impresion correcta" });
   } catch (err) {
     console.log(err);

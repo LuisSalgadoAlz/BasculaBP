@@ -9,6 +9,7 @@ import {
   FiClock,
   FiX,
 } from "react-icons/fi";
+import { RiPassValidLine } from "react-icons/ri";
 import { PiNewspaperClippingLight } from "react-icons/pi";
 
 const formatDate = (dateString) => {
@@ -27,7 +28,7 @@ const formatDate = (dateString) => {
   };
 };
 
-const StatusBadge = ({ paseDeSalida, data }) => {
+const StatusBadge = ({ paseDeSalida, data, horas, minutos }) => {
   const getStatusConfig = () => {
     if (data?.estado === 'Completado' && !paseDeSalida) {
       return {
@@ -44,10 +45,17 @@ const StatusBadge = ({ paseDeSalida, data }) => {
     }
     
     if (paseDeSalida.estado === false) {
-      return {
-        text: "Pase de salida sin efectuar",
-        className: "bg-green-500 text-white"
-      };
+      if((horas>0 || minutos>15) && data?.movimiento !== 'Carga Doble Detalle') {
+        return {
+          text: "Permitido para salir - Tiempo excedido",
+          className: "bg-orange-500 text-white"
+        }
+      }else{
+        return {
+          text: "Permitido para salir",
+          className: "bg-green-500 text-white"
+        };
+      }
     }
 
     return {
@@ -60,7 +68,7 @@ const StatusBadge = ({ paseDeSalida, data }) => {
 
   return (
     <span
-      className={`px-3 py-1 rounded-full text-sm font-medium ${className}`}
+      className={`px-3 py-1 rounded-full text-sm font-medium w-full text-center ${className}`}
       style={{ animation: "slideUp 0.5s ease-out 0.6s both" }}
     >
       {text}
@@ -69,50 +77,65 @@ const StatusBadge = ({ paseDeSalida, data }) => {
 };
 
 const ModalHeader = ({ data, closeModal }) => {
+  let horas = null;
+  let minutos = null;
+
+  if (data?.fechaFin) {
+    const diferenciaMs = (data?.paseDeSalida?.fechaSalida ? new Date(data?.paseDeSalida?.fechaSalida) : new Date()) - new Date(data.fechaFin); // Diferencia en milisegundos
+    const diffMin = Math.floor(diferenciaMs / 60000);
+    horas = Math.floor(diffMin / 60);
+    minutos = diffMin % 60;
+  } else {
+    horas = null;
+    minutos = null;
+  }
+
   const getDocumentTitle = () => {
-    if (data?.manifiesto && data?.manifiesto!=0) return `Manifiesto: # ${data.manifiesto}`;
-    if (data?.ordenDeCompra && data?.ordenDeCompra!=0) return `Orden De Compra: #${data.ordenDeCompra}`;
-    return "Sin Documentos";
+    return `${data?.proceso===0 ? 'Entrada' : 'Salida'} - ${data?.movimiento ? data?.movimiento : 'En proceso'}`
   };
 
   return (
     <div className="bg-gradient-to-r bg-[#5a3f27] text-white p-6 sticky top-0 z-10 max-sm:pt-10">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center"
-            style={{ animation: "bounceIn 0.6s ease-out 0.2s both" }}
-          >
-            <FiFileText className="w-5 h-5" />
-          </div>
-          
           <div>
             <h1
-              className="text-2xl font-bold max-sm:text-sm"
+              className="text-2xl font-bold max-sm:text-lg"
               style={{ animation: "slideRight 0.5s ease-out 0.3s both" }}
             >
               {getDocumentTitle()}
             </h1>
             
             <div
-              className="grid grid-cols-3 max-sm:grid-cols-2 gap-2 text-blue-100 mt-1"
-              style={{ animation: "slideRight 0.5s ease-out 0.4s both" }}
-            >
-              <span className="flex items-center gap-1">
-                <FiPackage className="w-4 h-4" />
-                ID: {data?.id}
-              </span>
-              <span className="flex items-center gap-1">
-                <FiTruck className="w-4 h-4" />
-                {data?.placa}
-              </span>
-              {data?.numBoleta && (
-                <span className="flex items-center gap-1">
-                    <PiNewspaperClippingLight className="w-4 h-4" />
-                    Bol: {data?.numBoleta}
+                className="flex flex-wrap gap-3 text-blue-100 mt-1"
+                style={{ animation: "slideRight 0.5s ease-out 0.4s both" }}
+              >
+                <span className="flex items-center gap-1 min-w-fit">
+                  <FiTruck className="w-4 h-4 flex-shrink-0" />
+                  <span className="text-sm font-medium">{data?.placa}</span>
                 </span>
-              )}
-            </div>
+                
+                {(data?.manifiesto !== 0 && data?.manifiesto !== null) && (
+                  <span className="flex items-center gap-1 min-w-fit">
+                    <FiPackage className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-sm">Manifiesto: {data?.manifiesto}</span>
+                  </span>
+                )}
+                
+                {(data?.paseDeSalida && data?.paseDeSalida?.numPaseSalida) && (
+                  <span className="flex items-center gap-1 min-w-fit">
+                    <RiPassValidLine className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-sm">Pase: #{data?.paseDeSalida?.numPaseSalida}</span>
+                  </span>
+                )}
+                
+                {data?.numBoleta && (
+                  <span className="flex items-center gap-1 min-w-fit">
+                    <PiNewspaperClippingLight className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-sm">Bol: {data?.numBoleta}</span>
+                  </span>
+                )}
+              </div>
           </div>
 
           
@@ -127,8 +150,8 @@ const ModalHeader = ({ data, closeModal }) => {
         </button>
       </div>
 
-      <div className="mt-4">
-        <StatusBadge paseDeSalida={data?.paseDeSalida} data={data} />
+      <div className="mt-4 w-full flex justify-center items-center">
+        <StatusBadge paseDeSalida={data?.paseDeSalida} data={data} horas={horas} minutos={minutos} />
       </div>
     </div>
   );
@@ -442,14 +465,24 @@ const TransportTimeline = ({ data }) => {
               Icon={FiCalendar}
               color={(horas>0 || minutos > 15 ) ? 'red' : 'gray'}
             />
-          ) : ( 
-            <TimelineSuccessItem
-              title={`Llegada a la guardia: ${(horas>0 || minutos > 15 ) ? 'Tiempo excedido' : (horas==null && minutos==null) ? 'N/A': 'Sin Problema'}`}
-              fecha={fechaGuardia.date}
-              hora={fechaGuardia.time}
-              Icon={FiCalendar}
-              color={(horas>0 || minutos > 15 ) ? 'red' : 'green'}
-            />
+          ) : (
+            data?.movimiento !== 'Carga Doble Detalle' ? (
+              <TimelineSuccessItem
+                title={`Llegada a la guardia: ${(horas>0 || minutos > 15 ) ? 'Tiempo excedido' : (horas==null && minutos==null) ? 'N/A': 'Sin Problema'}`}
+                fecha={fechaGuardia.date}
+                hora={fechaGuardia.time}
+                Icon={FiCalendar}
+                color={(horas>0 || minutos > 15 ) ? 'red' : 'green'}
+              />
+            ) : (
+              <TimelineSuccessItem
+                title={`Llegada a la guardia: Sin Problemas`}
+                fecha={fechaGuardia.date}
+                hora={fechaGuardia.time}
+                Icon={FiCalendar}
+                color={'green'}
+              />
+            )
           )
         )}
       </div>
