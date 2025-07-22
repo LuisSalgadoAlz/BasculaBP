@@ -699,7 +699,7 @@ function generarContenidoTercioCarta(copia, esPrimera = false, colors, boleta, d
     { canvas: [ { type: 'rect', x: 0, y: 0, w: 10, h: 250, color: colors[copia] }], absolutePosition: { x: 98, y: 2 } },
     { canvas: [ { type: 'rect', x: 0, y: 0, w: 608, h: 10, color: colors[copia], }], absolutePosition: { x: 2, y: 252 } },
     {
-      text: esPaseSalida ? 'P A S E  D E  S A L I D A' : 'O R I G I N A L',
+      text: esPaseSalida ? '' : 'O R I G I N A L',
       color: 'gray',
       opacity: 0.2,
       bold: true,
@@ -740,7 +740,16 @@ function generarContenidoTercioCarta(copia, esPrimera = false, colors, boleta, d
       margin: [36, 10, 36, 0],
       canvas: [{ type: 'line', x1: 0, y1: 0, x2: 540, y2: 0, lineWidth: 1 }]
     },
-    {
+      (esPaseSalida ? {
+      text: 'P A S E  D E  S A L I D A',
+      color: 'gray',
+      opacity: 0.3,
+      bold: true,
+      italics: true,
+      fontSize: 30,
+      alignment: 'center',
+      margin: [10, 10, 36, 0]
+    } : {
       margin: [36, 10, 36, 0],
       layout: 'noBorders',
       table: {
@@ -756,7 +765,7 @@ function generarContenidoTercioCarta(copia, esPrimera = false, colors, boleta, d
           ]
         ]
       }
-    },
+    }),
     {
       margin: [36, 10, 36, 0],
       canvas: [{ type: 'line', x1: 0, y1: 0, x2: 540, y2: 0, lineWidth: 1 }]
@@ -864,7 +873,16 @@ function generarContenidoTercioCartaReimpresion(copia, esPrimera = false, colors
       margin: [36, 10, 36, 0],
       canvas: [{ type: 'line', x1: 0, y1: 0, x2: 540, y2: 0, lineWidth: 1 }]
     },
-    {
+    (esPaseSalida ? {
+      text: 'P A S E  D E  S A L I D A',
+      color: 'gray',
+      opacity: 0.3,
+      bold: true,
+      italics: true,
+      fontSize: 30,
+      alignment: 'center',
+      margin: [10, 10, 36, 0]
+    }:{
       margin: [36, 10, 36, 0],
       layout: 'noBorders',
       table: {
@@ -880,7 +898,7 @@ function generarContenidoTercioCartaReimpresion(copia, esPrimera = false, colors
           ]
         ]
       }
-    },
+    }),
     {
       margin: [36, 10, 36, 0],
       canvas: [{ type: 'line', x1: 0, y1: 0, x2: 540, y2: 0, lineWidth: 1 }]
