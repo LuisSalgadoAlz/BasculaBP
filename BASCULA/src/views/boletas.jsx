@@ -167,6 +167,7 @@ const Boletas = () => {
       setAddMarchamos([])
       setOpenModalForm(false)
       closeAllDataOfForm()
+      setSearch('')
     } 
   }
 

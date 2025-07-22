@@ -381,6 +381,9 @@ const getDataBoletas = async (req, res) => {
           fechaInicio: true,
         },
         where: baseWhere,
+        orderBy: {
+          id: 'desc'
+        },
         skip,
         take: limit,
       }),
