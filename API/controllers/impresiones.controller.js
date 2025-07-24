@@ -961,7 +961,7 @@ const generarCantidadCopias = (boleta, numPaseSalida) => {
   }
 
   if(arrSubproductos.includes(idProducto)) {
-    return filtrarCopias(['o', 'g', 'p'])
+    return filtrarCopias(['o', 'g', 'p', 'y'])
   }
 
   if (todasLasCopias.includes(idProducto)) {
