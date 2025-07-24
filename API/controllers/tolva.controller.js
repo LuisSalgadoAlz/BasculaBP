@@ -5,6 +5,8 @@ const jsQR = require('jsqr');
 const jimp = require('jimp');
 const sharp = require('sharp');
 const jwt = require("jsonwebtoken");
+const enviarCorreo = require("../utils/enviarCorreo");
+const { alertaMarchamosDiferentes } = require('../utils/cuerposCorreo');
 
 const TYPES_OF_STATES = ['PENDIENTE', 'COMPLETO', 'CANCELADO', 'FUERA DE TIEMPO']
 
@@ -565,7 +567,7 @@ const getListUsersForTolva = async(req, res) =>{
  */
 const postSiloInBoletas = async(req, res) => {
   try{
-    const { silo, silo2, silo3, tolvaDescarga } = req.body;
+    const { silo, silo2, silo3, tolvaDescarga, sello1, sello2, sello3, sello4, sello5, sello6 } = req.body;
     const boletaID = req.params.id;
 
     const token = req.header('Authorization');
@@ -584,14 +586,33 @@ const postSiloInBoletas = async(req, res) => {
       where: { usuarios: verificado["usuarios"] }
     });
 
-    const isEmptyTolva = await db.tolva.count({
-      where: {
-        tolvaDescarga: {
-          contains: `T${usuario.UsuariosPorTolva.tolva}-${tolvaDescarga}`
+    const [isEmptyTolva, boleta] = await Promise.all([
+      db.tolva.count({
+        where: {
+          tolvaDescarga: {
+            contains: `T${usuario.UsuariosPorTolva.tolva}-${tolvaDescarga}`
+          },
+          estado: 0,
+        }
+      }),
+      db.boleta.findUnique({
+        select: {
+          socio:true, empresa: true, placa: true, motorista: true, producto: true, tolvaAsignada: true, sello1: true, sello2:true, sello3:true, sello4: true, sello5: true, sello6: true,
         },
-        estado: 0,
-      }
-    });
+        where:{id:parseInt(boletaID)}
+      })
+    ])
+
+    const arrTolva = [sello1, sello2, sello3, sello4, sello5, sello6];
+    const arrBoleta = [boleta.sello1, boleta.sello2, boleta.sello3, boleta.sello4, boleta.sello5, boleta.sello6];
+
+    const enviarAlerta = arrTolva
+    .filter(s => s !== null && s !== undefined)
+    .every(sello => arrBoleta.filter(b => b !== null && b !== undefined).includes(sello));
+
+    if(!enviarAlerta) {
+      alertaMarchamosDiferentes(boleta, usuario, enviarCorreo, arrBoleta, arrTolva, tolvaDescarga)
+    }
 
     if (isEmptyTolva !== 0) {
       return res.status(200).send({ err: 'Tolva de descarga actualmente en uso, finalice proceso' });
@@ -607,7 +628,13 @@ const postSiloInBoletas = async(req, res) => {
         siloSecundario: parseInt(silo2)|| null, 
         SiloTerciario: parseInt(silo3) || null, 
         estado: 0, 
-        tolvaDescarga: `T${usuario.UsuariosPorTolva.tolva}-${tolvaDescarga}`
+        tolvaDescarga: `T${usuario.UsuariosPorTolva.tolva}-${tolvaDescarga}`,
+        Sello1: parseInt(sello1) || null, 
+        Sello2: parseInt(sello2) || null, 
+        Sello3: parseInt(sello3) || null, 
+        Sello4: parseInt(sello4) || null, 
+        Sello5: parseInt(sello5) || null, 
+        Sello6: parseInt(sello6) || null, 
       }
     })
     return res.status(200).send({msg:'¡Boleta ha sido asignada correctamente!'})
