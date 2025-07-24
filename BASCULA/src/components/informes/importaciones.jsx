@@ -19,6 +19,7 @@ const Importaciones = () => {
   const [buquesDetails, setBuquesDetails] = useState([{}])
   const [isLoadingBuquesDetails, setIsLoadingBuquesDetails] = useState(false)
   const [selected, setBuqueSelected] = useState()
+  const [selectedName, setSelectedName] = useState('')
   const [stats, setStats] = useState()
   const [isLoadStats, setIsLoadStats] = useState(false)
   const [pagination, setPagination] = useState(1)
@@ -29,6 +30,8 @@ const Importaciones = () => {
   };
   
   const handleChangeBuque = (e) => {
+    const nombreVisible = e.target.options[e.target.selectedIndex].text
+    setSelectedName(nombreVisible)
     setBuqueSelected(e.target.value)
     setPagination(1)
   }
@@ -127,12 +130,6 @@ const Importaciones = () => {
         value:  stats?.porcentaje || 0,
         color: "bg-amber-500",
       },
-      {
-        icon: <FiClock size={24} className="text-white" />,
-        title: "Facturas",
-        value:  stats?.facturas || 0,
-        color: "bg-amber-500",
-      },
   ];
 
   return (
@@ -188,7 +185,8 @@ const Importaciones = () => {
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-2">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
+        <ProgressBar current={stats?.pesoNeto || 0} limit={9000} unit="Toneladas" label={`${selectedName ? 'Seleccione un buque' : selectedName} ${stats?.facturas ? ' - Facturas: ': ''}`}/>
         {statsdata?.map((stat, index) => (
             <StatCard
               key={index}
@@ -198,7 +196,7 @@ const Importaciones = () => {
               color={stat.color}
             />
           ))}
-      </div>
+      </div>  
       <div>
         {resumenBFHLoad ? (
           <TablaResumenBFHLoader />
@@ -220,5 +218,69 @@ const Importaciones = () => {
     </>
   );
 };
+
+function ProgressBar({ current, limit, label = "Progreso", unit = "productos" }) {
+  const percentage = limit > 0 ? Math.min((current / limit) * 100, 100) : 0;
+  
+  return (
+    <div className="w-full max-w-lg mx-auto row-span-2">
+      <div className="bg-white rounded-xl shadow-lg border border-gray-100 px-2 py-7">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold text-gray-800">{label}</h3>
+          <div className="flex items-center space-x-2">
+            <span className="text-2xl font-bold text-green-600">
+              {Math.round(percentage)}%
+            </span>
+            <span className="text-sm text-gray-500">completado</span>
+          </div>
+        </div>
+        
+        {/* Progress Bar Container */}
+        <div className="mb-4">
+          <div className="relative w-full bg-gray-100 rounded-full h-6 overflow-hidden shadow-inner">
+            {/* Progress Fill */}
+            <div 
+              className="absolute top-0 left-0 h-full bg-gradient-to-r from-green-400 via-green-500 to-green-600 transition-all duration-700 ease-out rounded-full shadow-sm"
+              style={{ width: `${percentage}%` }}
+            >
+              {/* Shine Effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20 animate-pulse"></div>
+            </div>
+            
+            {/* Progress Text Overlay */}
+            {percentage > 15 && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-white text-sm font-medium drop-shadow-sm">
+                  {Math.round(percentage)}%
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {/* Stats */}
+        <div className="flex justify-between items-center">
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+            <span className="text-sm text-gray-600">
+              <span className="font-semibold text-gray-800">{current.toLocaleString()}</span> de{' '}
+              <span className="font-semibold text-gray-800">{limit.toLocaleString()}</span>
+            </span>
+          </div>
+          <span className="text-sm text-gray-500 capitalize">{unit}</span>
+        </div>
+        
+        {/* Additional Info */}
+        <div className="mt-4 pt-4 border-t border-gray-100">
+          <div className="flex justify-between text-xs text-gray-500">
+            <span>Restante: {(limit - current).toLocaleString()} {unit}</span>
+            <span>{percentage < 100 ? `${(100 - percentage).toFixed(1)}% por completar` : '¡Completado!'}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default Importaciones;
