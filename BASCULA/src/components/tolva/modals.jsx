@@ -6,19 +6,26 @@ import {
   IoCarOutline,
   IoGrid,
   IoBusinessOutline,
+  IoShieldCheckmarkOutline,
+  IoChevronDown,
+  IoDocumentTextOutline,
 } from "react-icons/io5";
 import { MdOutlinePlace, MdOutlineSecurity } from "react-icons/md";
 
 export const Modals = (props) => {
-  const { hdlClose, hdlSubmit, isLoadingImage, data, silos, handleChange, error, isLoadAsingar } = props
+  const { hdlClose, hdlSubmit, isLoadingImage, data, silos, handleChange, error, isLoadAsingar, handleKeyDown, handleMarchamos, formData } = props
+  const [isMarchamosExpanded, setIsMarchamosExpanded] = useState(false);
 
   if (data.err) {
     return;
   }
 
+  const marchamos = [data?.sello1, data?.sello2, data?.sello3, data?.sello4, data?.sello5, data?.sello6]
+  const marchamosValidos = marchamos.filter(item => item && item.trim() !== '');
+
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black bg-opa-50 p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-auto border border-gray-200 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black bg-opa-50 sm:p-4">
+      <div className="bg-white w-full h-full sm:rounded-2xl sm:shadow-xl sm:w-full sm:max-w-md sm:mx-auto sm:border sm:border-gray-200 sm:max-h-[90vh] overflow-y-auto flex flex-col">
         {isLoadingImage ? (
           <>
             <ModalLoader />
@@ -120,43 +127,91 @@ export const Modals = (props) => {
                     </p>
                   </div>
                 </div>
-
-                {/* Marchamos */}
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center w-8 h-8 bg-purple-100 rounded-full">
-                    <MdOutlineSecurity size={16} className="text-purple-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Marchamos</p>
-                    <p className="text-sm font-medium text-gray-800">
-                      {[data?.sello1, data?.sello2, data?.sello3, data?.sello4, data?.sello5, data?.sello6]
-                    .filter(Boolean)
-                    .join(', ') || 'N/A'}
-                    </p>
-                  </div>
-                </div>
               </div>
 
-              {/* Selección de Silo */}
-              <div className="space-y-2">
+              {/* Verificación de Marchamos - Expandible */}
+              <div className="bg-gray-50 rounded-lg border border-gray-200">
+                <button
+                  onClick={() => setIsMarchamosExpanded(!isMarchamosExpanded)}
+                  className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-100 transition-colors rounded-lg"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-center w-8 h-8 bg-amber-100 rounded-full">
+                      <IoShieldCheckmarkOutline size={16} className="text-amber-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-700">
+                        Verificación de Marchamos
+                      </h3>
+                      <p className="text-xs text-gray-500">
+                        Debe de digitar los marchamos encontrados.
+                      </p>
+                    </div>
+                  </div>
+                  <div className={`transform transition-transform duration-200 ${isMarchamosExpanded ? 'rotate-180' : ''}`}>
+                    <IoChevronDown size={20} className="text-gray-400" />
+                  </div>
+                </button>
+
+                {isMarchamosExpanded && (
+                  <div className="px-4 pb-4 space-y-3">
+                    <div className="h-px bg-gray-200 mb-3"></div>
+                    {marchamosValidos.length > 0 ? (
+                      <div className="grid grid-cols-2 gap-2">
+                        {marchamos.map((item, index) => (
+                          <div key={index} className="relative">
+                            <input 
+                              className={`w-full px-3 py-2 text-sm text-gray-700 bg-white border border-gray-200 rounded-md 
+                                        focus:outline-none ${(formData[`sello${index+1}`] || '').length === 6 ? 'focus:border-green-500' : 'focus:border-red-500'} focus:ring-1 focus:ring-amber-200 
+                                        transition-all duration-200 placeholder-gray-400
+                                        hover:border-gray-300 shadow-sm`}
+                              name={`sello${index+1}`} 
+                              type="text"
+                              inputMode="numeric"
+                              pattern="\d*"
+                              maxLength={6}
+                              value={formData[`sello${index+1}`]}
+                              onChange={handleMarchamos}
+                              onKeyDown={handleKeyDown}  
+                              placeholder={`Marchamo ${index+1}`}
+                              defaultValue=""
+                            />
+                            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                              <IoDocumentTextOutline className="w-4 h-4 text-gray-400" />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-4">
+                        <p className="text-sm text-gray-500">No hay marchamos disponibles</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Selección de Destinos */}
+              <div className="space-y-3">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
                   <IoBusinessOutline size={16} />
                   Seleccionar tolva de descarga 
                 </label>
                 <select name="tolvaDescarga"
                   onChange={handleChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#5A3F27] focus:border-transparent text-sm transition-all border-gray-300`}
+                  className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#5A3F27] focus:border-transparent text-sm transition-all border-gray-300"
                 >
                   <option value={0}>Seleccione tolva de descarga</option>
                   <option value={1}>Tolva De Descarga #1</option>
                   <option value={2}>Tolva De Descarga #2</option>
                 </select>
+
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
                   <IoBusinessOutline size={16} />
                   Seleccionar Destino
                 </label>
                 <select name="silo" onChange={handleChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#5A3F27] focus:border-transparent text-sm transition-all border-gray-300`}
+                  className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#5A3F27] focus:border-transparent text-sm transition-all border-gray-300"
                 >
                   <option value="">Seleccione destino principal</option>
                   {silos.map((silo) => (
@@ -167,7 +222,7 @@ export const Modals = (props) => {
                   ))}
                 </select>
                 <select name="silo2" onChange={handleChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#5A3F27] focus:border-transparent text-sm transition-all border-gray-300`}
+                  className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#5A3F27] focus:border-transparent text-sm transition-all border-gray-300"
                 >
                   <option value="">Seleccione destino #2 (opcional)</option>
                   {silos.map((silo) => (
@@ -178,7 +233,7 @@ export const Modals = (props) => {
                   ))}
                 </select>
                 <select name="silo3" onChange={handleChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#5A3F27] focus:border-transparent text-sm transition-all border-gray-300`}
+                  className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#5A3F27] focus:border-transparent text-sm transition-all border-gray-300"
                 >
                   <option value="">Seleccione destino #3 (opcional)</option>
                   {silos.map((silo) => (
