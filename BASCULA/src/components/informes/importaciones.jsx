@@ -186,7 +186,7 @@ const Importaciones = () => {
         </div>
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
-        <ProgressBar current={stats?.pesoNeto || 0} limit={9000} unit="Toneladas" label={`${selectedName ? 'Seleccione un buque' : selectedName} ${stats?.facturas ? ' - Facturas: ': ''}`}/>
+        <ProgressBar current={stats?.pesoNeto || 0} limit={9000} unit="Toneladas" label={`${selectedName ? selectedName : 'Seleccione un buque'} ${stats?.facturas ? `- Facturas: ${stats?.facturas}`: ''}`}/>
         {statsdata?.map((stat, index) => (
             <StatCard
               key={index}
@@ -223,8 +223,8 @@ function ProgressBar({ current, limit, label = "Progreso", unit = "productos" })
   const percentage = limit > 0 ? Math.min((current / limit) * 100, 100) : 0;
   
   return (
-    <div className="w-full max-w-lg mx-auto row-span-2">
-      <div className="bg-white rounded-xl shadow-lg border border-gray-100 px-2 py-7">
+    <div className="w-full mx-auto row-span-2">
+      <div className="bg-white rounded-xl shadow-lg border border-gray-100 px-7 py-7">
         {/* Header */}
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold text-gray-800">{label}</h3>
