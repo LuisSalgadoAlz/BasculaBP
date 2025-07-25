@@ -272,21 +272,21 @@ const exportR1Importaciones =  async(req, res) => {
         )
         SELECT socio, fechaFin, pesoNeto, pesoTeorico, desviacion, factura
         FROM numerados
-        where factura = ${factura}
         ORDER BY factura ASC, fechaFin ASC`;
-
+    
         const grouped = rawData.reduce((acc, item) => {
             // Convertir fecha UTC a zona horaria de Honduras (UTC-6)
             const fechaUTC = new Date(item.fechaFin);
             const fechaHonduras = new Date(fechaUTC.getTime() - (6 * 60 * 60 * 1000));
             const fechaLocal = fechaHonduras.toISOString().split('T')[0];
             
-            const key = `${item.socio}-${fechaLocal}`;
+            const key = `${item.socio}-${fechaLocal}-${Number(item.factura)}`;
             
             if (!acc[key]) {
                 acc[key] = {
                     socio: item.socio,
                     fecha: fechaLocal,
+                    factura: Number(item.factura),
                     total: 0, 
                     pesoNeto: 0, 
                     pesoTeorico: 0,
@@ -317,9 +317,60 @@ const exportR1Importaciones =  async(req, res) => {
             )
             SELECT *
             FROM numerados
-            WHERE factura = ${factura}
             ORDER BY factura ASC, Nviajes ASC
         `
+
+        // Nueva consulta para la hoja de detalles completos
+        const detallesCompletos = await db.$queryRaw`
+            WITH numerados AS (
+                SELECT *,
+                ROW_NUMBER() OVER (PARTITION BY Nviajes ORDER BY numBoleta) AS factura
+                FROM boleta
+                WHERE estado != 'Pendiente' 
+                AND estado != 'Cancelada' 
+                AND idSocio = ${buque} 
+                AND idMovimiento = ${IMPORTACIONES} 
+                AND idProducto = ${GRANZA} 
+                AND Nviajes IS NOT NULL
+            )
+            SELECT DISTINCT 
+                n.factura,
+                n.numBoleta, 
+                n.Nviajes, 
+                n.NSalida, 
+                n.socio, 
+                n.placa, 
+                n.empresa, 
+                -- Pesos originales en libras
+                n.pesoFinal as Tara, 
+                n.pesoInicial as PesoBruto, 
+                n.pesoNeto,
+                ROUND(n.pesoNeto / 100.0, 2) as PesoNetoQuintales,
+                ROUND(n.pesoNeto / 2204.62, 3) as PesoNetoToneladas,
+                n.pesoTeorico, 
+                ROUND(n.pesoTeorico / 100.0, 2) as PesoTeoricoQuintales,
+                ROUND(n.pesoTeorico / 2204.62, 3) as PesoTeoricoToneladas,
+                -- Otros campos
+                n.desviacion,
+                ROUND(n.desviacion / 100.0, 2) as DesviacionEnQuintales,
+                ROUND(n.desviacion / 2204.62, 3) as DesviacionEnTonelada,
+                n.sello1, 
+                n.sello2, 
+                n.sello3, 
+                n.sello4, 
+                n.sello5, 
+                n.sello6,
+                n.tolvaAsignada,
+                s1.nombre AS siloPrincipal,
+                s2.nombre AS siloSecundario,
+                s3.nombre AS siloTerciario
+            FROM numerados as n
+            INNER JOIN Tolva as t ON n.id = t.idBoleta
+            LEFT JOIN Silos as s1 ON s1.id = t.siloPrincipal
+            LEFT JOIN Silos as s2 ON s2.id = t.siloSecundario  
+            LEFT JOIN Silos as s3 ON s3.id = t.SiloTerciario 
+            ORDER BY factura ASC, Nviajes ASC
+        `;
         
         // Verificación de datos del resumen
         if (result.length === 0) {
@@ -713,31 +764,250 @@ const exportR1Importaciones =  async(req, res) => {
         footerCell.value = 'BAPROSA - Sistema de Gestión de Básculas © ' + new Date().getFullYear();
         Object.assign(footerCell.style, styles.footer);
 
-        // ===== HOJA 2: ANÁLISIS (EN BLANCO) =====
+        // ===== HOJA 2: DETALLES COMPLETOS =====
         const sheet2 = workbook.addWorksheet('Detalles', {
-            properties: { tabColor: {argb: COLORS.secondary} }
+            pageSetup: {
+                paperSize: 9, // A4
+                orientation: 'landscape',
+                fitToPage: true,
+                fitToWidth: 1,
+                fitToHeight: 0,
+                margins: {
+                    top: 0.7,
+                    left: 0.7,
+                    bottom: 0.7,
+                    right: 0.7,
+                    header: 0.3,
+                    footer: 0.3
+                }
+            },
+            properties: { 
+                tabColor: {argb: COLORS.secondary} 
+            }
         });
         
-        // Encabezado de la hoja de análisis
-        sheet2.mergeCells("A1:F1");
-        const analysisTitle = sheet2.getCell("A1");
-        analysisTitle.value = "ANÁLISIS DE DATOS BFH";
-        analysisTitle.style = {
+        // Encabezado de la hoja de detalles
+        sheet2.mergeCells("A1:AC1");
+        const detailsTitle = sheet2.getCell("A1");
+        detailsTitle.value = "DETALLES COMPLETOS BFH - IMPORTACIONES DE GRANZA";
+        detailsTitle.style = {
             font: { name: 'Calibri', bold: true, size: 16, color: { argb: COLORS.primary } },
             alignment: { horizontal: 'center', vertical: 'middle' },
             fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.light } },
             border: { outline: { style: 'thin', color: { argb: COLORS.primary } } }
         };
         
-        sheet2.getRow(3).values = ['Esta hoja está disponible para análisis personalizado de los datos BFH'];
-        sheet2.getCell('A3').style = {
-            font: { name: 'Calibri', italic: true, size: 12, color: { argb: COLORS.lightText } },
-            alignment: { horizontal: 'left', vertical: 'middle' }
+        // Fecha de generación
+        sheet2.mergeCells("A2:AC2");
+        const detailsDateCell = sheet2.getCell("A2");
+        detailsDateCell.value = `Generado el: ${now.toLocaleDateString('es-ES', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        })}`;
+        Object.assign(detailsDateCell.style, styles.dateInfo);
+        
+        sheet2.addRow([]);
+        
+        // Encabezados de la tabla de detalles completos
+        const detailHeaders = [
+            'Factura', 'Num. Boleta', 'N° Viaje', 'N° Salida', 'Socio', 'Placa', 'Empresa',
+            'Tara (lb)', 'Peso Bruto (lb)', 'Peso Neto (lb)', 'Peso Neto (qq)', 'Peso Neto (ton)',
+            'Peso Teórico (lb)', 'Peso Teórico (qq)', 'Peso Teórico (ton)',
+            'Desviación (lb)', 'Desviación (qq)', 'Desviación (ton)',
+            'Sello 1', 'Sello 2', 'Sello 3', 'Sello 4', 'Sello 5', 'Sello 6',
+            'Tolva Asignada', 'Silo Principal', 'Silo Secundario', 'Silo Terciario'
+        ];
+        
+        const detailHeadersRow = sheet2.addRow(detailHeaders);
+        detailHeadersRow.height = 25;
+        
+        // Aplicar estilo a los encabezados
+        detailHeaders.forEach((header, index) => {
+            const cell = sheet2.getCell(sheet2.rowCount, index + 1);
+            Object.assign(cell.style, styles.header);
+        });
+        
+        // Configurar anchos de columna para la hoja de detalles
+        const detailColumnWidths = [8, 12, 10, 10, 25, 12, 20, 12, 15, 15, 12, 12, 15, 12, 12, 12, 12, 12, 10, 10, 10, 10, 10, 10, 15, 20, 20, 20];
+        detailColumnWidths.forEach((width, i) => {
+            sheet2.getColumn(i + 1).width = width;
+        });
+        
+        // Llenar datos de detalles completos
+        let detailTotals = {
+            pesoNeto: 0,
+            pesoNetoQuintales: 0,
+            pesoNetoToneladas: 0,
+            pesoTeorico: 0,
+            pesoTeoricoQuintales: 0,
+            pesoTeoricoToneladas: 0,
+            desviacion: 0,
+            desviacionQuintales: 0,
+            desviacionToneladas: 0
         };
         
-        // Configurar anchos de columna
-        for (let i = 1; i <= 6; i++) {
-            sheet2.getColumn(i).width = 20;
+        for (let i = 0; i < detallesCompletos.length; i++) {
+            const item = detallesCompletos[i];
+            const dataRow = sheet2.addRow([]);
+            const currentRowNum = sheet2.rowCount;
+            dataRow.height = 20;
+            
+            // Datos de la fila
+            const rowData = [
+                Number(item.factura),
+                item.numBoleta,
+                item.Nviajes,
+                item.NSalida,
+                item.socio,
+                item.placa,
+                item.empresa,
+                item.Tara,
+                item.PesoBruto,
+                item.pesoNeto,
+                item.PesoNetoQuintales,
+                item.PesoNetoToneladas,
+                item.pesoTeorico,
+                item.PesoTeoricoQuintales,
+                item.PesoTeoricoToneladas,
+                item.desviacion,
+                item.DesviacionEnQuintales,
+                item.DesviacionEnTonelada,
+                item.sello1,
+                item.sello2,
+                item.sello3,
+                item.sello4,
+                item.sello5,
+                item.sello6,
+                item.tolvaAsignada,
+                item.siloPrincipal,
+                item.siloSecundario,
+                item.siloTerciario
+            ];
+            
+            // Llenar datos en las celdas
+            rowData.forEach((value, colIndex) => {
+                const cell = sheet2.getCell(currentRowNum, colIndex + 1);
+                cell.value = value;
+                
+                // Aplicar estilo alternado
+                if (i % 2 !== 0) {
+                    cell.style = {...styles.data, ...styles.alternateRow};
+                } else {
+                    Object.assign(cell.style, styles.data);
+                }
+            });
+            
+            // Aplicar formatos específicos y alineaciones
+            // Centrar columnas numéricas específicas
+            [1, 2, 3, 4].forEach(col => {
+                sheet2.getCell(currentRowNum, col).alignment = { horizontal: 'center', vertical: 'middle' };
+            });
+            
+            // Formato para pesos en libras
+            [8, 9, 10, 13, 16].forEach(col => {
+                const cell = sheet2.getCell(currentRowNum, col);
+                if (typeof cell.value === 'number') {
+                    cell.numFmt = '#,##0.00 "lb"';
+                    cell.alignment = { horizontal: 'right', vertical: 'middle' };
+                }
+            });
+            
+            // Formato para quintales
+            [11, 14, 17].forEach(col => {
+                const cell = sheet2.getCell(currentRowNum, col);
+                if (typeof cell.value === 'number') {
+                    cell.numFmt = '#,##0.00 "qq"';
+                    cell.alignment = { horizontal: 'right', vertical: 'middle' };
+                }
+            });
+            
+            // Formato para toneladas
+            [12, 15, 18].forEach(col => {
+                const cell = sheet2.getCell(currentRowNum, col);
+                if (typeof cell.value === 'number') {
+                    cell.numFmt = '#,##0.000 "ton"';
+                    cell.alignment = { horizontal: 'right', vertical: 'middle' };
+                }
+            });
+            
+            // Colorear desviación según su valor (columnas 16, 17, 18)
+            [16, 17, 18].forEach(col => {
+                const cell = sheet2.getCell(currentRowNum, col);
+                if (typeof cell.value === 'number') {
+                    if (cell.value < -200 || (col === 17 && cell.value < -2) || (col === 18 && cell.value < -0.09)) {
+                        cell.font = { name: 'Calibri', bold: true, size: 11, color: { argb: COLORS.danger } };
+                    } else if (cell.value < 0) {
+                        cell.font = { name: 'Calibri', bold: true, size: 11, color: { argb: COLORS.warning } };
+                    } else {
+                        cell.font = { name: 'Calibri', bold: true, size: 11, color: { argb: COLORS.success } };
+                    }
+                }
+            });
+            
+            // Centrar sellos y tolva
+            [19, 20, 21, 22, 23, 24, 25].forEach(col => {
+                sheet2.getCell(currentRowNum, col).alignment = { horizontal: 'center', vertical: 'middle' };
+            });
+            
+            // Acumular totales
+            if (typeof item.pesoNeto === 'number') {
+                detailTotals.pesoNeto += item.pesoNeto;
+                detailTotals.pesoNetoQuintales += item.PesoNetoQuintales;
+                detailTotals.pesoNetoToneladas += item.PesoNetoToneladas;
+                detailTotals.pesoTeorico += item.pesoTeorico;
+                detailTotals.pesoTeoricoQuintales += item.PesoTeoricoQuintales;
+                detailTotals.pesoTeoricoToneladas += item.PesoTeoricoToneladas;
+                detailTotals.desviacion += item.desviacion;
+                detailTotals.desviacionQuintales += item.DesviacionEnQuintales;
+                detailTotals.desviacionToneladas += item.DesviacionEnTonelada;
+            }
+        }
+        
+        // Agregar fila de totales para la hoja de detalles
+        if (detallesCompletos.length > 0) {
+            sheet2.addRow([]); // Fila vacía
+            
+            const totalsRow = sheet2.addRow([]);
+            const totalsRowNum = sheet2.rowCount;
+            
+            const totalsData = [
+                '', '', '', '', '', '', 'TOTALES:',
+                '', '', 
+                detailTotals.pesoNeto,
+                detailTotals.pesoNetoQuintales, 
+                detailTotals.pesoNetoToneladas,
+                detailTotals.pesoTeorico,
+                detailTotals.pesoTeoricoQuintales,
+                detailTotals.pesoTeoricoToneladas,
+                detailTotals.desviacion,
+                detailTotals.desviacionQuintales,
+                detailTotals.desviacionToneladas,
+                '', '', '', '', '', '', '', '', '', ''
+            ];
+            
+            totalsData.forEach((value, colIndex) => {
+                const cell = sheet2.getCell(totalsRowNum, colIndex + 1);
+                cell.value = value;
+                
+                if (colIndex === 6) {
+                    cell.style = styles.summary;
+                } else if (colIndex >= 9 && colIndex <= 17 && value !== '') {
+                    cell.style = styles.summaryValue;
+                    
+                    // Aplicar formatos a los totales
+                    if (colIndex === 9 || colIndex === 12 || colIndex === 15) {
+                        cell.numFmt = '#,##0.00';
+                    } else if (colIndex === 10 || colIndex === 13 || colIndex === 16) {
+                        cell.numFmt = '#,##0.00';
+                    } else if (colIndex === 11 || colIndex === 14 || colIndex === 17) {
+                        cell.numFmt = '#,##0.000';
+                    }
+                }
+            });
         }
 
         // ===== HOJA 3: GRÁFICOS (EN BLANCO) =====
@@ -747,7 +1017,7 @@ const exportR1Importaciones =  async(req, res) => {
         
         sheet3.mergeCells("A1:F1");
         const chartsTitle = sheet3.getCell("A1");
-        chartsTitle.value = "GRÁFICOS Y VISUALIZACIONES";
+        chartsTitle.value = "PLACAS";
         chartsTitle.style = {
             font: { name: 'Calibri', bold: true, size: 16, color: { argb: COLORS.primary } },
             alignment: { horizontal: 'center', vertical: 'middle' },
@@ -755,7 +1025,7 @@ const exportR1Importaciones =  async(req, res) => {
             border: { outline: { style: 'thin', color: { argb: COLORS.primary } } }
         };
         
-        sheet3.getRow(3).values = ['Esta hoja está disponible para gráficos y visualizaciones de datos'];
+        sheet3.getRow(3).values = ['En desarrollo'];
         sheet3.getCell('A3').style = {
             font: { name: 'Calibri', italic: true, size: 12, color: { argb: COLORS.lightText } },
             alignment: { horizontal: 'left', vertical: 'middle' }
@@ -773,7 +1043,7 @@ const exportR1Importaciones =  async(req, res) => {
         
         sheet4.mergeCells("A1:F1");
         const notesTitle = sheet4.getCell("A1");
-        notesTitle.value = "NOTAS Y OBSERVACIONES";
+        notesTitle.value = "TOTALES";
         notesTitle.style = {
             font: { name: 'Calibri', bold: true, size: 16, color: { argb: COLORS.primary } },
             alignment: { horizontal: 'center', vertical: 'middle' },
@@ -781,7 +1051,7 @@ const exportR1Importaciones =  async(req, res) => {
             border: { outline: { style: 'thin', color: { argb: COLORS.primary } } }
         };
         
-        sheet4.getRow(3).values = ['Esta hoja está disponible para notas y observaciones sobre el reporte'];
+        sheet4.getRow(3).values = ['Desarrollo en curso...'];
         sheet4.getCell('A3').style = {
             font: { name: 'Calibri', italic: true, size: 12, color: { argb: COLORS.lightText } },
             alignment: { horizontal: 'left', vertical: 'middle' }
