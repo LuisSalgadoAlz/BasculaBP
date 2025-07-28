@@ -556,6 +556,88 @@ const reImprimirTikets = (boleta, despachador) => {
 }
 
 /**
+ * Ticket de trasnporte contratado
+ */
+
+const ImprimirTicketEmpresaContratada = (boleta, despachador) => {
+  try {
+    const tux = path.join(__dirname, 'logo.png');
+    const { device, printer } = getPrinter();
+
+    if (!device || !printer) {
+      return res.status(500).json({
+        success: false,
+        message: 'No se pudo acceder al dispositivo de impresión'
+      });
+    }
+    const companyName = 'BENEFICIO DE ARROZ PROGRESO, S.A.';
+    const fecha = new Date().toLocaleString('es-ES');
+    /* 42 */
+    escpos.Image.load(tux, function(image){
+      device.open((err) => {
+        if (err) {
+          return {
+            success: false,
+            message: `Error al abrir conexión con la impresora: ${err.message}`
+          }
+        }
+      
+        // Configurar e imprimir la boleta
+        printer
+          .model('qsprinter')
+          .align('ct')
+          .encode('utf8')
+          .size(0, 0.5)
+          .text('--------------------------------')
+          .style('B')
+          .text(companyName)
+          .style('NORMAL')
+          .text('--------------------------------')
+          .text(` `)
+          .align('ct')
+          .style('B')
+          .text(`COMPROBANTE DE CARGA`)
+          .style('B')
+          .text(`${fecha} No. ${addCero(boleta.numBoleta)}`)
+          .text(` `)
+          .align('lt')
+          .tableCustom([
+            { text: "PRODUCTO:", align: "LEFT", width: 0.4, style: 'B' }, 
+            { text: "Granza Americana", align: "RIGHT", width: 0.4 }
+          ])
+          .tableCustom([
+            { text: "MOTORISTA:", align: "LEFT", width: 0.4, style: 'B' }, 
+            { text: `${boleta.motorista}`, align: "RIGHT", width: 0.4 }
+          ])
+          .text('------------------------------------------')
+          .tableCustom([
+            { text: "PESO TEORICO:", align: "LEFT", width: 0.4, style: 'B' }, 
+            { text: `${(boleta.pesoTeorico/100).toFixed(2)} QQ`, align: "RIGHT", width: 0.4 }
+          ])
+          .text('------------------------------------------')
+          .text(`Observaciones: ${boleta.observaciones? boleta.observaciones: 'Ninguna.'}`)
+          .style(`NORMAL`)
+          .text(` `)
+          .text(` `)
+          .align(`ct`)
+          .text(`________________________________`)
+          .text(`Aprobado Por: ${despachador}`)
+          .text(' ')
+          .size(0, 0.5)
+          .image(image, 'd24')
+          .then(() => {
+            printer.text(' ')
+                   .cut()
+                   .close()
+          });
+      });
+    })
+  } catch (error) {
+    console.error('Error en el proceso de impresión:', error);
+  }
+}
+
+/**
  * Terminada
  * @param {*} boleta 
  * @param {*} despachador 
@@ -1177,4 +1259,5 @@ module.exports = {
   getReimprimirWorkForce,
   reImprimirTikets,
   generarPaseDeSalidaTemporal,
+  ImprimirTicketEmpresaContratada,
 };

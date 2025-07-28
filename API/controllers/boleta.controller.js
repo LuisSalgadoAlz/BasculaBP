@@ -1,7 +1,7 @@
 const db = require("../lib/prisma");
 const dotenv = require("dotenv");
 const jwt = require("jsonwebtoken");
-const { imprimirEpson, imprimirQRTolva, comprobanteDeCarga, imprimirWorkForce, imprimirTikets, getReimprimirWorkForce, reImprimirTikets, generarPaseDeSalidaTemporal } = require("./impresiones.controller");
+const { imprimirEpson, imprimirQRTolva, comprobanteDeCarga, imprimirWorkForce, imprimirTikets, getReimprimirWorkForce, reImprimirTikets, generarPaseDeSalidaTemporal, ImprimirTicketEmpresaContratada } = require("./impresiones.controller");
 const enviarCorreo = require("../utils/enviarCorreo");
 const {alertaDesviacion, alertaCancelacion} = require("../utils/cuerposCorreo");
 const {setLogger} = require('../utils/logger');
@@ -1097,6 +1097,10 @@ const updateBoletaOut = async (req, res) => {
     // Generar comprobante para producto específico
     if (idProducto === 18) {
       comprobanteDeCarga(nuevaBoleta, despachador['name']);
+    }
+
+    if (nuevaBoleta.idSocio==1 && (nuevaBoleta.idEmpresa !=1 && nuevaBoleta.idEmpresa !=1015 && nuevaBoleta.idEmpresa!=1014) ) {
+      ImprimirTicketEmpresaContratada(nuevaBoleta, despachador['name']);
     }
 
     setLogger('BOLETA', 'MODIFICAR BOLETA (SALIDA DE BOLETA)', req, null, 1, nuevaBoleta.id);
