@@ -241,7 +241,7 @@ function ProgressBar({ current, limit, label = "Progreso", unit = "productos" })
           <div className="relative w-full bg-gray-100 rounded-full h-6 overflow-hidden shadow-inner">
             {/* Progress Fill */}
             <div 
-              className="absolute top-0 left-0 h-full bg-gradient-to-r from-green-400 via-green-500 to-green-600 transition-all duration-700 ease-out rounded-full shadow-sm"
+              className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#5a3f27] via-[#5a3f27] to-[#5a3f27] transition-all duration-700 ease-out rounded-full shadow-sm"
               style={{ width: `${percentage}%` }}
             >
               {/* Shine Effect */}
