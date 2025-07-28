@@ -228,8 +228,8 @@ function ProgressBar({ current, limit, label = "Progreso", unit = "productos" })
         {/* Header */}
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold text-gray-800">{label}</h3>
-          <div className="flex items-center space-x-2">
-            <span className="text-2xl font-bold text-green-600">
+          <div className="flex items-center space-x-2 ML-">
+            <span className="text-2xl font-bold text-[#5a3f27]">
               {Math.round(percentage)}%
             </span>
             <span className="text-sm text-gray-500">completado</span>
@@ -262,7 +262,7 @@ function ProgressBar({ current, limit, label = "Progreso", unit = "productos" })
         {/* Stats */}
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+            <div className="w-3 h-3 bg-[#5a3f27] rounded-full"></div>
             <span className="text-sm text-gray-600">
               <span className="font-semibold text-gray-800">{current.toLocaleString()}</span> de{' '}
               <span className="font-semibold text-gray-800">{limit.toLocaleString()}</span>
