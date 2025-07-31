@@ -4,14 +4,16 @@ import { RiTruckLine } from "react-icons/ri";
 import { FiUsers } from "react-icons/fi";
 import { useState } from "react";
 import { SupportModal } from "./alerts";
-import { CalendarSection, LogsSection, NavigationRoutes, ReportsSection, SideBarBase, SidebarHeader, SupportSection, UserDropdown } from "./sideBar/elements";
+import { LogsSection, NavigationRoutes, ReportsSection, SideBarBase, SidebarHeader, SupportSection, UserDropdown } from "./sideBar/elements";
 
 const RUTAS_PRINCIPALES = [
+  /* 
+    Se deshabilito de bascula
   {
     path: "/dashboard",
     name: "Dashboard",
     icon: <MdOutlineDashboard />,
-  },
+  }, */
   {
     path: "/socios",
     name: "Socios",
@@ -70,7 +72,6 @@ export const SideBar = ({ modo = "extendido", altura = 500 }) => {
     <SideBarBase extended={isExtendido}>
       <SidebarHeader isExtendido={isExtendido} title="Baprosa" subtitle="Sistema de Gestión Bascula" />
       <NavigationRoutes routes={RUTAS_PRINCIPALES} isExtendido={isExtendido} sectionTitle="Bascula" />
-      <CalendarSection isExtendido={isExtendido} />
       <ReportsSection isExtendido={isExtendido} />
       <SupportSection isExtendido={isExtendido} onShowModal={handleShowModal} />
       <UserDropdown isExtendido={isExtendido} altura={altura} />
