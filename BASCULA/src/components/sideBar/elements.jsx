@@ -76,18 +76,18 @@ export const UserDropdown = ({ isExtendido = true, altura = 500 }) => {
           {/* Dropdown cuando está extendido - aparece abajo */}
           {isDropdownOpen && isExtendido && (
             <div className="absolute bottom-full left-3 right-3 mb-3 bg-[#725033] border border-[#725033] rounded-lg shadow-xl z-50 backdrop-blur-sm">
-              <button
+              {/* <button
                 className="w-full px-4 py-3.5 text-left text-sm text-slate-200 hover:bg-[#765c45] hover:text-white transition-all duration-150 flex items-center gap-3"
                 onClick={handleProfileClick}
               >
                 <PiUserCircleFill className="text-base opacity-70" />
                 Perfil
-              </button>
+              </button> */}
               
-              <div className="border-t border-slate-600 my-1" />
+              {/* <div className="border-t border-slate-600 my-1" /> */}
               
               <button
-                className="w-full px-4 py-3.5 text-left text-sm text-slate-200 hover:bg-red-600 hover:text-white transition-all duration-150 flex items-center gap-3"
+                className="w-full px-4 py-3.5 text-left text-sm text-slate-200 hover:bg-red-600 hover:rounded-lg hover:text-white transition-all duration-150 flex items-center gap-3"
                 onClick={handleClose}
               >
                 <PiSignOutFill className="text-base opacity-70" />
@@ -98,8 +98,8 @@ export const UserDropdown = ({ isExtendido = true, altura = 500 }) => {
 
           {/* Dropdown cuando está colapsado - aparece al lado */}
           {isDropdownOpen && !isExtendido && (
-            <div className="absolute left-full top-1/6 -translate-y-1/2 ml-5 bg-[#725033] border border-[#725033] rounded-lg shadow-xl z-50 backdrop-blur-sm whitespace-nowrap">
-              <button
+            <div className="absolute left-full top-1/2 -translate-y-1/2 ml-5 bg-[#725033] border border-[#725033] rounded-lg shadow-xl z-50 backdrop-blur-sm whitespace-nowrap">
+              {/* <button
                 className="w-full px-4 py-3.5 text-left text-sm text-slate-200 hover:bg-[#765c45] hover:text-white transition-all duration-150 flex items-center gap-3 min-w-[160px]"
                 onClick={handleProfileClick}
               >
@@ -107,10 +107,10 @@ export const UserDropdown = ({ isExtendido = true, altura = 500 }) => {
                 Perfil
               </button>
               
-              <div className="border-t border-slate-600 my-1" />
+              <div className="border-t border-slate-600 my-1" /> */}
               
               <button
-                className="w-full px-4 py-3.5 text-left text-sm text-slate-200 hover:bg-red-600 hover:text-white transition-all duration-150 flex items-center gap-3 min-w-[160px]"
+                className="w-full px-4 py-3.5 text-left text-sm text-slate-200 hover:bg-red-600 hover:text-white hover:rounded-lg transition-all duration-150 flex items-center gap-3 min-w-[160px]"
                 onClick={handleClose}
               >
                 <PiSignOutFill className="text-base opacity-70" />
