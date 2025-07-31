@@ -148,15 +148,17 @@ export const SidebarHeader = ({ isExtendido, title, subtitle }) => {
           </div>
         )}
       </div>
-      {isExtendido && (
+      <hr className="h-px my-1 bg-gray-200 border-0 dark:bg-gray-700" />
+      {/* Esto se compenta para cuando este en operativo y ya estne todos los reportes y el buscar sea mas facil. */}
+      {/* {isExtendido && (
         <div className="px-2 py-2">
           <input
             type="text"
-            className="block w-full p-2 text-white border border-[#725033] rounded-md bg-[#5A3F27] text-sm focus:border-blue-500"
+            className="w-full p-2 text-white hidden border border-[#725033] rounded-md bg-[#5A3F27] text-sm focus:border-blue-500"
             placeholder="Buscar..."
           />
         </div>
-      )}
+      )} */}
     </div>
   );
 };
@@ -191,13 +193,13 @@ export const NavigationRoutes = ({ routes, isExtendido, sectionTitle }) => {
   );
 };
 
-export const CalendarSection = ({ isExtendido }) => {
+export const ReportsSection = ({ isExtendido }) => {
   return (
     <div className={isExtendido ? `pb-2 px-2` : 'pb-2'}>
       <ul className="flex w-full flex-col gap-1 px-2">
         {isExtendido ? (
           <>
-            <h1 className="px-3 text-sm text-gray-300">Calendario</h1>
+            <h1 className="px-3 text-sm text-gray-300 mt-2">Reportes</h1>
             <NavLink
               to="/calendario"
               className="flex items-center gap-x-3 rounded-md px-3 py-2 text-sm font-medium text-white"
@@ -207,36 +209,6 @@ export const CalendarSection = ({ isExtendido }) => {
               </span>
               <span className="flex-1">Calendario</span>
             </NavLink>
-          </>
-        ) : (
-          <div className="relative group w-max">
-            <NavLink
-              to="/calendario"
-              className="flex items-center gap-x-3 rounded-md px-5 py-2 text-sm font-medium text-white"
-            >
-              <span className="text-lg text-center">
-                <IoCalendarOutline />
-              </span>
-            </NavLink>
-
-            <div className="absolute left-full top-1/2 -translate-y-1/2 ml-6 hidden group-hover:block sidebar text-white text-xs px-8 py-2 rounded shadow-lg z-10 whitespace-nowrap">
-              Calendario
-            </div>
-          </div>
-        )}
-      </ul>
-      <hr className="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700" />
-    </div>
-  );
-};
-
-export const ReportsSection = ({ isExtendido }) => {
-  return (
-    <div className={isExtendido ? `pb-2 px-2` : 'pb-2'}>
-      <ul className="flex w-full flex-col gap-1 px-2">
-        {isExtendido ? (
-          <>
-            <h1 className="px-3 text-sm text-gray-300 mt-2">Reportes</h1>
             <NavLink
               to="/informes"
               end
@@ -257,20 +229,36 @@ export const ReportsSection = ({ isExtendido }) => {
             </ul>
           </>
         ) : (
-          <div className="relative group w-max mt-2">
+          <>
+          <div className="relative group w-max">
             <NavLink
-              to="/informes"
+              to="/calendario"
               className="flex items-center gap-x-3 rounded-md px-5 py-2 text-sm font-medium text-white"
             >
               <span className="text-lg text-center">
-                <BsFileBarGraph />
+                <IoCalendarOutline />
               </span>
             </NavLink>
 
             <div className="absolute left-full top-1/2 -translate-y-1/2 ml-6 hidden group-hover:block sidebar text-white text-xs px-8 py-2 rounded shadow-lg z-10 whitespace-nowrap">
-              Informes
+              Calendario
             </div>
           </div>
+            <div className="relative group w-max mt-2">
+              <NavLink
+                to="/informes"
+                className="flex items-center gap-x-3 rounded-md px-5 py-2 text-sm font-medium text-white"
+              >
+                <span className="text-lg text-center">
+                  <BsFileBarGraph />
+                </span>
+              </NavLink>
+
+              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-6 hidden group-hover:block sidebar text-white text-xs px-8 py-2 rounded shadow-lg z-10 whitespace-nowrap">
+                Informes
+              </div>
+            </div>
+          </>
         )}
       </ul>
       <hr className="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700" />
