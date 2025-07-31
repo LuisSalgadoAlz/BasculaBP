@@ -157,7 +157,7 @@ const Search = ({ sts }) => {
           <option value={1}>Cliente</option>
         </select>
         {/* Proximamente */}
-        <ButtonAdd name="Exportar"/>
+        {/* <ButtonAdd name="Exportar"/> */}
         <ButtonAdd name="Agregar" fun={toggleOpen} />
       </div>
       <div className="mt-7 text-center">
