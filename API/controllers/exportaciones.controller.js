@@ -2,6 +2,7 @@
 const ExcelJS = require("exceljs");
 const { PrismaClient } = require('@prisma/client');
 const e = require("express");
+const { setLogger } = require("../utils/logger");
 const db = new PrismaClient();
 
 const exportToExcel = async (req, res) => {
@@ -561,6 +562,7 @@ const exportToExcel = async (req, res) => {
     );
 
     await workbook.xlsx.write(res);
+    setLogger('REPORTE', 'SE GENERO REPORTE DE EXCEL', req, null, 1, null)  
     res.end();
   } catch (err) {
     console.error("Error generando el reporte Excel:", err);
