@@ -609,6 +609,14 @@ const ImprimirTicketEmpresaContratada = (boleta, despachador) => {
             { text: "MOTORISTA:", align: "LEFT", width: 0.4, style: 'B' }, 
             { text: `${boleta.motorista}`, align: "RIGHT", width: 0.4 }
           ])
+          .tableCustom([
+            { text: "DESTINO:", align: "LEFT", width: 0.4, style: 'B' }, 
+            { text: `${boleta.destino}`, align: "RIGHT", width: 0.4 }
+          ])
+          .tableCustom([
+            { text: "MANIFIESTO:", align: "LEFT", width: 0.4, style: 'B' }, 
+            { text: `${boleta.manifiesto}`, align: "RIGHT", width: 0.4 }
+          ])
           .text('------------------------------------------')
           .tableCustom([
             { text: "PESO TEORICO:", align: "LEFT", width: 0.4, style: 'B' }, 
