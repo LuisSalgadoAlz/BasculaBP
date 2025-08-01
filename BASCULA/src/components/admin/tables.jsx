@@ -7,7 +7,7 @@ const ALERTS_COLORS = {
 }
 
 const ESTADOS = {
-  Activo: 'bg-green-200', 
+  Activo: 'bg-white', 
   Inactivo: 'bg-red-100'
 }
 export const TablesBD = ({ datos = [{}], fun }) => {
@@ -55,7 +55,7 @@ export const TableUsers = ({ datos = [{}], fun }) => {
         <table className="w-full text-sm text-left rtl:text-right text-gray-700 dark:text-gray-400">
           <thead className="text-xs text-gray-700 uppercase bg-[#FFFDF5]">
             <tr>
-              {Object.keys(datos[0]).map((el, keys) => (
+              {Object.keys(datos[0]).slice(1).map((el, keys) => (
                 <th key={keys} scope="col" className={`px-2 py-3 text-gray-700`}>
                   {el}
                 </th>
@@ -66,12 +66,12 @@ export const TableUsers = ({ datos = [{}], fun }) => {
           <tbody>
             {datos.map((fila, index) => (
               <tr key={index} className={`${fila?.estado && ESTADOS[fila?.estado]} border-b border-gray-200 hover:bg-[#FDF5D4] rounded-2xl`}>
-                {Object.values(fila).map((el, key) => (
+                {Object.values(fila).slice(1).map((el, key) => (
                   <td
                     key={key}
                     className={`px-2 py-3 text-gray-700`}
                   >
-                    {el}
+                    {el || (<span className="text-gray-400 italic text-xs">No disponible</span>)}
                   </td>
                 ))}
                 <td className="text-center">
