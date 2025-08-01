@@ -423,7 +423,9 @@ const analizadorQR = async (req, res) => {
       if (boleta.idProducto !=17 && boleta.idProducto!=18) return res.status(200).send({err: 'Favor, ingresar boletas proporcionadas por su ticket'})
       if (boleta.tolvaAsignada!=usuario.UsuariosPorTolva.tolva) return res.status(200).send({err: 'Boleta, no esta asignada a su tolva, favor enviar a la tolva correcta'})
       if (tolva!=0) return res.status(200).send({err: 'Boleta ya ha sido asignada'})
-
+      
+      setLogger('TOLVA', 'BUSQUEDA CON QR', req, null, 1, idBolQR)  
+      
       return res.json({ 
         boleta: boleta,
         processingTime: totalTime,
@@ -436,6 +438,7 @@ const analizadorQR = async (req, res) => {
     }
     
   } catch (error) {
+    setLogger('TOLVA', 'BUSQUEDA CON QR', req, null, 3)  
     console.error('Error general:', error);
     return res.status(200).json({err: 'Error interno'});
   }
@@ -478,6 +481,9 @@ const buscarBoleSinQR = async(req, res) => {
     if (boleta.tolvaAsignada!=usuario.UsuariosPorTolva.tolva) return res.status(200).send({err: 'Boleta, no esta asignada a su tolva, favor enviar a la tolva correcta'})
     if (tolva!=0) return res.status(200).send({err: 'Boleta ya ha sido asignada'})
     
+
+    setLogger('TOLVA', 'BUSQUEDA SIN QR', req, null, 1, parseInt(id))  
+
       /* Falta Validacion */
     return res.json({ 
       boleta: boleta,
@@ -485,6 +491,7 @@ const buscarBoleSinQR = async(req, res) => {
     });
 
   }catch(err){
+    setLogger('TOLVA', 'BUSQUEDA SIN QR', req, null, 3)  
     console.log(err)
   }
 }
@@ -532,6 +539,7 @@ const getDataForSelectSilos = async (req, res) => {
 
     res.status(200).send(silos);
   } catch (err) {
+    setLogger('SILOS', 'ERROR AL OBTENER SILOS', req, null, 3)  
     console.error('Error al obtener silos:', err);
     res.status(500).send({ error: 'Error interno del servidor' });
   }
@@ -556,6 +564,7 @@ const getListUsersForTolva = async(req, res) =>{
     });
     res.json(usuario)
   }catch(err){
+    setLogger('TOLVA', 'ERROR AL OBTENER USUARIOS', req, null, 3)  
     console.log(err)
   }
 }
@@ -611,6 +620,7 @@ const postSiloInBoletas = async(req, res) => {
     .every(sello => arrBoleta.filter(b => b !== null && b !== undefined).includes(sello));
 
     if(!enviarAlerta) {
+      setLogger('TOLVA', 'MARCHAMOS NO COINCIDEN CON BÁSCULA', req, null, 3)  
       alertaMarchamosDiferentes(boleta, usuario, enviarCorreo, arrBoleta, arrTolva, tolvaDescarga)
     }
 
@@ -637,9 +647,11 @@ const postSiloInBoletas = async(req, res) => {
         Sello6: parseInt(sello6) || null, 
       }
     })
+    setLogger('TOLVA', 'ASIGNO BOLETA A SILO, Y COMENZO A DESCARGAR', req, null, 1, updateSiloBoleta.id)  
     return res.status(200).send({msg:'¡Boleta ha sido asignada correctamente!'})
   } catch(err) {
     console.log(err)
+    setLogger('TOLVA', 'ASIGNO BOLETA A SILO, Y NO PUDO COMENZO A DESCARGAR', req, null, 3)  
     res.status(200).send({err:'Intente denuevo'})
   }
 }
@@ -677,9 +689,10 @@ const updateFinalizarDescarga = async(req, res)=>{
         id: parseInt(id)
       }
     })
-
+    setLogger('TOLVA', 'FINALIZO LA DESCARGA EN TOLVA', req, null, 1, updateFinalizarDescarga.id)  
     return res.status(200).send({msg:'Finalizada correctamente'})
   }catch(err){
+    setLogger('TOLVA', 'FINALIZO LA DESCARGA EN TOLVA', req, null, 3)  
     console.log(err)
   }
 }
@@ -744,6 +757,7 @@ const getTolvasDeDescargasOcupadas = async(req, res) => {
     res.status(200).send({descarga1, descarga2})
 
   }catch(err){
+    setLogger('TOLVA', 'OBTENER EL ESTADO DE LAS TOLVAS DE DESCARGA', req, null, 3)  
     console.log(err)
   }
 }
@@ -841,6 +855,7 @@ const getAsignForDay = async(req, res) => {
       }
     } )
   }catch(err){
+    setLogger('TOLVA', 'OBTENER LOS DATOS DE CAMIONES DESCARGADOS EN TOLVA', req, null, 3)  
     console.log(err)
   }
 }
@@ -905,6 +920,7 @@ const getStatsForTolva = async(req, res) =>{
     ])
     res.status(200).send({total, pendientes, gamericana, gnacional})
   }catch(err){
+    setLogger('TOLVA', 'OBTENER ESTADISTICAS DE LA TOLVA', req, null, 3)  
     console.log(err)
   }
 }
