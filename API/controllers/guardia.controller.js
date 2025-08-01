@@ -58,6 +58,7 @@ const getBuscarPlaca = async (req, res) => {
         return res.send({ data: resultado });
 
     } catch (err) {
+        setLogger('GUARDIA', 'BUSCAR PLACA  - PASE DE SALIDA', req, null, 3)  
         console.error('Error en getBuscarPlaca:', err);
         return res.send({ err: 'Error interno del servidor' });
     }
@@ -113,10 +114,13 @@ const updatePaseDeSalida = async(req, res) => {
                 id: parseInt(id),
             }
         })
+        
+        setLogger('PASE DE SALIDA', 'EFECTUO EL PASE DE SALIDA', req, null, 1, updatePaseSalida.id)  
 
         return res.status(200).send({msg: 'Salida registrada, puede despachar el vehiculo.'})
     } catch(err){
         console.log(err)
+        setLogger('GUARDIA', 'NO SE EFECTUO EL PASE DE SALIDA', req, null, 3)  
         return res.status(500).send({err: 'Error Interno del API'})
     }
 }
@@ -148,6 +152,7 @@ const getStats = async(req, res) => {
 
         return res.status(200).json({ total, pendientes });
     } catch(err) {
+        setLogger('GUARDIA', 'OBTENER ESTADISTICAS', req, null, 3)  
         console.log(err);
         return res.status(500).json({ error: 'Error interno del servidor' });
     }
