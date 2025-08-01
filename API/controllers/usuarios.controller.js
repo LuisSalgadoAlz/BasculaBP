@@ -2,6 +2,7 @@ const db = require('../lib/prisma')
 const dotenv = require('dotenv')
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const { setLogger } = require('../utils/logger');
 
 const typesOfUsers = ['VACIO','ADMINISTRADOR', 'BASCULA', 'TOLVA', 'CONTABILIDAD', 'GUARDIA']
 const typesOfState = ['VACIO', true, false]
@@ -23,7 +24,8 @@ const getUsuarios = async (req, res) => {
         }
         
         const data = await db.usuarios.findMany({
-            where, 
+            where,
+            omit:{contrasena: true}, 
             skip,
             take: limit,
         })
@@ -43,6 +45,7 @@ const getUsuarios = async (req, res) => {
             },
         })
     } catch(err) {
+        setLogger('USUARIOS', 'OBTENER USUARIOS', req, null, 3)  
         console.log(err)
     }
 }
@@ -84,8 +87,10 @@ const postUsuarios = async (req, res) => {
         });
 
         // Responder con el usuario creado
+        setLogger('USUARIOS', 'CREAR USUARIO', req, null, 1, nuevoUsuario.id)  
         res.status(201).json({ msg: 'Usuario creado exitosamente'});
     } catch (error) {
+        setLogger('USUARIOS', 'CREAR USUARIO', req, null, 3)  
         console.error(error);
         res.status(500).json({ msgErr: `Error al crear usuario: ${error.message}` });
     }
@@ -119,8 +124,10 @@ const updateUsuarios = async (req, res) => {
                 estado: estado,
             }
         })
+        setLogger('USUARIOS', 'MODIFICAR USUARIO', req, null, 1, udUsuarios.id)  
         res.status(200).send({msg: 'Se actualizo el usuario'});
     } catch {
+        setLogger('USUARIOS', 'MODIFICAR USUARIO', req, null, 3)  
         res.status(401).send({msgErr: "Error interno en el API"});
     }
 }
@@ -137,6 +144,7 @@ const getStatsUser = async(req, res) => {
 
         res.status(201).send({total, admins, bascula, tolva, contabilidad})
     }catch(err) {
+        setLogger('USUARIOS', 'OBTENER ESTADISTICAS', req, null, 3)  
         console.log(err)
         res.status(401).send({msg:'Error interno en el API'})
     }
