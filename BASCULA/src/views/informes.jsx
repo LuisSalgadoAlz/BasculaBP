@@ -5,10 +5,11 @@ import {
   getHistorialBoletas,
   getDataForSelect,
 } from "../hooks/formDataInformes";
-import { ButtonAdd } from "../components/buttons";
 import { FiltrosReporteria } from "../components/informes/filters";
 import { DistribucionPorTipoChart } from "../components/graficos/charts";
 import { URLHOST } from "../constants/global";
+import Cookies from 'js-cookie'
+import { RiFileExcel2Line } from "react-icons/ri";
 
 const Informes = () => {
   const [data, setData] = useState();
@@ -22,6 +23,7 @@ const Informes = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [err, setErr] = useState(false);
   const [msg, setMsg] = useState();
+  const [isLoadingDescargas, setIsLoadingDescargas] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -52,7 +54,7 @@ const Informes = () => {
     getHistorialBoletas(setData, formFiltros, setIsload);
   };
 
-  const handleExportToExcel = () => {
+  const handleExportToExcel = async () => {
     if (!formFiltros?.dateIn || !formFiltros?.dateOut) {
       setErr(true);
       setMsg(
@@ -61,8 +63,48 @@ const Informes = () => {
       return;
     }
 
-    const url = `${URLHOST}boletas/export/excel?movimiento=${formFiltros?.movimiento}&producto=${formFiltros?.producto}&dateIn=${formFiltros?.dateIn}&dateOut=${formFiltros?.dateOut}&socio=${formFiltros?.socio}`;
-    window.open(url, '_blank');
+    try {
+      setIsLoadingDescargas(true)
+      const url = `${URLHOST}boletas/export/excel?movimiento=${formFiltros?.movimiento}&producto=${formFiltros?.producto}&dateIn=${formFiltros?.dateIn}&dateOut=${formFiltros?.dateOut}&socio=${formFiltros?.socio}`;
+      
+      const token = Cookies.get('token');
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `${token}`, // o el formato que uses
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al exportar el archivo');
+      }
+
+      // Convertir la respuesta a blob
+      const blob = await response.blob();
+      
+      // Crear URL temporal para el blob
+      const downloadUrl = window.URL.createObjectURL(blob);
+      
+      // Crear elemento <a> temporal para descargar
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = `boletas_${formFiltros.dateIn}_${formFiltros.dateOut}.xlsx`; // nombre del archivo
+      document.body.appendChild(link);
+      link.click();
+      
+      // Limpiar
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+      
+    } catch (error) {
+      console.error('Error al exportar:', error);
+      setErr(true);
+      setMsg('Error al exportar el archivo. Intente nuevamente.');
+    } finally {
+      setIsLoadingDescargas(false)
+    }
   };
 
   const handleCloseErr = () => {
@@ -104,7 +146,7 @@ const Informes = () => {
         {/* Cabecera y acciones principales */}
         <div className="p-6 bg-gray-50 border-b border-gray-200">
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <div className="md:col-span-3">
+            <div className="md:col-span-4">
               <div className="relative">
                 <input
                   className="w-full p-3 pl-10 text-sm bg-white border  rounded-lg"
@@ -118,8 +160,15 @@ const Informes = () => {
                 </div>
               </div>
             </div>
-            <ButtonAdd name="Exportar PDF" className="w-full justify-center" />
-            <ButtonAdd name="Exportar EXCEL" fun={handleExportToExcel} className="w-full justify-center" />
+            <button onClick={handleExportToExcel} disabled={isLoadingDescargas} className="inline-flex items-center gap-2 font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 
+            focus:                                                                         disabled:opacity-50 disabled:cursor-not-allowed bg-gray-100 hover:bg-gray-300 text-gray-800 focus:ring-gray-500 px-4">
+              {isLoadingDescargas ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+              ) : (
+                <span className="text-lg"><RiFileExcel2Line /></span>
+              )}
+              Exportar Excel
+            </button>
           </div>
         </div>
 
