@@ -54,7 +54,7 @@ const Informes = () => {
     getHistorialBoletas(setData, formFiltros, setIsload);
   };
 
-  const handleExportToExcel = async () => {
+  const handleExportToExcel = () => {
     if (!formFiltros?.dateIn || !formFiltros?.dateOut) {
       setErr(true);
       setMsg(
@@ -63,48 +63,8 @@ const Informes = () => {
       return;
     }
 
-    try {
-      setIsLoadingDescargas(true)
-      const url = `${URLHOST}boletas/export/excel?movimiento=${formFiltros?.movimiento}&producto=${formFiltros?.producto}&dateIn=${formFiltros?.dateIn}&dateOut=${formFiltros?.dateOut}&socio=${formFiltros?.socio}`;
-      
-      const token = Cookies.get('token');
-      
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Authorization': `${token}`, // o el formato que uses
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al exportar el archivo');
-      }
-
-      // Convertir la respuesta a blob
-      const blob = await response.blob();
-      
-      // Crear URL temporal para el blob
-      const downloadUrl = window.URL.createObjectURL(blob);
-      
-      // Crear elemento <a> temporal para descargar
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.download = `boletas_${formFiltros.dateIn}_${formFiltros.dateOut}.xlsx`; // nombre del archivo
-      document.body.appendChild(link);
-      link.click();
-      
-      // Limpiar
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(downloadUrl);
-      
-    } catch (error) {
-      console.error('Error al exportar:', error);
-      setErr(true);
-      setMsg('Error al exportar el archivo. Intente nuevamente.');
-    } finally {
-      setIsLoadingDescargas(false)
-    }
+    const url = `${URLHOST}boletas/export/excel?movimiento=${formFiltros?.movimiento}&producto=${formFiltros?.producto}&dateIn=${formFiltros?.dateIn}&dateOut=${formFiltros?.dateOut}&socio=${formFiltros?.socio}`;
+    window.open(url, '_blank');
   };
 
   const handleCloseErr = () => {
