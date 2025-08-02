@@ -35,17 +35,41 @@ const VerificarLog = ({Children, redirectTo='/', userType}) => {
         return () => {
           window.removeEventListener('click', sessionActive);
         };
-      }, []);
+    }, []);
 
-    if (!Cookies.get('token') || Cookies.get('type')!=userType){
+    const token = Cookies.get('token');
+    const userTypeFromCookie = Cookies.get('type');
+
+    // Token lo mas importante para redirigir a login para que otro usuario no intent
+    if (!token) {
         return <Navigate to={redirectTo} />
     }
 
-    if (Cookies.get('type') == 'ADMINISTRADOR') return cuerpoAdmin;
-    if (Cookies.get('type') == 'BASCULA') return cuerpoMemo;
-    if (Cookies.get('type') == 'TOLVA') return cuerpoTolva;
-    if (Cookies.get('type') == 'GUARDIA') return cuerpoGuardia;
+    // Convertir userType en array para manejar múltiples tipos
+    const allowedUserTypes = userType.split(',').map(type => type.trim());
+    
+    const hasAccess = () => {
+        return allowedUserTypes.includes(userTypeFromCookie);
+    }
 
+    if (!hasAccess()) {
+        return <Navigate to={redirectTo} />
+    }
+
+    switch(userTypeFromCookie) {
+        case 'ADMINISTRADOR':
+            return cuerpoAdmin;
+        case 'BASCULA':
+            return cuerpoMemo;
+        case 'TOLVA':
+            return cuerpoTolva;
+        case 'GUARDIA':
+            return cuerpoGuardia;
+        case 'CONTABILIDAD':
+            return cuerpoAdmin; 
+        default:
+            return <Navigate to={redirectTo} />
+    }
 }
  
 export default VerificarLog;
