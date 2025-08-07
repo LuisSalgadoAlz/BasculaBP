@@ -2,12 +2,23 @@ import { Children, useState } from "react";
 import { useNavigate } from "react-router";
 import { PiSignOutFill, PiUserCircleFill, PiCaretDownFill } from "react-icons/pi";
 import Cookies from "js-cookie";
-import { MdOutlineScale } from "react-icons/md";
+import { MdOutlineScale, MdOutlineAdminPanelSettings, MdOutlineSecurity  } from "react-icons/md";
+import { FaScaleUnbalancedFlip } from "react-icons/fa6";
 import { NavLink } from "react-router";
 import { IoCalendarOutline } from "react-icons/io5";
 import { BsFileBarGraph } from "react-icons/bs";
 import { SlSupport } from "react-icons/sl";
 import { AiOutlineFileExclamation } from "react-icons/ai";
+import { BiFilterAlt } from "react-icons/bi";
+import { TbReportAnalytics } from "react-icons/tb";
+
+const LISTICONS = {
+  'Admin' : <MdOutlineAdminPanelSettings />, 
+  'Bascula' : <FaScaleUnbalancedFlip />,
+  'Tolva' : <BiFilterAlt />,
+  'Guardia' : <MdOutlineSecurity />,
+  'Reportes' : <TbReportAnalytics />
+}
 
 export const SideBarBase = ({ children, extended = true }) => {
     return (
@@ -76,18 +87,18 @@ export const UserDropdown = ({ isExtendido = true, altura = 500 }) => {
           {/* Dropdown cuando está extendido - aparece abajo */}
           {isDropdownOpen && isExtendido && (
             <div className="absolute bottom-full left-3 right-3 mb-3 bg-[#725033] border border-[#725033] rounded-lg shadow-xl z-50 backdrop-blur-sm">
-              <button
+              {/* <button
                 className="w-full px-4 py-3.5 text-left text-sm text-slate-200 hover:bg-[#765c45] hover:text-white transition-all duration-150 flex items-center gap-3"
                 onClick={handleProfileClick}
               >
                 <PiUserCircleFill className="text-base opacity-70" />
                 Perfil
-              </button>
+              </button> */}
               
-              <div className="border-t border-slate-600 my-1" />
+              {/* <div className="border-t border-slate-600 my-1" /> */}
               
               <button
-                className="w-full px-4 py-3.5 text-left text-sm text-slate-200 hover:bg-red-600 hover:text-white transition-all duration-150 flex items-center gap-3"
+                className="w-full px-4 py-3.5 text-left text-sm text-slate-200 hover:bg-red-600 hover:rounded-lg hover:text-white transition-all duration-150 flex items-center gap-3"
                 onClick={handleClose}
               >
                 <PiSignOutFill className="text-base opacity-70" />
@@ -98,8 +109,8 @@ export const UserDropdown = ({ isExtendido = true, altura = 500 }) => {
 
           {/* Dropdown cuando está colapsado - aparece al lado */}
           {isDropdownOpen && !isExtendido && (
-            <div className="absolute left-full top-1/6 -translate-y-1/2 ml-5 bg-[#725033] border border-[#725033] rounded-lg shadow-xl z-50 backdrop-blur-sm whitespace-nowrap">
-              <button
+            <div className="absolute left-full top-1/2 -translate-y-1/2 ml-5 bg-[#725033] border border-[#725033] rounded-lg shadow-xl z-50 backdrop-blur-sm whitespace-nowrap">
+              {/* <button
                 className="w-full px-4 py-3.5 text-left text-sm text-slate-200 hover:bg-[#765c45] hover:text-white transition-all duration-150 flex items-center gap-3 min-w-[160px]"
                 onClick={handleProfileClick}
               >
@@ -107,10 +118,10 @@ export const UserDropdown = ({ isExtendido = true, altura = 500 }) => {
                 Perfil
               </button>
               
-              <div className="border-t border-slate-600 my-1" />
+              <div className="border-t border-slate-600 my-1" /> */}
               
               <button
-                className="w-full px-4 py-3.5 text-left text-sm text-slate-200 hover:bg-red-600 hover:text-white transition-all duration-150 flex items-center gap-3 min-w-[160px]"
+                className="w-full px-4 py-3.5 text-left text-sm text-slate-200 hover:bg-red-600 hover:text-white hover:rounded-lg transition-all duration-150 flex items-center gap-3 min-w-[160px]"
                 onClick={handleClose}
               >
                 <PiSignOutFill className="text-base opacity-70" />
@@ -148,20 +159,89 @@ export const SidebarHeader = ({ isExtendido, title, subtitle }) => {
           </div>
         )}
       </div>
-      {isExtendido && (
+      <hr className="h-px my-1 bg-gray-200 border-0 dark:bg-gray-700" />
+      {/* Esto se compenta para cuando este en operativo y ya estne todos los reportes y el buscar sea mas facil. */}
+      {/* {isExtendido && (
         <div className="px-2 py-2">
           <input
             type="text"
-            className="block w-full p-2 text-white border border-[#725033] rounded-md bg-[#5A3F27] text-sm focus:border-blue-500"
+            className="w-full p-2 text-white hidden border border-[#725033] rounded-md bg-[#5A3F27] text-sm focus:border-blue-500"
             placeholder="Buscar..."
           />
         </div>
-      )}
+      )} */}
     </div>
   );
 };
 
-export const NavigationRoutes = ({ routes, isExtendido, sectionTitle }) => {
+export const NavigationRoutes = ({ routes, isExtendido, sectionTitle, userRole }) => {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  
+  const isAdmin = userRole === 'ADMINISTRADOR';
+
+  // Si es administrador, mostrar como dropdown
+  if (isAdmin) {
+    return (
+      <div className="px-2">
+        <div className="relative">
+          <button
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className={`flex items-center rounded-md py-2 text-sm font-medium text-white w-full hover:bg-gray-700 transition-colors ${
+              isExtendido ? 'gap-x-3 px-3' : 'justify-center px-2'
+            }`}
+          >
+            <span className="text-lg">{LISTICONS[sectionTitle]}</span>
+            {isExtendido && <span className="flex-1 text-left">{sectionTitle || 'Administración'}</span>}
+            {isExtendido && (
+              <svg 
+                className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            )}
+          </button>
+
+          {/* Tooltip para sidebar colapsado */}
+          {!isExtendido && (
+            <div className="absolute left-full top-1/2 -translate-y-1/2 ml-6 hidden group-hover:block sidebar text-white text-xs px-8 py-2 rounded shadow-lg z-10 whitespace-nowrap">
+              {sectionTitle || 'Administración'}
+            </div>
+          )}
+
+          {/* Dropdown menu */}
+          {isDropdownOpen && (
+            <div className="mt-1 space-y-1">
+              {routes.map((data, key) => (
+                <div key={key} className="relative group w-full">
+                  <NavLink
+                    to={data.path}
+                    className={`flex items-center rounded-md py-2 text-sm font-medium text-white hover:bg-gray-600 transition-colors ${
+                      isExtendido ? 'gap-x-3 px-3' : 'justify-center px-2'
+                    }`}
+                  >
+                    <span className="text-lg">{data.icon}</span>
+                    {isExtendido && <span className="flex-1">{data.name}</span>}
+                  </NavLink>
+
+                  {!isExtendido && (
+                    <div className="absolute left-full top-1/2 -translate-y-1/2 ml-6 hidden group-hover:block sidebar text-white text-xs px-8 py-2 rounded shadow-lg z-10 whitespace-nowrap">
+                      {data.name}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <hr className="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700" />
+      </div>
+    );
+  }
+
+  // Para usuarios no administradores, mantener el comportamiento original
   return (
     <div className="p-2">
       <ul className="flex w-full flex-col gap-1 px-2">
@@ -172,7 +252,9 @@ export const NavigationRoutes = ({ routes, isExtendido, sectionTitle }) => {
           <div key={key} className="relative group w-full">
             <NavLink
               to={data.path}
-              className="flex items-center gap-x-3 rounded-md px-3 py-2 text-sm font-medium text-white"
+              className={`flex items-center rounded-md py-2 text-sm font-medium text-white ${
+                isExtendido ? 'gap-x-3 px-3' : 'justify-center px-2'
+              }`}
             >
               <span className="text-lg">{data.icon}</span>
               {isExtendido && <span className="flex-1">{data.name}</span>}
@@ -191,13 +273,113 @@ export const NavigationRoutes = ({ routes, isExtendido, sectionTitle }) => {
   );
 };
 
-export const CalendarSection = ({ isExtendido }) => {
+export const ReportsSection = ({ isExtendido, userRole }) => {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  
+  const isAdmin = userRole === 'ADMINISTRADOR';
+
+  // Si es administrador, mostrar como dropdown
+  if (isAdmin) {
+    return (
+      <div className={isExtendido ? `pb-2 px-2` : ''}>
+        <div className="relative">
+          <button
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className={`flex items-center gap-x-3 rounded-md px-3 py-2 text-sm font-medium text-white w-full hover:bg-gray-700 transition-colors ${
+              isExtendido ? 'gap-x-3 px-3' : 'justify-center px-2'
+            }`}
+          >
+            <span className="text-lg text-center">{LISTICONS['Reportes']}</span>
+            {isExtendido && <span className="flex-1 text-left">Reportes</span>}
+            {isExtendido && (
+              <svg 
+                className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            )}
+          </button>
+
+          {/* Tooltip para sidebar colapsado */}
+          {!isExtendido && (
+            <div className="absolute left-full top-1/2 -translate-y-1/2 ml-6 hidden hover:block sidebar text-white text-xs px-8 py-2 rounded shadow-lg z-10 whitespace-nowrap">
+              Reportes
+            </div>
+          )}
+
+          {/* Dropdown menu */}
+          {isDropdownOpen && (
+            <div className="mt-1 space-y-1">
+              <div className="relative group w-full">
+                <NavLink
+                  to="/calendario"
+                  className={`flex items-center gap-x-3 rounded-md py-2 text-sm font-medium text-white hover:bg-gray-600 transition-colors ${
+                    isExtendido ? 'px-3' : 'justify-center px-2'
+                  }`}
+                >
+                  <span className="text-lg">
+                    <IoCalendarOutline />
+                  </span>
+                  {isExtendido && <span className="flex-1">Calendario</span>}
+                </NavLink>
+
+                {!isExtendido && (
+                  <div className="absolute left-full top-1/2 -translate-y-1/2 ml-6 hidden group-hover:block sidebar text-white text-xs px-8 py-2 rounded shadow-lg z-10 whitespace-nowrap">
+                    Calendario
+                  </div>
+                )}
+              </div>
+
+              <div className="relative group w-full">
+                <NavLink
+                  to="/informes"
+                  end
+                  className={`flex items-center gap-x-3 rounded-md py-2 text-sm font-medium text-white hover:bg-gray-600 transition-colors ${
+                    isExtendido ? 'px-3' : 'justify-center px-2'
+                  }`}
+                >
+                  <span className="text-lg">
+                    <BsFileBarGraph />
+                  </span>
+                  {isExtendido && <span className="flex-1">Informes</span>}
+                </NavLink>
+
+                {!isExtendido && (
+                  <div className="absolute left-full top-1/2 -translate-y-1/2 ml-6 hidden group-hover:block sidebar text-white text-xs px-8 py-2 rounded shadow-lg z-10 whitespace-nowrap">
+                    Informes
+                  </div>
+                )}
+              </div>
+
+              {/* Submenú de informes */}
+              {isExtendido && (
+                <div className="pl-5 border-l border-gray-500 ml-5">
+                  <NavLink
+                    to="/informes/importaciones-granza"
+                    className="flex items-center gap-x-1 px-3 rounded-md py-2 text-sm font-medium text-white hover:bg-gray-600 transition-colors"
+                  >
+                    <span className="flex-1 text-sm">Importacion: Granza</span>
+                  </NavLink>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+        <hr className="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700" />
+      </div>
+    );
+  }
+
+  // Para usuarios no administradores, mantener el comportamiento original
   return (
     <div className={isExtendido ? `pb-2 px-2` : 'pb-2'}>
-      <ul className="flex w-full flex-col gap-1 px-2">
+      <ul className={`flex w-full flex-col gap-1 ${isExtendido ? 'px-2' : 'items-center'}`}>
         {isExtendido ? (
           <>
-            <h1 className="px-3 text-sm text-gray-300">Calendario</h1>
+            <h1 className="px-3 text-sm text-gray-300 mt-2">Reportes</h1>
             <NavLink
               to="/calendario"
               className="flex items-center gap-x-3 rounded-md px-3 py-2 text-sm font-medium text-white"
@@ -207,36 +389,6 @@ export const CalendarSection = ({ isExtendido }) => {
               </span>
               <span className="flex-1">Calendario</span>
             </NavLink>
-          </>
-        ) : (
-          <div className="relative group w-max">
-            <NavLink
-              to="/calendario"
-              className="flex items-center gap-x-3 rounded-md px-5 py-2 text-sm font-medium text-white"
-            >
-              <span className="text-lg text-center">
-                <IoCalendarOutline />
-              </span>
-            </NavLink>
-
-            <div className="absolute left-full top-1/2 -translate-y-1/2 ml-6 hidden group-hover:block sidebar text-white text-xs px-8 py-2 rounded shadow-lg z-10 whitespace-nowrap">
-              Calendario
-            </div>
-          </div>
-        )}
-      </ul>
-      <hr className="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700" />
-    </div>
-  );
-};
-
-export const ReportsSection = ({ isExtendido }) => {
-  return (
-    <div className={isExtendido ? `pb-2 px-2` : 'pb-2'}>
-      <ul className="flex w-full flex-col gap-1 px-2">
-        {isExtendido ? (
-          <>
-            <h1 className="px-3 text-sm text-gray-300 mt-2">Reportes</h1>
             <NavLink
               to="/informes"
               end
@@ -257,20 +409,36 @@ export const ReportsSection = ({ isExtendido }) => {
             </ul>
           </>
         ) : (
-          <div className="relative group w-max mt-2">
-            <NavLink
-              to="/informes"
-              className="flex items-center gap-x-3 rounded-md px-5 py-2 text-sm font-medium text-white"
-            >
-              <span className="text-lg text-center">
-                <BsFileBarGraph />
-              </span>
-            </NavLink>
+          <>
+            <div className="relative group">
+              <NavLink
+                to="/calendario"
+                className="flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium text-white w-12 h-10"
+              >
+                <span className="text-lg">
+                  <IoCalendarOutline />
+                </span>
+              </NavLink>
 
-            <div className="absolute left-full top-1/2 -translate-y-1/2 ml-6 hidden group-hover:block sidebar text-white text-xs px-8 py-2 rounded shadow-lg z-10 whitespace-nowrap">
-              Informes
+              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-6 hidden group-hover:block sidebar text-white text-xs px-8 py-2 rounded shadow-lg z-10 whitespace-nowrap">
+                Calendario
+              </div>
             </div>
-          </div>
+            <div className="relative group">
+              <NavLink
+                to="/informes"
+                className="flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium text-white w-12 h-10"
+              >
+                <span className="text-lg">
+                  <BsFileBarGraph />
+                </span>
+              </NavLink>
+
+              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-6 hidden group-hover:block sidebar text-white text-xs px-8 py-2 rounded shadow-lg z-10 whitespace-nowrap">
+                Informes
+              </div>
+            </div>
+          </>
         )}
       </ul>
       <hr className="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700" />

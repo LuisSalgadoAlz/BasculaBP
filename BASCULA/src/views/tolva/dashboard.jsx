@@ -153,6 +153,16 @@ const DashboardTolva = () => {
     }));
   };
 
+  const handleMarchamos = (e) => {
+    const {name, value} = e.target;
+    if (!/^\d{0,6}$/.test(value)) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  }
+
   const handleKeyDown = (e) => {
     const forbiddenKeys = ['e', 'E', '+', '-', '.', ','];
     if (forbiddenKeys.includes(e.key)) {
@@ -179,13 +189,30 @@ const DashboardTolva = () => {
 
   const hdlSubmit = async () => {
     if(isLoadAsingar) return
-    const { silo, silo2, silo3 } = formData || {};
+    const { silo, silo2, silo3, sello1, sello2, sello3, sello4, sello5, sello6 } = formData || {};
 
-    if (!silo) {
-      setError("No se ha seleccionado el silo principal.");
+    if(!sello1 && !sello2 && !sello3 && !sello4 && !sello5 && !sello6){
+      toast.error('Debe digitar al menos un marchamo.', {style:{background:'#ff4d4f'}})
+      retur
+    }
+
+    if((sello1 && sello1.length !==6) || (sello2 && sello2.length !==6) || (sello3 && sello3.length !==6) || (sello4 && sello4.length !==6) || (sello5 && sello5.length !==6) || (sello6 && sello6.length !==6)) {
+      toast.error('Marchamos deben de ser de 6 digitos.', {style:{background:'#ff4d4f'}})
       return;
     }
-    
+
+    if(!formData?.tolvaDescarga || formData?.tolvaDescarga==0) {
+      toast.error('Debe selecionar una tolva de descarga.', {style:{background:'#ff4d4f'}})
+      return
+    }
+
+    if (!silo) {
+      toast.error('Debe digitar el silo principal.', {style:{background:'#ff4d4f'}})
+      return
+      /* setError("No se ha seleccionado el silo principal.");
+      return; */
+    }
+
     const filledSilos = [silo, silo2, silo3].filter(Boolean);
     const uniqueSilos = new Set(filledSilos);
 
@@ -194,10 +221,6 @@ const DashboardTolva = () => {
       return;
     }
 
-    if(!formData?.tolvaDescarga || formData?.tolvaDescarga==0) {
-      toast.error('Debe selecionar una tolva de descarga.', {style:{background:'#ff4d4f'}})
-      return
-    }
     setError("");
     const response = await updateSilos(formData, data?.id, setIsLoadAsingar);
     if (response?.msg) {
@@ -313,6 +336,9 @@ const DashboardTolva = () => {
     handleChange,
     error,
     isLoadAsingar,
+    handleKeyDown,
+    handleMarchamos,
+    formData,   
   };
 
   const dashboardProps = {

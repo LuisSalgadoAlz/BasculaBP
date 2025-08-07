@@ -1,17 +1,23 @@
 import { StatCard } from "../../components/buttons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   FiCalendar,
   FiClock,
 } from "react-icons/fi";
-import { getDataPlaca } from "../../hooks/guardia/formDataGuardia";
-import { ManifestModal } from "../../components/guardia/elements"
+import { getDataPlaca, getStatsGuardia, updatePaseSalida } from "../../hooks/guardia/formDataGuardia";
+import { ManifestModal, DespacharUnidad } from "../../components/guardia/elements"
+import { Toaster, toast } from "sonner";
 
 const Guardia = () => {
   const [stats, setStats] = useState();
   const [placa, setPlaca] = useState("");
   const [infoPlaca, setInfoPlaca] = useState();
   const [openModal, setOpenModal] = useState(false);
+  const [despacharUnidadModal, setDespacharUnidadModal] = useState(false)
+  const [isLoadingConfirm, setIsLoadingConfirm] = useState(false)
+  const [motivo, setMotivo] = useState(false)
+  const [motivoDetails, setMotivoDetails] = useState()
+  const [isLoadingSearch, setIsLoadingSearch] = useState(false)
 
   const handleChangePlaca = (e) => {
     const { value } = e.target;
@@ -19,32 +25,83 @@ const Guardia = () => {
   };
 
   const handleSearchPlaca = async () => {
-    const response = await getDataPlaca(setInfoPlaca, placa);
+    if(!placa) return toast.error('No ha ingresado una placa.', {style:{background:'#ff4d4f'}});
+    const response = await getDataPlaca(setInfoPlaca, placa, setIsLoadingSearch);
     if (response?.err) {
-      return response?.err;
+      toast.error(response?.err, {style:{background:'#ff4d4f'}});
+      return
     }
     setInfoPlaca(response?.data);
     setOpenModal(true);
+    setMotivo(false)
+    setMotivoDetails('')
   };
 
   const handleCloseModal = () => {
     setOpenModal(false);
   };
 
+  const handleOpenConfirm = () => {
+    const fechaFin = new Date(infoPlaca?.fechaFin);
+    const fechaActual = new Date();
+
+    const diffMs = fechaActual - fechaFin; // diferencia en milisegundos
+    const diffMin = Math.floor(diffMs / 60000); // minutos
+    const horas = Math.floor(diffMin / 60);
+    const minutos = diffMin % 60;
+
+    // Los únicos sin motivo son: sin fecha final Y no servicio báscula
+    const requiereMotivo = (horas !== 0 || minutos > 15) && 
+                            (infoPlaca?.fechaFin !== null && 
+                            (infoPlaca?.movimiento !== 'SERVICIO BASCULA') &&
+                            (infoPlaca?.movimiento !== 'Carga Doble Detalle') &&
+                            (infoPlaca?.paseDeSalida?.aplicaAlerta===true));
+
+    if(requiereMotivo) {
+      setMotivo(true)
+    }
+
+    setDespacharUnidadModal(true)
+  }
+
+  const handleCloseConfirm =() => {
+    setDespacharUnidadModal(false)
+  }
+
+  const handleConfirmSalidad = async(data) => {
+    if(motivo===true && !motivoDetails) return toast.error('No ha ingresado un motivo.', {style:{background:'#ff4d4f'}});
+    const response = await updatePaseSalida(infoPlaca?.paseDeSalida?.id, setIsLoadingConfirm, motivoDetails)
+    if(response?.msg){
+      toast.success(response?.msg, {style:{background:'#4CAF50'}});
+      setOpenModal(false)
+      setDespacharUnidadModal(false)
+      setMotivo(false)
+      setMotivoDetails('')
+      getStatsGuardia(setStats)
+      return
+    }
+    toast.error(response?.err , {style:{background:'#ff4d4f'}});
+  }
+
   const statsdata = [
     {
       icon: <FiCalendar size={24} className="text-white" />,
-      title: "Total (hoy)",
-      value: stats?.total || 40,
+      title: "Despachados (hoy)",
+      value: stats?.total || 0,
       color: "bg-blue-500",
     },
     {
       icon: <FiClock size={24} className="text-white" />,
-      title: "Pendientes(hoy)",
-      value: stats?.pendientes || 20,
+      title: "En BAPROSA (hoy)",
+      value: stats?.pendientes || 0,
       color: "bg-amber-500",
     },
   ];
+
+  useEffect(() => {
+    getStatsGuardia(setStats)
+  }, []);
+
 
   return (
     <div className="min-h-[80vh]">
@@ -82,21 +139,32 @@ const Guardia = () => {
 
           <button
             onClick={handleSearchPlaca}
+            disabled={isLoadingSearch}
             className="bg-[#725033] hover:bg-[#866548] text-white font-medium 
                       py-2.5 px-6 rounded-lg transition-all duration-200 
                       focus:outline-none focus:ring-2 focus:ring-[#a67c5a] 
                       min-w-[100px]"
           >
-            Buscar
+            {isLoadingSearch ? 'Buscando...' : 'Buscar'}
           </button>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto sm:min-w-[300px]">
           {openModal && (
-            <ManifestModal data={infoPlaca} closeModal={handleCloseModal} />
+            <ManifestModal data={infoPlaca} closeModal={handleCloseModal} handleOpenConfirm={handleOpenConfirm}/>
           )}
         </div>
       </div>
+      {despacharUnidadModal && <DespacharUnidad hdClose={handleCloseConfirm} hdlSubmit={handleConfirmSalidad} isLoading={isLoadingConfirm} requiereMotivo={motivo} motivo={motivoDetails} setMotivo={setMotivoDetails} />}
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          style: {
+            background: '#333', // estilo general
+            color: 'white',
+          },
+        }}
+      />
     </div>
   );
 };

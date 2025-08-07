@@ -4,14 +4,17 @@ import { RiTruckLine } from "react-icons/ri";
 import { FiUsers } from "react-icons/fi";
 import { useState } from "react";
 import { SupportModal } from "./alerts";
-import { CalendarSection, LogsSection, NavigationRoutes, ReportsSection, SideBarBase, SidebarHeader, SupportSection, UserDropdown } from "./sideBar/elements";
+import { NavigationRoutes, ReportsSection, SideBarBase, SidebarHeader, SupportSection, UserDropdown } from "./sideBar/elements";
+import { FaTruckLoading } from "react-icons/fa";
 
 const RUTAS_PRINCIPALES = [
+  /* 
+    Se deshabilito de bascula
   {
     path: "/dashboard",
     name: "Dashboard",
     icon: <MdOutlineDashboard />,
-  },
+  }, */
   {
     path: "/socios",
     name: "Socios",
@@ -40,13 +43,18 @@ const RUTAS_ADMIN = [
     name: "Usuarios",
     icon: <FiUsers />,
   },
+  {
+    path: "/admin/logs",
+    name: "Logs",
+    icon: <BsClipboard2Pulse />,
+  }
 ];
 
 const RUTAS_TOLVA = [
   {
     path: "/tolva/dashboard",
-    name: "Dashboard",
-    icon: <MdOutlineDashboard />,
+    name: "Descarga",
+    icon: <FaTruckLoading />,
   },
 ]
 
@@ -70,7 +78,6 @@ export const SideBar = ({ modo = "extendido", altura = 500 }) => {
     <SideBarBase extended={isExtendido}>
       <SidebarHeader isExtendido={isExtendido} title="Baprosa" subtitle="Sistema de Gestión Bascula" />
       <NavigationRoutes routes={RUTAS_PRINCIPALES} isExtendido={isExtendido} sectionTitle="Bascula" />
-      <CalendarSection isExtendido={isExtendido} />
       <ReportsSection isExtendido={isExtendido} />
       <SupportSection isExtendido={isExtendido} onShowModal={handleShowModal} />
       <UserDropdown isExtendido={isExtendido} altura={altura} />
@@ -85,8 +92,11 @@ export const SideBarAdmin = ({ modo = "extendido", altura = 500 }) => {
   return (
     <SideBarBase extended={isExtendido}>
       <SidebarHeader isExtendido={isExtendido} title="Baprosa" subtitle="Administración Bascula" />
-      <NavigationRoutes routes={RUTAS_ADMIN} isExtendido={isExtendido} sectionTitle="Admin"/>
-      <LogsSection isExtendido={isExtendido}/>
+      <NavigationRoutes routes={RUTAS_ADMIN} isExtendido={isExtendido} sectionTitle="Admin" userRole={'ADMINISTRADOR'}/>
+      <NavigationRoutes routes={RUTAS_PRINCIPALES} isExtendido={isExtendido} sectionTitle="Bascula" userRole={'ADMINISTRADOR'} />
+      <NavigationRoutes routes={RUTAS_TOLVA} isExtendido={isExtendido} sectionTitle="Tolva" userRole={'ADMINISTRADOR'}/>
+      <NavigationRoutes routes={RUTAS_GUARDIA} isExtendido={isExtendido} sectionTitle="Guardia" userRole={'ADMINISTRADOR'}/>
+      <ReportsSection isExtendido={isExtendido} userRole={'ADMINISTRADOR'} />
       <UserDropdown isExtendido={isExtendido} altura={altura} />
     </SideBarBase>
   );

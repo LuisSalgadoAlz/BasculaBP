@@ -153,7 +153,7 @@ const Boletas = () => {
    */
   const handleSubmitNewPlaca = async () => {
     const response = formaterDataNewPlaca(formBoletas, marchamos)
-    const isCorrect = verificarDataNewPlaca(setErr,response, setMsg, marchamos)
+    const isCorrect = true /* verificarDataNewPlaca(setErr,response, setMsg, marchamos) */
     if (isCorrect) {
       const state = await postBoletasNormal(response, setIsLoading)
       if(state?.err){
@@ -167,6 +167,7 @@ const Boletas = () => {
       setAddMarchamos([])
       setOpenModalForm(false)
       closeAllDataOfForm()
+      setSearch('')
     } 
   }
 

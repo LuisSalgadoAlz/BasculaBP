@@ -1,9 +1,9 @@
 export const URLHOST = 'http://192.9.100.56:3000/api/'
 export const URLWEBSOCKET = 'ws://192.9.100.56:3000'
-export const VERSION = '1.0.11'
+export const VERSION = '1.0.13'
 
 export const AUTH_CONFIG = {
-  BASCULA: '/dashboard',
+  BASCULA: '/boletas',
   ADMINISTRADOR: '/admin/dashboard',
   TOLVA: '/tolva/dashboard', 
   GUARDIA: '/guardia'

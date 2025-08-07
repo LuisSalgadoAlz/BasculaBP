@@ -2,8 +2,9 @@ import { URLHOST } from '../../constants/global'
 import Cookies from 'js-cookie'
 
 
-export const getDataPlaca = async (fun, placa) => {
+export const getDataPlaca = async (fun, placa, setIsLoading) => {
   try {
+    setIsLoading(true)
     const response = await fetch(`${URLHOST}guardia/buscarPlaca?placa=${placa}`, {
       method: "GET",
       headers: {
@@ -17,6 +18,55 @@ export const getDataPlaca = async (fun, placa) => {
 
     const data = await response.json();
     return data
+  } catch (error) {
+    console.error("Error al obtener los clientes:", error);
+  }finally{
+    setIsLoading(false)
+  }
+};
+
+export const updatePaseSalida = async (id, setIsLoading, motivo) => {
+  setIsLoading(true)
+  try {
+    const response = await fetch(`${URLHOST}guardia/upd/pase/${id}`, {
+      method: "PUT",
+      body: JSON.stringify({obs: motivo}),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: Cookies.get('token'),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API");
+    }
+
+    const msg = await response.json()
+    return msg;
+
+  } catch (error) {
+    console.error("Error al obtener los datos:", error);
+  } finally {
+    setIsLoading(false)
+  }
+};
+
+
+export const getStatsGuardia = async (fun, placa) => {
+  try {
+    const response = await fetch(`${URLHOST}guardia/stats`, {
+      method: "GET",
+      headers: {
+        Authorization: Cookies.get('token'),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API");
+    }
+
+    const data = await response.json();
+    fun(data)
   } catch (error) {
     console.error("Error al obtener los clientes:", error);
   }

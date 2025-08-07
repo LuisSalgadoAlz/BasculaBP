@@ -5,6 +5,8 @@ const jsQR = require('jsqr');
 const jimp = require('jimp');
 const sharp = require('sharp');
 const jwt = require("jsonwebtoken");
+const enviarCorreo = require("../utils/enviarCorreo");
+const { alertaMarchamosDiferentes } = require('../utils/cuerposCorreo');
 
 const TYPES_OF_STATES = ['PENDIENTE', 'COMPLETO', 'CANCELADO', 'FUERA DE TIEMPO']
 
@@ -421,7 +423,9 @@ const analizadorQR = async (req, res) => {
       if (boleta.idProducto !=17 && boleta.idProducto!=18) return res.status(200).send({err: 'Favor, ingresar boletas proporcionadas por su ticket'})
       if (boleta.tolvaAsignada!=usuario.UsuariosPorTolva.tolva) return res.status(200).send({err: 'Boleta, no esta asignada a su tolva, favor enviar a la tolva correcta'})
       if (tolva!=0) return res.status(200).send({err: 'Boleta ya ha sido asignada'})
-
+      
+      setLogger('TOLVA', 'BUSQUEDA CON QR', req, null, 1, idBolQR)  
+      
       return res.json({ 
         boleta: boleta,
         processingTime: totalTime,
@@ -434,6 +438,7 @@ const analizadorQR = async (req, res) => {
     }
     
   } catch (error) {
+    setLogger('TOLVA', 'BUSQUEDA CON QR', req, null, 3)  
     console.error('Error general:', error);
     return res.status(200).json({err: 'Error interno'});
   }
@@ -476,6 +481,9 @@ const buscarBoleSinQR = async(req, res) => {
     if (boleta.tolvaAsignada!=usuario.UsuariosPorTolva.tolva) return res.status(200).send({err: 'Boleta, no esta asignada a su tolva, favor enviar a la tolva correcta'})
     if (tolva!=0) return res.status(200).send({err: 'Boleta ya ha sido asignada'})
     
+
+    setLogger('TOLVA', 'BUSQUEDA SIN QR', req, null, 1, parseInt(id))  
+
       /* Falta Validacion */
     return res.json({ 
       boleta: boleta,
@@ -483,6 +491,7 @@ const buscarBoleSinQR = async(req, res) => {
     });
 
   }catch(err){
+    setLogger('TOLVA', 'BUSQUEDA SIN QR', req, null, 3)  
     console.log(err)
   }
 }
@@ -530,6 +539,7 @@ const getDataForSelectSilos = async (req, res) => {
 
     res.status(200).send(silos);
   } catch (err) {
+    setLogger('SILOS', 'ERROR AL OBTENER SILOS', req, null, 3)  
     console.error('Error al obtener silos:', err);
     res.status(500).send({ error: 'Error interno del servidor' });
   }
@@ -554,6 +564,7 @@ const getListUsersForTolva = async(req, res) =>{
     });
     res.json(usuario)
   }catch(err){
+    setLogger('TOLVA', 'ERROR AL OBTENER USUARIOS', req, null, 3)  
     console.log(err)
   }
 }
@@ -565,7 +576,7 @@ const getListUsersForTolva = async(req, res) =>{
  */
 const postSiloInBoletas = async(req, res) => {
   try{
-    const { silo, silo2, silo3, tolvaDescarga } = req.body;
+    const { silo, silo2, silo3, tolvaDescarga, sello1, sello2, sello3, sello4, sello5, sello6 } = req.body;
     const boletaID = req.params.id;
 
     const token = req.header('Authorization');
@@ -584,14 +595,34 @@ const postSiloInBoletas = async(req, res) => {
       where: { usuarios: verificado["usuarios"] }
     });
 
-    const isEmptyTolva = await db.tolva.count({
-      where: {
-        tolvaDescarga: {
-          contains: `T${usuario.UsuariosPorTolva.tolva}-${tolvaDescarga}`
+    const [isEmptyTolva, boleta] = await Promise.all([
+      db.tolva.count({
+        where: {
+          tolvaDescarga: {
+            contains: `T${usuario.UsuariosPorTolva.tolva}-${tolvaDescarga}`
+          },
+          estado: 0,
+        }
+      }),
+      db.boleta.findUnique({
+        select: {
+          socio:true, empresa: true, placa: true, motorista: true, producto: true, tolvaAsignada: true, sello1: true, sello2:true, sello3:true, sello4: true, sello5: true, sello6: true,
         },
-        estado: 0,
-      }
-    });
+        where:{id:parseInt(boletaID)}
+      })
+    ])
+
+    const arrTolva = [sello1, sello2, sello3, sello4, sello5, sello6];
+    const arrBoleta = [boleta.sello1, boleta.sello2, boleta.sello3, boleta.sello4, boleta.sello5, boleta.sello6];
+
+    const enviarAlerta = arrTolva
+    .filter(s => s !== null && s !== undefined)
+    .every(sello => arrBoleta.filter(b => b !== null && b !== undefined).includes(sello));
+
+    if(!enviarAlerta) {
+      setLogger('TOLVA', 'MARCHAMOS NO COINCIDEN CON BÁSCULA', req, null, 3)  
+      alertaMarchamosDiferentes(boleta, usuario, enviarCorreo, arrBoleta, arrTolva, tolvaDescarga)
+    }
 
     if (isEmptyTolva !== 0) {
       return res.status(200).send({ err: 'Tolva de descarga actualmente en uso, finalice proceso' });
@@ -607,12 +638,20 @@ const postSiloInBoletas = async(req, res) => {
         siloSecundario: parseInt(silo2)|| null, 
         SiloTerciario: parseInt(silo3) || null, 
         estado: 0, 
-        tolvaDescarga: `T${usuario.UsuariosPorTolva.tolva}-${tolvaDescarga}`
+        tolvaDescarga: `T${usuario.UsuariosPorTolva.tolva}-${tolvaDescarga}`,
+        Sello1: parseInt(sello1) || null, 
+        Sello2: parseInt(sello2) || null, 
+        Sello3: parseInt(sello3) || null, 
+        Sello4: parseInt(sello4) || null, 
+        Sello5: parseInt(sello5) || null, 
+        Sello6: parseInt(sello6) || null, 
       }
     })
+    setLogger('TOLVA', 'ASIGNO BOLETA A SILO, Y COMENZO A DESCARGAR', req, null, 1, updateSiloBoleta.id)  
     return res.status(200).send({msg:'¡Boleta ha sido asignada correctamente!'})
   } catch(err) {
     console.log(err)
+    setLogger('TOLVA', 'ASIGNO BOLETA A SILO, Y NO PUDO COMENZO A DESCARGAR', req, null, 3)  
     res.status(200).send({err:'Intente denuevo'})
   }
 }
@@ -650,9 +689,10 @@ const updateFinalizarDescarga = async(req, res)=>{
         id: parseInt(id)
       }
     })
-
+    setLogger('TOLVA', 'FINALIZO LA DESCARGA EN TOLVA', req, null, 1, updateFinalizarDescarga.id)  
     return res.status(200).send({msg:'Finalizada correctamente'})
   }catch(err){
+    setLogger('TOLVA', 'FINALIZO LA DESCARGA EN TOLVA', req, null, 3)  
     console.log(err)
   }
 }
@@ -717,6 +757,7 @@ const getTolvasDeDescargasOcupadas = async(req, res) => {
     res.status(200).send({descarga1, descarga2})
 
   }catch(err){
+    setLogger('TOLVA', 'OBTENER EL ESTADO DE LAS TOLVAS DE DESCARGA', req, null, 3)  
     console.log(err)
   }
 }
@@ -814,6 +855,7 @@ const getAsignForDay = async(req, res) => {
       }
     } )
   }catch(err){
+    setLogger('TOLVA', 'OBTENER LOS DATOS DE CAMIONES DESCARGADOS EN TOLVA', req, null, 3)  
     console.log(err)
   }
 }
@@ -878,6 +920,7 @@ const getStatsForTolva = async(req, res) =>{
     ])
     res.status(200).send({total, pendientes, gamericana, gnacional})
   }catch(err){
+    setLogger('TOLVA', 'OBTENER ESTADISTICAS DE LA TOLVA', req, null, 3)  
     console.log(err)
   }
 }

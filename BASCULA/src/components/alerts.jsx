@@ -11,22 +11,54 @@ import {
 } from "react-icons/io5";
 import { useState } from "react";
 import { postEnviarMensajeDeSoporte } from "../hooks/admin/soporte";
+import { MdError, MdClose, MdCheckCircle, MdWarning } from 'react-icons/md';
 
-export const ModalSuccess = ({ name, hdClose }) => {
+export const ModalSuccess = ({ name, hdClose, onContinue }) => {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-opa-50">
-      <div className="bg-white p-6 rounded-2xl shadow-xl max-w-sm border border-gray-200">
-        <h2 className="text-xl font-bold text-gray-800 mb-4">
-          ¡Éxito en {name}!
-        </h2>
-        <p className="text-gray-600">La operación se realizó correctamente.</p>
-        <div className="mt-6 flex justify-end">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+      <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-md w-full mx-4 border border-gray-100 transform transition-all duration-300 ease-out animate-in">
+        {/* Header con icono de éxito */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-3"> 
+            <div className="flex-shrink-0 w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+              <MdCheckCircle className="w-6 h-6 text-green-600" />
+            </div>
+            <h2 className="text-2xl font-semibold text-gray-900">Éxito</h2>
+          </div>
           <button
             onClick={hdClose}
-            aria-label="Cerrar modal de éxito"
-            className="px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700 transition-transform duration-300 ease-in-out hover:scale-105"
+            className="text-gray-400 hover:text-gray-600 transition-colors duration-200"
+            aria-label="Cerrar modal"
           >
-            Aceptar
+            <MdClose className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Contenido del éxito */}
+        <div className="mb-8">
+          <p className="text-gray-700 leading-relaxed">
+            La operación se ha completado exitosamente en:
+          </p>
+          <div className="mt-3 p-3 bg-green-50 border-l-4 border-green-400 rounded-r-lg">
+            <p className="text-green-800 font-medium">{name}</p>
+          </div>
+        </div>
+
+        {/* Botones de acción */}
+        <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
+          {onContinue && (
+            <button
+              onClick={onContinue}
+              className="px-6 py-3 text-green-700 bg-white border border-green-300 rounded-lg font-medium hover:bg-green-50 hover:border-green-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+            >
+              Continuar
+            </button>
+          )}
+          <button
+            onClick={hdClose}
+            className="px-6 py-3 text-white bg-green-600 rounded-lg font-medium hover:bg-green-700 active:bg-green-800 transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 shadow-lg hover:shadow-xl"
+          >
+            Cerrar
           </button>
         </div>
       </div>
@@ -34,19 +66,52 @@ export const ModalSuccess = ({ name, hdClose }) => {
   );
 };
 
-export const ModalErr = ({ name, hdClose }) => {
+export const ModalErr = ({ name, hdClose, onRetry }) => {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-opa-50">
-      <div className="bg-white p-6 rounded-2xl shadow-xl max-w-sm border border-gray-200">
-        <h2 className="text-xl font-bold text-gray-800 mb-4">¡Error!</h2>
-        <p className="text-gray-600">La operación fallo por: {name}</p>
-        <div className="mt-6 flex justify-end">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/10">
+      <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-md w-full mx-4 border border-gray-100 transform transition-all duration-300 ease-out animate-in">
+        {/* Header con icono de error */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-3">
+            <div className="flex-shrink-0 w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+              <MdError className="w-6 h-6 text-red-600" />
+            </div>
+            <h2 className="text-2xl font-semibold text-gray-900">Error</h2>
+          </div>
           <button
             onClick={hdClose}
-            aria-label="Cerrar modal de éxito"
-            className="px-4 py-2 text-white bg-red-600 rounded-lg transition-transform duration-300 ease-in-out hover:scale-105"
+            className="text-gray-400 hover:text-gray-600 transition-colors duration-200"
+            aria-label="Cerrar modal"
           >
-            Aceptar
+            <MdClose className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Contenido del error */}
+        <div className="mb-8">
+          <p className="text-gray-700 leading-relaxed">
+            Ha ocurrido un problema durante la operación:
+          </p>
+          <div className="mt-3 p-3 bg-red-50 border-l-4 border-red-400 rounded-r-lg">
+            <p className="text-red-800 font-medium">{name}</p>
+          </div>
+        </div>
+
+        {/* Botones de acción */}
+        <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
+          {onRetry && (
+            <button
+              onClick={onRetry}
+              className="px-6 py-3 text-red-700 bg-white border border-red-300 rounded-lg font-medium hover:bg-red-50 hover:border-red-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+            >
+              Reintentar
+            </button>
+          )}
+          <button
+            onClick={hdClose}
+            className="px-6 py-3 text-white bg-red-600 rounded-lg font-medium hover:bg-red-700 active:bg-red-800 transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 shadow-lg hover:shadow-xl"
+          >
+            Cerrar
           </button>
         </div>
       </div>
@@ -56,28 +121,56 @@ export const ModalErr = ({ name, hdClose }) => {
 
 export const ModalVehiculoDuplicado = ({ name, hdClose, hdlSubmit }) => {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-opa-50">
-      <div className="bg-white p-6 rounded-2xl shadow-xl max-w-sm border border-gray-200">
-        <h2 className="text-xl font-bold text-gray-800 mb-4">¡Advertencia!</h2>
-        <p className="text-gray-600">
-          El vehículo ya está registrado en las siguientes empresas:
-          <span className="text-yellow-600"> {name}</span>. ¿Desea agregarlo de
-          todos modos?
-        </p>
-        <div className="mt-6 flex justify-end gap-2">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/10 backdrop-blur-sm">
+      <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-lg w-full mx-4 border border-gray-100 transform transition-all duration-300 ease-out animate-in">
+        {/* Header con icono de advertencia */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-3">
+            <div className="flex-shrink-0 w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+              <MdWarning className="w-6 h-6 text-yellow-600" />
+            </div>
+            <h2 className="text-2xl font-semibold text-gray-900">Advertencia</h2>
+          </div>
           <button
             onClick={hdClose}
-            aria-label="Cerrar modal de éxito"
-            className="px-4 py-2 text-gray-400 rounded-lg transition-transform duration-300 ease-in-out hover:scale-105"
+            className="text-gray-400 hover:text-gray-600 transition-colors duration-200"
+            aria-label="Cerrar modal"
+          >
+            <MdClose className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Contenido de la advertencia */}
+        <div className="mb-8">
+          <p className="text-gray-700 leading-relaxed mb-3">
+            Se ha detectado que el vehículo ya está registrado en el sistema.
+          </p>
+          <div className="p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-r-lg">
+            <p className="text-gray-800 mb-2">
+              <span className="font-medium">Empresas registradas:</span>
+            </p>
+            <p className="text-yellow-800 font-semibold">{name}</p>
+          </div>
+          <p className="text-gray-700 leading-relaxed mt-4">
+            ¿Desea agregarlo de todos modos? Esta acción creará un registro duplicado.
+          </p>
+        </div>
+
+        {/* Botones de acción */}
+        <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
+          <button
+            onClick={hdClose}
+            className="px-6 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg font-medium hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+            aria-label="Cancelar operación"
           >
             Cancelar
           </button>
           <button
             onClick={hdlSubmit}
-            aria-label="Cerrar modal de éxito"
-            className="px-4 py-2 text-white bg-yellow-600 rounded-lg transition-transform duration-300 ease-in-out hover:scale-105"
+            className="px-6 py-3 text-white bg-yellow-600 rounded-lg font-medium hover:bg-yellow-700 active:bg-yellow-800 transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 shadow-lg hover:shadow-xl"
+            aria-label="Agregar vehículo duplicado"
           >
-            Agregar
+            Agregar de todos modos
           </button>
         </div>
       </div>
@@ -87,28 +180,56 @@ export const ModalVehiculoDuplicado = ({ name, hdClose, hdlSubmit }) => {
 
 export const ModalVehiculoDuplicadoEdit = ({ name, hdClose, hdlSubmit }) => {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-opa-50">
-      <div className="bg-white p-6 rounded-2xl shadow-xl max-w-sm border border-gray-200">
-        <h2 className="text-xl font-bold text-gray-800 mb-4">¡Advertencia!</h2>
-        <p className="text-gray-600">
-          El vehículo ya está registrado en las siguientes empresas:
-          <span className="text-yellow-600"> {name}</span>. ¿Desea modificarlo
-          de todos modos?
-        </p>
-        <div className="mt-6 flex justify-end gap-2">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/10">
+      <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-lg w-full mx-4 border border-gray-100 transform transition-all duration-300 ease-out animate-in">
+        {/* Header con icono de advertencia */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-3">
+            <div className="flex-shrink-0 w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+              <MdWarning className="w-6 h-6 text-yellow-600" />
+            </div>
+            <h2 className="text-2xl font-semibold text-gray-900">Advertencia</h2>
+          </div>
           <button
             onClick={hdClose}
-            aria-label="Cerrar modal de éxito"
-            className="px-4 py-2 text-gray-400 rounded-lg transition-transform duration-300 ease-in-out hover:scale-105"
+            className="text-gray-400 hover:text-gray-600 transition-colors duration-200"
+            aria-label="Cerrar modal"
+          >
+            <MdClose className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Contenido de la advertencia */}
+        <div className="mb-8">
+          <p className="text-gray-700 leading-relaxed mb-3">
+            Se ha detectado que el vehículo ya está registrado en el sistema.
+          </p>
+          <div className="p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-r-lg">
+            <p className="text-gray-800 mb-2">
+              <span className="font-medium">Empresas registradas:</span>
+            </p>
+            <p className="text-yellow-800 font-semibold">{name}</p>
+          </div>
+          <p className="text-gray-700 leading-relaxed mt-4">
+            ¿Desea modificarlo de todos modos? Esta acción afectará el registro existente.
+          </p>
+        </div>
+
+        {/* Botones de acción */}
+        <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
+          <button
+            onClick={hdClose}
+            className="px-6 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg font-medium hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+            aria-label="Cancelar operación"
           >
             Cancelar
           </button>
           <button
             onClick={hdlSubmit}
-            aria-label="Cerrar modal de éxito"
-            className="px-4 py-2 text-white bg-yellow-600 rounded-lg transition-transform duration-300 ease-in-out hover:scale-105"
+            className="px-6 py-3 text-white bg-yellow-600 rounded-lg font-medium hover:bg-yellow-700 active:bg-yellow-800 transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 shadow-lg hover:shadow-xl"
+            aria-label="Modificar vehículo duplicado"
           >
-            Modificar
+            Modificar de todos modos
           </button>
         </div>
       </div>

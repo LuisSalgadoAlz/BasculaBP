@@ -116,7 +116,7 @@ const ViewBoletas = (props) => {
           type="date"
           onChange={handleSearchDate}
         />
-        <ButtonAdd name="Exportar" />
+        {/* <ButtonAdd name="Exportar" /> */}
       </div>
       <div className="filtros grid grid-rows-1 grid-flow-col">
         <button

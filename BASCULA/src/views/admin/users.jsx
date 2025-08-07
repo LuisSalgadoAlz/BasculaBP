@@ -26,6 +26,7 @@ import {
   ModalEditUsuarios,
 } from "../../components/admin/modal";
 import { Pagination } from "../../components/buttons";
+import Cookies from 'js-cookie';
 
 const typesOfUsers = {
   BASCULA: 1,
@@ -151,6 +152,12 @@ const Users = () => {
   };
 
   const hdlSaveUser = async () => {
+    console.log(formUsers)
+    if(formUsers.Tipo === 4 && Cookies.get('name')!=='Administrador') {
+      setErr(true)
+      setMsg('Su usuario no puede crear usuarios ADMINISTRADORES. Comuniques con IT.')
+      return
+    }
     const response = await postUsers(formUsers);
     if (response.msgErr) {
       setErr(true);
@@ -182,6 +189,11 @@ const Users = () => {
   };
 
   const handleGetUser = (item) => {
+    if(Cookies.get('name')!=='Administrador') {
+      setErr(true)
+      setMsg('No cuenta con los permisos necesarios.')
+      return
+    }
     setModalEditUser(true);
     setFormUsers({
       Nombre: item.name,

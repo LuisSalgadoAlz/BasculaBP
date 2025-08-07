@@ -1,10 +1,10 @@
 import { URLHOST } from "../constants/global";
 import Cookies from 'js-cookie'
 
-export const getHistorialBoletas = async (fun, formFiltros = {},setIsLoading) => {
+export const getHistorialBoletas = async (fun, formFiltros = {},setIsLoading, page, search = "") => {
   try {
     setIsLoading(true)
-    const response = await fetch(`${URLHOST}boletas/historial?movimiento=${formFiltros?.movimiento}&producto=${formFiltros?.producto}&dateIn=${formFiltros?.dateIn}&dateOut=${formFiltros?.dateOut}&socios=${formFiltros?.socio}`, {
+    const response = await fetch(`${URLHOST}boletas/historial?movimiento=${formFiltros?.movimiento}&producto=${formFiltros?.producto}&dateIn=${formFiltros?.dateIn}&dateOut=${formFiltros?.dateOut}&socios=${formFiltros?.socio}&page=${page}&search=${search}`, {
       method: "GET",
       headers: {
         Authorization: Cookies.get('token'),

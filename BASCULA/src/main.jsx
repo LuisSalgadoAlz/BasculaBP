@@ -23,36 +23,36 @@ const Informes = lazy(()=>import('./views/informes'))
 const Importaciones = lazy(()=>import('./components/informes/importaciones'))
 const Guardia = lazy(()=>import('./views/guardia/guardia'))
 
-const navRutas = createBrowserRouter([
+const navRutas = createBrowserRouter([  
   { path: "/", element: <Login />, errorElement: <NotFoundPage />, },
   {
     element: <VerificarLog userType='ADMINISTRADOR' />,
     children: [
       { path: '/admin/dashboard', element: <DashboardAdmin /> },
       { path: '/admin/usuarios', element: <Users /> }, 
-      { path: '/admin/logs', element: <Logs /> }, 
+      { path: '/admin/logs', element: <Logs /> },
     ]
   },
   {
-    element: <VerificarLog userType='TOLVA' />,
+    element: <VerificarLog userType='ADMINISTRADOR, TOLVA' />,
     children: [
       { path: '/tolva/dashboard', element: <DashboardTolva /> }, 
     ]
   },
   {
-    element: <VerificarLog userType='CONTABILIDAD' />,
+    element: <VerificarLog userType='ADMINISTRADOR, CONTABILIDAD' />,
     children: [
       { path: '/contabilidad/dashboard', element: <DashboardAdmin /> }, 
     ]
   },
   {
-    element: <VerificarLog userType='GUARDIA' />,
+    element: <VerificarLog userType='ADMINISTRADOR,GUARDIA' />,
     children: [
       { path: '/guardia', element: <Guardia />}
     ]
   },
   {
-    element: <VerificarLog userType='BASCULA' />,
+    element: <VerificarLog userType='ADMINISTRADOR,BASCULA' />,
     children: [
       { path: "/Dashboard", element: <Dashboard />, },
       { path: "/Boletas", element: <Boletas />, },
@@ -64,8 +64,7 @@ const navRutas = createBrowserRouter([
       { path: "/informes/diarios", element: <ViewDisabled />, },
       { path: "/informes/semanales", element: <ViewDisabled />, },
       { path: "/socios/:id", element: <EditClientes />, errorElement: <NoFoundData /> },
-      { path: "/empresas/:id", element: <EditTransporte />, errorElement: <NoFoundData />
-      },
+      { path: "/empresas/:id", element: <EditTransporte />, errorElement: <NoFoundData /> },
     ],
   },
 ]);

@@ -57,7 +57,7 @@ const alertaDesviacion = (nuevaBoleta, despachador, enviarCorreo) => {
           <td style="padding: 8px; border-bottom: 1px solid #eee;">${nuevaBoleta.placa || 'N/A'}</td>
         </tr>
         <tr>
-          <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Placa:</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Motorista:</td>
           <td style="padding: 8px; border-bottom: 1px solid #eee;">${nuevaBoleta.motorista || 'N/A'}</td>
         </tr>
         <tr>
@@ -319,4 +319,115 @@ const alertaSoporte = (datosFormulario, usuario, enviarCorreo) => {
   }
 };
 
-module.exports = {alertaCancelacion, alertaDesviacion, alertaSoporte};
+const alertaMarchamosDiferentes = (nuevaBoleta, despachador, enviarCorreo, arrBoleta, arrTolva, tolvaDescarga) => {
+  // Validar que los parámetros requeridos existan
+  if (!nuevaBoleta || !despachador || !enviarCorreo) {
+    console.error('Error: Faltan parámetros requeridos');
+    return { exito: false, mensaje: 'Faltan parámetros requeridos' };
+  }
+  
+  // Configurar alerta para marchas no concordantes
+  let colorAlerta = '#ff9800'; // Naranja para discrepancias de marchas
+  let severidad = 'MEDIA';
+
+  // Fecha y hora actual formateada
+  const fechaHora = new Date().toLocaleString('es-GT', {
+    dateStyle: 'medium',
+    timeStyle: 'medium'
+  });
+  
+  // Construir el cuerpo del correo con estilos mejorados
+  const cuerpoMail = `
+    <div style="font-family: Arial, sans-serif; border: 1px solid #ccc; border-radius: 8px; padding: 20px; max-width: 600px; margin: 0 auto;">
+      <div style="background-color: ${colorAlerta}; color: white; padding: 12px; border-radius: 4px; margin-bottom: 16px;">
+        <h2 style="margin: 0;">⚠️ Alerta Marchamos - Tolva: ${nuevaBoleta.tolvaAsignada} </h2>
+      </div>
+      
+      <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; padding: 12px; margin-bottom: 16px;">
+        <p style="margin: 0; color: #856404; font-weight: bold;">
+          Las marchamos registradas en báscula no coinciden con las marchamos colocadas en tolva.
+        </p>
+      </div>
+      
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+          <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Socio:</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee;">${nuevaBoleta.socio || 'N/A'}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Transporte:</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee;">${nuevaBoleta.empresa || 'N/A'}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Placa:</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee;">${nuevaBoleta.placa || 'N/A'}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Motorista:</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee;">${nuevaBoleta.motorista || 'N/A'}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Usuario de tolva:</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee;">${despachador.name || 'N/A'}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Producto:</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee;">${nuevaBoleta.producto || 'N/A'}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Fecha y Hora:</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee;">${fechaHora}</td>
+        </tr>
+      </table>
+      
+      <div style="background-color: #e3f2fd; border: 1px solid #90caf9; border-radius: 4px; padding: 12px; margin-top: 16px;">
+        <p style="margin: 0; color: #1565c0; font-size: 14px;">
+          <strong>Marchamos registrados en báscula: ${arrBoleta.filter((item)=>Boolean(item)).join(', ')}</strong> 
+        </p>
+      </div>
+      <div style="background-color: #e3f2fd; border: 1px solid #90caf9; border-radius: 4px; padding: 12px; margin-top: 16px;">
+        <p style="margin: 0; color: #1565c0; font-size: 14px;">
+          <strong>Marchamos registrados en tolva: ${arrTolva.filter((item)=>Boolean(item)).join(', ')}</strong> 
+        </p>
+      </div>  
+      
+      <p style="font-size: 14px; color: #555; margin-top: 16px;">
+        Esta es una notificación automática generada por el sistema de control de báscula.
+        Por favor, no responda a este correo.
+      </p>  
+
+      <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;"/>
+      <div style="text-align: center;">
+        ${footerImgage}
+        <p style="font-size: 12px; color: #888;">
+          SISTEMA DE BÁSCULA · <strong>BAPROSA</strong><br/>
+          ©2025 BAPROSA. Todos los derechos reservados.
+        </p>
+      </div>
+    </div>
+  `;
+  
+  // Generar el asunto del correo
+  const asunto = `Alerta de Marchamos [${severidad}] - Tolva: ${nuevaBoleta.tolvaAsignada}`;
+  
+  try {
+    enviarCorreo(process.env.END_MAILS, asunto, cuerpoMail);
+        
+    return {
+      exito: true,
+      mensaje: 'Alerta de marchas no concordantes enviada correctamente',
+      destinatario: process.env.END_MAILS,
+      fecha: new Date()
+    };
+    
+  } catch (error) {
+    console.error('Error al enviar alerta de marchas no concordantes:', error);
+    return {
+      exito: false,
+      mensaje: `Error al enviar alerta: ${error.message}`,
+      error: error
+    };
+  }
+};
+
+module.exports = {alertaCancelacion, alertaDesviacion, alertaSoporte, alertaMarchamosDiferentes};

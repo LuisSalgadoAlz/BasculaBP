@@ -22,6 +22,7 @@ model Boleta {
     idMovimiento Int?
     movimiento String?
     manifiesto Int?
+    manifiestoDeAgregado Int?
     estado String 
     impreso DateTime?
     impresaAmarilla DateTime?
@@ -65,7 +66,7 @@ model Boleta {
     boletasMovimientos Movimientos? @relation(fields: [idMovimiento], references: [id])
     
     tolva Tolva[]
-    paseDeSalida PasesDeSalida?
+    paseDeSalida PasesDeSalida[]
 
     /* Indices */
     @@index([estado])
@@ -98,6 +99,12 @@ model Tolva {
   usuarioDeCierre String?
   observacionDeCancelacion String?
   observacionTiempo String?
+  Sello1 Int?
+  Sello2 Int?
+  Sello3 Int?
+  Sello4 Int?
+  Sello5 Int?
+  Sello6 Int?
 
   // lrelacion de los silos
   principal      Silos   @relation("PrincipalSilo", fields: [siloPrincipal], references: [id], onUpdate: NoAction, onDelete: NoAction)
@@ -116,10 +123,11 @@ model UsuariosPorTolva {
 
 model PasesDeSalida {
   id          Int      @id @default(autoincrement())
-  idBoleta    Int      @unique
+  idBoleta    Int 
   numPaseSalida   Int?
   fechaSalida DateTime?
   observaciones String?
+  aplicaAlerta Boolean?
   estado Boolean?
 
   boleta Boleta @relation(fields: [idBoleta], references: [id])

@@ -11,8 +11,11 @@ import { getPrintEpson, getToleranciaValue } from "../../hooks/formDataBoletas";
 import { CiLock } from "react-icons/ci";
 import { CiUnlock } from "react-icons/ci";
 import { Toaster, toast } from 'sonner';
+import { IoIosArrowDown, IoIosArrowUp, IoIosArrowForward   } from "react-icons/io";
 
 const formInputSelect = ['Transportes', 'Placa', 'Motoristas']
+const guardiaValidacion = [{id: 1, nombre: 'Si'}, {id: 2, nombre: 'No'}]
+
 
 const PrevisualizarPesoNeto = ({ pn, hdlClose, unidad = "lb" }) => {
   const [animateValue, setAnimateValue] = useState(0);
@@ -384,6 +387,7 @@ export const ModalOut = (props) => {
   const [modal, setModal] = useState(false)
   const [dataPrev, setDataPrev] = useState()
   const [openMarchamos, setOpenMarchamos] = useState(false)
+  const [openDocumento, setOpenDocumento] = useState(false)
 
   const getPesoOut = () => {
     formBol((prev)=> ({
@@ -421,6 +425,7 @@ export const ModalOut = (props) => {
     };
 
     socket.onerror = () => {
+      alert('Se perdio la conexion con la bascula.')
       setPeso('No conectada')
     }
 
@@ -476,15 +481,36 @@ export const ModalOut = (props) => {
                 )}
                 <PartPesosDeSalida fun={getPesoOut} hdlChange={hdlChange} val={boletas} />
                 <InputsFormBoletas data={claseFormInputs} name={'Peso Teorico'} fun={hdlChange} />
+                {(move == 'Traslado Interno' || move == 'Traslado Externo') ? <InputsFormBoletas data={claseFormInputs} name={'Orden de Transferencia'} fun={hdlChange} /> : ''}
                 {typeStructure == 0 ? (
                   typeBol == 0 ? (
                     move == "Traslado Interno" || move == "Traslado Externo" ? (
-                      <InputsFormBoletas
-                        data={claseFormInputs}
-                        name={"Documento"}
-                        val={boletas["Documento"]}
-                        fun={hdlChange}
-                      />
+                      <>
+                        <InputsFormBoletas
+                          data={claseFormInputs}
+                          name={"Documento"}
+                          val={boletas["Documento"]}
+                          fun={hdlChange}
+                        />
+                        {boletas?.Socios=== 1 && (
+                          <>
+                            <button
+                                type="button"
+                                onClick={()=> setOpenDocumento(!openDocumento)}
+                                className="text-xs flex gap-1 items-center text-gray-500 hover:text-gray-700 transition-all duration-200 self-start col-span-2 my-1 text-left"
+                              >
+                                <span >{openDocumento ? <IoIosArrowDown  /> : <IoIosArrowForward />}</span>
+                                {openDocumento ? 'Ocultar documento auxiliar' : 'Agregar documento auxiliar'}
+                              </button>
+                            {openDocumento && (
+                              <>
+                                <label htmlFor="" className="block mb-2 text-sm font-medium text-gray-900">Documento Auxiliar</label>
+                                <input type="text" placeholder="Agregar manifiesto auxiliar" className={claseFormInputs} name="documentoAgregado" onChange={hdlChange} value={boletas["documentoAgregado"]} />
+                              </>
+                            )}
+                          </>
+                        )}
+                      </>
                     ) : (
                       <InputsFormBoletas
                         data={claseFormInputs}
@@ -494,19 +520,46 @@ export const ModalOut = (props) => {
                       />
                     )
                   ) : (
-                    <InputsFormBoletas
-                      data={claseFormInputs}
-                      name={"Documento"}
-                      val={boletas["Documento"]}
-                      fun={hdlChange}
-                    />
+                    <>
+                      <InputsFormBoletas
+                        data={claseFormInputs}
+                        name={"Documento"}
+                        val={boletas["Documento"]}
+                        fun={hdlChange}
+                      />
+                      {boletas?.Socios== 1 && (
+                        <>
+                          <button
+                                type="button"
+                                onClick={()=> setOpenDocumento(!openDocumento)}
+                                className="text-xs flex gap-1 items-center text-gray-500 hover:text-gray-700 transition-all duration-200 self-start col-span-2 my-1 text-left"
+                              >
+                                <span >{openDocumento ? <IoIosArrowDown  /> : <IoIosArrowForward />}</span>
+                                {openDocumento ? 'Ocultar documento auxiliar' : 'Agregar documento auxiliar'}
+                              </button>
+                            {openDocumento && (
+                              <>
+                                <label htmlFor="" className="block mb-2 text-sm font-medium text-gray-900">Documento Auxiliar</label>
+                                <input type="text" placeholder="Agregar manifiesto auxiliar" className={claseFormInputs} name="documentoAgregado" onChange={hdlChange} value={boletas["documentoAgregado"]} />
+                              </>
+                            )}
+                        </>
+                      )}
+                    </>
                   )
                 ) : (
                   ""
                 )}
-                {(move == 'Traslado Interno' || move == 'Traslado Externo') ? <InputsFormBoletas data={claseFormInputs} name={'Orden de Transferencia'} fun={hdlChange} /> : ''}
-                <InputsFormBoletas data={claseFormInputs} name={'Observaciones'} fun={hdlChange} />
               </div>
+            </div>
+
+            <div className="px-2 grid grid-cols-2 mt-2 bg-gray-100 py-3 rounded-2xl shadow-sm gap-1.5">
+              <InputsFormBoletas data={claseFormInputs} name={'Observaciones'} fun={hdlChange} />
+              
+              {/* Sale hoy, Agregado. */}
+              {(boletas?.Socios === 1 && boletas?.Proceso ===1 && (boletas?.Transportes === 1 || boletas?.Transportes === 1014 || boletas?.Transportes === 1015)) ? (
+                <SelectFormBoletas classCss={classFormSelct} name={'¿Sale hoy?'} data={guardiaValidacion} fun={hdlChange} val={boletas?.isExit}/>
+              ) : (null)}
             </div>
 
             <div className={`px-3 flex`}>
@@ -655,6 +708,7 @@ export const VisualizarBoletas = (props) => {
                 <span className="text-md text-gray-700">Producto: {boletas?.producto ? boletas?.producto : isNullData}</span>
                 <span className="text-md text-gray-700">Movimiento: {boletas?.movimiento ? boletas?.movimiento : isNullData}</span>
                 <span className="text-md text-gray-700">Manifiesto: {boletas?.manifiesto ? boletas?.manifiesto: isNullData}</span>
+                <span className="text-md text-gray-700">Manifiesto de agregado: {boletas?.manifiestoDeAgregado ? boletas?.manifiestoDeAgregado: isNullData}</span>
                 <span className="text-md text-gray-700">Orden de Compra: {boletas?.ordenDeCompra ? boletas?.ordenDeCompra:isNullData}</span>
                 <hr className="text-gray-400 my-4"/>
                 <span className="text-md font-bold text-gray-700">Tiempos:</span>

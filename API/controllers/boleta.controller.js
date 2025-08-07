@@ -1,10 +1,12 @@
 const db = require("../lib/prisma");
 const dotenv = require("dotenv");
 const jwt = require("jsonwebtoken");
-const { imprimirEpson, imprimirQRTolva, comprobanteDeCarga, imprimirWorkForce, imprimirTikets, getReimprimirWorkForce, reImprimirTikets } = require("./impresiones.controller");
+const { imprimirEpson, imprimirQRTolva, comprobanteDeCarga, imprimirWorkForce, imprimirTikets, getReimprimirWorkForce, reImprimirTikets, generarPaseDeSalidaTemporal, ImprimirTicketEmpresaContratada } = require("./impresiones.controller");
 const enviarCorreo = require("../utils/enviarCorreo");
 const {alertaDesviacion, alertaCancelacion} = require("../utils/cuerposCorreo");
 const {setLogger} = require('../utils/logger');
+const { list_pase_inicial, list_parte_final, listaInicialAlertas } = require("../utils/listPaseSalida");
+const { list } = require("pdfkit");
 
 const generarNumBoleta = async () => {
   const ultimo = await db.boleta.findFirst({
@@ -314,7 +316,6 @@ const postBoletasNormal = async (req, res) => {
         trasladoOrigen: null,
         trasladoDestino: null,
         proceso,
-        ordenDeCompra: ordenDeCompra,
         ordenDeTransferencia: null,
       },
     });
@@ -322,7 +323,9 @@ const postBoletasNormal = async (req, res) => {
     setLogger('BOLETA', 'AGREGAR BOLETA CASULLA', req, null, 1, nuevaBoleta.id)  
 
     /* Imprimir Boleta */
-    const response = await imprimirWorkForce(nuevaBoleta)
+    const debeCrearPase = list_parte_final[proceso].includes(idMovimiento);
+    const crearPase = debeCrearPase ? await createPaseDeSalida(nuevaBoleta) : null;
+    const response = await imprimirWorkForce(nuevaBoleta, crearPase?.numPaseSalida);
     
     if (response) {
       return res.status(201).json({ msg: "Boleta creado exitosamente e impresa con exito" });
@@ -378,6 +381,9 @@ const getDataBoletas = async (req, res) => {
           fechaInicio: true,
         },
         where: baseWhere,
+        orderBy: {
+          id: 'desc'
+        },
         skip,
         take: limit,
       }),
@@ -535,10 +541,12 @@ const postClientePlacaMoto = async (req, res) => {
     const newBol = await db.boleta.create({ data: baseData });
 
     const debeImprimirQR = (idProducto === 17 && idMovimiento === 1) || (idProducto === 18 && idMovimiento === 2);
-    /* const isTrasladoZip = (newBol?.idMovimiento ==11) && (manifiesto)
-    if (isTrasladoZip) {
-      createPaseDeSalida(newBol)
-    } */
+    const ocupaAlerta = idMovimiento ? listaInicialAlertas.includes(idMovimiento) : false
+    const debeCrearPase = idMovimiento ? list_pase_inicial.includes(idMovimiento) : false
+    if (debeCrearPase) {
+      const newPase = await createPaseDeSalida(newBol, ocupaAlerta)
+      const response = await generarPaseDeSalidaTemporal(newBol, newPase?.numPaseSalida)
+    }
     if(debeImprimirQR) {
       imprimirQRTolva(newBol);
     }
@@ -657,6 +665,13 @@ const postClientePlacaMotoComodin = async (req, res) => {
     }
 
     const newBol = await db.boleta.create({ data: baseData });
+
+    const debeCrearPase = list_pase_inicial.includes(idMovimiento);
+    const ocupaAlerta = idMovimiento ? listaInicialAlertas.includes(idMovimiento) : false
+    if (debeCrearPase) {
+      const newPase = await createPaseDeSalida(newBol, ocupaAlerta)
+      const response = await generarPaseDeSalidaTemporal(newBol, newPase?.numPaseSalida)
+    }
 
     const debeImprimirQR = (idProducto === 17 && idMovimiento === 1) || (idProducto === 18 && idMovimiento === 2);
     if(debeImprimirQR) {
@@ -869,24 +884,36 @@ const getBoletasCompletadasDiarias = async (req, res) => {
  * @param {*} res 
  */
 
-const createPaseDeSalida = async(boleta) =>{
+const createPaseDeSalida = async(boleta, aplicaAlerta = true) => {
   try {
-    const ultimoPase = await db.PasesDeSalida.findFirst({
-      orderBy: { numPaseSalida: 'desc' },
-      select: { numPaseSalida: true },
+    const boletaId = parseInt(boleta.id);
+    
+    // Usar transacción para consistencia y mejor rendimiento
+    const result = await db.$transaction(async (tx) => {
+      // Obtener el último número de pase
+      const ultimoPase = await tx.PasesDeSalida.findFirst({
+        orderBy: { numPaseSalida: 'desc' },
+        select: { numPaseSalida: true }
+      });
+      
+      // Crear el nuevo pase
+      const PasesDeSalida = await tx.PasesDeSalida.create({
+        data: {
+          idBoleta: boletaId,
+          numPaseSalida: (ultimoPase?.numPaseSalida || 0) + 1,
+          estado: false, 
+          aplicaAlerta,
+        }
+      });
+      
+      return PasesDeSalida;
     });
-
-    const createPase = await db.PasesDeSalida.create({
-      data: {
-        idBoleta:parseInt(boleta.id),
-        numPaseSalida: (ultimoPase?.numPaseSalida || 0) + 1,
-        estado: false, 
-      }
-    })
-    return true
-  }catch(err) {
-    console.log(err)
-    return false
+    
+    return result;
+    
+  } catch(err) {
+    console.error('Error en createPaseDeSalida:', err);
+    return false;
   }
 }
 
@@ -921,7 +948,9 @@ const updateBoletaOut = async (req, res) => {
       pesoNeto,
       pesoFinal,
       desviacion,
-      allSellos
+      allSellos,
+      aplicaAlerta,
+      documentoAgregado,
     } = req.body;
 
     const verificado = jwt.verify(idUsuario, process.env.SECRET_KEY);
@@ -1027,6 +1056,7 @@ const updateBoletaOut = async (req, res) => {
       proceso,
       pesoNeto: parseFloat(pesoNeto),
       desviacion: parseFloat(desviacion),
+      manifiestoDeAgregado: parseInt(documentoAgregado) || null,
       porTolerancia,
       ...allSellos
     };
@@ -1038,7 +1068,7 @@ const updateBoletaOut = async (req, res) => {
       updateData.idOrigen = proceso == 0 ? parseInt(idOrigen) : null;
       updateData.idDestino = proceso == 1 ? parseInt(idDestino) : null;
       updateData.manifiesto = proceso == 1 ? parseInt(manifiesto) : null;
-      updateData.ordenDeCompra = proceso == 0 ? ordenDeCompra : null;
+      updateData.ordenDeCompra = proceso == 0 ? ordenDeCompra || null : null;
       updateData.idTrasladoOrigen = null;
       updateData.idTrasladoDestino = null;
       updateData.trasladoOrigen = null;
@@ -1049,7 +1079,7 @@ const updateBoletaOut = async (req, res) => {
       updateData.destino = null;
       updateData.idOrigen = null;
       updateData.idDestino = null;
-      updateData.manifiesto = null;
+      updateData.manifiesto = parseInt(manifiesto) || null;
       updateData.ordenDeCompra = null;
       updateData.idTrasladoOrigen = parseInt(idTrasladoOrigen);
       updateData.idTrasladoDestino = parseInt(idTrasladoDestino);
@@ -1074,15 +1104,17 @@ const updateBoletaOut = async (req, res) => {
       comprobanteDeCarga(nuevaBoleta, despachador['name']);
     }
 
+    if (nuevaBoleta.idSocio==1 && (nuevaBoleta.idEmpresa !=1 && nuevaBoleta.idEmpresa !=1015 && nuevaBoleta.idEmpresa!=1014) ) {
+      ImprimirTicketEmpresaContratada(nuevaBoleta, despachador['name']);
+    }
+
     setLogger('BOLETA', 'MODIFICAR BOLETA (SALIDA DE BOLETA)', req, null, 1, nuevaBoleta.id);
 
     // Crear pase de salida e imprimir en paralelo
-    /* const [crearPase, response] = await Promise.all([
-      createPaseDeSalida(nuevaBoleta),
-      imprimirWorkForce(nuevaBoleta)
-    ]); */
 
-    imprimirWorkForce(nuevaBoleta)
+    const debeCrearPase = list_parte_final[proceso].includes(idMovimiento);
+    const crearPase = debeCrearPase ? await createPaseDeSalida(nuevaBoleta, aplicaAlerta) : null;
+    const response = await imprimirWorkForce(nuevaBoleta, crearPase?.numPaseSalida);
 
     const message = response 
       ? "Boleta creado exitosamente e impresa con exito"
@@ -1129,6 +1161,7 @@ const updateBoletaOutComdin = async (req, res) => {
       pesoFinal,
       desviacion,
       allSellos,
+      aplicaAlerta,
     } = req.body;
 
     const verificado = jwt.verify(idUsuario, process.env.SECRET_KEY);
@@ -1208,7 +1241,7 @@ const updateBoletaOutComdin = async (req, res) => {
       updateData.origen = proceso == 0 ? origen : "Baprosa";
       updateData.destino = proceso == 1 ? destino : "Baprosa";
       updateData.manifiesto = proceso == 1 ? parseInt(manifiesto) : null;
-      updateData.ordenDeCompra = proceso == 0 ? ordenDeCompra : null;
+      updateData.ordenDeCompra = proceso == 0 ? ordenDeCompra || null : null;
       updateData.idTrasladoOrigen = null;
       updateData.idTrasladoDestino = null;
       updateData.trasladoOrigen = null;
@@ -1239,7 +1272,9 @@ const updateBoletaOutComdin = async (req, res) => {
     setLogger('BOLETA', 'MODIFICAR BOLETA (SALIDA DE BOLETA | COMODIN)', req, null, 1, nuevaBoleta.id);
 
     // Imprimir boleta
-    const response = await imprimirWorkForce(nuevaBoleta);
+    const debeCrearPase = list_parte_final[proceso].includes(idMovimiento);
+    const crearPase = debeCrearPase ? await createPaseDeSalida(nuevaBoleta, aplicaAlerta) : null;
+    const response = await imprimirWorkForce(nuevaBoleta, crearPase?.numPaseSalida);
 
     const message = response 
       ? "Boleta creado exitosamente e impresa con exito"
@@ -1268,6 +1303,7 @@ const updateBoleta = async (req, res) => {
  * @param {*} req 
  * @param {*} res 
  */
+
 const getBoletasHistorial = async (req, res) => {
   try {
     const movimiento = req.query.movimiento || "";
@@ -1275,20 +1311,69 @@ const getBoletasHistorial = async (req, res) => {
     const dateIn = req.query.dateIn || null;
     const dateOut = req.query.dateOut || null;
     const socios = req.query.socios || "";
+    
+    // Parámetros de paginación
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+    
+    // Parámetros de búsqueda
+    const search = req.query.search || "";
+
+    if (!dateIn || !dateOut || 
+        dateIn === "undefined" || dateOut === "undefined" || 
+        dateIn === "null" || dateOut === "null" ||
+        dateIn.trim() === "" || dateOut.trim() === "") {
+      return res.status(400).send({ msg: "No se ha ingresado ninguna fecha." });
+    }
 
     const [y1, m1, d1] = dateIn.split("-").map(Number);
     const startOfDay = new Date(Date.UTC(y1, m1 - 1, d1, 6, 0, 0));
     const [y2, m2, d2] = dateOut.split("-").map(Number);
     const endOfDay = new Date(Date.UTC(y2, m2 - 1, d2 + 1, 6, 0, 0));
 
-    const [entrada, salida, canceladas, completas, desviadas] = await Promise.all([
+    // Construir condiciones base
+    const baseConditions = {
+      ...(socios ? { socio: socios } : {}),
+      fechaFin: { gte: startOfDay, lte: endOfDay },
+      estado: { not: "Pendiente" },
+      ...(movimiento ? { movimiento: movimiento } : {}),
+      ...(producto ? { producto: producto } : {}),
+    };
+
+    // Agregar condiciones de búsqueda si existe el término
+    let searchConditions = {};
+    
+    if (search) {
+      searchConditions = {
+        OR: [
+          { placa: { contains: search } },
+          { socio: { contains: search } },
+          { empresa: { contains: search } },
+          { motorista: { contains: search } },
+          { movimiento: { contains: search } },
+          { producto: { contains: search } },
+          { estado: { contains: search } },
+          ...(Number.isFinite(Number(search)) ? [{ manifiesto: Number(search) }] : []),
+          ...(Number.isFinite(Number(search)) ? [{ numBoleta: Number(search) }] : []), 
+        ]
+      };
+    }
+
+    const finalConditions = {
+      ...baseConditions,
+      ...searchConditions
+    };
+
+    // Contar totales para gráficos y paginación
+    const [entrada, salida, canceladas, completas, desviadas, totalRecords] = await Promise.all([
       db.boleta.count({
         where: {
           AND: [
             { estado: { not: "Pendiente" } },
             { estado: { not: "Cancelada" } },
           ],
-          ...(socios ? {socio: socios} : {}),  
+          ...(socios ? { socio: socios } : {}),
           proceso: 0,
           fechaFin: { gte: startOfDay, lte: endOfDay },
           ...(movimiento ? { movimiento: movimiento } : {}),
@@ -1301,7 +1386,7 @@ const getBoletasHistorial = async (req, res) => {
             { estado: { not: "Pendiente" } },
             { estado: { not: "Cancelada" } },
           ],
-          ...(socios ? {socio: socios} : {}),  
+          ...(socios ? { socio: socios } : {}),
           proceso: 1,
           fechaFin: { gte: startOfDay, lte: endOfDay },
           ...(movimiento ? { movimiento: movimiento } : {}),
@@ -1311,7 +1396,7 @@ const getBoletasHistorial = async (req, res) => {
       db.boleta.count({
         where: {
           AND: [{ estado: { not: "Pendiente" } }, { estado: "Cancelada" }],
-          ...(socios ? {socio: socios} : {}), 
+          ...(socios ? { socio: socios } : {}),
           fechaFin: { gte: startOfDay, lte: endOfDay },
           ...(movimiento ? { movimiento: movimiento } : {}),
           ...(producto ? { producto: producto } : {}),
@@ -1320,7 +1405,7 @@ const getBoletasHistorial = async (req, res) => {
       db.boleta.count({
         where: {
           AND: [{ estado: { not: "Pendiente" } }, { estado: "Completado" }],
-          ...(socios ? {socio: socios} : {}), 
+          ...(socios ? { socio: socios } : {}),
           fechaFin: { gte: startOfDay, lte: endOfDay },
           ...(movimiento ? { movimiento: movimiento } : {}),
           ...(producto ? { producto: producto } : {}),
@@ -1329,18 +1414,23 @@ const getBoletasHistorial = async (req, res) => {
       db.boleta.count({
         where: {
           AND: [{ estado: { not: "Pendiente" } }, { estado: "Completo(Fuera de tolerancia)" }],
-          ...(socios ? {socio: socios} : {}),  
+          ...(socios ? { socio: socios } : {}),
           fechaFin: { gte: startOfDay, lte: endOfDay },
           ...(movimiento ? { movimiento: movimiento } : {}),
           ...(producto ? { producto: producto } : {}),
         },
       }),
+      // Contar total de registros que coinciden con la búsqueda
+      db.boleta.count({
+        where: finalConditions,
+      })
     ]);
 
+    // Obtener datos paginados
     const data = await db.boleta.findMany({
       select: {
         id: true,
-        numBoleta: true, 
+        numBoleta: true,
         estado: true,
         proceso: true,
         empresa: true,
@@ -1352,40 +1442,77 @@ const getBoletasHistorial = async (req, res) => {
         desviacion: true,
         socio: true,
         placa: true,
+        manifiesto:true,
+        manifiestoDeAgregado: true,
+        fechaInicio: true,
         fechaFin: true,
-        estado: true, 
-        proceso: true,
       },
-      where: {
-        ...(socios ? {socio: socios} : {}), 
-        fechaFin: { gte: startOfDay, lte: endOfDay },
-        estado: {
-          not: "Pendiente",
-        },
-        ...(movimiento ? { movimiento: movimiento } : {}),
-        ...(producto ? { producto: producto } : {}),
-      },
+      where: finalConditions,
+      skip: offset,
+      take: limit,
+      orderBy: {
+        fechaFin: 'desc' // Ordenar por fecha más reciente
+      }
     });
 
-    const dataUTCHN = data.map((el) => ({
-      Boleta: el.numBoleta,
-      Placa: el.placa,
-      Cliente: el.socio,
-      Transporte: el.empresa,
-      Motorista: el.motorista,
-      Moviento: el.movimiento,
-      Producto: el.producto,
-      PesoNeto: el.pesoNeto,
-      PesoTeorico: el.pesoTeorico,
-      Desviacion: el.desviacion,
-      Estado: el.estado, 
-      Fecha: el.fechaFin.toLocaleString(),
-    }));
+    // Transformar datos para el frontend
+    const dataUTCHN = data.map((el) => {
+      const inicio = new Date(el.fechaInicio);
+      const fin = new Date(el.fechaFin);
+      const diffMs = fin - inicio; // diferencia en milisegundos
 
-    res.send({ table: dataUTCHN, graphProcesos: [{entrada}, {salida}], graphEstados: [{canceladas}, {completas}, {desviadas}] });
+      const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+      const diffMin = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      const diffSec = Math.floor((diffMs % (1000 * 60)) / 1000);
+
+      const duracion = `${diffHrs}h ${diffMin}m ${diffSec}s`;
+
+      return {
+        id: el.id,
+        Boleta: el.numBoleta,
+        Placa: el.placa,
+        Cliente: el.socio,
+        Transporte: el.empresa,
+        Motorista: el.motorista,
+        Movimiento: el.movimiento,
+        Producto: el.producto,
+        PesoNeto: el.pesoNeto,
+        PesoTeorico: el.pesoTeorico,
+        Desviacion: el.desviacion,
+        Estado: el.estado,
+        Manifiesto: el.manifiesto || '-',
+        'Manifiesto de agregados': el.manifiestoDeAgregado || '-',
+        'Fecha Final': fin.toLocaleString(),
+        'Fecha inicial': inicio.toLocaleString(),
+        'Duración': duracion
+      };
+    });
+
+
+    // Calcular información de paginación
+    const totalPages = Math.ceil(totalRecords / limit);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
+
+    const response = {
+      table: dataUTCHN,
+      graphProcesos: [{ entrada }, { salida }],
+      graphEstados: [{ canceladas }, { completas }, { desviadas }],
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalRecords,
+        hasNextPage,
+        hasPrevPage,
+        limit,
+        recordsOnCurrentPage: dataUTCHN.length
+      }
+    };
+
+    res.send(response);
   } catch (err) {
     console.log(err);
-    setLogger('BOLETA', 'OBTENER BOLETAS EN EL REPORTE', req, null, 3)  
+    setLogger('BOLETA', 'OBTENER BOLETAS EN EL REPORTE', req, null, 3);
     res.status(500).send({ msg: "Error interno API" });
   }
 };
@@ -1400,13 +1527,25 @@ const getReimprimir = async (req, res) => {
   try {
     const id = req.params.id;
     const type = req.query.type;
-    const boleta = await db.boleta.findUnique({
-      where: {
-        id: parseInt(id),
-      },
-    });
+    const [boleta, paseDeSalida] = await Promise.all([
+      db.boleta.findUnique({
+        where: {
+          id: parseInt(id),
+        },
+      }), 
+      db.PasesDeSalida.findFirst({
+        select: { numPaseSalida: true },
+        where: {
+          idBoleta: parseInt(id),
+        },
+        orderBy: {
+          numPaseSalida: 'desc'
+        }
+      })
+    ])
+
     const types_colors = {yellow:['y'], pink:['p'], green:['g']}
-    getReimprimirWorkForce(boleta, types_colors[type]);
+    getReimprimirWorkForce(boleta, types_colors[type], paseDeSalida?.numPaseSalida);
     res.send({ msg: "Impresion correcta" });
   } catch (err) {
     console.log(err);

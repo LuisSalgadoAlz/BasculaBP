@@ -52,8 +52,12 @@ const Logs = () => {
   }, []);
 
   useEffect(() => {
+  const delayDebounce = setTimeout(() => {
     getLogs(setTablesLogs, setIsLoading, filters?.categoria, filters?.user, filters?.search, pagination, filters?.date);
-  }, [filters?.categoria, filters?.user, filters?.search, pagination, filters?.date],);
+  }, 150); // Espera 300ms después del último cambio
+
+  return () => clearTimeout(delayDebounce);
+}, [filters?.categoria, filters?.user, filters?.search, pagination, filters?.date]);
 
   const handleChange = (e) => {
     const {name, value} = e.target
