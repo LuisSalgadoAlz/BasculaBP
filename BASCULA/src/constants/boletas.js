@@ -204,3 +204,5 @@ export const noSelectectView = "p-2.5 text-sm font-medium text-gray-400 rounded-
     },
     exit: { opacity: 0, scale: 0.95 }
   };
+
+  export const classExportToExcel = 'inline-flex items-center gap-2 font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus: disabled:opacity-50 disabled:cursor-not-allowed bg-gray-100 hover:bg-gray-300 text-gray-800 focus:ring-gray-500 px-4'

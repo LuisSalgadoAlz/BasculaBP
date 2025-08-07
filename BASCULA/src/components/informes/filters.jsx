@@ -5,7 +5,7 @@ export const FiltrosReporteria = ({
 }) => {
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mt-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Fecha inicial
@@ -93,7 +93,7 @@ export const FiltrosReporteria = ({
           </select>
         </div>
         
-        <div className="flex items-center justify-end col-span-3">
+        <div className="flex items-center justify-end col-span-5">
           {/* Area de los botones de filtros que sirve tanto para la exportacion comoo a la tabla */}
           <div className="flex justify-end mt-4">
             <button className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 mr-2 text-sm font-medium">
@@ -108,7 +108,7 @@ export const FiltrosReporteria = ({
           </div>
         </div>
       </div>
-      <hr className="mt-10 mb-4 text-gray-400" />
+      <hr className="mt-10 mb-4 text-gray-200" />
     </>
   );
 };

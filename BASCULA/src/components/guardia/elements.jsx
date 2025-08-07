@@ -45,7 +45,7 @@ const StatusBadge = ({ paseDeSalida, data, horas, minutos }) => {
     }
     
     if (paseDeSalida.estado === false) {
-      if((horas>0 || minutos>15) && data?.movimiento !== 'Carga Doble Detalle') {
+      if((horas>0 || minutos>15) && data?.paseDeSalida?.aplicaAlerta===true) {
         return {
           text: "Permitido para salir - Tiempo excedido",
           className: "bg-orange-500 text-white"
@@ -86,8 +86,10 @@ const ModalHeader = ({ data, closeModal }) => {
     horas = Math.floor(diffMin / 60);
     minutos = diffMin % 60;
   } else {
-    horas = null;
-    minutos = null;
+    const diferenciaMs = (data?.paseDeSalida?.fechaSalida ? new Date(data?.paseDeSalida?.fechaSalida) : new Date()) - new Date(data.fechaInicio); // Diferencia en milisegundos
+    const diffMin = Math.floor(diferenciaMs / 60000); // A minutos
+    horas = Math.floor(diffMin / 60);
+    minutos = diffMin % 60;
   }
 
   const getDocumentTitle = () => {
@@ -118,7 +120,7 @@ const ModalHeader = ({ data, closeModal }) => {
                 {(data?.manifiesto !== 0 && data?.manifiesto !== null) && (
                   <span className="flex items-center gap-1 min-w-fit">
                     <FiPackage className="w-4 h-4 flex-shrink-0" />
-                    <span className="text-sm">Manifiesto: {data?.manifiesto}</span>
+                    <span className="text-sm">Manifiesto(s): {[data?.manifiesto, data?.manifiestoDeAgregado].filter(Boolean).join(', ')}</span>
                   </span>
                 )}
                 
@@ -372,12 +374,12 @@ const TransportTimeline = ({ data }) => {
     horas = Math.floor(diffMin / 60);
     minutos = diffMin % 60;
   } else {
-    horas = null;
-    minutos = null;
+    const diferenciaMs = (data?.paseDeSalida?.fechaSalida ? new Date(data?.paseDeSalida?.fechaSalida) : new Date()) - new Date(data.fechaInicio); // Diferencia en milisegundos
+    const diffMin = Math.floor(diferenciaMs / 60000); // A minutos
+    horas = Math.floor(diffMin / 60);
+    minutos = diffMin % 60;
   }
 
-
-  console.log(`min: ${minutos} horas: ${horas}`)
   // Verificar si necesita mostrar descarga en tolva
   const shouldShowTolvaDischarge = 
     data?.producto === "GRANZA" && 
@@ -457,7 +459,10 @@ const TransportTimeline = ({ data }) => {
 
         {/* Llegada a la guardia */}
         {data?.paseDeSalida && (
-          data?.paseDeSalida?.estado===true ? (
+          
+          /* Aqui era para uso de un historico, pero ya no se aplica, se tiene por si lo quieren colocar a futuro */
+          
+          (data?.paseDeSalida?.estado===true && data?.paseDeSalida?.aplicaAlerta===true) ? (
             <TimelineSuccessItem
               title={`Llegada a la guardia`}
               fecha={fechaSalida.date}
@@ -466,7 +471,10 @@ const TransportTimeline = ({ data }) => {
               color={(horas>0 || minutos > 15 ) ? 'red' : 'gray'}
             />
           ) : (
-            data?.movimiento !== 'Carga Doble Detalle' ? (
+            
+            /* Aqui los que tienen lo de aplcicar alerta y los que no sean carga doble detalle */
+            
+            (data?.movimiento !== 'Carga Doble Detalle' && data?.paseDeSalida?.aplicaAlerta===true) ? (
               <TimelineSuccessItem
                 title={`Llegada a la guardia: ${(horas>0 || minutos > 15 ) ? 'Tiempo excedido' : (horas==null && minutos==null) ? 'N/A': 'Sin Problema'}`}
                 fecha={fechaGuardia.date}
@@ -475,6 +483,8 @@ const TransportTimeline = ({ data }) => {
                 color={(horas>0 || minutos > 15 ) ? 'red' : 'green'}
               />
             ) : (
+
+              /* Entran los que se marcaron como que salian hoy */
               <TimelineSuccessItem
                 title={`Llegada a la guardia: Sin Problemas`}
                 fecha={fechaGuardia.date}

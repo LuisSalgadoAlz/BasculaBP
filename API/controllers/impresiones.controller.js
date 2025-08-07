@@ -614,8 +614,8 @@ const ImprimirTicketEmpresaContratada = (boleta, despachador) => {
             { text: `${boleta.destino}`, align: "RIGHT", width: 0.4 }
           ])
           .tableCustom([
-            { text: "MANIFIESTO:", align: "LEFT", width: 0.4, style: 'B' }, 
-            { text: `${boleta.manifiesto}`, align: "RIGHT", width: 0.4 }
+            { text: "MANIFIESTO(S):", align: "LEFT", width: 0.4, style: 'B' }, 
+            { text: `${[boleta.manifiesto, boleta.manifiestoDeAgregado].filter(Boolean).join(', ') || 'N/A'}`, align: "RIGHT", width: 0.4 }
           ])
           .text('------------------------------------------')
           .tableCustom([
@@ -774,8 +774,8 @@ function generarContenidoTercioCarta(copia, esPrimera = false, colors, boleta, d
   const PROCESO = boleta.proceso===0 ? 'Entrada' : 'Salida'
 
   /* SALIDA DE DOCUMENTO */
-  const manifiesto = boleta?.manifiesto ? `Manifiesto_${boleta.manifiesto}` : null;
-  const ordenCompra = boleta?.ordenDeCompra ? `OrdenCompra_${boleta.ordenDeCompra}` : null;
+  const manifiesto = boleta?.manifiesto ? `Manifiesto(s) ${[boleta.manifiesto, boleta.manifiestoDeAgregado].filter(Boolean).join(', ')}` : null;
+  const ordenCompra = boleta?.ordenDeCompra ? `OrdenCompra ${boleta.ordenDeCompra}` : null;
   const ultimoDocumento = manifiesto || ordenCompra || 'N/A';
 
   /**
@@ -907,8 +907,8 @@ function generarContenidoTercioCartaReimpresion(copia, esPrimera = false, colors
   const PROCESO = boleta.proceso===0 ? 'Entrada' : 'Salida'
 
   /* SALIDA DE DOCUMENTO */
-  const manifiesto = boleta?.manifiesto ? `Manifiesto_${boleta.manifiesto}` : null;
-  const ordenCompra = boleta?.ordenDeCompra ? `OrdenCompra_${boleta.ordenDeCompra}` : null;
+  const manifiesto = boleta?.manifiesto ? `Manifiesto(s) ${[boleta.manifiesto, boleta.manifiestoDeAgregado].filter(Boolean).join(', ')}` : null;
+  const ordenCompra = boleta?.ordenDeCompra ? `OrdenCompra ${boleta.ordenDeCompra}` : null;
   const ultimoDocumento = manifiesto || ordenCompra || 'N/A';
 
   /**

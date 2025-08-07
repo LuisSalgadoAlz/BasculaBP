@@ -1,5 +1,6 @@
 const db = require('../lib/prisma')
 const dotenv = require("dotenv");
+const { setLogger } = require('../utils/logger');
 
 const getBuscarPlaca = async (req, res) => {
     try {
@@ -22,6 +23,7 @@ const getBuscarPlaca = async (req, res) => {
                 trasladoDestino: true,
                 movimiento: true,
                 manifiesto: true,
+                manifiestoDeAgregado: true,
                 ordenDeCompra: true,
                 ordenDeTransferencia: true,
                 estado: true,
@@ -39,6 +41,7 @@ const getBuscarPlaca = async (req, res) => {
                         numPaseSalida: true,
                         estado: true,
                         fechaSalida: true,
+                        aplicaAlerta: true,
                     }
                 },
             },

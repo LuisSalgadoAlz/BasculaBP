@@ -5,7 +5,7 @@ const { imprimirEpson, imprimirQRTolva, comprobanteDeCarga, imprimirWorkForce, i
 const enviarCorreo = require("../utils/enviarCorreo");
 const {alertaDesviacion, alertaCancelacion} = require("../utils/cuerposCorreo");
 const {setLogger} = require('../utils/logger');
-const { list_pase_inicial, list_parte_final } = require("../utils/listPaseSalida");
+const { list_pase_inicial, list_parte_final, listaInicialAlertas } = require("../utils/listPaseSalida");
 const { list } = require("pdfkit");
 
 const generarNumBoleta = async () => {
@@ -541,10 +541,10 @@ const postClientePlacaMoto = async (req, res) => {
     const newBol = await db.boleta.create({ data: baseData });
 
     const debeImprimirQR = (idProducto === 17 && idMovimiento === 1) || (idProducto === 18 && idMovimiento === 2);
-    
+    const ocupaAlerta = idMovimiento ? listaInicialAlertas.includes(idMovimiento) : false
     const debeCrearPase = idMovimiento ? list_pase_inicial.includes(idMovimiento) : false
     if (debeCrearPase) {
-      const newPase = await createPaseDeSalida(newBol)
+      const newPase = await createPaseDeSalida(newBol, ocupaAlerta)
       const response = await generarPaseDeSalidaTemporal(newBol, newPase?.numPaseSalida)
     }
     if(debeImprimirQR) {
@@ -667,8 +667,9 @@ const postClientePlacaMotoComodin = async (req, res) => {
     const newBol = await db.boleta.create({ data: baseData });
 
     const debeCrearPase = list_pase_inicial.includes(idMovimiento);
+    const ocupaAlerta = idMovimiento ? listaInicialAlertas.includes(idMovimiento) : false
     if (debeCrearPase) {
-      const newPase = await createPaseDeSalida(newBol)
+      const newPase = await createPaseDeSalida(newBol, ocupaAlerta)
       const response = await generarPaseDeSalidaTemporal(newBol, newPase?.numPaseSalida)
     }
 
@@ -883,7 +884,7 @@ const getBoletasCompletadasDiarias = async (req, res) => {
  * @param {*} res 
  */
 
-const createPaseDeSalida = async(boleta) => {
+const createPaseDeSalida = async(boleta, aplicaAlerta = true) => {
   try {
     const boletaId = parseInt(boleta.id);
     
@@ -900,7 +901,8 @@ const createPaseDeSalida = async(boleta) => {
         data: {
           idBoleta: boletaId,
           numPaseSalida: (ultimoPase?.numPaseSalida || 0) + 1,
-          estado: false
+          estado: false, 
+          aplicaAlerta,
         }
       });
       
@@ -946,7 +948,9 @@ const updateBoletaOut = async (req, res) => {
       pesoNeto,
       pesoFinal,
       desviacion,
-      allSellos
+      allSellos,
+      aplicaAlerta,
+      documentoAgregado,
     } = req.body;
 
     const verificado = jwt.verify(idUsuario, process.env.SECRET_KEY);
@@ -1052,6 +1056,7 @@ const updateBoletaOut = async (req, res) => {
       proceso,
       pesoNeto: parseFloat(pesoNeto),
       desviacion: parseFloat(desviacion),
+      manifiestoDeAgregado: parseInt(documentoAgregado) || null,
       porTolerancia,
       ...allSellos
     };
@@ -1108,7 +1113,7 @@ const updateBoletaOut = async (req, res) => {
     // Crear pase de salida e imprimir en paralelo
 
     const debeCrearPase = list_parte_final[proceso].includes(idMovimiento);
-    const crearPase = debeCrearPase ? await createPaseDeSalida(nuevaBoleta) : null;
+    const crearPase = debeCrearPase ? await createPaseDeSalida(nuevaBoleta, aplicaAlerta) : null;
     const response = await imprimirWorkForce(nuevaBoleta, crearPase?.numPaseSalida);
 
     const message = response 
@@ -1156,6 +1161,7 @@ const updateBoletaOutComdin = async (req, res) => {
       pesoFinal,
       desviacion,
       allSellos,
+      aplicaAlerta,
     } = req.body;
 
     const verificado = jwt.verify(idUsuario, process.env.SECRET_KEY);
@@ -1267,7 +1273,7 @@ const updateBoletaOutComdin = async (req, res) => {
 
     // Imprimir boleta
     const debeCrearPase = list_parte_final[proceso].includes(idMovimiento);
-    const crearPase = debeCrearPase ? await createPaseDeSalida(nuevaBoleta) : null;
+    const crearPase = debeCrearPase ? await createPaseDeSalida(nuevaBoleta, aplicaAlerta) : null;
     const response = await imprimirWorkForce(nuevaBoleta, crearPase?.numPaseSalida);
 
     const message = response 
@@ -1297,6 +1303,7 @@ const updateBoleta = async (req, res) => {
  * @param {*} req 
  * @param {*} res 
  */
+
 const getBoletasHistorial = async (req, res) => {
   try {
     const movimiento = req.query.movimiento || "";
@@ -1304,20 +1311,69 @@ const getBoletasHistorial = async (req, res) => {
     const dateIn = req.query.dateIn || null;
     const dateOut = req.query.dateOut || null;
     const socios = req.query.socios || "";
+    
+    // Parámetros de paginación
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+    
+    // Parámetros de búsqueda
+    const search = req.query.search || "";
+
+    if (!dateIn || !dateOut || 
+        dateIn === "undefined" || dateOut === "undefined" || 
+        dateIn === "null" || dateOut === "null" ||
+        dateIn.trim() === "" || dateOut.trim() === "") {
+      return res.status(400).send({ msg: "No se ha ingresado ninguna fecha." });
+    }
 
     const [y1, m1, d1] = dateIn.split("-").map(Number);
     const startOfDay = new Date(Date.UTC(y1, m1 - 1, d1, 6, 0, 0));
     const [y2, m2, d2] = dateOut.split("-").map(Number);
     const endOfDay = new Date(Date.UTC(y2, m2 - 1, d2 + 1, 6, 0, 0));
 
-    const [entrada, salida, canceladas, completas, desviadas] = await Promise.all([
+    // Construir condiciones base
+    const baseConditions = {
+      ...(socios ? { socio: socios } : {}),
+      fechaFin: { gte: startOfDay, lte: endOfDay },
+      estado: { not: "Pendiente" },
+      ...(movimiento ? { movimiento: movimiento } : {}),
+      ...(producto ? { producto: producto } : {}),
+    };
+
+    // Agregar condiciones de búsqueda si existe el término
+    let searchConditions = {};
+    
+    if (search) {
+      searchConditions = {
+        OR: [
+          { placa: { contains: search } },
+          { socio: { contains: search } },
+          { empresa: { contains: search } },
+          { motorista: { contains: search } },
+          { movimiento: { contains: search } },
+          { producto: { contains: search } },
+          { estado: { contains: search } },
+          ...(Number.isFinite(Number(search)) ? [{ manifiesto: Number(search) }] : []),
+          ...(Number.isFinite(Number(search)) ? [{ numBoleta: Number(search) }] : []), 
+        ]
+      };
+    }
+
+    const finalConditions = {
+      ...baseConditions,
+      ...searchConditions
+    };
+
+    // Contar totales para gráficos y paginación
+    const [entrada, salida, canceladas, completas, desviadas, totalRecords] = await Promise.all([
       db.boleta.count({
         where: {
           AND: [
             { estado: { not: "Pendiente" } },
             { estado: { not: "Cancelada" } },
           ],
-          ...(socios ? {socio: socios} : {}),  
+          ...(socios ? { socio: socios } : {}),
           proceso: 0,
           fechaFin: { gte: startOfDay, lte: endOfDay },
           ...(movimiento ? { movimiento: movimiento } : {}),
@@ -1330,7 +1386,7 @@ const getBoletasHistorial = async (req, res) => {
             { estado: { not: "Pendiente" } },
             { estado: { not: "Cancelada" } },
           ],
-          ...(socios ? {socio: socios} : {}),  
+          ...(socios ? { socio: socios } : {}),
           proceso: 1,
           fechaFin: { gte: startOfDay, lte: endOfDay },
           ...(movimiento ? { movimiento: movimiento } : {}),
@@ -1340,7 +1396,7 @@ const getBoletasHistorial = async (req, res) => {
       db.boleta.count({
         where: {
           AND: [{ estado: { not: "Pendiente" } }, { estado: "Cancelada" }],
-          ...(socios ? {socio: socios} : {}), 
+          ...(socios ? { socio: socios } : {}),
           fechaFin: { gte: startOfDay, lte: endOfDay },
           ...(movimiento ? { movimiento: movimiento } : {}),
           ...(producto ? { producto: producto } : {}),
@@ -1349,7 +1405,7 @@ const getBoletasHistorial = async (req, res) => {
       db.boleta.count({
         where: {
           AND: [{ estado: { not: "Pendiente" } }, { estado: "Completado" }],
-          ...(socios ? {socio: socios} : {}), 
+          ...(socios ? { socio: socios } : {}),
           fechaFin: { gte: startOfDay, lte: endOfDay },
           ...(movimiento ? { movimiento: movimiento } : {}),
           ...(producto ? { producto: producto } : {}),
@@ -1358,18 +1414,23 @@ const getBoletasHistorial = async (req, res) => {
       db.boleta.count({
         where: {
           AND: [{ estado: { not: "Pendiente" } }, { estado: "Completo(Fuera de tolerancia)" }],
-          ...(socios ? {socio: socios} : {}),  
+          ...(socios ? { socio: socios } : {}),
           fechaFin: { gte: startOfDay, lte: endOfDay },
           ...(movimiento ? { movimiento: movimiento } : {}),
           ...(producto ? { producto: producto } : {}),
         },
       }),
+      // Contar total de registros que coinciden con la búsqueda
+      db.boleta.count({
+        where: finalConditions,
+      })
     ]);
 
+    // Obtener datos paginados
     const data = await db.boleta.findMany({
       select: {
         id: true,
-        numBoleta: true, 
+        numBoleta: true,
         estado: true,
         proceso: true,
         empresa: true,
@@ -1381,40 +1442,77 @@ const getBoletasHistorial = async (req, res) => {
         desviacion: true,
         socio: true,
         placa: true,
+        manifiesto:true,
+        manifiestoDeAgregado: true,
+        fechaInicio: true,
         fechaFin: true,
-        estado: true, 
-        proceso: true,
       },
-      where: {
-        ...(socios ? {socio: socios} : {}), 
-        fechaFin: { gte: startOfDay, lte: endOfDay },
-        estado: {
-          not: "Pendiente",
-        },
-        ...(movimiento ? { movimiento: movimiento } : {}),
-        ...(producto ? { producto: producto } : {}),
-      },
+      where: finalConditions,
+      skip: offset,
+      take: limit,
+      orderBy: {
+        fechaFin: 'desc' // Ordenar por fecha más reciente
+      }
     });
 
-    const dataUTCHN = data.map((el) => ({
-      Boleta: el.numBoleta,
-      Placa: el.placa,
-      Cliente: el.socio,
-      Transporte: el.empresa,
-      Motorista: el.motorista,
-      Moviento: el.movimiento,
-      Producto: el.producto,
-      PesoNeto: el.pesoNeto,
-      PesoTeorico: el.pesoTeorico,
-      Desviacion: el.desviacion,
-      Estado: el.estado, 
-      Fecha: el.fechaFin.toLocaleString(),
-    }));
+    // Transformar datos para el frontend
+    const dataUTCHN = data.map((el) => {
+      const inicio = new Date(el.fechaInicio);
+      const fin = new Date(el.fechaFin);
+      const diffMs = fin - inicio; // diferencia en milisegundos
 
-    res.send({ table: dataUTCHN, graphProcesos: [{entrada}, {salida}], graphEstados: [{canceladas}, {completas}, {desviadas}] });
+      const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+      const diffMin = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      const diffSec = Math.floor((diffMs % (1000 * 60)) / 1000);
+
+      const duracion = `${diffHrs}h ${diffMin}m ${diffSec}s`;
+
+      return {
+        id: el.id,
+        Boleta: el.numBoleta,
+        Placa: el.placa,
+        Cliente: el.socio,
+        Transporte: el.empresa,
+        Motorista: el.motorista,
+        Movimiento: el.movimiento,
+        Producto: el.producto,
+        PesoNeto: el.pesoNeto,
+        PesoTeorico: el.pesoTeorico,
+        Desviacion: el.desviacion,
+        Estado: el.estado,
+        Manifiesto: el.manifiesto || '-',
+        'Manifiesto de agregados': el.manifiestoDeAgregado || '-',
+        'Fecha Final': fin.toLocaleString(),
+        'Fecha inicial': inicio.toLocaleString(),
+        'Duración': duracion
+      };
+    });
+
+
+    // Calcular información de paginación
+    const totalPages = Math.ceil(totalRecords / limit);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
+
+    const response = {
+      table: dataUTCHN,
+      graphProcesos: [{ entrada }, { salida }],
+      graphEstados: [{ canceladas }, { completas }, { desviadas }],
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalRecords,
+        hasNextPage,
+        hasPrevPage,
+        limit,
+        recordsOnCurrentPage: dataUTCHN.length
+      }
+    };
+
+    res.send(response);
   } catch (err) {
     console.log(err);
-    setLogger('BOLETA', 'OBTENER BOLETAS EN EL REPORTE', req, null, 3)  
+    setLogger('BOLETA', 'OBTENER BOLETAS EN EL REPORTE', req, null, 3);
     res.status(500).send({ msg: "Error interno API" });
   }
 };

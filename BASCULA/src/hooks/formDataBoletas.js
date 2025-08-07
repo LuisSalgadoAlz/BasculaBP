@@ -479,6 +479,8 @@ export const formaterData = (formBoletas, valor, marchamos) => {
     pesoNeto: pesoNeto, 
     desviacion: desviacion, 
     allSellos,
+    aplicaAlerta: formBoletas['¿Sale hoy?'] ? (formBoletas['¿Sale hoy?'] ===  2 ? false : true) : null,
+    documentoAgregado : formBoletas['documentoAgregado'], 
   }
   console.log(allData)
   return allData
@@ -591,7 +593,9 @@ export const verificarDataCompleto = (funError, data, setMsg, pesoIn) => {
     ordenDeCompra,
     proceso, 
     ordenDeTransferencia,
-    pesoFinal
+    pesoFinal,
+    aplicaAlerta,
+    documentoAgregado, 
   } = data;
 
   /* idPlaca observaciones ordenDeTransferencia pesoInicial pesoTeorico*/
@@ -619,37 +623,37 @@ export const verificarDataCompleto = (funError, data, setMsg, pesoIn) => {
   }
 
   if ((idMovimiento==11 || idMovimiento==10) && (idTrasladoOrigen == idTrasladoDestino)) {
-    setMsg('traslado origen y destino deben de ser diferentes')
+    setMsg('Traslado origen y destino deben de ser diferentes')
     funError(true)
     return false
   }
 
   if ((idMovimiento!=11 && idMovimiento!=10) && (idOrigen == idDestino)) {
-    setMsg('origen y destino deben de ser diferentes')
+    setMsg('Origen y destino deben de ser diferentes')
     funError(true)
     return false
   }
 
   if(proceso==0 && !ordenDeCompra && (idMovimiento!=11 && idMovimiento!=10)){
-    setMsg('Por favor, ingresar todos los datos segundo nivel: orden de compra')
+    setMsg('Por favor, ingresar todos los datos segundo nivel: orden de compra.')
     funError(true)
     return false
   }
 
   if(proceso==1 && !manifiesto){
-    setMsg('Por favor, ingresar todos los datos tercer nivel: proceso, manifiesto')
+    setMsg('Por favor, ingresar todos los datos tercer nivel: proceso, manifiesto.')
      funError(true)
     return false
   }
 
   if ((idMovimiento==11 || idMovimiento==10) && !ordenDeTransferencia) {
-    setMsg('Por favor, ingresar todos los datos cuarto nivel: orden de transferencia')
+    setMsg('Por favor, ingresar todos los datos cuarto nivel: orden de transferencia.')
     funError(true)
     return false
   }
 
   if (parseFloat(pesoFinal) <= 0) {
-    setMsg('El peso final debe ser mayor que 0')
+    setMsg('El peso final debe ser mayor que 0.')
     funError(true)
     return false
   }
@@ -665,6 +669,21 @@ export const verificarDataCompleto = (funError, data, setMsg, pesoIn) => {
 
   if((idMovimiento==11 || idMovimiento==10) && (!idTrasladoDestino || !idTrasladoOrigen)){
     setMsg('Ingrese todos los datos de direcciones.')
+    funError(true)
+    return false
+  }
+
+  /* Parte de Aplica Alerta */
+  if(!aplicaAlerta && idCliente ==1 && proceso==1 && (idEmpresa ==1 || idEmpresa ==1014 || idEmpresa ==1015)) {
+    setMsg('Ingrese si el vehículo queda dentro de las instalaciones de BAPROSA.')
+    funError(true)
+    return false
+  }
+
+  console.log(idCliente, proceso, idEmpresa, aplicaAlerta)
+
+  if(documentoAgregado && typeof documentoAgregado !== 'number') {
+    setMsg('Documento auxiliar debe de ser un numero valido.')
     funError(true)
     return false
   }

@@ -54,7 +54,8 @@ const Guardia = () => {
     const requiereMotivo = (horas !== 0 || minutos > 15) && 
                             (infoPlaca?.fechaFin !== null && 
                             (infoPlaca?.movimiento !== 'SERVICIO BASCULA') &&
-                            (infoPlaca?.movimiento !== 'Carga Doble Detalle'));
+                            (infoPlaca?.movimiento !== 'Carga Doble Detalle') &&
+                            (infoPlaca?.paseDeSalida?.aplicaAlerta===true));
 
     if(requiereMotivo) {
       setMotivo(true)
