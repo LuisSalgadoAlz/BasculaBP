@@ -425,7 +425,6 @@ export const ModalOut = (props) => {
     };
 
     socket.onerror = () => {
-      alert('Se perdio la conexion con la bascula.')
       setPeso('No conectada')
     }
 
