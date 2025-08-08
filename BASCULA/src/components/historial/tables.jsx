@@ -148,7 +148,8 @@ export const TableHistorial = (props) => {
                 {datos.map((fila, index) => (
                   <tr 
                     key={index} 
-                    className="bg-white border-b border-gray-100 hover:bg-[#FDF5D4] transition-colors"
+                    onDoubleClick={()=>handleOpenDetails(fila)}
+                    className="bg-white border-b border-gray-100 hover:bg-[#FDF5D4] transition-colors cursor-pointer"
                   >
                     {columnasArray.map((columna, key) => (
                       <td 
