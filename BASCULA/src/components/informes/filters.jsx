@@ -37,9 +37,9 @@ export const FiltrosReporteria = ({
           </label>
           <select name="socio" onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" defaultValue={0}>
             <option disabled value={0}> Ingrese un socio </option>
-            {dataSelect != {} &&
-              dataSelect &&
-              dataSelect?.socios.map(({ socio }) => (
+            {dataSelect &&
+              Object.keys(dataSelect).length > 0 &&
+              dataSelect.socios?.map(({ socio }) => (
                 <option key={socio} value={socio}>
                   {socio}
                 </option>
@@ -60,13 +60,13 @@ export const FiltrosReporteria = ({
             <option disabled value={0}>
               Ingrese un producto
             </option>
-            {dataSelect != {} &&
-              dataSelect &&
-              dataSelect?.producto.map(({ id, nombre }) => (
+            {dataSelect && Object.keys(dataSelect).length > 0 &&
+              dataSelect.producto?.map(({ id, nombre})=>(
                 <option key={id} value={nombre}>
                   {nombre}
                 </option>
-              ))}
+              ))
+            }
           </select>
         </div>
 
@@ -83,13 +83,14 @@ export const FiltrosReporteria = ({
             <option disabled value={0}>
               Ingrese un movimiento
             </option>
-            {dataSelect != {} &&
-              dataSelect &&
-              dataSelect?.movimiento.map(({ id, nombre }) => (
+
+            {dataSelect && Object.keys(dataSelect).length > 0 &&
+              dataSelect.movimiento?.map(({ id, nombre})=>(
                 <option key={id} value={nombre}>
                   {nombre}
                 </option>
-              ))}
+              ))
+            }
           </select>
         </div>
         
