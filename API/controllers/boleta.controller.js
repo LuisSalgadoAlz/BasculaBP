@@ -887,7 +887,6 @@ const getBoletasCompletadasDiarias = async (req, res) => {
 const createPaseDeSalida = async(boleta, aplicaAlerta = true) => {
   try {
     const boletaId = parseInt(boleta.id);
-    
     // Usar transacción para consistencia y mejor rendimiento
     const result = await db.$transaction(async (tx) => {
       // Obtener el último número de pase
@@ -902,7 +901,7 @@ const createPaseDeSalida = async(boleta, aplicaAlerta = true) => {
           idBoleta: boletaId,
           numPaseSalida: (ultimoPase?.numPaseSalida || 0) + 1,
           estado: false, 
-          aplicaAlerta,
+          aplicaAlerta : aplicaAlerta === '' ? true : aplicaAlerta,
         }
       });
       

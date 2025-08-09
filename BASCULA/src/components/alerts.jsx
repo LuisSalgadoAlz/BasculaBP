@@ -393,43 +393,189 @@ export const SkeletonModalOut = () => {
 };
 
 export const SkeletonBoleta = () => {
+  const SkeletonLine = ({ width = "100%", height = "16px", className = "" }) => (
+    <div 
+      className={`bg-gray-200 rounded animate-pulse ${className}`}
+      style={{ width, height }}
+    />
+  );
+
+  const SkeletonInfoRow = () => (
+    <div className="flex flex-col sm:flex-row sm:justify-between py-1 space-y-1 sm:space-y-0">
+      <SkeletonLine width="40%" height="14px" />
+      <SkeletonLine width="35%" height="14px" />
+    </div>
+  );
+
+  const SkeletonInfoSection = ({ title, children, className = "" }) => (
+    <div className={`bg-white border border-gray-200 rounded-lg p-4 shadow-sm ${className}`}>
+      <div className="mb-3 border-b border-gray-200 pb-2">
+        <SkeletonLine width="60%" height="20px" />
+      </div>
+      <div className="space-y-2">
+        {children}
+      </div>
+    </div>
+  );
+
   return (
-    <div className="animate-pulse">
-      {/* Header */}
-      <div className="mb-1 flex items-center justify-between gap-7">
-        <div>
-          <div className="h-6 w-40 bg-gray-300 rounded mb-2"></div>
-          <div className="h-4 w-56 bg-gray-300 rounded"></div>
-        </div>
-        <div className="h-8 w-8 bg-gray-300 rounded-full"></div>
-      </div>
-
-      {/* Fecha */}
-      <div className="my-2 p-2 bg-gray-100 rounded-lg border border-gray-300">
-        <div className="h-5 w-60 bg-gray-300 rounded"></div>
-      </div>
-
-      {/* Grid de contenido */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 mt-5">
-        {[1, 2, 3].map((_, idx) => (
-          <div key={idx} className="p-4 border-2 border-gray-300 rounded-lg space-y-3">
-            <div className="h-5 w-40 bg-gray-300 rounded"></div>
-            <div className="h-1 w-full bg-gray-300 rounded"></div>
-            {[...Array(6)].map((__, i) => (
-              <div key={i} className="h-4 w-full bg-gray-200 rounded"></div>
-            ))}
-            <div className="h-1 w-full bg-gray-300 rounded"></div>
-            {[...Array(4)].map((__, i) => (
-              <div key={i} className="h-4 w-5/6 bg-gray-200 rounded"></div>
-            ))}
+    <div className="fixed inset-0 bg-gray-50 z-50">
+      <div className="w-full h-full overflow-hidden">
+        <div className="flex flex-col h-full">
+          {/* Header Skeleton */}
+          <div className="bg-white border-b border-gray-200 p-6 lg:p-8 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex-1">
+                <SkeletonLine width="200px" height="28px" className="mb-2" />
+                <SkeletonLine width="280px" height="14px" />
+              </div>
+              <div className="self-end sm:self-center">
+                <SkeletonLine width="28px" height="28px" className="rounded-full" />
+              </div>
+            </div>
+            
+            {/* Fecha de creación skeleton */}
+            <div className="mt-4 p-3 bg-gray-100 rounded-lg">
+              <SkeletonLine width="300px" height="16px" />
+            </div>
           </div>
-        ))}
-      </div>
 
-      {/* Botones */}
-      <div className="flex items-center justify-end gap-2 mt-4">
-        <div className="h-10 w-32 bg-gray-300 rounded"></div>
-        <div className="h-10 w-28 bg-gray-300 rounded"></div>
+          {/* Content Skeleton */}
+          <div className="flex-1 overflow-y-auto p-6 lg:p-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8">
+              
+              {/* Información General Skeleton */}
+              <SkeletonInfoSection className="lg:col-span-1">
+                <div className="space-y-4">
+                  {/* Datos de la boleta */}
+                  <div>
+                    <SkeletonLine width="140px" height="16px" className="mb-2" />
+                    <div className="space-y-1 pl-2">
+                      <SkeletonInfoRow />
+                      <SkeletonInfoRow />
+                      <SkeletonInfoRow />
+                      <SkeletonInfoRow />
+                    </div>
+                  </div>
+
+                  {/* Ruta */}
+                  <div>
+                    <SkeletonLine width="60px" height="16px" className="mb-2" />
+                    <div className="space-y-1 pl-2">
+                      <SkeletonInfoRow />
+                      <SkeletonInfoRow />
+                    </div>
+                  </div>
+
+                  {/* Traslado */}
+                  <div>
+                    <SkeletonLine width="80px" height="16px" className="mb-2" />
+                    <div className="space-y-1 pl-2">
+                      <SkeletonInfoRow />
+                      <SkeletonInfoRow />
+                      <SkeletonInfoRow />
+                    </div>
+                  </div>
+
+                  {/* Datos de Tolva */}
+                  <div>
+                    <SkeletonLine width="120px" height="16px" className="mb-2" />
+                    <div className="space-y-1 pl-2">
+                      <SkeletonInfoRow />
+                      <SkeletonInfoRow />
+                    </div>
+                  </div>
+                </div>
+              </SkeletonInfoSection>
+
+              {/* Detalles del Proceso Skeleton */}
+              <SkeletonInfoSection className="lg:col-span-1">
+                <div className="space-y-4">
+                  {/* Estado del proceso */}
+                  <div>
+                    <SkeletonLine width="100%" height="44px" className="rounded-lg" />
+                  </div>
+
+                  {/* Datos del proceso */}
+                  <div className="space-y-1">
+                    <SkeletonInfoRow />
+                    <SkeletonInfoRow />
+                    <SkeletonInfoRow />
+                    <SkeletonInfoRow />
+                    <SkeletonInfoRow />
+                  </div>
+
+                  {/* Tiempos */}
+                  <div>
+                    <SkeletonLine width="80px" height="16px" className="mb-2" />
+                    <div className="space-y-1 pl-2">
+                      <SkeletonInfoRow />
+                      <SkeletonInfoRow />
+                      <SkeletonInfoRow />
+                    </div>
+                  </div>
+
+                  {/* Datos Puerto */}
+                  <div>
+                    <SkeletonLine width="100px" height="16px" className="mb-2" />
+                    <div className="space-y-1 pl-2">
+                      <SkeletonInfoRow />
+                      <SkeletonInfoRow />
+                    </div>
+                  </div>
+
+                  {/* Marchamos */}
+                  <div>
+                    <SkeletonLine width="90px" height="16px" className="mb-2" />
+                    <div className="bg-gray-50 p-3 rounded-lg">
+                      <SkeletonLine width="100%" height="14px" />
+                    </div>
+                  </div>
+                </div>
+              </SkeletonInfoSection>
+
+              {/* Datos del Peso Skeleton */}
+              <SkeletonInfoSection className="lg:col-span-2 xl:col-span-1">
+                <div className="space-y-4">
+                  {/* Estado */}
+                  <div>
+                    <SkeletonLine width="100%" height="44px" className="rounded-lg" />
+                  </div>
+
+                  {/* Pesos */}
+                  <div className="space-y-3">
+                    {[...Array(6)].map((_, i) => (
+                      <div key={i} className="flex justify-between items-center py-2 border-b border-gray-100">
+                        <SkeletonLine width="35%" height="16px" />
+                        <SkeletonLine width="25%" height="16px" />
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Observaciones */}
+                  <div className="mt-6">
+                    <SkeletonLine width="120px" height="16px" className="mb-2" />
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 min-h-[60px]">
+                      <SkeletonLine width="100%" height="14px" className="mb-2" />
+                      <SkeletonLine width="70%" height="14px" />
+                    </div>
+                  </div>
+                </div>
+              </SkeletonInfoSection>
+            </div>
+          </div>
+
+          {/* Footer con botones skeleton */}
+          <div className="bg-white border-t border-gray-200 p-6 lg:p-8 shadow-sm">
+            <div className="w-full">
+              <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
+                <SkeletonLine width="140px" height="40px" className="rounded-lg" />
+                <SkeletonLine width="140px" height="40px" className="rounded-lg" />
+                <SkeletonLine width="140px" height="40px" className="rounded-lg" />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

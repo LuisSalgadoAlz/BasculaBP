@@ -552,13 +552,12 @@ export const ModalOut = (props) => {
               </div>
             </div>
 
-            <div className="px-2 grid grid-cols-2 mt-2 bg-gray-100 py-3 rounded-2xl shadow-sm gap-1.5">
-              <InputsFormBoletas data={claseFormInputs} name={'Observaciones'} fun={hdlChange} />
-              
+            <div className="px-2 grid grid-cols-2 mt-2 bg-gray-100 py-3 rounded-2xl shadow-sm gap-1.5">              
               {/* Sale hoy, Agregado. */}
-              {(boletas?.Socios === 1 && boletas?.Proceso ===1 && (boletas?.Transportes === 1 || boletas?.Transportes === 1014 || boletas?.Transportes === 1015)) ? (
+              {(boletas?.Socios === 1 && boletas?.Proceso ===1) ? (
                 <SelectFormBoletas classCss={classFormSelct} name={'¿Sale hoy?'} data={guardiaValidacion} fun={hdlChange} val={boletas?.isExit}/>
               ) : (null)}
+              <InputsFormBoletas data={claseFormInputs} name={'Observaciones'} fun={hdlChange} />
             </div>
 
             <div className={`px-3 flex`}>
@@ -589,33 +588,34 @@ export const ModalOut = (props) => {
 
 export const VisualizarBoletas = (props) => {
   const { hdlClose, boletas, isLoad } = props;
-  const [isLoadingYellow, setIsLoadingYellow] = useState(false)
-  const [isLoadingGreen, setIsLoadingGreen] = useState(false)
-  const [isLoadingPink, setIsLoadingPink] = useState(false)
-  const opt = ['Entrada de material', 'Salida de material']
-  const isNullData =  'N/A'
-  const pesoTolerado = boletas?.pesoTeorico * boletas?.porTolerancia
+  const [isLoadingYellow, setIsLoadingYellow] = useState(false);
+  const [isLoadingGreen, setIsLoadingGreen] = useState(false);
+  const [isLoadingPink, setIsLoadingPink] = useState(false);
+  
+  const opt = ['Entrada de material', 'Salida de material'];
+  const isNullData = 'N/A';
+  const pesoTolerado = boletas?.pesoTeorico * boletas?.porTolerancia;
 
   const handleConvertPdf = async() => {
-    console.log(boletas)
+    console.log(boletas);
     const url = `${URLHOST}boletas/pdf/bol/${boletas?.id}`;
     window.open(url, '_blank');
-  }
+  };
 
   const handlePrintYellow = async() => {
-    const response = await getPrintEpson(boletas?.id, setIsLoadingYellow, 'yellow')
+    const response = await getPrintEpson(boletas?.id, setIsLoadingYellow, 'yellow');
     if(response?.msg) toast.success('SE IMPRIMIO CORRECTAMENTE BOLETA AMARILLA');
-  } 
+  };
 
   const handlePrintGreen = async() => {
-    const response = await getPrintEpson(boletas?.id, setIsLoadingGreen, 'green')
-    if(response?.msg) toast.success('SE IMPRIMIO CORRECTAMENTE BOLETA VERDE')
-  } 
+    const response = await getPrintEpson(boletas?.id, setIsLoadingGreen, 'green');
+    if(response?.msg) toast.success('SE IMPRIMIO CORRECTAMENTE BOLETA VERDE');
+  };
 
   const handlePrintPink = async() => {
-    const response = await getPrintEpson(boletas?.id, setIsLoadingPink, 'pink')
-    if(response?.msg) toast.success('SE IMPRIMIO CORRECTAMENTE BOLETA ROSADA')
-  } 
+    const response = await getPrintEpson(boletas?.id, setIsLoadingPink, 'pink');
+    if(response?.msg) toast.success('SE IMPRIMIO CORRECTAMENTE BOLETA ROSADA');
+  };
 
   const tiempoDeEstadia = () => {
     const inicio = new Date(boletas?.fechaInicio);
@@ -632,139 +632,273 @@ export const VisualizarBoletas = (props) => {
     return `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
   };
   
-  const isEspecialTraslado = boletas?.proceso === 0 && (boletas?.idMovimiento===10 || boletas?.idMovimiento===11)
+  let TARA;
+  let PESOBRUTO;
 
-  const TARA = isEspecialTraslado ? boletas?.pesoInicial : ((boletas?.pesoInicial && boletas?.pesoFinal) ? boletas?.proceso == 0 ? boletas?.pesoFinal : boletas?.pesoInicial : 0)
-  const PESOBRUTO =isEspecialTraslado ? boletas?.pesoFinal : ((boletas?.pesoInicial && boletas?.pesoFinal) ? boletas?.proceso == 0 ? boletas?.pesoInicial : boletas?.pesoFinal : 0)
+  const isServicioBascula = boletas?.proceso === 0 && (boletas?.idMovimiento ===12)
+  const isEspecialTraslado = boletas?.proceso === 0 && (boletas?.idMovimiento === 10 || boletas?.idMovimiento === 11);
+  console.log(boletas)
+  if(isServicioBascula) {
+    TARA = boletas?.pesoInicial;
+    PESOBRUTO = boletas?.pesoFinal;
+  } else {
+    TARA = isEspecialTraslado ? boletas?.pesoInicial : ((boletas?.pesoInicial && boletas?.pesoFinal) ? boletas?.proceso == 0 ? boletas?.pesoFinal : boletas?.pesoInicial : 0);
+    PESOBRUTO = isEspecialTraslado ? boletas?.pesoFinal : ((boletas?.pesoInicial && boletas?.pesoFinal) ? boletas?.proceso == 0 ? boletas?.pesoInicial : boletas?.pesoFinal : 0);
+  }
+
+  const getEstadoStyle = (estado) => {
+    switch(estado) {
+      case 'Completado':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'Cancelada':
+        return 'bg-red-100 text-red-800 border-red-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const InfoRow = ({ label, value }) => (
+    <div className="flex flex-col sm:flex-row sm:justify-between py-1">
+      <span className="text-sm font-medium text-gray-600">{label}:</span>
+      <span className="text-sm text-gray-900 sm:text-right">{value || isNullData}</span>
+    </div>
+  );
+
+  const InfoSection = ({ title, children, className = "" }) => (
+    <div className={`bg-white border border-gray-200 rounded-lg p-4 shadow-sm ${className}`}>
+      <h3 className="text-lg font-semibold text-gray-800 mb-3 border-b border-gray-200 pb-2">
+        {title}
+      </h3>
+      <div className="space-y-2">
+        {children}
+      </div>
+    </div>
+  );
 
   return (
-    <div className="fixed inset-0 bg-opacity-50 z-50 min-h-screen overflow-auto ">
+    <div className="fixed inset-0 bg-gray-50 z-50">
       <motion.div
-        initial={{ scale: 0.1, opacity: 0, y: 50 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.4, opacity: 0, y: 50 }}
-        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        className="bg-white flex items-center justify-center w-full min-w-[100vw] min-h-[100vh] max-sm:overflow-auto max-sm:min-h-[0px] shadow-lg overflow-y-auto boletas border-8 border-white max-sm:p-10"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 20 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+        className="w-full h-full overflow-hidden"
       >
-      {isLoad ? <div className="w-full p-5"><SkeletonBoleta /></div> : (
-        <div className="w-full p-5">
-          <div className="mb-1 flex items-center justify-between gap-7">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-800">Boleta - # {boletas?.numBoleta}</h2>
-              <p className="text-sm text-gray-500">Visualización general de la boleta</p>
-            </div>
-            <button className="text-4xl" onClick={hdlClose}><IoCloseSharp /></button>
+        {isLoad ? (
+          <div className="p-6">
+            <SkeletonBoleta />
           </div>
-
-          <div className="my-2 p-2 bg-gray-100 rounded-lg border border-gray-300">
-            <div className="flex justify-between items-center">
-              <span className="text-lg font-bold text-gray-700 max-sm:text-sm">Creacion de la boleta: {boletas?.fechaFin ? new Date(boletas?.fechaFin).toLocaleString('es-ES'): 'Cargando...'}</span>
-            </div>
-          </div>
-
-          {/* Contenido */}
-          <div className=" grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 mt-5">
-            <div className="p-4 border-2 border-gray-300 rounded-lg">
-              <div className="flex flex-col gap-1">
-                <span className="text-md font-bold text-gray-700">Datos de la boleta:</span>
-                <hr className="text-gray-400 mb-4" />
-                <span className="text-md text-gray-700">Socio: {boletas?.socio ? boletas?.socio : 'Cargando...'}</span>
-                <span className="text-md text-gray-700">Transporte: {boletas?.empresa ? boletas?.empresa : 'Cargando...'}</span>
-                <span className="text-md text-gray-700">Placa: {boletas?.placa ? boletas?.placa: 'Cargando...'}</span>
-                <span className="text-md text-gray-700">Conductor: {boletas?.motorista? boletas?.motorista:'Cargando...'}</span>  
+        ) : (
+          <div className="flex flex-col h-full">
+            {/* Header */}
+            <div className="bg-white border-b border-gray-200 p-6 lg:p-8 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+                    Boleta # {boletas?.numBoleta}
+                  </h2>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Visualización general de la boleta
+                  </p>
+                </div>
+                <button 
+                  className="self-end sm:self-center text-gray-400 hover:text-gray-600 transition-colors p-1"
+                  onClick={hdlClose}
+                >
+                  <IoCloseSharp size={28} />
+                </button>
               </div>
-
-              <div className="flex flex-col gap-1 mt-4">
-                <span className="text-md font-bold text-gray-700">Ruta:</span>
-                <hr className="text-gray-400 mb-4" />
-                <span className="text-md text-gray-700">Origen : {boletas?.origen ? boletas?.origen : isNullData}</span>
-                <span className="text-md text-gray-700">Destino: {boletas?.destino ? boletas?.destino : isNullData}</span>
-
-                <span className="text-md font-bold text-gray-700 mt-4">Traslado:</span>
-                <hr className="text-gray-400 mb-2" />
-                <span className="text-md text-gray-700">Origen : {boletas?.trasladoOrigen ? boletas?.trasladoOrigen : isNullData}</span>
-                <span className="text-md text-gray-700">Destino: {boletas?.trasladoDestino ? boletas?.trasladoDestino : isNullData}</span>
-                <span className="text-md text-gray-700">Orden de transferencia: {boletas?.ordenDeTransferencia ? boletas?.ordenDeTransferencia : isNullData}</span>
-              </div>
-              <div className="flex flex-col gap-1 mt-5">
-                <span className="text-md font-bold text-gray-700">Datos de Tolva</span>
-                <hr className="text-gray-400 mb-2" />
-                <span className="text-md text-gray-700">Tolva : {boletas?.tolvaAsignada || 'N/A'}</span>
-                <span className="text-md text-gray-700">Silos :{' '}
-                  {[boletas?.tolva[0]?.principal?.nombre, boletas?.tolva[0]?.secundario?.nombre, boletas?.tolva[0]?.terciario?.nombre]
-                  .filter(Boolean)
-                  .join(', ') || 'N/A'
-                  }
-                </span> 
-              </div>
-            </div>
-          
-            <div className="p-4 border-2 border-gray-300 rounded-lg">
-              <div className="flex flex-col gap-1">
-                <span className="text-md font-bold text-gray-700">Datos de la boleta:</span>
-                <hr className="text-gray-400 mb-4" />
-                <span className="text-md text-gray-700 border-2 p-2 rounded-sm mb-4">{parseInt(boletas?.proceso)===0 || parseInt(boletas?.proceso)===1 ? opt[parseInt(boletas?.proceso)]  : isNullData}</span>
-                <span className="text-md text-gray-700">Producto: {boletas?.producto ? boletas?.producto : isNullData}</span>
-                <span className="text-md text-gray-700">Movimiento: {boletas?.movimiento ? boletas?.movimiento : isNullData}</span>
-                <span className="text-md text-gray-700">Manifiesto: {boletas?.manifiesto ? boletas?.manifiesto: isNullData}</span>
-                <span className="text-md text-gray-700">Manifiesto de agregado: {boletas?.manifiestoDeAgregado ? boletas?.manifiestoDeAgregado: isNullData}</span>
-                <span className="text-md text-gray-700">Orden de Compra: {boletas?.ordenDeCompra ? boletas?.ordenDeCompra:isNullData}</span>
-                <hr className="text-gray-400 my-4"/>
-                <span className="text-md font-bold text-gray-700">Tiempos:</span>
-                <span className="text-md text-gray-700">Fecha Inicial: {boletas?.fechaInicio ? new Date(boletas?.fechaInicio).toLocaleString(): isNullData}</span>
-                <span className="text-md text-gray-700">Fecha Final: {boletas?.fechaInicio ? new Date(boletas?.fechaFin).toLocaleString(): isNullData}</span>
-                <span className="text-md text-gray-700">Duracion del proceso: {tiempoDeEstadia()}</span>
-                <hr className="text-gray-400 my-4"/>
-                <span className="text-md font-bold text-gray-700">Datos Puerto:</span>
-                <span className="text-md text-gray-700">Bodega: {boletas?.bodegaPuerto || 'N/A'}</span>
-                <span className="text-md text-gray-700">Fecha de despacho: {boletas?.fechaDespachoPuerto ? boletas?.fechaDespachoPuerto.split("T")[0] : 'N/A'}</span>
-                <hr className="text-gray-400 my-4"/>
-                <span className="text-md font-bold text-gray-700">Marchamos:</span>
-                <span className="text-md text-gray-700 bg-gray-200 p-2 rounded-sm shadow-2xl">
-                  Sellos:{' '}
-                  {[boletas?.sello1, boletas?.sello2, boletas?.sello3, boletas?.sello4, boletas?.sello5, boletas?.sello6]
-                    .filter(Boolean)
-                    .join(', ') || 'N/A'}
+              
+              {/* Fecha de creación */}
+              <div className="mt-4 p-3 bg-gray-100 rounded-lg">
+                <span className="text-sm sm:text-base font-medium text-gray-700">
+                  Creación de la boleta: {boletas?.fechaFin ? new Date(boletas?.fechaFin).toLocaleString('es-ES') : 'Cargando...'}
                 </span>
               </div>
             </div>
-            <div className="p-4 border-2 border-gray-300 rounded-lg">
-              <div className="flex flex-col gap-1">
-                <span className="text-md font-bold text-gray-700">Datos del Peso:</span>
-                <hr className="text-gray-400 mb-4" />
 
-                {boletas?.estado =='Completado' ? (
-                  <span className="text-md text-white border-2 p-4 bg-green-900 rounded-sm mb-4">{boletas?.estado}</span>
-                ):(boletas?.estado=='Cancelada' ? (<span className="text-md text-white border-2 p-4 bg-yellow-900 rounded-sm mb-4">{boletas?.estado}</span>):(<span className="text-md text-white border-2 p-4 bg-red-900 rounded-sm mb-4">{boletas?.estado}</span>))}
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-6 lg:p-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8">
+                
+                {/* Datos de la boleta y Ruta */}
+                <InfoSection title="Información General" className="lg:col-span-1">
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-medium text-gray-700 mb-2">Datos de la boleta</h4>
+                      <div className="space-y-1 pl-2">
+                        <InfoRow label="Socio" value={boletas?.socio} />
+                        <InfoRow label="Transporte" value={boletas?.empresa} />
+                        <InfoRow label="Placa" value={boletas?.placa} />
+                        <InfoRow label="Conductor" value={boletas?.motorista} />
+                      </div>
+                    </div>
 
-                <span className="text-md text-gray-700 flex justify-between"><span>Peso Tara:</span><span>{TARA} lb</span></span>
-                <span className="text-md text-gray-700 flex justify-between"><span>Peso Bruto:</span><span>{PESOBRUTO} lb</span></span>
-                <hr className="text-gray-400"/>
-                <span className="text-md text-gray-700 flex justify-between"><span>Peso Neto:</span><span>{boletas?.pesoNeto ? boletas?.pesoNeto :0} lb</span></span>
-                <span className="text-md text-gray-700 flex justify-between"><span>Peso Teorico:</span><span>{boletas?.pesoTeorico ? boletas?.pesoTeorico: 0} lb</span></span>
-                <hr className="text-gray-400" />
-                <span className="text-md text-gray-700 flex justify-between"><span>Desviación:</span><span>{boletas?.desviacion ? boletas?.desviacion:0} lb</span></span>
-                <hr className="text-gray-400 my-2" />
-                <span className="text-md text-gray-700 flex justify-between"><span>(Nota: Peso Tolerado)</span><span>± {parseFloat(pesoTolerado).toFixed(2)}</span></span>
-                <span className="text-md text-gray-700 mt-8">Observaciones: </span>  
-                <span className="text-md text-gray-700 border-2 border-gray-200 p-2">🔺{boletas?.observaciones ? boletas?.observaciones : isNullData}</span>
+                    <div>
+                      <h4 className="font-medium text-gray-700 mb-2">Ruta</h4>
+                      <div className="space-y-1 pl-2">
+                        <InfoRow label="Origen" value={boletas?.origen} />
+                        <InfoRow label="Destino" value={boletas?.destino} />
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="font-medium text-gray-700 mb-2">Traslado</h4>
+                      <div className="space-y-1 pl-2">
+                        <InfoRow label="Origen" value={boletas?.trasladoOrigen} />
+                        <InfoRow label="Destino" value={boletas?.trasladoDestino} />
+                        <InfoRow label="Orden de transferencia" value={boletas?.ordenDeTransferencia} />
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="font-medium text-gray-700 mb-2">Datos de Tolva</h4>
+                      <div className="space-y-1 pl-2">
+                        <InfoRow label="Tolva" value={boletas?.tolvaAsignada} />
+                        <InfoRow 
+                          label="Silos" 
+                          value={[boletas?.tolva[0]?.principal?.nombre, boletas?.tolva[0]?.secundario?.nombre, boletas?.tolva[0]?.terciario?.nombre]
+                            .filter(Boolean)
+                            .join(', ')
+                          } 
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </InfoSection>
+
+                {/* Detalles del proceso */}
+                <InfoSection title="Detalles del Proceso" className="lg:col-span-1">
+                  <div className="space-y-4">
+                    <div>
+                      <div className={`p-3 rounded-lg border text-center font-medium ${getEstadoStyle(boletas?.proceso)}`}>
+                        {parseInt(boletas?.proceso) === 0 || parseInt(boletas?.proceso) === 1 ? opt[parseInt(boletas?.proceso)] : isNullData}
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <InfoRow label="Producto" value={boletas?.producto} />
+                      <InfoRow label="Movimiento" value={boletas?.movimiento} />
+                      <InfoRow label="Manifiesto" value={boletas?.manifiesto} />
+                      <InfoRow label="Manifiesto de agregado" value={boletas?.manifiestoDeAgregado} />
+                      <InfoRow label="Orden de Compra" value={boletas?.ordenDeCompra} />
+                    </div>
+
+                    <div>
+                      <h4 className="font-medium text-gray-700 mb-2">Tiempos</h4>
+                      <div className="space-y-1 pl-2">
+                        <InfoRow label="Fecha Inicial" value={boletas?.fechaInicio ? new Date(boletas?.fechaInicio).toLocaleString() : isNullData} />
+                        <InfoRow label="Fecha Final" value={boletas?.fechaFin ? new Date(boletas?.fechaFin).toLocaleString() : isNullData} />
+                        <InfoRow label="Duración del proceso" value={tiempoDeEstadia()} />
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="font-medium text-gray-700 mb-2">Datos Puerto</h4>
+                      <div className="space-y-1 pl-2">
+                        <InfoRow label="Bodega" value={boletas?.bodegaPuerto} />
+                        <InfoRow label="Fecha de despacho" value={boletas?.fechaDespachoPuerto?.split("T")[0]} />
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="font-medium text-gray-700 mb-2">Marchamos</h4>
+                      <div className="bg-gray-50 p-3 rounded-lg text-sm">
+                        <span className="font-medium">Sellos: </span>
+                        <span className="text-gray-700">
+                          {[boletas?.sello1, boletas?.sello2, boletas?.sello3, boletas?.sello4, boletas?.sello5, boletas?.sello6]
+                            .filter(Boolean)
+                            .join(', ') || 'N/A'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </InfoSection>
+
+                {/* Datos del peso */}
+                <InfoSection title="Datos del Peso" className="lg:col-span-2 xl:col-span-1">
+                  <div className="space-y-4">
+                    <div className={`p-4 rounded-lg border text-center font-semibold ${getEstadoStyle(boletas?.estado)}`}>
+                      {boletas?.estado || 'Sin estado'}
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                        <span className="font-medium text-gray-600">Peso Tara:</span>
+                        <span className="font-semibold text-gray-900">{TARA} lb</span>
+                      </div>
+                      <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                        <span className="font-medium text-gray-600">Peso Bruto:</span>
+                        <span className="font-semibold text-gray-900">{PESOBRUTO} lb</span>
+                      </div>
+                      <div className="flex justify-between items-center py-2 border-b border-gray-200">
+                        <span className="font-medium text-gray-600">Peso Neto:</span>
+                        <span className="font-bold text-gray-900">{boletas?.pesoNeto || 0} lb</span>
+                      </div>
+                      <div className="flex justify-between items-center py-2">
+                        <span className="font-medium text-gray-600">Peso Teórico:</span>
+                        <span className="font-semibold text-gray-900">{boletas?.pesoTeorico || 0} lb</span>
+                      </div>
+                      <div className="flex justify-between items-center py-2 border-t border-gray-200">
+                        <span className="font-medium text-gray-600">Desviación:</span>
+                        <span className="font-semibold text-gray-900">{boletas?.desviacion || 0} lb</span>
+                      </div>
+                      <div className="flex justify-between items-center py-2 text-sm">
+                        <span className="text-gray-500">(Peso Tolerado)</span>
+                        <span className="font-medium text-gray-700">± {parseFloat(pesoTolerado).toFixed(2)}</span>
+                      </div>
+                    </div>
+
+                    <div className="mt-6">
+                      <h4 className="font-medium text-gray-700 mb-2">Observaciones</h4>
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm text-gray-700 min-h-[60px]">
+                        {boletas?.observaciones || 'Sin observaciones'}
+                      </div>
+                    </div>
+                  </div>
+                </InfoSection>
               </div>
             </div>
-          </div>
 
-          {/* Impresiones */}
-          <div className="flex items-center justify-end gap-2 mt-4 max-sm:flex-col">
-            {boletas?.estado !='Cancelada' && (
-              <>
-                <ButtonPrint name={'Imprimir'} fun={handlePrintYellow} isLoad={isLoadingYellow} color={`bg-yellow-500 max-sm:w-full`}/>
-                <ButtonPrint name={'Imprimir'} fun={handlePrintPink} isLoad={isLoadingPink} color={`bg-pink-500 max-sm:w-full`}/>
-                <ButtonPrint name={'Imprimir'} fun={handlePrintGreen} isLoad={isLoadingGreen} color={`bg-green-500 max-sm:w-full`}/> 
-              </>
-            )} 
+            {/* Footer con botones de impresión */}
+            {boletas?.estado !== 'Cancelada' && (
+              <div className="bg-white border-t border-gray-200 p-6 lg:p-8 shadow-sm">
+                <div className="w-full">
+                  <div className="flex flex-col sm:flex-row gap-3 sm:justify-end bg-red">
+                  <ButtonPrint 
+                    name="Imprimir Pase de Salida" 
+                    fun={handlePrintYellow} 
+                    isLoad={isLoadingYellow} 
+                    color="bg-yellow-500 hover:bg-yellow-600"
+                  />
+                  <ButtonPrint 
+                    name="Imprimir Rosada" 
+                    fun={handlePrintPink} 
+                    isLoad={isLoadingPink} 
+                    color="bg-pink-500 hover:bg-pink-600"
+                  />
+                  <ButtonPrint 
+                    name="Imprimir Verde" 
+                    fun={handlePrintGreen} 
+                    isLoad={isLoadingGreen} 
+                    color="bg-green-500 hover:bg-green-600"
+                  />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-          <Toaster position="top-center" toastOptions={{style: { background: '#955e37', color: 'white'},}}/>
-        </div>
-      )}
+        )}
+        
+        <Toaster 
+          position="top-center" 
+          toastOptions={{
+            style: { 
+              background: '#374151', 
+              color: 'white' 
+            }
+          }} 
+        />
       </motion.div>
     </div>
   );
