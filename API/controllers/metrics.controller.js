@@ -139,6 +139,7 @@ const getLogs = async (req, res) => {
     orderBy: { id: 'desc' }, 
     skip,
     take: limit,
+    omit: {id:true}
   });
 
   const totalData = await db.logs.count({ 

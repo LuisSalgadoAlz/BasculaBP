@@ -1,4 +1,4 @@
-import { MdFilterListAlt, MdOutlinePlace  } from "react-icons/md";
+import { MdFilterListAlt, MdOutlinePlace, MdOutlineFactory } from "react-icons/md";
 import { FaBalanceScale } from "react-icons/fa";
 import {
   FiCalendar,
@@ -29,6 +29,24 @@ const formatDate = (dateString) => {
 };
 
 const StatusBadge = ({ paseDeSalida, data, horas, minutos }) => {
+  const momentoActual = new Date();
+  const finalDeBoleta = new Date(data?.fechaFin);
+
+  const hoyLocal = new Date(
+    momentoActual.getFullYear(), 
+    momentoActual.getMonth(), 
+    momentoActual.getDate()
+  );
+
+  const fechaFinLocal = new Date(
+    finalDeBoleta.getFullYear(), 
+    finalDeBoleta.getMonth(), 
+    finalDeBoleta.getDate()
+  );
+
+  const debeDeSalirHoy = data?.paseDeSalida?.aplicaAlerta === false && 
+                        fechaFinLocal.getTime() !== hoyLocal.getTime();
+
   const getStatusConfig = () => {
     if (data?.estado === 'Completado' && !paseDeSalida) {
       return {
@@ -51,6 +69,12 @@ const StatusBadge = ({ paseDeSalida, data, horas, minutos }) => {
           className: "bg-orange-500 text-white"
         }
       }else{
+        if(data?.paseDeSalida?.aplicaAlerta===false && !debeDeSalirHoy) {
+          return {
+            text: "No ha completado su proceso",
+            className: "bg-red-500 text-white"
+          };
+        }
         return {
           text: "Permitido para salir",
           className: "bg-green-500 text-white"
@@ -249,7 +273,7 @@ const SecondProcessItem = ({ data, fechaFin }) => {
       style={{ animation: "slideLeft 0.6s ease-out 1.4s both" }}
     >
       <div className={`flex-shrink-0 w-16 h-16 max-sm:w-12 max-sm:h-12 ${colorClasses.bg} rounded-full flex items-center justify-center shadow-lg`}>
-        <FiCalendar className="w-6 h-6 max-sm:w-4 max-sm:h-4 text-white" />
+        <FaBalanceScale className="w-6 h-6 max-sm:w-4 max-sm:h-4 text-white" />
       </div>
 
       <div className={`ml-6 ${colorClasses.containerBg} rounded-lg p-4 flex-grow border-l-4 ${colorClasses.border}`}>
@@ -389,6 +413,25 @@ const TransportTimeline = ({ data }) => {
     data?.tolva?.length > 0 && 
     data?.tolva[0]?.fechaSalida;
 
+  
+    const momentoActual = new Date();
+    const finalDeBoleta = new Date(data?.fechaFin);
+
+    const hoyLocal = new Date(
+      momentoActual.getFullYear(), 
+      momentoActual.getMonth(), 
+      momentoActual.getDate()
+    );
+
+    const fechaFinLocal = new Date(
+      finalDeBoleta.getFullYear(), 
+      finalDeBoleta.getMonth(), 
+      finalDeBoleta.getDate()
+    );
+
+    const debeDeSalirHoy = data?.paseDeSalida?.aplicaAlerta === false && 
+                          fechaFinLocal.getTime() !== hoyLocal.getTime();
+
   return (
     <div className="p-6">
       <h2
@@ -483,15 +526,34 @@ const TransportTimeline = ({ data }) => {
                 color={(horas>0 || minutos > 15 ) ? 'red' : 'green'}
               />
             ) : (
-
-              /* Entran los que se marcaron como que salian hoy */
-              <TimelineSuccessItem
-                title={`Llegada a la guardia: Sin Problemas`}
-                fecha={fechaGuardia.date}
-                hora={fechaGuardia.time}
-                Icon={FiCalendar}
-                color={'green'}
-              />
+              <>
+                {data?.paseDeSalida?.aplicaAlerta ===false && (
+                  debeDeSalirHoy ? (
+                    <>
+                      <TimelineSuccessItem
+                        title={`Permaneció dentro de las instalaciones de BAPROSA.`}
+                        fecha={fechaGuardia.date}
+                        hora={fechaGuardia.time}
+                        Icon={MdOutlineFactory}
+                        color={'green'}
+                      />
+                      <TimelineSuccessItem
+                        title={`Llegada a la guardia: Sin Problemas`}
+                        fecha={fechaGuardia.date}
+                        hora={fechaGuardia.time}
+                        Icon={FiCalendar}
+                        color={'green'}
+                      />
+                    </>
+                  ):(
+                    <TimelinePendingItem
+                      title="Actualmente debe de permanecer dentro de las instalaciones de BAPROSA."
+                      subtitle="Proceso Pendiente"
+                      details="Aún no ha completado su proceso"
+                    />
+                  )
+                )}
+              </>
             )
           )
         )}
@@ -502,6 +564,25 @@ const TransportTimeline = ({ data }) => {
 
 const ModalFooter = ({ data, openConfim }) => {
   if (!data?.paseDeSalida) return null;
+  const momentoActual = new Date();
+  const finalDeBoleta = new Date(data?.fechaFin);
+
+  const hoyLocal = new Date(
+    momentoActual.getFullYear(), 
+    momentoActual.getMonth(), 
+    momentoActual.getDate()
+  );
+
+  const fechaFinLocal = new Date(
+    finalDeBoleta.getFullYear(), 
+    finalDeBoleta.getMonth(), 
+    finalDeBoleta.getDate()
+  );
+
+  const debeDeSalirHoy = data?.paseDeSalida?.aplicaAlerta === false && 
+                        fechaFinLocal.getTime() !== hoyLocal.getTime();
+
+  if (!debeDeSalirHoy && data?.paseDeSalida?.aplicaAlerta !== true) return null
   if (data?.paseDeSalida?.estado==true) return
 
   return (

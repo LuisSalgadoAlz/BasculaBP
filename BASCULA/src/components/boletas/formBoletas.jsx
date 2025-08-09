@@ -552,13 +552,12 @@ export const ModalOut = (props) => {
               </div>
             </div>
 
-            <div className="px-2 grid grid-cols-2 mt-2 bg-gray-100 py-3 rounded-2xl shadow-sm gap-1.5">
-              <InputsFormBoletas data={claseFormInputs} name={'Observaciones'} fun={hdlChange} />
-              
+            <div className="px-2 grid grid-cols-2 mt-2 bg-gray-100 py-3 rounded-2xl shadow-sm gap-1.5">              
               {/* Sale hoy, Agregado. */}
-              {(boletas?.Socios === 1 && boletas?.Proceso ===1 && (boletas?.Transportes === 1 || boletas?.Transportes === 1014 || boletas?.Transportes === 1015)) ? (
+              {(boletas?.Socios === 1 && boletas?.Proceso ===1) ? (
                 <SelectFormBoletas classCss={classFormSelct} name={'¿Sale hoy?'} data={guardiaValidacion} fun={hdlChange} val={boletas?.isExit}/>
               ) : (null)}
+              <InputsFormBoletas data={claseFormInputs} name={'Observaciones'} fun={hdlChange} />
             </div>
 
             <div className={`px-3 flex`}>
@@ -867,7 +866,7 @@ export const VisualizarBoletas = (props) => {
                 <div className="w-full">
                   <div className="flex flex-col sm:flex-row gap-3 sm:justify-end bg-red">
                   <ButtonPrint 
-                    name="Imprimir Amarilla" 
+                    name="Imprimir Pase de Salida" 
                     fun={handlePrintYellow} 
                     isLoad={isLoadingYellow} 
                     color="bg-yellow-500 hover:bg-yellow-600"

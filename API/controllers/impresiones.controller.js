@@ -602,20 +602,28 @@ const ImprimirTicketEmpresaContratada = (boleta, despachador) => {
           .text(` `)
           .align('lt')
           .tableCustom([
+            { text: "MOVIMIENTO:", align: "LEFT", width: 0.4, style: 'B' }, 
+            { text: `${boleta.movimiento.toUpperCase()}`, align: "RIGHT", width: 0.4 }
+          ])
+          .tableCustom([
             { text: "PRODUCTO:", align: "LEFT", width: 0.4, style: 'B' }, 
-            { text: "Granza Americana", align: "RIGHT", width: 0.4 }
+            { text: `${boleta.producto.toUpperCase()}`, align: "RIGHT", width: 0.4 }
+          ])
+          .tableCustom([
+            { text: "TRANSPORTE:", align: "LEFT", width: 0.4, style: 'B' }, 
+            { text: `${boleta.empresa.toUpperCase()}`, align: "RIGHT", width: 0.4 }
           ])
           .tableCustom([
             { text: "MOTORISTA:", align: "LEFT", width: 0.4, style: 'B' }, 
-            { text: `${boleta.motorista}`, align: "RIGHT", width: 0.4 }
+            { text: `${boleta.motorista.toUpperCase()}`, align: "RIGHT", width: 0.4 }
           ])
           .tableCustom([
-            { text: "DESTINO:", align: "LEFT", width: 0.4, style: 'B' }, 
-            { text: `${boleta.destino}`, align: "RIGHT", width: 0.4 }
+            { text: `${boleta.proceso === 0 ? 'ORIGEN:' : 'DESTINO:'}`, align: "LEFT", width: 0.4, style: 'B' }, 
+            { text: `${boleta.proceso === 0 ? boleta.origen.toUpperCase() : boleta.destino.toUpperCase()}`, align: "RIGHT", width: 0.4 }
           ])
           .tableCustom([
-            { text: "MANIFIESTO(S):", align: "LEFT", width: 0.4, style: 'B' }, 
-            { text: `${[boleta.manifiesto, boleta.manifiestoDeAgregado].filter(Boolean).join(', ') || 'N/A'}`, align: "RIGHT", width: 0.4 }
+            { text: `${boleta.proceso === 0 ? 'FACTURA:' : 'MANIFIESTO(S):'}`, align: "LEFT", width: 0.4, style: 'B' }, 
+            { text: `${boleta?.proceso === 0 ? boleta.ordenDeCompra || 'N/A' : [boleta.manifiesto, boleta.manifiestoDeAgregado].filter(Boolean).join(', ') || 'N/A'}`, align: "RIGHT", width: 0.4 }
           ])
           .text('------------------------------------------')
           .tableCustom([
@@ -774,8 +782,8 @@ function generarContenidoTercioCarta(copia, esPrimera = false, colors, boleta, d
   const PROCESO = boleta.proceso===0 ? 'Entrada' : 'Salida'
 
   /* SALIDA DE DOCUMENTO */
-  const manifiesto = boleta?.manifiesto ? `Manifiesto(s) ${[boleta.manifiesto, boleta.manifiestoDeAgregado].filter(Boolean).join(', ')}` : null;
-  const ordenCompra = boleta?.ordenDeCompra ? `OrdenCompra ${boleta.ordenDeCompra}` : null;
+  const manifiesto = boleta?.manifiesto ? `Manifiesto(s)    : ${[boleta.manifiesto, boleta.manifiestoDeAgregado].filter(Boolean).join(', ')}` : null;
+  const ordenCompra = boleta?.ordenDeCompra ? `Orden de Compra  : ${boleta.ordenDeCompra}` : null;
   const ultimoDocumento = manifiesto || ordenCompra || 'N/A';
 
   /**
@@ -818,7 +826,7 @@ function generarContenidoTercioCarta(copia, esPrimera = false, colors, boleta, d
           [`Fecha        : ${new Date().toLocaleString()}`, ''],
           [`${TYPEOFUSER}: ${boleta.socio}`, `Hora Entrada     : ${boleta.fechaInicio.toLocaleString()}`],
           [`Placa        : ${boleta.placa}`, `Hora de Salida   : ${boleta.fechaFin ? boleta.fechaFin.toLocaleString() : 'Pendiente'}`],
-          [`Motorista    : ${boleta.motorista}`, `Documento        : ${ultimoDocumento}`],
+          [`Motorista    : ${boleta.motorista}`, `${ultimoDocumento}`],
           [`Transporte   : ${boleta.empresa}`, `Marchamos        : ${[boleta?.sello1, boleta?.sello2, boleta?.sello3, boleta?.sello4, boleta?.sello5, boleta?.sello6].filter(Boolean).join(', ') || 'N/A'}`],
           [`Origen       : ${boleta.origen || boleta.trasladoOrigen}`, ''],
           [`Destino      : ${boleta.destino || boleta.trasladoDestino || 'Pendiente'}`, ''],
@@ -907,9 +915,9 @@ function generarContenidoTercioCartaReimpresion(copia, esPrimera = false, colors
   const PROCESO = boleta.proceso===0 ? 'Entrada' : 'Salida'
 
   /* SALIDA DE DOCUMENTO */
-  const manifiesto = boleta?.manifiesto ? `Manifiesto(s) ${[boleta.manifiesto, boleta.manifiestoDeAgregado].filter(Boolean).join(', ')}` : null;
-  const ordenCompra = boleta?.ordenDeCompra ? `OrdenCompra ${boleta.ordenDeCompra}` : null;
-  const ultimoDocumento = manifiesto || ordenCompra || 'N/A';
+  const manifiesto = boleta?.manifiesto ? `Manifiesto(s)    : ${[boleta.manifiesto, boleta.manifiestoDeAgregado].filter(Boolean).join(', ')}` : null;
+  const ordenCompra = boleta?.ordenDeCompra ? `Orden de Compra  : ${boleta.ordenDeCompra}` : null;
+  const ultimoDocumento = manifiesto || ordenCompra || '';
 
   /**
    * Identificador de fuera de tolerancia
@@ -951,7 +959,7 @@ function generarContenidoTercioCartaReimpresion(copia, esPrimera = false, colors
           [`Fecha        : ${isPrint ? new Date(datePrint).toLocaleString() : new Date().toLocaleString()}`, isPrint ? `Reimpresión      : ${new Date().toLocaleString()}`: ''],
           [`${TYPEOFUSER}: ${boleta.socio}`, `Hora Entrada     : ${boleta.fechaInicio.toLocaleString()}`],
           [`Placa        : ${boleta.placa}`, `Hora de Salida   : ${boleta.fechaFin ? boleta.fechaFin.toLocaleString() : 'Pendiente'}`],
-          [`Motorista    : ${boleta.motorista}`, `Documento        : ${ultimoDocumento}`],
+          [`Motorista    : ${boleta.motorista}`, `${ultimoDocumento}`],
           [`Transporte   : ${boleta.empresa}`, `Marchamos        : ${[boleta?.sello1, boleta?.sello2, boleta?.sello3, boleta?.sello4, boleta?.sello5, boleta?.sello6].filter(Boolean).join(', ') || 'N/A'}`],
           [`Origen       : ${boleta.origen || boleta.trasladoOrigen}`, ''],
           [`Destino      : ${boleta.destino || boleta.trasladoDestino || 'Pendiente'}`, ''],

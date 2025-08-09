@@ -479,7 +479,7 @@ export const formaterData = (formBoletas, valor, marchamos) => {
     pesoNeto: pesoNeto, 
     desviacion: desviacion, 
     allSellos,
-    aplicaAlerta: formBoletas['¿Sale hoy?'] ? (formBoletas['¿Sale hoy?'] ===  2 ? false : true) : null,
+    aplicaAlerta: formBoletas['¿Sale hoy?'] ? (formBoletas['¿Sale hoy?'] ===  2 ? false : true) : '',
     documentoAgregado : formBoletas['documentoAgregado'], 
   }
   console.log(allData)

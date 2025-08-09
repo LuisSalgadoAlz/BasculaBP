@@ -151,6 +151,15 @@ const Users = () => {
     setFormUsers(initialForm);
   };
 
+  const handleOpenCreateUser = () => {
+    if(Cookies.get('name')!=='Administrador') {
+      setErr(true)
+      setMsg('No cuenta con los permisos necesarios.')
+      return
+    }
+    setModalUser(!modalUser)
+  }
+
   const hdlSaveUser = async () => {
     console.log(formUsers)
     if(formUsers.Tipo === 4 && Cookies.get('name')!=='Administrador') {
@@ -373,7 +382,7 @@ const Users = () => {
               Usuarios registrados
             </h2>
             <button
-              onClick={() => setModalUser(!modalUser)}
+              onClick={handleOpenCreateUser}
               className="flex items-center px-4 py-3 bg-[#4f3627] text-white rounded-lg hover:bg-[#4f3627ce] transition-colors"
             >
               <IoAdd size={18} className="mr-2" />
