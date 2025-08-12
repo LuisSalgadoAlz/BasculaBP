@@ -411,7 +411,7 @@ const alertaMarchamosDiferentes = (nuevaBoleta, despachador, enviarCorreo, arrBo
   const asunto = `Alerta de Marchamos [${severidad}] - Tolva: ${nuevaBoleta.tolvaAsignada}`;
   
   try {
-    enviarCorreo(process.env.END_MAILS, asunto, cuerpoMail);
+    enviarCorreo(process.env.BASCULA_MAIL, asunto, cuerpoMail);
         
     return {
       exito: true,
