@@ -517,7 +517,7 @@ const TransportTimeline = ({ data }) => {
             
             /* Aqui los que tienen lo de aplcicar alerta y los que no sean carga doble detalle */
             
-            (data?.movimiento !== 'Carga Doble Detalle' && data?.paseDeSalida?.aplicaAlerta===true) ? (
+            (data?.paseDeSalida?.aplicaAlerta===true) ? (
               <TimelineSuccessItem
                 title={`Llegada a la guardia: ${(horas>0 || minutos > 15 ) ? 'Tiempo excedido' : (horas==null && minutos==null) ? 'N/A': 'Sin Problema'}`}
                 fecha={fechaGuardia.date}

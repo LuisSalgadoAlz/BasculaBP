@@ -674,7 +674,7 @@ export const verificarDataCompleto = (funError, data, setMsg, pesoIn) => {
   }
 
   /* Parte de Aplica Alerta */
-  if(!aplicaAlerta && idCliente ==1 && proceso==1 && (idEmpresa ==1 || idEmpresa ==1014 || idEmpresa ==1015)) {
+  if(aplicaAlerta==='' && idCliente ==1 && proceso==1 && (idEmpresa ==1 || idEmpresa ==1014 || idEmpresa ==1015)) {
     setMsg('Ingrese si el vehículo queda dentro de las instalaciones de BAPROSA.')
     funError(true)
     return false
