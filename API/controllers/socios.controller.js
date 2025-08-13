@@ -1,6 +1,7 @@
 const db = require('../lib/prisma')
 const dotenv = require("dotenv");
 const {setLogger} = require('../utils/logger');
+const jwt = require("jsonwebtoken");
 
 const getSocios = async (req, res) => {
   try{
@@ -294,6 +295,56 @@ const putDireccionesPorID = async (req, res) => {
   }
 };
 
+const postCrearFacturasPorSocios  = async(req, res) =>{
+  const { factura, codigoProveedor, proveedor, cantidad, idSocio } = req.body;
+  const verificado = jwt.verify(req.header('Authorization'), process.env.SECRET_KEY);
+  
+  const exits = await db.facturas.count({
+    where: {
+      id: parseInt(factura),
+      Proceso: {
+        in: [1, 2]
+      }
+    }
+  })
+
+  
+  if(exits!==0) return res.send({err: 'Factura ya existe.'})
+
+
+  const [getUser, getSocio] = await Promise.all([
+    db.usuarios.findUnique({
+      where: {
+        usuarios: verificado.usuarios,
+      }
+    }),
+    db.socios.findUnique({
+      where: {
+        id: parseInt(idSocio)
+      }
+    })
+  ])
+
+  try {
+    const crearNuevaFactura = await db.facturas.create({
+      data:{
+        id: parseInt(factura),
+        codigoProveedor,
+        Proveedor: proveedor,
+        Cantidad: parseFloat(cantidad),
+        idSocio: parseInt(getSocio.id),
+        socio: getSocio.nombre, 
+        createdByUserID: parseInt(getUser.id), 
+        createdByUserName: getUser.name,
+        Proceso:1, 
+      }
+    })
+    return res.send({msg: 'Factura Creada exitosamente.', data:crearNuevaFactura})
+  }catch(err){
+    console.log(err)
+  }
+}
+
 module.exports = {
   getSocios,
   postSocios,
@@ -303,5 +354,6 @@ module.exports = {
   getDireccionesPorSocios,
   postDirecciones,
   getDireccionesPorID, 
-  putDireccionesPorID
+  putDireccionesPorID, 
+  postCrearFacturasPorSocios,
 };

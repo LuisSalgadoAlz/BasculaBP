@@ -340,3 +340,5 @@ export const verificarDirecciones = (funErr, data, setMsg) => {
 
   return true
 }
+
+/* Apartado de facturas */

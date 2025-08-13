@@ -106,5 +106,34 @@ export const FormDireccionesEdit = ({ fun, data }) => {
   );
 };
 
-
+export const FormFacturas = ({ fun }) => {
+  return (
+    <>
+      <div className="mt-5">
+        <label className="block mb-2 text-sm font-medium text-gray-900 ">
+          Factura
+        </label>
+        <input type="text" name={"factura"} className={claseFormInputs} placeholder={`Ingrese factura`} required onChange={fun}   />
+      </div>
+      <div className="mt-5">
+        <label className="block mb-2 text-sm font-medium text-gray-900 ">
+          Código Proveedor
+        </label>
+        <input type="text" name={"codigoProveedor"} className={claseFormInputs} placeholder={`Ingrese código de proveedor`} required onChange={fun}   />
+      </div>
+      <div className="mt-5">
+        <label className="block mb-2 text-sm font-medium text-gray-900 ">
+          Proveedor
+        </label>
+        <input type="text" name={"proveedor"} className={claseFormInputs} placeholder={`Ingrese proveedor`} required onChange={fun}   />
+      </div>
+      <div className="mt-5">
+        <label className="block mb-2 text-sm font-medium text-gray-900 ">
+          Cantidad
+        </label>
+        <input type="number" name={"cantidad"} className={claseFormInputs} placeholder={`Ingrese cantidad(TM)`} required onChange={fun} />
+      </div>
+    </>
+  );
+};
 

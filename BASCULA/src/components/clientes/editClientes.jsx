@@ -14,7 +14,7 @@ import {
 } from "../../hooks/formClientes";
 import { TableDirecciones } from "./tableClientes";
 import { ModalSuccess, ModalErr, NoData, Spinner } from "../alerts";
-import { ModalDirecciones, ModalDireccionesEdit } from "./modal";
+import { ModalDirecciones, ModalDireccionesEdit, ModalFacturas } from "./modal";
 
 const EditClientes = () => {
   /* Estados / Datos del aplicativo */
@@ -28,6 +28,8 @@ const EditClientes = () => {
   const [direcciones, setDirecciones] = useState();
   const [modalDirecciones, setModalDirecciones] = useState();
   const [modalDireccionesEdit, setModalDireccionesEdit] = useState();
+  const [modalFacturas, setModalFacturas] = useState(false)
+  const [isLoadingSaveFactura, setIsLoadingSaveFactura] = useState(false)
   const [dataDireccion, setDataDireccion] = useState({});
   const [formData, setFormData] = useState({
     nombre: "",
@@ -42,6 +44,12 @@ const EditClientes = () => {
     estado: "",
     telefono: "",
   });
+  const [facturas, setFacturas] = useState({
+    factura: "",
+    codigoProveedor: "",
+    proveedor: "",
+    cantidad: 0,
+  })
 
   /* ID global */
   const { id } = useParams();
@@ -62,6 +70,38 @@ const EditClientes = () => {
     }));
   };
 
+  const handleChangeFacturas = (e) => {
+    const {value, name} = e.target;
+
+    setFacturas((prev) => ({
+      ...prev,
+      [name]: value
+    }))
+  }
+
+  const handleSaveFacturas = () => {
+    if(!facturas.factura || !facturas.codigoProveedor || !facturas.proveedor || !facturas.cantidad){
+      setErrorModal(true)
+      setMsg('No deben de haber campos vacios en el formulario de facturas. Intente denuevo.')
+      return
+    }
+    if(facturas.cantidad <= 0) {
+      setErrorModal(true) 
+      setMsg('La cantidad no puede ser negativa o cero. Revise la cantidad e intente denuevo.')
+      return
+    }
+    if(!/^\d+$/.test(facturas.factura)){
+      setErrorModal(true)
+      setMsg('La factura debe contener únicamente números. Intente de nuevo.')
+      return
+    }
+    if(facturas.factura.length !== 9) {
+      setErrorModal(true)
+      setMsg('La factura debe de ser de 9 digitos. Intente denuevo.')
+    }
+
+  }
+
   const handleClik = () => {
     navigate(-1);
   };
@@ -70,11 +110,16 @@ const EditClientes = () => {
     setModalDirecciones(true);
   };
 
+  const handleModalFacturas =() => {
+    setModalFacturas(true)
+  }
+
   const handleClose = () => {
     setErrorModal(false);
     setSuccess(false);
     setModalDirecciones(false);
     setModalDireccionesEdit(false);
+    setModalFacturas(false)
     hanldeCleanState()
   };
 
@@ -253,6 +298,22 @@ const EditClientes = () => {
         <hr className="text-gray-400 mt-7" />
         <div className="flex justify-between gap-5 mt-7 max-sm:flex-col">
           <div className="parte-izq">
+            <h1 className="text-3xl font-bold titulo">Agregar Facturas</h1>
+            <h1 className="text-gray-600">
+              {" "}
+              Gestión de facturas activas de socios: el proceso inicia en Recibiendo, solo el estado es modificable y la cancelación requiere que no haya boletas pendientes.
+            </h1>
+          </div>
+          <div className="parte-izq self-center">
+            <ButtonAdd
+              name={"Agregar Factura"}
+              fun={handleModalFacturas}
+            />
+          </div>
+        </div>
+        <hr className="text-gray-400 mt-7" />
+        <div className="flex justify-between gap-5 mt-7 max-sm:flex-col">
+          <div className="parte-izq">
             <h1 className="text-3xl font-bold titulo">Agregar Direcciones</h1>
             <h1 className="text-gray-600">
               {" "}
@@ -296,6 +357,14 @@ const EditClientes = () => {
           hdlData={handleDataDirecciones}
           hdlSubmit={handleUpdateDireccionFinish}
           dtDir={dataDireccion}
+          isLoading={isLoadingUpdateDirection}
+        />
+      )}
+      {modalFacturas && (
+        <ModalFacturas
+          tglModal={handleClose}
+          hdlData={handleChangeFacturas}
+          hdlSubmit={handleSaveFacturas}
           isLoading={isLoadingUpdateDirection}
         />
       )}

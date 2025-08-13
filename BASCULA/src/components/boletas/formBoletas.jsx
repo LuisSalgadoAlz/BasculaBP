@@ -300,7 +300,7 @@ export const ModalNormal = ({ hdlClose, hdlChange, fillData, formBol, boletas, h
                    * !Imporatnte: esto se debera de cambiar a algo mas sustancial, que sea migratorio
                    */
                 }
-                {(boletas?.Producto ===18 && boletas?.Movimiento==2) &&(
+                {(boletas?.Movimiento==2) &&(
                   <>
                     <div className="grid grid-cols-6 gap-3 mt-2 mb-4 bg-gray-50 p-4 rounded-2xl max-sm:grid-cols-2 max-sm:gap-1 shadow">
                       <div className="col-span-2">
@@ -330,7 +330,7 @@ export const ModalNormal = ({ hdlClose, hdlChange, fillData, formBol, boletas, h
                     </div>
                   </>
                 )}
-                {(boletas?.Movimiento==2) && (
+                {(boletas?.Movimiento==2 || boletas?.Movimiento == 15) && (
                   <>
                     <button 
                       className={buttonCalcular}
