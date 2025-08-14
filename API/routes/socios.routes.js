@@ -9,7 +9,10 @@ const {
   postDirecciones,
   getDireccionesPorID, 
   putDireccionesPorID,
-  postCrearFacturasPorSocios
+  postCrearFacturasPorSocios,
+  getFacturasPorSocios,
+  getFacturaPorId,
+  putFacturasPorId
 } = require("../controllers/socios.controller.js");
 const verificarToken = require("../middlewares/authJWT.js");
 
@@ -18,6 +21,9 @@ socios.post("/", verificarToken, postSocios);
 socios.post("/direcciones", verificarToken, postDirecciones);
 socios.post("/crear/facturas", verificarToken, postCrearFacturasPorSocios);
 socios.get("/stats", verificarToken, getStats);
+socios.get("/facturas/:id", getFacturasPorSocios)
+socios.get("/factura", getFacturaPorId)
+socios.put("/factura", putFacturasPorId)
 socios.get("/:id", verificarToken, getSocioPorID);
 socios.get("/direcciones/:id", verificarToken,getDireccionesPorSocios);
 socios.get("/direcciones/f/:id",verificarToken, getDireccionesPorID);

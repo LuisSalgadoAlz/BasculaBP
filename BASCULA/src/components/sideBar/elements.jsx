@@ -174,42 +174,95 @@ export const SidebarHeader = ({ isExtendido, title, subtitle }) => {
   );
 };
 
-export const NavigationRoutes = ({ routes, isExtendido, sectionTitle, userRole }) => {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  
+export const NavigationRoutes = ({ routes, isExtendido, sectionTitle, userRole, activeDropdown, setActiveDropdown }) => {
+  const [internalDropdownOpen, setInternalDropdownOpen] = useState(false);
   const isAdmin = userRole === 'ADMINISTRADOR';
+  
+  const isDropdownOpen = !isExtendido ? (activeDropdown === sectionTitle) : internalDropdownOpen;
 
-  // Si es administrador, mostrar como dropdown
+  const handleDropdownToggle = () => {
+    if (!isExtendido) {
+      if (isDropdownOpen) {
+        setActiveDropdown(null);
+      } else {
+        setActiveDropdown(sectionTitle);
+      }
+    } else {
+      setInternalDropdownOpen(!internalDropdownOpen);
+    }
+  };
+
+  const handleItemClick = () => {
+    if (!isExtendido) {
+      setActiveDropdown(null);
+    }
+  };
+
+  // Si es administrador
   if (isAdmin) {
+    // Si no está extendido, mostrar menú flotante al hover/click
+    if (!isExtendido) {
+      return (
+        <div className="px-2">
+          <div className="relative group w-full">
+            <button
+              onClick={handleDropdownToggle}
+              className="flex items-center justify-center rounded-md py-2 px-2 text-sm font-medium text-white hover:bg-gray-700 transition-colors w-full"
+            >
+              <span className="text-lg">{LISTICONS[sectionTitle]}</span>
+            </button>
+
+            {/* Menú flotante */}
+            {(isDropdownOpen || false) && (
+              <div className="absolute left-full top-0 ml-4 bg-[#31251b] rounded-md shadow-lg z-20 min-w-[200px] py-1">
+                <div className="px-3 py-2 text-xs text-gray-300 border-b border-gray-700">
+                  {sectionTitle || 'Administración'}
+                </div>
+                {routes.map((data, key) => (
+                  <NavLink
+                    key={key}
+                    to={data.path}
+                    className="flex items-center gap-x-3 px-3 py-2 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
+                    onClick={handleItemClick}
+                  >
+                    <span className="text-lg">{data.icon}</span>
+                    <span>{data.name}</span>
+                  </NavLink>
+                ))}
+              </div>
+            )}
+
+            {/* Tooltip del botón principal cuando no está abierto */}
+            {!isDropdownOpen && (
+              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-6 hidden group-hover:block bg-gray-800 text-white text-xs px-2 py-1 rounded shadow-lg z-10 whitespace-nowrap">
+                {sectionTitle || 'Administración'}
+              </div>
+            )}
+          </div>
+          <hr className="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700" />
+        </div>
+      );
+    }
+
+    // Si está extendido, mostrar como dropdown
     return (
       <div className="px-2">
         <div className="relative">
           <button
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className={`flex items-center rounded-md py-2 text-sm font-medium text-white w-full hover:bg-gray-700 transition-colors ${
-              isExtendido ? 'gap-x-3 px-3' : 'justify-center px-2'
-            }`}
+            onClick={handleDropdownToggle}
+            className="flex items-center rounded-md py-2 text-sm font-medium text-white w-full hover:bg-gray-700 transition-colors gap-x-3 px-3"
           >
             <span className="text-lg">{LISTICONS[sectionTitle]}</span>
-            {isExtendido && <span className="flex-1 text-left">{sectionTitle || 'Administración'}</span>}
-            {isExtendido && (
-              <svg 
-                className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            )}
+            <span className="flex-1 text-left">{sectionTitle || 'Administración'}</span>
+            <svg 
+              className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
           </button>
-
-          {/* Tooltip para sidebar colapsado */}
-          {!isExtendido && (
-            <div className="absolute left-full top-1/2 -translate-y-1/2 ml-6 hidden group-hover:block sidebar text-white text-xs px-8 py-2 rounded shadow-lg z-10 whitespace-nowrap">
-              {sectionTitle || 'Administración'}
-            </div>
-          )}
 
           {/* Dropdown menu */}
           {isDropdownOpen && (
@@ -218,19 +271,11 @@ export const NavigationRoutes = ({ routes, isExtendido, sectionTitle, userRole }
                 <div key={key} className="relative group w-full">
                   <NavLink
                     to={data.path}
-                    className={`flex items-center rounded-md py-2 text-sm font-medium text-white hover:bg-gray-600 transition-colors ${
-                      isExtendido ? 'gap-x-3 px-3' : 'justify-center px-2'
-                    }`}
+                    className="flex items-center rounded-md py-2 text-sm font-medium text-white hover:bg-gray-600 transition-colors gap-x-3 px-3"
                   >
                     <span className="text-lg">{data.icon}</span>
-                    {isExtendido && <span className="flex-1">{data.name}</span>}
+                    <span className="flex-1">{data.name}</span>
                   </NavLink>
-
-                  {!isExtendido && (
-                    <div className="absolute left-full top-1/2 -translate-y-1/2 ml-6 hidden group-hover:block sidebar text-white text-xs px-8 py-2 rounded shadow-lg z-10 whitespace-nowrap">
-                      {data.name}
-                    </div>
-                  )}
                 </div>
               ))}
             </div>

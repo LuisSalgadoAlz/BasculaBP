@@ -48,6 +48,7 @@ const getAllData = async (req, res) => {
       MovimientosS,
       TI,
       TE,
+      Facturas, 
     ] = await Promise.all([
       db.socios.findMany({
         select: { id: true, nombre: true },
@@ -169,6 +170,15 @@ const getAllData = async (req, res) => {
       db.translado.findMany({
         select: { id: true, nombre: true, code:true },
       }),
+      socio ? db.facturas.findMany({
+        select:{
+          id: true, factura: true,
+        }, 
+        where:{
+          Proceso: 1,
+          idSocio: socio
+        }
+      }) : null, 
     ]);
     const Placa = Vehiculo.map((el) => ({
       id: el.placa,
@@ -181,6 +191,7 @@ const getAllData = async (req, res) => {
 
     const TransladosI = TI.map((item)=>({...item, nombre: `${item.nombre} (${item.code})`}))
     const TransladosE = TE.map((item)=>({...item, nombre: `${item.nombre} (${item.code})`}))
+    const FacturaFinal = Facturas === null ? [{id: -999, nombre: 'No contiene facturas'}] : Facturas.map((item) => ({ id: item.id, nombre: item.factura})) 
     const Flete = MovimientosE;
     const FleteS = MovimientosS;
     res.status(200).json({
@@ -195,6 +206,7 @@ const getAllData = async (req, res) => {
       FleteS,
       TransladosI,
       TransladosE,
+      FacturaFinal,
     });
   } catch (err) {
     setLogger('BOLETA', 'OBTENER DATOS PARA SELECTS', req, null, 3)  
@@ -379,6 +391,7 @@ const getDataBoletas = async (req, res) => {
           placa: true,
           producto: true,
           fechaInicio: true,
+          idMovimiento: true,
         },
         where: baseWhere,
         orderBy: {
@@ -399,6 +412,7 @@ const getDataBoletas = async (req, res) => {
       Motorista: el.motorista,
       Producto: el.producto || 'N/A',
       Fecha: el.fechaInicio.toLocaleString(),
+      Movimiento: el.idMovimiento || null,
     }));
 
     res.send({
@@ -448,10 +462,15 @@ const postClientePlacaMoto = async (req, res) => {
       tolvaAsignada,
       Nbodega,
       FechaPuerto,
-      manifiesto,  
+      manifiesto, 
+      factura,
+      contenedor, 
+      sacosDeOrigen, 
+      marchamoOrigen, 
     } = req.body;
 
     const [
+      facturaData,
       empresa,
       motorista,
       socio,
@@ -462,6 +481,7 @@ const postClientePlacaMoto = async (req, res) => {
       trasladoOrigen,
       despachador
     ] = await Promise.all([
+      db.facturas.findUnique({ where: { id: parseInt(factura) } }),
       db.empresa.findUnique({ where: { id: parseInt(idEmpresa) } }),
       db.motoristas.findUnique({ where: { id: parseInt(idMotorista) } }),
       db.socios.findUnique({ where: { id: parseInt(idCliente) } }),
@@ -520,7 +540,7 @@ const postClientePlacaMoto = async (req, res) => {
         });
       }
 
-      if (idProducto === 18) {
+      if (idMovimiento == 2) {
         Object.assign(baseData, {
           Nviajes: parseInt(NViajes),
           NSalida: parseInt(NSalida),
@@ -531,16 +551,31 @@ const postClientePlacaMoto = async (req, res) => {
       }
 
       // Datos específicos para movimiento 2
-      if (idMovimiento == 2) {
+      if (idMovimiento == 2 || idMovimiento ==15) {
         Object.assign(baseData, {
-          sello1, sello2, sello3, sello4, sello5, sello6
+          sello1, sello2, sello3, sello4, sello5, sello6, factura: facturaData.factura
         });
       }
     }
 
-    const newBol = await db.boleta.create({ data: baseData });
+    const newBol = await db.boleta.create({ 
+      data: {
+        ...baseData, 
+        impContenerizada:{
+          create:{
+            contenedor: contenedor,
+            sacosTeoricos: parseInt(sacosDeOrigen),
+            marchamoDeOrigen: marchamoOrigen, 
+          }
+        }
+      }, 
+      include: {
+        impContenerizada: true,
+      }
+    });
 
-    const debeImprimirQR = (idProducto === 17 && idMovimiento === 1) || (idProducto === 18 && idMovimiento === 2);
+    const debeImprimirQR = idMovimiento === 2 
+    /* const debeImprimirQR =  (idProducto === 17 && idMovimiento === 1) || (idProducto === 18 && idMovimiento === 2) // Nueva version se eliminara */;
     const ocupaAlerta = idMovimiento ? listaInicialAlertas.includes(idMovimiento) : false
     const debeCrearPase = idMovimiento ? list_pase_inicial.includes(idMovimiento) : false
     if (debeCrearPase) {
@@ -563,7 +598,7 @@ const postClientePlacaMoto = async (req, res) => {
 };
 
 /**
- * !Importante falta probar
+ * !Importante: desactualizada del metodo actual.
  * @param {*} req 
  * @param {*} res 
  */
@@ -593,7 +628,8 @@ const postClientePlacaMotoComodin = async (req, res) => {
       tolvaAsignada,
       Nbodega,
       FechaPuerto,
-      manifiesto,  
+      manifiesto,
+      factura,  
     } = req.body;
 
     const [
@@ -647,7 +683,7 @@ const postClientePlacaMotoComodin = async (req, res) => {
         });
       }
 
-      if (idProducto === 18) {
+      if (idMovimiento===2) {
         Object.assign(baseData, {
           Nviajes: parseInt(NViajes),
           NSalida: parseInt(NSalida),
@@ -657,7 +693,7 @@ const postClientePlacaMotoComodin = async (req, res) => {
         });
       }
 
-      if (idMovimiento == 2) {
+      if (idMovimiento == 2 || idMovimiento ==15) {
         Object.assign(baseData, {
           sello1, sello2, sello3, sello4, sello5, sello6
         });
@@ -749,35 +785,53 @@ const getStatsBoletas = async (req, res) => {
 
 const getBoletaID = async (req, res) => {
   try {
-    const data = await db.boleta.findUnique({
-      where: {
-        id: parseInt(req.params.id),
-      },
-      include: {
-        clienteBoleta: {
-          select: {
-            tipo: true,
-          },
+    const [boleta, encargados] = await Promise.all([
+      db.boleta.findUnique({
+        where: {
+          id: parseInt(req.params.id),
         },
-        tolva: {
-          select:{
-            principal: {
-              select: {nombre:true}
-            }, 
-            secundario:{
-              select: {nombre:true}
-            }, 
-            terciario: {
-              select: {nombre: true}
-            }, 
-          }
-        }, 
-      },
-    });
-
+        include: {
+          clienteBoleta: {
+            select: {
+              tipo: true,
+            },
+          },
+          tolva: {
+            select:{
+              principal: {
+                select: {nombre:true}
+              }, 
+              secundario:{
+                select: {nombre:true}
+              }, 
+              terciario: {
+                select: {nombre: true}
+              }, 
+            }
+          },
+          impContenerizada: {
+            select: {
+              contenedor : true, 
+              sacosTeoricos: true, 
+              marchamoDeOrigen: true, 
+            }
+          } 
+        },
+      }),
+      db.encargadosDeBodega.findMany({
+        select:{
+          id: true, 
+          Nombre: true,
+        }
+      }) 
+    ])
+    const data = {
+      ...boleta, encargados
+    }
     return res.json(data);
   } catch (err) {
     setLogger('BOLETA', 'OBTENER DATOS DE UNA BOLETA', req, null, 3)  
+    console.log(err)
     return res.status(401).send("Error en el api");
   }
 };
@@ -1099,7 +1153,7 @@ const updateBoletaOut = async (req, res) => {
     }
 
     // Generar comprobante para producto específico
-    if (idProducto === 18) {
+    if (idProducto === 18 && idMovimiento === 2) {
       comprobanteDeCarga(nuevaBoleta, despachador['name']);
     }
 
@@ -1264,7 +1318,7 @@ const updateBoletaOutComdin = async (req, res) => {
     });
 
     // Generar comprobante para producto específico
-    if (idProducto === 18) {
+    if (idProducto === 18 && idMovimiento === 2) {
       comprobanteDeCarga(nuevaBoleta, despachador['name']);
     }
 
@@ -1445,6 +1499,13 @@ const getBoletasHistorial = async (req, res) => {
         manifiestoDeAgregado: true,
         fechaInicio: true,
         fechaFin: true,
+        sello1: true,
+        sello2: true,
+        sello3: true,
+        sello4: true,
+        sello5: true,
+        sello6: true, 
+        factura: true, 
       },
       where: finalConditions,
       skip: offset,
@@ -1483,7 +1544,9 @@ const getBoletasHistorial = async (req, res) => {
         'Manifiesto de agregados': el.manifiestoDeAgregado || '-',
         'Fecha Final': fin.toLocaleString(),
         'Fecha inicial': inicio.toLocaleString(),
-        'Duración': duracion
+        'Duración': duracion, 
+        'Marchamos': [el.sello1, el.sello2, el.sello3, el.sello4, el.sello5, el.sello6].filter(Boolean).join(', '),
+        Factura: el.factura, 
       };
     });
 

@@ -342,3 +342,102 @@ export const verificarDirecciones = (funErr, data, setMsg) => {
 }
 
 /* Apartado de facturas */
+export const getFacturaInfo = async (fun, setIsLoading, id) => {
+  try {
+    setIsLoading(true)
+    const response = await fetch(`${URLHOST}socios/factura?id=${id}`, {
+      method: "GET",
+      headers: {
+        Authorization: Cookies.get('token'),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API / Facturas");
+    }
+
+    const item = await response.json();
+
+    fun({ factura: item.factura, codigoProveedor: item.codigoProveedor, proveedor: item.Proveedor, cantidad: item.Cantidad, Proceso: item.Proceso, Id: item.id, ProcesoTemp: item.Proceso});
+  } catch (error) {
+    console.error("Error al obtener los facturas:", error);
+  } finally {
+    setIsLoading(false)
+  }
+};
+
+export const getFacturasPorSocio = async (fun, setIsLoading, id) => {
+  try {
+    setIsLoading(true)
+    const response = await fetch(`${URLHOST}socios/facturas/${id}`, {
+      method: "GET",
+      headers: {
+        Authorization: Cookies.get('token'),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API / Facturas");
+    }
+
+    const data = await response.json();
+    fun(data);
+  } catch (error) {
+    console.error("Error al obtener los facturas:", error);
+  } finally {
+    setIsLoading(false)
+  }
+};
+
+export const postCrearFactura = async (factura, setIsLoading) => {
+  setIsLoading(true)
+  try {
+    const response = await fetch(`${URLHOST}socios/crear/facturas`, {
+      method: "POST",
+      body: JSON.stringify(factura),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: Cookies.get('token'),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API");
+    }
+
+    const data = await response.json();
+    return data
+  } catch (error) {
+    console.error("Error al obtener los datos:", error);
+  } finally {
+    setIsLoading(false)
+  }
+};
+
+export const updateFacturaProceso = async (factura, setIsLoading) => {
+  setIsLoading(true)
+  try {
+    const response = await fetch(`${URLHOST}socios/factura`, {
+      method: "PUT",
+      body: JSON.stringify(factura),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: Cookies.get('token'),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API");
+    }
+
+    const msg = await response.json()
+
+    if (response.ok) {
+      return msg;
+    }
+  } catch (error) {
+    console.error("Error al obtener los datos:", error);
+  } finally {
+    setIsLoading(false)
+  }
+};

@@ -22,7 +22,8 @@ model Socios{
 
 model Facturas {
     /* Campos principales clave */
-    id Int @id
+    id Int @id @default(autoincrement())
+    factura String
     codigoProveedor String
     Proveedor String
     Cantidad Float

@@ -87,15 +87,16 @@ export const SideBar = ({ modo = "extendido", altura = 500 }) => {
 };
 
 export const SideBarAdmin = ({ modo = "extendido", altura = 500 }) => {
+  const [activeDropdown, setActiveDropdown] = useState(null);
   const isExtendido = modo === "extendido";
 
   return (
     <SideBarBase extended={isExtendido}>
       <SidebarHeader isExtendido={isExtendido} title="Baprosa" subtitle="Administración Bascula" />
-      <NavigationRoutes routes={RUTAS_ADMIN} isExtendido={isExtendido} sectionTitle="Admin" userRole={'ADMINISTRADOR'}/>
-      <NavigationRoutes routes={RUTAS_PRINCIPALES} isExtendido={isExtendido} sectionTitle="Bascula" userRole={'ADMINISTRADOR'} />
-      <NavigationRoutes routes={RUTAS_TOLVA} isExtendido={isExtendido} sectionTitle="Tolva" userRole={'ADMINISTRADOR'}/>
-      <NavigationRoutes routes={RUTAS_GUARDIA} isExtendido={isExtendido} sectionTitle="Guardia" userRole={'ADMINISTRADOR'}/>
+      <NavigationRoutes routes={RUTAS_ADMIN} isExtendido={isExtendido} sectionTitle="Admin" userRole={'ADMINISTRADOR'}activeDropdown={activeDropdown}setActiveDropdown={setActiveDropdown}/>
+      <NavigationRoutes routes={RUTAS_PRINCIPALES} isExtendido={isExtendido} sectionTitle="Bascula" userRole={'ADMINISTRADOR'}activeDropdown={activeDropdown}setActiveDropdown={setActiveDropdown}/>
+      <NavigationRoutes routes={RUTAS_TOLVA} isExtendido={isExtendido} sectionTitle="Tolva" userRole={'ADMINISTRADOR'}activeDropdown={activeDropdown}setActiveDropdown={setActiveDropdown}/>
+      <NavigationRoutes routes={RUTAS_GUARDIA} isExtendido={isExtendido} sectionTitle="Guardia" userRole={'ADMINISTRADOR'}activeDropdown={activeDropdown}setActiveDropdown={setActiveDropdown}/>
       <ReportsSection isExtendido={isExtendido} userRole={'ADMINISTRADOR'} />
       <UserDropdown isExtendido={isExtendido} altura={altura} />
     </SideBarBase>

@@ -11,10 +11,14 @@ import {
   postDirecciones,
   getDireccionesPorID,
   updateDireccionesPorID,
+  postCrearFactura,
+  getFacturasPorSocio,
+  getFacturaInfo,
+  updateFacturaProceso,
 } from "../../hooks/formClientes";
-import { TableDirecciones } from "./tableClientes";
+import { TableComponent, TableDirecciones, TableFacturas } from "./tableClientes";
 import { ModalSuccess, ModalErr, NoData, Spinner } from "../alerts";
-import { ModalDirecciones, ModalDireccionesEdit, ModalFacturas } from "./modal";
+import { ModalDirecciones, ModalDireccionesEdit, ModalFacturas, ModalFacturasEdit } from "./modal";
 
 const EditClientes = () => {
   /* Estados / Datos del aplicativo */
@@ -29,7 +33,12 @@ const EditClientes = () => {
   const [modalDirecciones, setModalDirecciones] = useState();
   const [modalDireccionesEdit, setModalDireccionesEdit] = useState();
   const [modalFacturas, setModalFacturas] = useState(false)
+  const [modalFacturasEdit, setModalFacturasEdit] = useState(false)
+  const [isLoadingInfoFactura, setIsLoadingInforFactura] = useState(false)
   const [isLoadingSaveFactura, setIsLoadingSaveFactura] = useState(false)
+  const [isLoadingUpdateFactura, setIsLoadingUpdateFactura] = useState(false)
+  const [dataFacturas, setDataFacturas] = useState()
+  const [isLoadDataFacturas, setIsLoadDataFacturas] = useState(false)
   const [dataDireccion, setDataDireccion] = useState({});
   const [formData, setFormData] = useState({
     nombre: "",
@@ -57,6 +66,7 @@ const EditClientes = () => {
   /* Limpieza de componentes */
   const hanldeCleanState = () => {
     setFormData({ nombre: "", tipo: -1, descripcion: "", estado: 1 });
+    setFacturas({ factura: "", codigoProveedor: "", proveedor: "", cantidad: 0, })
   };
 
   const navigate = useNavigate();
@@ -79,27 +89,63 @@ const EditClientes = () => {
     }))
   }
 
-  const handleSaveFacturas = () => {
+  const verificarFactura = (facturas) => {
     if(!facturas.factura || !facturas.codigoProveedor || !facturas.proveedor || !facturas.cantidad){
       setErrorModal(true)
       setMsg('No deben de haber campos vacios en el formulario de facturas. Intente denuevo.')
-      return
+      return false
     }
     if(facturas.cantidad <= 0) {
       setErrorModal(true) 
       setMsg('La cantidad no puede ser negativa o cero. Revise la cantidad e intente denuevo.')
-      return
+      return false
     }
-    if(!/^\d+$/.test(facturas.factura)){
-      setErrorModal(true)
-      setMsg('La factura debe contener únicamente números. Intente de nuevo.')
-      return
-    }
-    if(facturas.factura.length !== 9) {
-      setErrorModal(true)
-      setMsg('La factura debe de ser de 9 digitos. Intente denuevo.')
-    }
+    /* No se agregaron mas validaciones porque se espera que surgan mas en las reuniones */
+    return true
+  }
 
+  const handleSaveFacturas = async() => {
+    const isCorrect = verificarFactura(facturas)
+    if(isCorrect) {
+      const arrSendFactura = {...facturas, idSocio: id}
+      const crearFactura = await postCrearFactura(arrSendFactura, setIsLoadingSaveFactura)
+      if(crearFactura?.err){
+        setErrorModal(true)
+        setMsg(crearFactura?.err)
+        return
+      }
+      setMsg(crearFactura?.msg)
+      getFacturasPorSocio(setDataFacturas, setIsLoadDataFacturas, id)
+      setModalFacturas(false)
+      setSuccess(true)
+    }
+  }
+
+  const handleOpenModalFacturasEdit = async(item) => {
+    setModalFacturasEdit(true)
+    const resposne = await getFacturaInfo(setFacturas, setIsLoadingInforFactura, item.id)
+  }
+
+  const handleUpdateFactura = async()=>{
+    if(facturas?.ProcesoTemp === 2 || facturas?.ProcesoTemp === 3){
+      setErrorModal(true)
+      setMsg('No es posible modificar una factura completada o cancelada.')
+      return
+    }
+    if (facturas?.ProcesoTemp === facturas?.Proceso) {
+      setErrorModal(true)
+      setMsg('No ha modificado el proceso de la factura. Intente denuevo')
+      return
+    }
+    const statusRequest = await updateFacturaProceso(facturas, setIsLoadingUpdateFactura)
+    if(statusRequest.err) {
+      setErrorModal(true)
+      setMsg(statusRequest.err)
+      return
+    }
+    setMsg(statusRequest.msg)
+    setSuccess(true)
+    getFacturasPorSocio(setDataFacturas, setIsLoadDataFacturas, id)
   }
 
   const handleClik = () => {
@@ -120,6 +166,7 @@ const EditClientes = () => {
     setModalDirecciones(false);
     setModalDireccionesEdit(false);
     setModalFacturas(false)
+    setModalFacturasEdit(false)
     hanldeCleanState()
   };
 
@@ -193,6 +240,7 @@ const EditClientes = () => {
   const fetchData = useCallback(() => {
     getDireccionesPorSocios(setDirecciones, id, setIsLoadDireccion);
     getClientesPorID(setSc, id);
+    getFacturasPorSocio(setDataFacturas, setIsLoadDataFacturas, id)
   }, []);
 
   useEffect(() => {
@@ -301,7 +349,7 @@ const EditClientes = () => {
             <h1 className="text-3xl font-bold titulo">Agregar Facturas</h1>
             <h1 className="text-gray-600">
               {" "}
-              Gestión de facturas activas de socios: el proceso inicia en Recibiendo, solo el estado es modificable y la cancelación requiere que no haya boletas pendientes.
+              Gestión de facturas activas de socios
             </h1>
           </div>
           <div className="parte-izq self-center">
@@ -310,6 +358,13 @@ const EditClientes = () => {
               fun={handleModalFacturas}
             />
           </div>
+        </div>
+        <div className="gap-5 mt-7">
+          {(isLoadDataFacturas && !dataFacturas) ? <Spinner /> : (!dataFacturas || dataFacturas.length == 0) ? (
+            <NoData />
+          ) : (
+            <TableFacturas datos={dataFacturas} fun={handleOpenModalFacturasEdit} />
+          )}
         </div>
         <hr className="text-gray-400 mt-7" />
         <div className="flex justify-between gap-5 mt-7 max-sm:flex-col">
@@ -365,7 +420,17 @@ const EditClientes = () => {
           tglModal={handleClose}
           hdlData={handleChangeFacturas}
           hdlSubmit={handleSaveFacturas}
-          isLoading={isLoadingUpdateDirection}
+          isLoading={isLoadingSaveFactura}
+        />
+      )}
+      {modalFacturasEdit && (
+        <ModalFacturasEdit
+          tglModal={handleClose}
+          hdlData={handleChangeFacturas}
+          hdlSubmit={handleUpdateFactura}
+          isLoading={isLoadingUpdateFactura}
+          isLoadingData={isLoadingInfoFactura}
+          data={facturas}
         />
       )}
     </>

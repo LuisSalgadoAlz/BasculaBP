@@ -133,6 +133,7 @@ export const formaterDataNewPlaca = (formBoletas, marchamos) => {
     ...(formBoletas?.Proceso == 0 && {
       idProducto: formBoletas?.Producto|| null, 
       idMovimiento: formBoletas?.Movimiento ||  null,
+      factura: formBoletas?.Factura || null,
       ...((formBoletas?.Movimiento==10 || formBoletas?.Movimiento==11) && {
         idTrasladoOrigen: formBoletas['Traslado Origen'],
         manifiesto: formBoletas?.Documento,
@@ -144,8 +145,13 @@ export const formaterDataNewPlaca = (formBoletas, marchamos) => {
       NViajes:  formBoletas.NViajes  || null,
       Nbodega: formBoletas?.Nbodega || null,
       FechaPuerto: formBoletas?.FechaPuerto || null,
-      tolvaAsignada: formBoletas?.TolvaAsignada || null,  
-      ...(formBoletas?.Movimiento==2 && {
+      tolvaAsignada: formBoletas?.TolvaAsignada || null,
+      ...(formBoletas?.Movimiento==15 && {
+        contenedor : formBoletas?.contenedor || null, 
+        sacosDeOrigen : formBoletas?.sacosDeOrigen || null, 
+        marchamoOrigen : formBoletas?.marchamoOrigen || null, 
+      }), 
+      ...((formBoletas?.Movimiento==2 || formBoletas?.Movimiento==15) && {
         sello1 : marchamos[0] || null,
         sello2 : marchamos[1] || null,
         sello3 : marchamos[2] || null,
@@ -208,6 +214,10 @@ export const getDataParaForm = async (setFormBoletas, data, setMove, setIsLoadin
     pesoOut: 0,
     idBoleta: data.Id,
     tipoSocio: response?.clienteBoleta?.tipo,
+    contenedor: response?.impContenerizada?.contenedor, 
+    marchamoOrigen: response?.impContenerizada?.marchamoDeOrigen, 
+    sacosDeOrigen: response?.impContenerizada?.sacosTeoricos, 
+    onlyContenerizada: response?.encargados,
   }));
 };
 
@@ -504,7 +514,11 @@ export const verificarDataNewPlaca = (funError, data, setMsg, marchamos) => {
     idTrasladoOrigen,
     tolvaAsignada,
     Nbodega,
-    FechaPuerto
+    FechaPuerto,
+    factura,
+    contenedor, 
+    sacosDeOrigen, 
+    marchamoOrigen, 
   } = data;
 
   const mostrarError = (mensaje) => {
@@ -532,9 +546,11 @@ export const verificarDataNewPlaca = (funError, data, setMsg, marchamos) => {
     }
   }
 
-  // Validaciones específicas para Granza importada
-  const esImportacionProducto18 = idProducto === 18 && idMovimiento === 2;
-  if (esImportacionProducto18) {
+  // Validaciones importaciones a granel
+  const esImportacionesAgranel = idMovimiento === 2;
+  const esImportacionesContenerizada = idMovimiento === 15;
+
+  if (esImportacionesAgranel) {
     if (!NSalida || !NViajes) {
       return mostrarError('Por favor, ingresar numero de viaje y de salida');
     }
@@ -560,6 +576,24 @@ export const verificarDataNewPlaca = (funError, data, setMsg, marchamos) => {
     }
   }
 
+  if(esImportacionesContenerizada) {
+    if(!contenedor) {
+      return mostrarError('Por favor, ingresar el numero de contenedor');
+    }
+
+    if(!sacosDeOrigen) {
+      return mostrarError('Por favor, ingresar el numero de sacos de origen');
+    }
+
+    if(sacosDeOrigen<0){
+      return mostrarError('Por favor, la cantidad de sacos de origen positiva y mayor que cero.')
+    }
+
+    if(!marchamoOrigen) {
+      return mostrarError('Por favor, ingresar el numero de marchamo de origen');
+    }
+  }
+
   const esClienteEspecial = idCliente === -998 || idCliente === -999;
   if (esClienteEspecial && !regexPlca.test(idPlaca)) {
     return mostrarError(
@@ -567,12 +601,20 @@ export const verificarDataNewPlaca = (funError, data, setMsg, marchamos) => {
     );
   }
 
-  if (parseFloat(pesoInicial) <= 0) {
+  /* if (parseFloat(pesoInicial) <= 0) {
     return mostrarError('Por favor, el peso inicial no debe de ser menor o igual a 0');
+  } */
+
+  if (idMovimiento === 2 && marchamos.length < 3) {
+    return mostrarError('Las importaciones a granel deben de llevar al menos 3 marchamo.');
   }
 
-  if (idMovimiento === 2 && marchamos.length === 0) {
-    return mostrarError('Las importaciones deben de llevar al menos 1 marchamo.');
+  if (idMovimiento === 15 && marchamos.length < 1){
+    return mostrarError('Las importaciones contenerizadas deben de llevar al menos 1 marchamo.')
+  }
+
+  if([2, 15].includes(idMovimiento) && !factura) {
+    return mostrarError('Las importaciones a granel / contenerizada deben contenter una factura.')
   }
 
   return true;
@@ -600,13 +642,13 @@ export const verificarDataCompleto = (funError, data, setMsg, pesoIn) => {
 
   /* idPlaca observaciones ordenDeTransferencia pesoInicial pesoTeorico*/
 
-  if(proceso == 0 && parseFloat(pesoIn)<=parseFloat(pesoFinal)){
+  /* if(proceso == 0 && parseFloat(pesoIn)<=parseFloat(pesoFinal)){
     if (idMovimiento!=10 && idMovimiento!=11) {
       setMsg('Peso inicial debe ser mayor al peso final)')
       funError(true)
       return false
     }
-  }
+  } */
 
   if(proceso == 1 && parseFloat(pesoIn)>=parseFloat(pesoFinal)){
     if (idMovimiento!=13 && idMovimiento!=12) {

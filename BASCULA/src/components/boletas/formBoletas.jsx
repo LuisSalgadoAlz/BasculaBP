@@ -11,7 +11,7 @@ import { getPrintEpson, getToleranciaValue } from "../../hooks/formDataBoletas";
 import { CiLock } from "react-icons/ci";
 import { CiUnlock } from "react-icons/ci";
 import { Toaster, toast } from 'sonner';
-import { IoIosArrowDown, IoIosArrowUp, IoIosArrowForward   } from "react-icons/io";
+import { IoIosArrowDown, IoIosArrowUp, IoIosArrowForward, IoMdClose   } from "react-icons/io";
 
 const formInputSelect = ['Transportes', 'Placa', 'Motoristas']
 const guardiaValidacion = [{id: 1, nombre: 'Si'}, {id: 2, nombre: 'No'}]
@@ -284,7 +284,9 @@ export const ModalNormal = ({ hdlClose, hdlChange, fillData, formBol, boletas, h
               <>
                 <div className="grid grid-cols-2 space-y-1">
                   <SelectFormBoletas classCss={classFormSelct} name="Movimiento" data={fillData['Flete']} fun={hdlChange} val={boletas?.Movimiento}/>
-
+                  {(boletas?.Movimiento==2 || boletas?.Movimiento == 15) && (
+                    <SelectFormBoletas classCss={classFormSelct} name="Factura" data={fillData['FacturaFinal']} fun={hdlChange} val={boletas['Factura']}/>
+                  )}
                   {(boletas?.Movimiento === 10 || boletas?.Movimiento===11) ? (
                     <>
                       <InputsFormBoletas data={claseFormInputs} name={'Documento'} val={boletas['Documento']} fun={hdlChange} />
@@ -326,6 +328,24 @@ export const ModalNormal = ({ hdlClose, hdlChange, fillData, formBol, boletas, h
                           <option value={1}>Tolva 1</option>
                           <option value={2}>Tolva 2</option>
                         </select>
+                      </div>
+                    </div>
+                  </>
+                )}
+                {(boletas?.Movimiento==15) &&(
+                  <>
+                    <div className="grid grid-cols-6 gap-3 mt-2 mb-4 bg-gray-50 p-4 rounded-2xl max-sm:grid-cols-2 max-sm:gap-1 shadow">
+                      <div className="col-span-4">
+                        <label htmlFor="contenedor" className="block text-sm text-gray-600">Contenedor</label>
+                        <input type="text" name="contenedor" onChange={hdlChange} onKeyDown={handleKeyDown} className={claseFormInputs} value={boletas?.contenedor} />
+                      </div>
+                      <div className="col-span-2">
+                        <label htmlFor="NViajes" className="block text-sm text-gray-600">Sacos teoricos</label>
+                        <input type="number" name="sacosDeOrigen" onChange={hdlChange} onKeyDown={handleKeyDown} className={claseFormInputs} value={boletas?.sacosDeOrigen}/>
+                      </div>
+                      <div className="col-span-6">
+                        <label htmlFor="Nbodega" className="block text-sm text-gray-600">Marchamo de origen</label>
+                        <input type="text" name="marchamoOrigen" onChange={hdlChange} className={claseFormInputs} value={boletas?.marchamoOrigen}/>
                       </div>
                     </div>
                   </>
@@ -388,6 +408,7 @@ export const ModalOut = (props) => {
   const [dataPrev, setDataPrev] = useState()
   const [openMarchamos, setOpenMarchamos] = useState(false)
   const [openDocumento, setOpenDocumento] = useState(false)
+  const [openImpContenerizada, setOpenImpContenerizada] = useState(false)
 
   const getPesoOut = () => {
     formBol((prev)=> ({
@@ -565,6 +586,9 @@ export const ModalOut = (props) => {
               {
                 boletas?.Proceso == 1 && <button className={buttonCalcular} onClick={()=>setOpenMarchamos(true)}> Agregar Marchamos </button>
               }
+              {
+                (boletas?.Proceso == 0 && boletas?.Movimiento == 15) && <button className={buttonCalcular} onClick={()=>setOpenImpContenerizada(true)}> Importacion contenerizada </button>
+              }
             </div>
       
             <hr className="text-gray-300 mt-1" />
@@ -578,6 +602,7 @@ export const ModalOut = (props) => {
               </button>
             </div>
             {openMarchamos && <AgregarMarchamos {...propsAddMarchamos}/>}
+            {openImpContenerizada && <FormImportacionesContenerizada setOpenContenedor={setOpenImpContenerizada} boletas={boletas} hdlChange={hdlChange}/>}
           </>
         )}
       </div>
@@ -691,7 +716,7 @@ export const VisualizarBoletas = (props) => {
         ) : (
           <div className="flex flex-col h-full">
             {/* Header */}
-            <div className="bg-white border-b border-gray-200 p-6 lg:p-8 shadow-sm">
+            <div className="bg-white border-b border-gray-200 p-6 lg:px-8 lg:py-4 shadow-sm">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
@@ -718,7 +743,7 @@ export const VisualizarBoletas = (props) => {
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto p-6 lg:p-8">
+            <div className="flex-1 overflow-y-auto p-6 lg:px-8 lg:py-4">
               <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8">
                 
                 {/* Datos de la boleta y Ruta */}
@@ -731,6 +756,7 @@ export const VisualizarBoletas = (props) => {
                         <InfoRow label="Transporte" value={boletas?.empresa} />
                         <InfoRow label="Placa" value={boletas?.placa} />
                         <InfoRow label="Conductor" value={boletas?.motorista} />
+                        <InfoRow label="Factura" value={boletas?.factura} />
                       </div>
                     </div>
 
@@ -862,7 +888,7 @@ export const VisualizarBoletas = (props) => {
 
             {/* Footer con botones de impresión */}
             {boletas?.estado !== 'Cancelada' && (
-              <div className="bg-white border-t border-gray-200 p-6 lg:p-8 shadow-sm">
+              <div className="bg-white border-t border-gray-200 p-6 lg:px-4 lg:py-4 shadow-sm">
                 <div className="w-full">
                   <div className="flex flex-col sm:flex-row gap-3 sm:justify-end bg-red">
                   <ButtonPrint 
@@ -1119,6 +1145,117 @@ export const ValidarMarchamos = ({ hdClose, hdlSubmit, isLoading }) => {
           </button>
         </div>
       </div>
+    </div>
+  );
+};
+
+
+export const FormImportacionesContenerizada = ({ setOpenContenedor, hdlChange, boletas }) => {
+  const encargadosDeBodega = { }
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="bg-white w-full max-w-lg rounded-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto border border-gray-200 relative">
+        {/* Close button */}
+        <button
+          onClick={() => setOpenContenedor(false)}
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors duration-200 p-1 hover:bg-gray-100 rounded-full"
+        >
+          <IoMdClose size={30} />
+        </button>
+
+        {/* Header */}
+        <div className="mb-6">
+          <h2 className="text-lg font-bold text-gray-800 mb-2">Información del Contenedor</h2>
+        </div>
+
+        {/* Formulario */}
+        <div className="space-y-4">
+          {/* Sacos teóricos */}
+          <div className="grid grid-cols-2 gap-2 items-center">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Contenedor
+            </label>
+            <input
+              type="text"
+              name="contenedor"
+              className="w-full text-sm px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all duration-200 outline-none text-gray-700 placeholder-gray-400"
+              placeholder="Ingrese número de contenedor..."
+              value={boletas?.contenedor}
+              onChange={hdlChange}
+              disabled
+            />
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Marchamo de origen
+            </label>
+            <input
+              type="text"
+              name="marchamoOrigen"
+              className="w-full text-sm px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all duration-200 outline-none text-gray-700 placeholder-gray-400"
+              placeholder="Ingrese marchamo de origen..."
+              value={boletas?.marchamoOrigen || ''}
+              onChange={hdlChange}
+              disabled
+            />
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Sacos teóricos
+            </label>
+            <input
+              type="number"
+              name="sacosDeOrigen"
+              className="w-full text-sm px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all duration-200 outline-none text-gray-700 placeholder-gray-400"
+              placeholder="Cantidad de sacos teóricos..."
+              value={boletas?.sacosDeOrigen || ''}
+              onChange={hdlChange}
+              disabled
+            />
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Encargado de bodega
+            </label>
+            <select 
+              name="encargadoDeBodega"
+              onChange={hdlChange}
+              value={boletas?.encargadoDeBodega}
+              className="w-full text-sm px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all duration-200 outline-none text-gray-700 placeholder-gray-400">
+              <option value="-1">Seleccione un encargado</option>
+              {boletas?.onlyContenerizada.map((items) => (
+                <option value={items.id}>{items.nombre}</option>
+              ))}
+            </select>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Sacos descargados
+            </label>
+            <input
+              type="number"
+              name="sacosDescargados"
+              className="w-full text-sm px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all duration-200 outline-none text-gray-700 placeholder-gray-400"
+              placeholder="Cantidad de sacos descargados..."
+              value={boletas?.sacosDescargados || ''}
+              onChange={hdlChange}
+            />
+          </div>
+
+          {/* Botón */}
+          <div className="pt-4 border-t border-gray-200">
+            <button 
+              className="w-full bg-[#725033] hover:bg-[#68513d] text-white rounded-xl p-3 hover:scale-105 transition-all duration-200 font-medium shadow-lg hover:shadow-xl" 
+              onClick={() => setOpenContenedor(false)}
+            >
+              Finalizar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <style jsx>{`
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        input[type="number"] {
+          -moz-appearance: textfield;
+        }
+      `}</style>
     </div>
   );
 };
