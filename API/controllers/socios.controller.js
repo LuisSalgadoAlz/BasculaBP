@@ -354,18 +354,50 @@ const getFacturasPorSocios = async(req, res) => {
 const putFacturasPorId = async (req, res) => {
   const { Proceso, Id } = req.body;
   try {
-    if (Proceso == 3) {
-      const inv = await db.facturas.findUnique({ where: { id: parseInt(Id) } })
-      const contieneBoletas = await db.boleta.count({
-        where : {
+    const inv = await db.facturas.findUnique({ where: { id: parseInt(Id) } })
+    
+    const [boletasPendientes, boletasCompletadas] = await Promise.all([
+      db.boleta.count({
+        where: {
           factura: inv.factura,
-          idMovimiento: {
-            in: [2, 15]
-          }
+          estado: 'Pendiente'
         }
-      })
+      }),
+      db.boleta.count({
+        where: {
+          factura: inv.factura,
+          estado: {
+            not: { in: ['Cancelada', 'Pendiente'] },
+          },
+        },
+      }) 
+    ])
 
-      if(contieneBoletas!==0) return res.status(200).send({err: 'Esta factura contiene boletas, no se puede cencelar.'})
+    // Total de boletas (pendientes + completadas)
+    const totalBoletas = boletasPendientes + boletasCompletadas;
+
+    // Validaciones para Proceso 3 (Cacnelar Factura)
+    if (Proceso == 3) {
+      if (totalBoletas > 0) {
+        return res.status(200).send({
+          err: 'Esta factura contiene boletas pendientes o completadas, no se puede cancelar.'
+        });
+      }
+    }
+
+    // Validaciones para Proceso 2 (Completar la factura)
+    if (Proceso == 2) {
+      if (boletasCompletadas === 0) {
+        return res.status(200).send({
+          err: 'Esta factura debe tener al menos una boleta completada para poder completarse.'
+        });
+      }
+      
+      if (boletasPendientes > 0) {
+        return res.status(200).send({
+          err: 'Esta factura no puede completarse mientras tenga boletas pendientes.'
+        });
+      }
     }
 
     const updateFacturas = await db.facturas.update({
@@ -379,8 +411,8 @@ const putFacturasPorId = async (req, res) => {
 
     res.status(200).send({msg: "Se ha modificado el proceso correctamente."});
   } catch (error) {
-    console.log(error)
-    res.status(200).send({err: `Ha ocurrido un error, intente denuevo. ${error}`});
+    console.log(error);
+    res.status(200).send({err: `Ha ocurrido un error, intente de nuevo. ${error}`});
   }
 };
 

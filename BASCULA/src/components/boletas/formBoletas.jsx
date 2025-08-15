@@ -1151,7 +1151,6 @@ export const ValidarMarchamos = ({ hdClose, hdlSubmit, isLoading }) => {
 
 
 export const FormImportacionesContenerizada = ({ setOpenContenedor, hdlChange, boletas }) => {
-  const encargadosDeBodega = { }
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="bg-white w-full max-w-lg rounded-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto border border-gray-200 relative">
@@ -1218,7 +1217,7 @@ export const FormImportacionesContenerizada = ({ setOpenContenedor, hdlChange, b
               className="w-full text-sm px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all duration-200 outline-none text-gray-700 placeholder-gray-400">
               <option value="-1">Seleccione un encargado</option>
               {boletas?.onlyContenerizada.map((items) => (
-                <option value={items.id}>{items.nombre}</option>
+                <option value={items.id}>{items.Nombre}</option>
               ))}
             </select>
             <label className="block text-sm font-medium text-gray-700 mb-2">

@@ -414,7 +414,7 @@ const imprimirQRTolva = (boleta) => {
 };
 
 /**
- * ! Sustituto de la funcion de imprimirQRTolva por los momentos
+ * ! imprimirTikets (obsoleta) - remplazado por - imprimirQRTolva
  */
 
 const imprimirTikets = (boleta, despachador) => {
@@ -485,7 +485,7 @@ const imprimirTikets = (boleta, despachador) => {
 }
 
 /**
- * Reimpresion de lo de arriba
+ * ! reImprimirTikets (obsoleta) - remplazado por - imprimirQRTolva
  */
 
 const reImprimirTikets = (boleta, despachador) => {

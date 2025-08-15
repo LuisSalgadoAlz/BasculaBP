@@ -95,6 +95,14 @@ const EditClientes = () => {
       setMsg('No deben de haber campos vacios en el formulario de facturas. Intente denuevo.')
       return false
     }
+     // Validación para factura: solo números, 9-10 dígitos
+    const facturaRegex = /^\d{9,10}$/;
+    if(!facturaRegex.test(facturas.factura)){
+      setErrorModal(true)
+      setMsg('El número de factura debe contener únicamente dígitos numéricos y tener entre 9 y 10 dígitos. No se permiten símbolos especiales.')
+      return false
+    }
+    
     if(facturas.cantidad <= 0) {
       setErrorModal(true) 
       setMsg('La cantidad no puede ser negativa o cero. Revise la cantidad e intente denuevo.')

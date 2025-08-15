@@ -490,7 +490,10 @@ export const formaterData = (formBoletas, valor, marchamos) => {
     desviacion: desviacion, 
     allSellos,
     aplicaAlerta: formBoletas['¿Sale hoy?'] ? (formBoletas['¿Sale hoy?'] ===  2 ? false : true) : '',
-    documentoAgregado : formBoletas['documentoAgregado'], 
+    documentoAgregado : formBoletas['documentoAgregado'],
+    encargadoDeBodegaId: formBoletas?.encargadoDeBodega || null, 
+    encargadoDeNombre : formBoletas?.onlyContenerizada?.find(item => Number(item.id) === Number(formBoletas?.encargadoDeBodega))?.Nombre || null,
+    sacosDescargados: formBoletas?.sacosDescargados || null, 
   }
   console.log(allData)
   return allData
@@ -637,7 +640,10 @@ export const verificarDataCompleto = (funError, data, setMsg, pesoIn) => {
     ordenDeTransferencia,
     pesoFinal,
     aplicaAlerta,
-    documentoAgregado, 
+    documentoAgregado,
+    encargadoDeBodegaId,
+    encargadoDeNombre,
+    sacosDescargados,  
   } = data;
 
   /* idPlaca observaciones ordenDeTransferencia pesoInicial pesoTeorico*/
@@ -723,7 +729,23 @@ export const verificarDataCompleto = (funError, data, setMsg, pesoIn) => {
     return false
   }
 
-  console.log(idCliente, proceso, idEmpresa, aplicaAlerta)
+  if(idMovimiento===15 && (!encargadoDeBodegaId || !encargadoDeNombre)) {
+    setMsg('Ingrese el encargado de la bodega que recibio la importacion.')
+    funError(true)
+    return false
+  }
+
+  if(idMovimiento === 15 && !sacosDescargados) {
+    setMsg('Ingrese los sacos descargados en la bodega.')
+    funError(true)
+    return false
+  }
+
+  if(idMovimiento === 15 && sacosDescargados == 0) {
+    setMsg('Los sacos descargados no pueden ser 0.')
+    funError(true)
+    return false
+  }
 
   if(documentoAgregado && typeof documentoAgregado !== 'number') {
     setMsg('Documento auxiliar debe de ser un numero valido.')

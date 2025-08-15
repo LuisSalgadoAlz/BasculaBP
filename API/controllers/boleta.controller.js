@@ -1,7 +1,7 @@
 const db = require("../lib/prisma");
 const dotenv = require("dotenv");
 const jwt = require("jsonwebtoken");
-const { imprimirEpson, imprimirQRTolva, comprobanteDeCarga, imprimirWorkForce, imprimirTikets, getReimprimirWorkForce, reImprimirTikets, generarPaseDeSalidaTemporal, ImprimirTicketEmpresaContratada } = require("./impresiones.controller");
+const { imprimirQRTolva, comprobanteDeCarga, imprimirWorkForce, getReimprimirWorkForce, generarPaseDeSalidaTemporal, ImprimirTicketEmpresaContratada } = require("./impresiones.controller");
 const enviarCorreo = require("../utils/enviarCorreo");
 const {alertaDesviacion, alertaCancelacion} = require("../utils/cuerposCorreo");
 const {setLogger} = require('../utils/logger');
@@ -481,7 +481,7 @@ const postClientePlacaMoto = async (req, res) => {
       trasladoOrigen,
       despachador
     ] = await Promise.all([
-      db.facturas.findUnique({ where: { id: parseInt(factura) } }),
+      ((proceso === 0 && (idMovimiento ===2 || idMovimiento ===15)) ? db.facturas.findUnique({ where: { id: parseInt(factura) } }) : null),
       db.empresa.findUnique({ where: { id: parseInt(idEmpresa) } }),
       db.motoristas.findUnique({ where: { id: parseInt(idMotorista) } }),
       db.socios.findUnique({ where: { id: parseInt(idCliente) } }),
@@ -561,21 +561,22 @@ const postClientePlacaMoto = async (req, res) => {
     const newBol = await db.boleta.create({ 
       data: {
         ...baseData, 
-        impContenerizada:{
-          create:{
-            contenedor: contenedor,
-            sacosTeoricos: parseInt(sacosDeOrigen),
-            marchamoDeOrigen: marchamoOrigen, 
+        ...(idMovimiento === 15 && {
+          impContenerizada:{
+            create:{
+              contenedor: contenedor,
+              sacosTeoricos: parseInt(sacosDeOrigen),
+              marchamoDeOrigen: marchamoOrigen, 
+            }
           }
-        }
+        })
       }, 
       include: {
         impContenerizada: true,
       }
     });
 
-    const debeImprimirQR = idMovimiento === 2 
-    /* const debeImprimirQR =  (idProducto === 17 && idMovimiento === 1) || (idProducto === 18 && idMovimiento === 2) // Nueva version se eliminara */;
+    const debeImprimirQR = (idMovimiento === 2) /* Se mantienen unicamente a importaciones a granel || (idProducto === 17 && idMovimiento === 14)   */
     const ocupaAlerta = idMovimiento ? listaInicialAlertas.includes(idMovimiento) : false
     const debeCrearPase = idMovimiento ? list_pase_inicial.includes(idMovimiento) : false
     if (debeCrearPase) {
@@ -1004,6 +1005,9 @@ const updateBoletaOut = async (req, res) => {
       allSellos,
       aplicaAlerta,
       documentoAgregado,
+      encargadoDeBodegaId, 
+      encargadoDeNombre, 
+      sacosDescargados,
     } = req.body;
 
     const verificado = jwt.verify(idUsuario, process.env.SECRET_KEY);
@@ -1143,7 +1147,18 @@ const updateBoletaOut = async (req, res) => {
 
     const nuevaBoleta = await db.boleta.update({
       where: { id: parseInt(req.params.id) },
-      data: updateData,
+      data: {
+        ...updateData,
+        ...(idMovimiento === 15 && {
+          impContenerizada:{
+            update:{
+              encargadoDeBodegaID: parseInt(encargadoDeBodegaId),
+              encargadoDeNombre: encargadoDeNombre,
+              sacosCargados: parseInt(sacosDescargados), 
+            }
+          }
+        })
+      },
     });
 
     // Verificar desviación y enviar alerta si es necesario
