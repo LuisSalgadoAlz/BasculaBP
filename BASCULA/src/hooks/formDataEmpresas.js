@@ -137,10 +137,10 @@ export const updateEmpresas = async (empresa, id, setIsloading) => {
   }
 };
 
-export const getVehiculosPorEmpresas = async (fun, id, setIsloading)=>{
+export const getVehiculosPorEmpresas = async (fun, id, setIsloading, page, search)=>{
   try {
     setIsloading(true)
-      const response = await fetch(`${URLHOST}empresas/vehiculos/${id}`, {
+      const response = await fetch(`${URLHOST}empresas/vehiculos/${id}?page=${page}&search=${search}`, {
         method: "GET",
         headers: {
           Authorization: Cookies.get('token'),
@@ -225,10 +225,10 @@ export const updateVehiculosPorEmpresas = async (vehiculo, idEmpresa) => {
   }
 };
 
-export const getMotoristasPorEmpresas = async (fun, id, setIsloading)=>{
+export const getMotoristasPorEmpresas = async (fun, id, setIsloading, page, search)=>{
   try {
       setIsloading(true)
-      const response = await fetch(`${URLHOST}empresas/motoristas/${id}`, {
+      const response = await fetch(`${URLHOST}empresas/motoristas/${id}?page=${page}&search=${search}`, {
         method: "GET",
         headers: {
           Authorization: Cookies.get('token'),

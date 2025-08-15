@@ -1,8 +1,8 @@
 import { useParams } from "react-router";
-import { ButtonAdd, ButtonSave, ButtonVolver } from "../buttons";
+import { ButtonAdd, ButtonSave, ButtonVolver, Pagination } from "../buttons";
 import { cargando, claseFormInputs, classFormSelct } from "../../constants/boletas";
 import { useNavigate } from "react-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 import { getEmpresasPorId, getSociosParaSelect, updateEmpresas, verificarData, getVehiculosPorEmpresas, postVehiculosPorEmpresas, updateVehiculosPorEmpresas,
   verificarDataVehiculos, verificarListadoDeVehiculos, getMotoristasPorEmpresas, postMotoristasDeLaEmpresa, verificarDataDeMotoristas, updateMotoristasPorEmpresa
 } from "../../hooks/formDataEmpresas";
@@ -10,6 +10,7 @@ import { SelectSociosEdit } from "../selects";
 import { ModalErr, ModalSuccess, ModalVehiculoDuplicado, ModalVehiculoDuplicadoEdit, NoData, Spinner } from "../alerts";
 import { TableMotoristas, TableVehiculos } from "./tables";
 import { ModalMotoristas, ModalMotoristasEdit, ModalVehiculos, ModalVehiculosEdit } from "./modal";
+import { debounce } from "lodash";
 
 /**
  * TODO : Comienzo  del componente de la pagina de edit de
@@ -41,6 +42,11 @@ const EditTransporte = () => {
   const [motoristas, setMotoristas] = useState()
   const [modalMotoristas, setModalMotoristas] = useState()
   const [modalMotoristasEdit, setModalMotoristasEdit] = useState()
+  const [paginationVehiculos, setPaginationVehiculos] = useState(1)
+  const [searchPlaca, setSearchPlaca] = useState('')
+  const [paginactionMotorista, setPaginationMotoristas] = useState(1)
+  const [searchMotorista, setSearchMotorista] = useState('')
+
   const [formMotoristas,  setFormMotoristas] = useState({
     nombre : '', telefono: '', correo: '', id: id
   })
@@ -183,7 +189,7 @@ const EditTransporte = () => {
 
   const editVehiculoEmpresa = async() => {
     await updateVehiculosPorEmpresas(formVehiculos, id)
-    fetchData()
+    fetchVehiculos()
     setMsg('modificar vehiculo')
     setMdlVehiculoDuplicadoEdit(false)
     setModalVehiculosEdit(false)
@@ -227,6 +233,54 @@ const EditTransporte = () => {
       return
     }
   }
+
+  const handlePaginationVehiculos = (item) => {
+    if (paginationVehiculos>0) {
+      const newRender = paginationVehiculos+item
+      if(newRender==0) return
+      if(newRender>vehiculos.pagination.totalPages) return
+      setPaginationVehiculos(newRender) 
+    }
+  }
+
+  const handleSearchDebouncedVehiculo = useMemo(
+    () =>
+      debounce((value) => {
+        setSearchPlaca(value)
+      }, 350), // 300 ms de espera
+    []
+  );
+  
+  const handleSearhPlaca = (e) => {
+    const { value } = e.target
+    setPaginationVehiculos(1)
+    handleSearchDebouncedVehiculo(value)
+  }
+
+  /* Parte de los motoristas */
+  const handlePaginationMotoristas = (item) => {
+    if (paginactionMotorista>0) {
+      const newRender = paginactionMotorista+item
+      if(newRender==0) return
+      if(newRender>motoristas.pagination.totalPages) return
+      setPaginationMotoristas(newRender) 
+    }
+  }
+
+  const handleSearchDebouncedMotorista = useMemo(
+    () =>
+      debounce((value) => {
+        setSearchMotorista(value)
+      }, 350), // 300 ms de espera
+    []
+  );
+
+  const handleSearhMotorista = (e) => {
+    const { value } = e.target
+    setPaginationMotoristas(1)
+    handleSearchDebouncedMotorista(value)
+  }
+
 
    /**
    * TODO: Parte de motoristas
@@ -301,12 +355,26 @@ const EditTransporte = () => {
    *  ? datos que se almacenan en el cache
    */
 
+  const fetchVehiculos = useCallback(() => {
+    getVehiculosPorEmpresas(setVehiculos, id, setIsLoadVehiculos, paginationVehiculos, searchPlaca);
+  }, [paginationVehiculos, searchPlaca])
+
   const fetchData = useCallback(() => {
-    getVehiculosPorEmpresas(setVehiculos, id, setIsLoadVehiculos);
-    getMotoristasPorEmpresas(setMotoristas, id, setIsloadMotorista)
+    getMotoristasPorEmpresas(setMotoristas, id, setIsloadMotorista, paginactionMotorista, searchMotorista)
+  }, [paginactionMotorista, searchMotorista]);
+
+  const fechOnlyData = useCallback(() => {
     getEmpresasPorId(setEmpresa, id);
     getSociosParaSelect(setSocios);
-  }, []);
+  }, [])
+
+  useEffect(()=>{
+    fechOnlyData()
+  }, [fechOnlyData])
+
+  useEffect(()=> {
+    fetchVehiculos();
+  }, [fetchVehiculos])
 
   useEffect(() => {
     fetchData();
@@ -437,11 +505,24 @@ const EditTransporte = () => {
           </div>
         </div>
         <div className="gap-5 mt-7">
-          {(isLoadVehiculos && !vehiculos) ? <Spinner /> : (!vehiculos || vehiculos.length == []) ? (
-            <NoData />
-          ) : (
-            <TableVehiculos datos={vehiculos} fun={handleGetVehiculo} />
-          )}
+         <div className="relative mb-4 p-2">
+           <input className="w-full p-3 pl-12 text-sm bg-white border rounded-lg  border-gray-200" onChange={handleSearhPlaca} type="text" placeholder="Buscar placa" />
+            <div className="absolute inset-y-0 left-0 flex items-center pl-7 pointer-events-none">
+              <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+            </div>
+         </div>
+          <div className="min-h-[400px]">
+            {(isLoadVehiculos && !vehiculos) ? <Spinner /> : (!vehiculos || vehiculos.data.length == []) ? (
+              <NoData />
+            ) : (
+              <TableVehiculos datos={vehiculos?.data} fun={handleGetVehiculo} />
+            )}
+          </div>
+          <div className="p-4 mt-4">
+            {vehiculos && vehiculos.pagination.totalPages > 1 && <Pagination pg={paginationVehiculos} sp={setPaginationVehiculos} hp={handlePaginationVehiculos } dt={vehiculos}/>}
+          </div>
         </div>
 
         {/* Parte de motoristas */}
@@ -458,7 +539,20 @@ const EditTransporte = () => {
             <ButtonAdd name={"Agregar Motoristas"} fun={handleShowModalMotoristas}/>
           </div>
         </div>
-        <div className="gap-5 mt-7">{(isLoadMotorista && !motoristas) ? <Spinner /> :(!motoristas || motoristas.length == []) ? <NoData /> : <TableMotoristas datos={motoristas} fun={handleGetMotoristasEdit} />}</div>
+          <div className="relative mb-4 p-2 mt-7">
+           <input className="w-full p-3 pl-12 text-sm bg-white border rounded-lg  border-gray-200" onChange={handleSearhMotorista} type="text" placeholder="Buscar motorista" />
+            <div className="absolute inset-y-0 left-0 flex items-center pl-7 pointer-events-none">
+              <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+            </div>
+          </div>
+        <div className="gap-5 mt-7 min-h-[400px]">
+          {(isLoadMotorista && !motoristas) ? <Spinner /> :(!motoristas || motoristas.data.length == []) ? <NoData /> : <TableMotoristas datos={motoristas.data} fun={handleGetMotoristasEdit} />}
+        </div>
+        <div className="mt-4 p-4">
+          {motoristas && motoristas.pagination.totalPages > 1 && <Pagination pg={paginactionMotorista} sp={setPaginationMotoristas} hp={handlePaginationMotoristas } dt={motoristas}/>}
+        </div>
         <hr className="text-gray-400 mt-7" />
       </div>
 
