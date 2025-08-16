@@ -48,7 +48,9 @@ const getAllData = async (req, res) => {
       MovimientosS,
       TI,
       TE,
-      Facturas, 
+      Facturas,
+      FurgonesData,
+      Rastras,  
     ] = await Promise.all([
       db.socios.findMany({
         select: { id: true, nombre: true },
@@ -122,7 +124,7 @@ const getAllData = async (req, res) => {
         },
       }),
       db.vehiculo.findMany({
-        select: { placa: true },
+        select: { placa: true, tipo: true },
         where: {
           estado: true,
           rEmpresaVehiculo: {
@@ -178,12 +180,53 @@ const getAllData = async (req, res) => {
           Proceso: 1,
           idSocio: socio
         }
-      }) : null, 
+      }) : null,
+      (socio && socio == 1 && empresa ) ? db.vehiculo.findMany({
+        select: { placa: true },
+        where: {
+          estado: true,
+          tipo: "11",
+          rEmpresaVehiculo: {
+            estado: true,
+            ...(empresa ? { id: empresa } : {}),
+            rClientes: {
+              estado: true,
+              ...(socio ? { id: socio } : {}),
+              ...(tipo == 0 || tipo == 1 ? { tipo: tipo } : {}),
+            },
+          },
+        },
+        distinct: ["placa"],
+      }): null,
+      (socio && socio == 1 && empresa ) ? db.vehiculo.findMany({
+        select: { placa: true },
+        where: {
+          estado: true,
+          tipo: "10",
+          rEmpresaVehiculo: {
+            estado: true,
+            ...(empresa ? { id: empresa } : {}),
+            rClientes: {
+              estado: true,
+              ...(socio ? { id: socio } : {}),
+              ...(tipo == 0 || tipo == 1 ? { tipo: tipo } : {}),
+            },
+          },
+        },
+        distinct: ["placa"],
+      }): null,  
     ]);
     const Placa = Vehiculo.map((el) => ({
       id: el.placa,
       nombre: el.placa,
+      tipo: el.tipo, 
     }));
+
+    const Furgones = FurgonesData === null ? [] : FurgonesData.map((el) => ({
+      id: el.placa,
+      nombre: el.placa,
+    }));
+
     Clientes.push(
       { id: -998, nombre: "Cliente X" },
       { id: -999, nombre: "Proveedor X" }
@@ -207,6 +250,8 @@ const getAllData = async (req, res) => {
       TransladosI,
       TransladosE,
       FacturaFinal,
+      Furgones, 
+      Rastras
     });
   } catch (err) {
     setLogger('BOLETA', 'OBTENER DATOS PARA SELECTS', req, null, 3)  

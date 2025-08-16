@@ -123,6 +123,8 @@ export const direccionOrigenEmpresa = [
 
 
 export const tiposCamion = [
+  { id: 10, tipo: "uso", nombre: "Rastra o tráiler" },
+  { id: 11, tipo: "uso", nombre: "Furgón de carga" },
   { id: 0, tipo: "peso", nombre: "Camión liviano" },
   { id: 1, tipo: "peso", nombre: "Camión mediano" },
   { id: 2, tipo: "peso", nombre: "Camión pesado" },
@@ -133,8 +135,6 @@ export const tiposCamion = [
   { id: 7, tipo: "uso", nombre: "Camión volteo" },
   { id: 8, tipo: "uso", nombre: "Camión grúa" },
   { id: 9, tipo: "uso", nombre: "Camión jaula" },
-  { id: 10, tipo: "uso", nombre: "Rastra o tráiler" },
-  { id: 11, tipo: "uso", nombre: "Camión lowboy" }
 ];
 
 export const windowVariants = {

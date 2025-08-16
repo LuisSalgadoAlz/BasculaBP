@@ -267,6 +267,12 @@ export const ModalNormal = ({ hdlClose, hdlChange, fillData, formBol, boletas, h
                       <InputsFormBoletas key={field} data={claseFormInputs} name={field} fun={hdlChange} val={field === 'Transportes' ? 'Transportes X' : boletas[field]} stt={field === 'Transportes'} />
                     )
                   )}
+
+                  {console.log(fillData['Furgones'])}
+                  {fillData['Rastras']?.some(r => r.placa === boletas?.Placa) && (
+                    <SelectFormBoletas classCss={classFormSelct} name="Furgón" data={fillData['Furgones']} fun={hdlChange} val={boletas?.Furgones}/>
+                  )}
+
                   <PartInputsPesos fun={getPesoIn} hdlChange={hdlChange} val={boletas} />
                 </div>
               </>
