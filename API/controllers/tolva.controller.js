@@ -612,16 +612,24 @@ const postSiloInBoletas = async(req, res) => {
       })
     ])
 
-    const arrTolva = [sello1, sello2, sello3, sello4, sello5, sello6];
-    const arrBoleta = [boleta.sello1, boleta.sello2, boleta.sello3, boleta.sello4, boleta.sello5, boleta.sello6];
+    const arrTolva = [sello1, sello2, sello3, sello4, sello5, sello6].filter(Boolean); 
+    /* if (arrTolva.length < 3) return res.status(200).send({ err: 'Minimo de marchamos 3.' }); */
+    const arrBoleta = [boleta.sello1, boleta.sello2, boleta.sello3, boleta.sello4, boleta.sello5, boleta.sello6].filter(Boolean);
 
-    const enviarAlerta = arrTolva
-    .filter(s => s !== null && s !== undefined)
-    .every(sello => arrBoleta.filter(b => b !== null && b !== undefined).includes(sello));
+    const arraysIguales = (a, b) => {
+        if (a.length !== b.length) return false;
+        const sortedA = [...a].sort();
+        const sortedB = [...b].sort();
+        return sortedA.every((val, index) => val === sortedB[index]);
+    };
 
-    if(!enviarAlerta) {
-      setLogger('TOLVA', 'MARCHAMOS NO COINCIDEN CON BÁSCULA', req, null, 3)  
-      alertaMarchamosDiferentes(boleta, usuario, enviarCorreo, arrBoleta, arrTolva, tolvaDescarga)
+    const enviarAlerta = !arraysIguales(arrTolva, arrBoleta);
+
+    console.log(`Se envio alerta de marchamos: ${enviarAlerta ? 'Si' : 'No'}`);
+
+    if(enviarAlerta) {
+        setLogger('TOLVA', 'MARCHAMOS NO COINCIDEN CON BÁSCULA', req, null, 3);
+        alertaMarchamosDiferentes(boleta, usuario, enviarCorreo, arrBoleta, arrTolva, tolvaDescarga);
     }
 
     if (isEmptyTolva !== 0) {
@@ -639,12 +647,12 @@ const postSiloInBoletas = async(req, res) => {
         SiloTerciario: parseInt(silo3) || null, 
         estado: 0, 
         tolvaDescarga: `T${usuario.UsuariosPorTolva.tolva}-${tolvaDescarga}`,
-        Sello1: parseInt(sello1) || null, 
-        Sello2: parseInt(sello2) || null, 
-        Sello3: parseInt(sello3) || null, 
-        Sello4: parseInt(sello4) || null, 
-        Sello5: parseInt(sello5) || null, 
-        Sello6: parseInt(sello6) || null, 
+        Sello1: sello1 || null, 
+        Sello2: sello2 || null, 
+        Sello3: sello3 || null, 
+        Sello4: sello4 || null, 
+        Sello5: sello5 || null, 
+        Sello6: sello6 || null, 
       }
     })
     setLogger('TOLVA', 'ASIGNO BOLETA A SILO, Y COMENZO A DESCARGAR', req, null, 1, updateSiloBoleta.id)  
