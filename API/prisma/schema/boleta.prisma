@@ -3,7 +3,9 @@ model Boleta {
     numBoleta Int?
     boletaType Int?
     idPlaca Int?
-    placa String 
+    placa String
+    idFurgon Int?
+    furgon String? 
     idEmpresa Int?
     empresa String
     idSocio Int?
@@ -58,7 +60,8 @@ model Boleta {
     fechaDespachoPuerto DateTime?
 
     /* Relaciones dentro de la boleta */
-    placasBoletas Vehiculo? @relation(fields: [idPlaca], references: [id], onDelete: NoAction, onUpdate: NoAction)
+    placasBoletas Vehiculo? @relation("PlacaBoleta", fields: [idPlaca], references: [id], onDelete: NoAction, onUpdate: NoAction)
+    furgonBoletas Vehiculo? @relation("FurgonBoleta", fields: [idFurgon], references: [id], onDelete: NoAction, onUpdate: NoAction)
     despachador Usuarios @relation(fields: [idUsuario], references: [id])
     empresaBoleta Empresa? @relation(fields: [idEmpresa], references: [id], onDelete: NoAction, onUpdate: NoAction)
     clienteBoleta Socios? @relation(fields: [idSocio], references: [id])

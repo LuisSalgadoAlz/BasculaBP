@@ -129,6 +129,7 @@ export const formaterDataNewPlaca = (formBoletas, marchamos) => {
     idMotorista: formBoletas?.Motoristas,
     pesoInicial: formBoletas?.pesoIn,
     idPlaca: formBoletas?.Placa,
+    furgon: formBoletas?.Furgon,
     idEmpresa: formBoletas?.Transportes,
     ...(formBoletas?.Proceso == 0 && {
       idProducto: formBoletas?.Producto|| null, 
@@ -500,7 +501,7 @@ export const formaterData = (formBoletas, valor, marchamos) => {
 }
 
 
-export const verificarDataNewPlaca = (funError, data, setMsg, marchamos) => {
+export const verificarDataNewPlaca = (funError, data, setMsg, marchamos, dataSelects) => {
   const { 
     idCliente, 
     idUsuario, 
@@ -521,7 +522,8 @@ export const verificarDataNewPlaca = (funError, data, setMsg, marchamos) => {
     factura,
     contenedor, 
     sacosDeOrigen, 
-    marchamoOrigen, 
+    marchamoOrigen,
+    furgon, 
   } = data;
 
   const mostrarError = (mensaje) => {
@@ -532,6 +534,10 @@ export const verificarDataNewPlaca = (funError, data, setMsg, marchamos) => {
 
   if (!idCliente || !idUsuario || !idMotorista || !idPlaca || !idEmpresa) {
     return mostrarError('Por favor, complete todos los campos antes de continuar. (Cliente, Motorista, Placa y Empresa)');
+  }
+
+  if(dataSelects['Rastras']?.some(r => r.placa === idPlaca) && !furgon) {
+    return mostrarError('Por favor, ingrese la placa del furgon.')
   }
 
   if (proceso === 0) {

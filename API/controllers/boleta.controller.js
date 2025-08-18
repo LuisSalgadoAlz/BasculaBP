@@ -511,41 +511,47 @@ const postClientePlacaMoto = async (req, res) => {
       factura,
       contenedor, 
       sacosDeOrigen, 
-      marchamoOrigen, 
+      marchamoOrigen,
+      furgon, 
     } = req.body;
 
-    const [
-      facturaData,
-      empresa,
-      motorista,
-      socio,
-      placaData,
-      producto,
-      origen,
-      movimiento,
-      trasladoOrigen,
-      despachador
-    ] = await Promise.all([
-      ((proceso === 0 && (idMovimiento ===2 || idMovimiento ===15)) ? db.facturas.findUnique({ where: { id: parseInt(factura) } }) : null),
-      db.empresa.findUnique({ where: { id: parseInt(idEmpresa) } }),
-      db.motoristas.findUnique({ where: { id: parseInt(idMotorista) } }),
-      db.socios.findUnique({ where: { id: parseInt(idCliente) } }),
-      db.vehiculo.findFirst({
+    const verificado = jwt.verify(idUsuario, process.env.SECRET_KEY);
+
+    const ids = { empresa: parseInt(idEmpresa), motorista: parseInt(idMotorista), cliente: parseInt(idCliente), 
+      producto: parseInt(idProducto), origen: parseInt(idOrigen), movimiento: parseInt(idMovimiento), trasladoOrigen: parseInt(idTrasladoOrigen),
+      factura: parseInt(factura)
+    };
+
+    // Condiciones pre-calculadas
+    const esProcesoCero = proceso === 0;
+    const esMovimientoFactura = idMovimiento === 2 || idMovimiento === 15;
+    const esMovimientoTraslado = idMovimiento === 10 || idMovimiento === 11;
+    const requiereFactura = esProcesoCero && esMovimientoFactura;
+    const requiereOrigen = esProcesoCero && !esMovimientoTraslado;
+    const requiereTraslado = esProcesoCero && esMovimientoTraslado;
+    
+    const [ facturaData, empresa, motorista, socio, vehiculos, producto, origen, movimiento, trasladoOrigen, despachador ] = await Promise.all([
+      requiereFactura ? db.facturas.findUnique({ where: { id: ids.factura } }) : null,
+      db.empresa.findUnique({ where: { id: ids.empresa } }),
+      db.motoristas.findUnique({ where: { id: ids.motorista } }),
+      db.socios.findUnique({ where: { id: ids.cliente } }),
+      db.vehiculo.findMany({
         select: { id: true, placa: true },
-        where: { placa: idPlaca, rEmpresaVehiculo: { id: idEmpresa } },
+        where: { 
+          placa: { in: [idPlaca, furgon].filter(Boolean) },
+          rEmpresaVehiculo: { id: ids.empresa } 
+        }
       }),
-      proceso === 0 ? db.producto.findUnique({ where: { id: idProducto } }) : null,
-      (proceso === 0 && (idMovimiento != 10 && idMovimiento != 11)) ? 
-        db.direcciones.findUnique({ where: { id: idOrigen } }) : null,
-      proceso === 0 ? db.movimientos.findUnique({ where: { id: idMovimiento } }) : null,
-      (proceso === 0 && (idMovimiento == 10 || idMovimiento == 11)) ? 
-        db.translado.findUnique({ where: { id: idTrasladoOrigen } }) : null,
-      (async () => {
-        const verificado = jwt.verify(idUsuario, process.env.SECRET_KEY);
-        return db.usuarios.findUnique({ where: { usuarios: verificado["usuarios"] } });
-      })()
+      esProcesoCero ? db.producto.findUnique({ where: { id: ids.producto } }) : null,
+      requiereOrigen ? db.direcciones.findUnique({ where: { id: ids.origen } }) : null,
+      esProcesoCero ? db.movimientos.findUnique({ where: { id: ids.movimiento } }) : null,
+      requiereTraslado ? db.translado.findUnique({ where: { id: ids.trasladoOrigen } }) : null,
+      db.usuarios.findUnique({ where: { usuarios: verificado.usuarios } })
     ]);
 
+    const placaData = vehiculos.find(v => v.placa === idPlaca);
+    const furgonData = vehiculos.find(v => v.placa === furgon);
+    console.log(furgonData)
     const baseData = {
       idSocio: parseInt(idCliente),
       placa: placaData.placa,

@@ -13,7 +13,7 @@ import { CiUnlock } from "react-icons/ci";
 import { Toaster, toast } from 'sonner';
 import { IoIosArrowDown, IoIosArrowUp, IoIosArrowForward, IoMdClose   } from "react-icons/io";
 
-const formInputSelect = ['Transportes', 'Placa', 'Motoristas']
+const formInputSelect = ['Transportes', 'Placa', 'Furgon', 'Motoristas']
 const guardiaValidacion = [{id: 1, nombre: 'Si'}, {id: 2, nombre: 'No'}]
 
 
@@ -261,17 +261,41 @@ export const ModalNormal = ({ hdlClose, hdlChange, fillData, formBol, boletas, h
                   {boletas?.Socios === -998 && ( <InputsFormBoletas data={claseFormInputs} name="Cliente" fun={hdlChange} val={boletas?.Cliente}/> )}
                   {boletas?.Socios === -999 && (<InputsFormBoletas data={claseFormInputs} name="Proveedor" fun={hdlChange} val={boletas?.Proveedor}/> )}
 
-                  {formInputSelect.map((field) => boletas?.Socios !== -998 && boletas?.Socios !== -999 ? (
-                      <SelectFormBoletas key={field} classCss={classFormSelct} name={field} data={fillData[field]} fun={hdlChange} val={boletas[field]} stt={boletas?.Proceso!==''? false: true}/>
+                  {formInputSelect.map((field) => (
+                    boletas?.Socios !== -998 && boletas?.Socios !== -999 ? (
+                      field === 'Furgon' ? (
+                        fillData['Rastras']?.some(r => r.placa === boletas?.Placa) && (
+                          <SelectFormBoletas
+                            key={field}
+                            classCss={classFormSelct}
+                            name={field}
+                            data={fillData['Furgones']}
+                            fun={hdlChange}
+                            val={boletas?.Furgones}
+                          />
+                        )
+                      ) : (
+                        <SelectFormBoletas
+                          key={field}
+                          classCss={classFormSelct}
+                          name={field}
+                          data={fillData[field]}
+                          fun={hdlChange}
+                          val={boletas[field]}
+                          stt={boletas?.Proceso !== '' ? false : true}
+                        />
+                      )
                     ) : (
-                      <InputsFormBoletas key={field} data={claseFormInputs} name={field} fun={hdlChange} val={field === 'Transportes' ? 'Transportes X' : boletas[field]} stt={field === 'Transportes'} />
+                      <InputsFormBoletas
+                        key={field}
+                        data={claseFormInputs}
+                        name={field}
+                        fun={hdlChange}
+                        val={field === 'Transportes' ? 'Transportes X' : boletas[field]}
+                        stt={field === 'Transportes'}
+                      />
                     )
-                  )}
-
-                  {console.log(fillData['Furgones'])}
-                  {fillData['Rastras']?.some(r => r.placa === boletas?.Placa) && (
-                    <SelectFormBoletas classCss={classFormSelct} name="Furgón" data={fillData['Furgones']} fun={hdlChange} val={boletas?.Furgones}/>
-                  )}
+                  ))}
 
                   <PartInputsPesos fun={getPesoIn} hdlChange={hdlChange} val={boletas} />
                 </div>

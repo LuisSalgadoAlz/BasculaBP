@@ -1,0 +1,23 @@
+BEGIN TRY
+
+BEGIN TRAN;
+
+-- AlterTable
+ALTER TABLE [dbo].[Boleta] ADD [furgon] NVARCHAR(1000),
+[idFurgon] INT;
+
+-- AddForeignKey
+ALTER TABLE [dbo].[Boleta] ADD CONSTRAINT [Boleta_idFurgon_fkey] FOREIGN KEY ([idFurgon]) REFERENCES [dbo].[Vehiculo]([id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+COMMIT TRAN;
+
+END TRY
+BEGIN CATCH
+
+IF @@TRANCOUNT > 0
+BEGIN
+    ROLLBACK TRAN;
+END;
+THROW
+
+END CATCH

@@ -153,7 +153,7 @@ const Boletas = () => {
    */
   const handleSubmitNewPlaca = async () => {
     const response = formaterDataNewPlaca(formBoletas, marchamos)
-    const isCorrect = verificarDataNewPlaca(setErr,response, setMsg, marchamos)
+    const isCorrect = verificarDataNewPlaca(setErr,response, setMsg, marchamos, dataSelets)
     if (isCorrect) {
       const state = await postBoletasNormal(response, setIsLoading)
       if(state?.err){
