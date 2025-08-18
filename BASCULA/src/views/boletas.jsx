@@ -152,7 +152,7 @@ const Boletas = () => {
    * Todo: terminada Primera parte
    */
   const handleSubmitNewPlaca = async () => {
-    const response = formaterDataNewPlaca(formBoletas, marchamos)
+    const response = formaterDataNewPlaca(formBoletas, marchamos, dataSelets)
     const isCorrect = verificarDataNewPlaca(setErr,response, setMsg, marchamos, dataSelets)
     if (isCorrect) {
       const state = await postBoletasNormal(response, setIsLoading)
@@ -188,7 +188,7 @@ const Boletas = () => {
 
   const validarDatosPrincipales = async () => {
     const {valor} = await getToleranciaValue()
-    const response = formaterData(formBoletas, valor, marchamos)
+    const response = formaterData(formBoletas, valor, marchamos, dataSelets)
     const isCorrect = verificarDataCompleto(setErr, response, setMsg, formBoletas?.pesoIn)
     return { isCorrect, response, valor }
   }

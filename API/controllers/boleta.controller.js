@@ -127,6 +127,7 @@ const getAllData = async (req, res) => {
         select: { placa: true, tipo: true },
         where: {
           estado: true,
+          tipo: {not: "11"},
           rEmpresaVehiculo: {
             estado: true,
             ...(empresa ? { id: empresa } : {}),
@@ -551,10 +552,13 @@ const postClientePlacaMoto = async (req, res) => {
 
     const placaData = vehiculos.find(v => v.placa === idPlaca);
     const furgonData = vehiculos.find(v => v.placa === furgon);
+
     console.log(furgonData)
     const baseData = {
       idSocio: parseInt(idCliente),
       placa: placaData.placa,
+      idFurgon: furgonData?.id || null,
+      furgon: furgonData?.placa || null,
       empresa: empresa.nombre,
       motorista: motorista.nombre,
       socio: socio.nombre,
@@ -1059,13 +1063,14 @@ const updateBoletaOut = async (req, res) => {
       encargadoDeBodegaId, 
       encargadoDeNombre, 
       sacosDescargados,
+      furgon
     } = req.body;
 
     const verificado = jwt.verify(idUsuario, process.env.SECRET_KEY);
 
     const [
       despachador,
-      placaData,
+      vehiculos,
       empresa,
       motorista,
       socio,
@@ -1077,12 +1082,12 @@ const updateBoletaOut = async (req, res) => {
       db.usuarios.findUnique({
         where: { usuarios: verificado["usuarios"] },
       }),
-      db.vehiculo.findFirst({
+      db.vehiculo.findMany({
         select: { id: true, placa: true },
-        where: {
-          placa: idPlaca,
-          rEmpresaVehiculo: { id: idEmpresa },
-        },
+        where: { 
+          placa: { in: [idPlaca, furgon].filter(Boolean) },
+          rEmpresaVehiculo: { id: idEmpresa } 
+        }
       }),
       db.empresa.findUnique({
         where: { id: parseInt(idEmpresa) },
@@ -1102,6 +1107,9 @@ const updateBoletaOut = async (req, res) => {
       generarNumBoleta(),
       toleranciaPermititda()
     ]);
+
+    const placaData = vehiculos.find(v => v.placa === idPlaca);
+    const furgonData = vehiculos.find(v => v.placa === furgon);
 
     const isTraslado = move.nombre === "Traslado Interno" || move.nombre === "Traslado Externo";
 
@@ -1143,6 +1151,8 @@ const updateBoletaOut = async (req, res) => {
       idSocio: parseInt(idCliente),
       numBoleta,
       placa: placaData.placa,
+      furgon: furgonData?.placa || null,
+      idFurgon: furgonData?.id || null,
       empresa: empresa.nombre,
       motorista: motorista.nombre,
       socio: socio.nombre,

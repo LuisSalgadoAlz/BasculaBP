@@ -9,7 +9,7 @@ import {
   FiClock,
   FiX,
 } from "react-icons/fi";
-import { RiPassValidLine } from "react-icons/ri";
+import { RiPassValidLine, RiCaravanFill } from "react-icons/ri";
 import { PiNewspaperClippingLight } from "react-icons/pi";
 
 const formatDate = (dateString) => {
@@ -141,6 +141,12 @@ const ModalHeader = ({ data, closeModal }) => {
                   <span className="text-sm font-medium">{data?.placa}</span>
                 </span>
                 
+                {data?.furgon && (
+                  <span className="flex items-center gap-1 min-w-fit">
+                    <RiCaravanFill className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-sm font-medium"> Furgon: {data?.furgon}</span>
+                  </span>
+                )}
                 {(data?.manifiesto !== 0 && data?.manifiesto !== null) && (
                   <span className="flex items-center gap-1 min-w-fit">
                     <FiPackage className="w-4 h-4 flex-shrink-0" />

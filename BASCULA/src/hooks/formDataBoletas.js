@@ -118,9 +118,10 @@ export const getDataBoletasPorID = async (id, setIsLoading) => {
   }
 };
 
-export const formaterDataNewPlaca = (formBoletas, marchamos) => {
+export const formaterDataNewPlaca = (formBoletas, marchamos, dataSelects) => {
   const typeSocio = formBoletas?.Socios ==-998 ?  formBoletas?.Cliente : formBoletas?.Proveedor
-  console.log(formBoletas)
+  const requiereIngresoDeFurgon = dataSelects['Rastras']?.some(r => r.placa === formBoletas?.Placa)
+
   const allData = {
     proceso: formBoletas?.Proceso, 
     idCliente : formBoletas?.Socios,
@@ -129,7 +130,7 @@ export const formaterDataNewPlaca = (formBoletas, marchamos) => {
     idMotorista: formBoletas?.Motoristas,
     pesoInicial: formBoletas?.pesoIn,
     idPlaca: formBoletas?.Placa,
-    furgon: formBoletas?.Furgon,
+    furgon: requiereIngresoDeFurgon ? formBoletas?.Furgon : null,
     idEmpresa: formBoletas?.Transportes,
     ...(formBoletas?.Proceso == 0 && {
       idProducto: formBoletas?.Producto|| null, 
@@ -203,6 +204,7 @@ export const getDataParaForm = async (setFormBoletas, data, setMove, setIsLoadin
     valueSocio : response?.socio,
     Motoristas: response.idMotorista ?? response.motorista,
     Placa: response.placa,
+    Furgon: response.furgon,
     Proceso: response.proceso,
     Producto: response.idProducto,
     Movimiento: response.idMovimiento,
@@ -451,7 +453,7 @@ export const getToleranciaValue = async () => {
   }
 };
 
-export const formaterData = (formBoletas, valor, marchamos) => {
+export const formaterData = (formBoletas, valor, marchamos, dataSelects) => {
   const pesoNeto = Math.abs(formBoletas?.pesoOut - formBoletas?.pesoIn);
 
   const tolerancia = (formBoletas['Peso Teorico']) ? (formBoletas['Peso Teorico'] * valor) : 0;
@@ -463,6 +465,9 @@ export const formaterData = (formBoletas, valor, marchamos) => {
     acc[`sello${index + 1}`] = sello;
     return acc;
   }, {});
+
+  const requiereIngresoDeFurgon = dataSelects['Rastras']?.some(r => r.placa === formBoletas?.Placa)
+
 
   const allData = {
     idCliente : formBoletas?.Socios,
@@ -494,7 +499,8 @@ export const formaterData = (formBoletas, valor, marchamos) => {
     documentoAgregado : formBoletas['documentoAgregado'],
     encargadoDeBodegaId: formBoletas?.encargadoDeBodega || null, 
     encargadoDeNombre : formBoletas?.onlyContenerizada?.find(item => Number(item.id) === Number(formBoletas?.encargadoDeBodega))?.Nombre || null,
-    sacosDescargados: formBoletas?.sacosDescargados || null, 
+    sacosDescargados: formBoletas?.sacosDescargados || null,
+    furgon: requiereIngresoDeFurgon ? formBoletas?.Furgon : null, 
   }
   console.log(allData)
   return allData
@@ -662,13 +668,13 @@ export const verificarDataCompleto = (funError, data, setMsg, pesoIn) => {
     }
   } */
 
-  if(proceso == 1 && parseFloat(pesoIn)>=parseFloat(pesoFinal)){
+  /* if(proceso == 1 && parseFloat(pesoIn)>=parseFloat(pesoFinal)){
     if (idMovimiento!=13 && idMovimiento!=12) {
       setMsg('Peso final debe ser mayor al peso de inicio')
       funError(true)
       return false
     }
-  }
+  } */
   
   if (!idCliente || !idEmpresa || !idMotorista || !idMovimiento || !idProducto) {
     setMsg('Por favor, ingresar todos los datos primer nivel: cliente, transporte, motorista, movimiento, producto')
@@ -706,11 +712,11 @@ export const verificarDataCompleto = (funError, data, setMsg, pesoIn) => {
     return false
   }
 
-  if (parseFloat(pesoFinal) <= 0) {
+  /* if (parseFloat(pesoFinal) <= 0) {
     setMsg('El peso final debe ser mayor que 0.')
     funError(true)
     return false
-  }
+  } */
 
   /**
    * Parte de las direcciones
