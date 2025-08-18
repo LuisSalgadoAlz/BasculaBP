@@ -106,12 +106,12 @@ model Tolva {
   usuarioDeCierre String?
   observacionDeCancelacion String?
   observacionTiempo String?
-  Sello1 Int?
-  Sello2 Int?
-  Sello3 Int?
-  Sello4 Int?
-  Sello5 Int?
-  Sello6 Int?
+  Sello1 String?
+  Sello2 String?
+  Sello3 String?
+  Sello4 String?
+  Sello5 String?
+  Sello6 String?
 
   // lrelacion de los silos
   principal      Silos   @relation("PrincipalSilo", fields: [siloPrincipal], references: [id], onUpdate: NoAction, onDelete: NoAction)
