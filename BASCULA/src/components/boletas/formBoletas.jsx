@@ -153,11 +153,13 @@ export const ModalBoletas = ({hdlClose, hdlChange, fillData, formBol, boletas, h
             <SelectFormBoletas key={clean} classCss={classFormSelct} name={'Socios'} data={newClient} fun={hdlChange} stt={(boletas.Proceso==='')? true : false}/>
             {boletas?.Socios==-998 && <InputsFormBoletas data={claseFormInputs} name={'Cliente'} fun={hdlChange} />}
             {boletas?.Socios==-999 && <InputsFormBoletas data={claseFormInputs} name={'Proveedor'} fun={hdlChange} />}
-            {formInputSelect.map((field) => (boletas?.Socios !=-998 && boletas?.Socios !=-999) ? 
+            {formInputSelect.map((field) => (boletas?.Socios !=-998 && boletas?.Socios !=-999 && field !== 'Furgon') ? 
               (
                 <SelectFormBoletas key={field} classCss={classFormSelct} name={field} data={fillData[field]} fun={hdlChange} />
                 ) : (
-                <InputsFormBoletas key={field} data={claseFormInputs} name={field} fun={hdlChange} val={boletas?.[field]} /> 
+                  field !=='Furgon' && (
+                    <InputsFormBoletas key={field} data={claseFormInputs} name={field} fun={hdlChange} val={boletas?.[field]} /> 
+                )
               )
             )}
             <SelectFormBoletas classCss={classFormSelct} name={'Producto'} data={fillData['Producto']} fun={hdlChange}/>
@@ -286,14 +288,16 @@ export const ModalNormal = ({ hdlClose, hdlChange, fillData, formBol, boletas, h
                         />
                       )
                     ) : (
-                      <InputsFormBoletas
-                        key={field}
-                        data={claseFormInputs}
-                        name={field}
-                        fun={hdlChange}
-                        val={field === 'Transportes' ? 'Transportes X' : boletas[field]}
-                        stt={field === 'Transportes'}
-                      />
+                      field !== 'Furgon' && (
+                        <InputsFormBoletas
+                          key={field}
+                          data={claseFormInputs}
+                          name={field}
+                          fun={hdlChange}
+                          val={field === 'Transportes' ? 'Transportes X' : boletas[field]}
+                          stt={field === 'Transportes'}
+                        />
+                      )
                     )
                   ))}
 
@@ -530,7 +534,9 @@ export const ModalOut = (props) => {
                         <SelectFormBoletas key={field} classCss={classFormSelct} name={field} val={boletas?.[field]} data={fillData[field]} fun={hdlChange} stt={true}/>
                       )                  
                   ) : (
-                    <InputsFormBoletas key={field} data={claseFormInputs} name={field} fun={hdlChange} val={boletas?.[field]} stt={true} /> 
+                    field !== 'Furgon' && (
+                      <InputsFormBoletas key={field} data={claseFormInputs} name={field} fun={hdlChange} val={boletas?.[field]} stt={true} />
+                    )
                   )
                 )}
               </div>

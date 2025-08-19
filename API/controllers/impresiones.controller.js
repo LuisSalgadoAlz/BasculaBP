@@ -784,7 +784,7 @@ function generarContenidoTercioCarta(copia, esPrimera = false, colors, boleta, d
   /* SALIDA DE DOCUMENTO */
   const manifiesto = boleta?.manifiesto ? `Manifiesto(s)    : ${[boleta.manifiesto, boleta.manifiestoDeAgregado].filter(Boolean).join(', ')}` : null;
   const ordenCompra = boleta?.ordenDeCompra ? `Orden de Compra  : ${boleta.ordenDeCompra}` : null;
-  const ultimoDocumento = manifiesto || ordenCompra || 'N/A';
+  const ultimoDocumento = manifiesto || ordenCompra || '';
 
   /**
    * Identificador de fuera de tolerancia

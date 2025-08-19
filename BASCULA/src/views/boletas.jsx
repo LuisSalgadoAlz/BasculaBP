@@ -271,7 +271,7 @@ const Boletas = () => {
   }
 
   const handleSubmitCasulla = async() => {
-    const response = formaterData(formBoletas, 0, marchamos)
+    const response = formaterData(formBoletas, 0, marchamos, dataSelets)
     const allForm = {...response, ['pesoInicial']: formBoletas?.pesoIn, ["Cliente"] : formBoletas?.Cliente}
     const isCorrect = verificarDataCasulla(setErr, response, setMsg, formBoletas?.pesoIn)
     if (isCorrect) {

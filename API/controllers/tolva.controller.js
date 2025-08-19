@@ -613,7 +613,8 @@ const postSiloInBoletas = async(req, res) => {
     ])
 
     const arrTolva = [sello1, sello2, sello3, sello4, sello5, sello6].filter(Boolean); 
-    /* if (arrTolva.length < 3) return res.status(200).send({ err: 'Minimo de marchamos 3.' }); */
+    /* Autorizado por Javier y Salomon dia: 18/9/2025 a las 3PM */
+    if (arrTolva.length < 3) return res.status(200).send({ err: 'Minimo de marchamos 3.' });
     const arrBoleta = [boleta.sello1, boleta.sello2, boleta.sello3, boleta.sello4, boleta.sello5, boleta.sello6].filter(Boolean);
 
     const arraysIguales = (a, b) => {

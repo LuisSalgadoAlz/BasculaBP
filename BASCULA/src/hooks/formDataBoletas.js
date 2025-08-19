@@ -616,9 +616,9 @@ export const verificarDataNewPlaca = (funError, data, setMsg, marchamos, dataSel
     );
   }
 
-  /* if (parseFloat(pesoInicial) <= 0) {
+  if (parseFloat(pesoInicial) <= 0) {
     return mostrarError('Por favor, el peso inicial no debe de ser menor o igual a 0');
-  } */
+  }
 
   if (idMovimiento === 2 && marchamos.length < 3) {
     return mostrarError('Las importaciones a granel deben de llevar al menos 3 marchamo.');
@@ -651,6 +651,7 @@ export const verificarDataCompleto = (funError, data, setMsg, pesoIn) => {
     proceso, 
     ordenDeTransferencia,
     pesoFinal,
+    pesoTeorico, 
     aplicaAlerta,
     documentoAgregado,
     encargadoDeBodegaId,
@@ -658,112 +659,64 @@ export const verificarDataCompleto = (funError, data, setMsg, pesoIn) => {
     sacosDescargados,  
   } = data;
 
+  
+  const regexSoloNumeros = /^\d+$/;
+
+  const mostrarError = (mensaje) => {
+    funError(true);
+    setMsg(mensaje);
+    return false;
+  };
+
   /* idPlaca observaciones ordenDeTransferencia pesoInicial pesoTeorico*/
 
-  /* if(proceso == 0 && parseFloat(pesoIn)<=parseFloat(pesoFinal)){
-    if (idMovimiento!=10 && idMovimiento!=11) {
-      setMsg('Peso inicial debe ser mayor al peso final)')
-      funError(true)
-      return false
-    }
-  } */
+  if (!idCliente || !idEmpresa || !idMotorista || !idMovimiento || !idProducto) return mostrarError('Por favor, ingresar todos los datos primer nivel: cliente, transporte, motorista, movimiento, producto')
 
-  /* if(proceso == 1 && parseFloat(pesoIn)>=parseFloat(pesoFinal)){
-    if (idMovimiento!=13 && idMovimiento!=12) {
-      setMsg('Peso final debe ser mayor al peso de inicio')
-      funError(true)
-      return false
-    }
-  } */
+  if(proceso==1 && !idDestino && (idMovimiento!=11 && idMovimiento!=10)) return mostrarError('Ingrese todos los datos de direcciones.')
+
+  if((idMovimiento==11 || idMovimiento==10) && (!idTrasladoDestino || !idTrasladoOrigen)) return mostrarError('Ingrese todos los datos de direcciones.')
   
-  if (!idCliente || !idEmpresa || !idMotorista || !idMovimiento || !idProducto) {
-    setMsg('Por favor, ingresar todos los datos primer nivel: cliente, transporte, motorista, movimiento, producto')
-    funError(true)
-    return false
+  if ((idMovimiento==11 || idMovimiento==10) && (idTrasladoOrigen == idTrasladoDestino)) return mostrarError('Traslado origen y destino deben de ser diferentes')
+
+  if ((idMovimiento!=11 && idMovimiento!=10) && (idOrigen == idDestino)) return mostrarError('Origen y destino deben de ser diferentes')
+  
+  if (parseFloat(pesoFinal) <= 0) return mostrarError('El peso final debe ser mayor que 0.')
+
+  if(proceso == 0 && parseFloat(pesoIn)<=parseFloat(pesoFinal)){
+    if (idMovimiento!=10 && idMovimiento!=11) {
+      return mostrarError('Peso inicial debe ser mayor al peso final')
+    }
   }
 
-  if ((idMovimiento==11 || idMovimiento==10) && (idTrasladoOrigen == idTrasladoDestino)) {
-    setMsg('Traslado origen y destino deben de ser diferentes')
-    funError(true)
-    return false
+  if(proceso == 1 && parseFloat(pesoIn)>=parseFloat(pesoFinal)){
+    if (idMovimiento!=13 && idMovimiento!=12) {
+      return mostrarError('Peso final debe ser mayor al peso de inicio')
+    }
   }
 
-  if ((idMovimiento!=11 && idMovimiento!=10) && (idOrigen == idDestino)) {
-    setMsg('Origen y destino deben de ser diferentes')
-    funError(true)
-    return false
+  if(proceso==0 && !ordenDeCompra && (idMovimiento!=11 && idMovimiento!=10)) return mostrarError('Por favor, ingresar todos los datos segundo nivel: orden de compra.')
+
+  if (proceso === 1) {
+    if (!manifiesto || !regexSoloNumeros.test(manifiesto)) {
+      return mostrarError('Por favor, ingresar un manifiesto válido (solo números) para el proceso de tercer nivel.');
+    }
   }
 
-  if(proceso==0 && !ordenDeCompra && (idMovimiento!=11 && idMovimiento!=10)){
-    setMsg('Por favor, ingresar todos los datos segundo nivel: orden de compra.')
-    funError(true)
-    return false
+  if (pesoTeorico && !regexSoloNumeros.test(pesoTeorico)) {
+    return mostrarError('El peso teorico debe de ser numerico.');
   }
 
-  if(proceso==1 && !manifiesto){
-    setMsg('Por favor, ingresar todos los datos tercer nivel: proceso, manifiesto.')
-     funError(true)
-    return false
-  }
+  if ((idMovimiento==11 || idMovimiento==10) && !ordenDeTransferencia) return mostrarError('Por favor, ingresar todos los datos tercer nivel: proceso, manifiesto.')
+  
+  if(aplicaAlerta==='' && idCliente ==1 && proceso==1 && (idEmpresa ==1 || idEmpresa ==1014 || idEmpresa ==1015)) return mostrarError('Ingrese si el vehículo queda dentro de las instalaciones de BAPROSA.')
 
-  if ((idMovimiento==11 || idMovimiento==10) && !ordenDeTransferencia) {
-    setMsg('Por favor, ingresar todos los datos cuarto nivel: orden de transferencia.')
-    funError(true)
-    return false
-  }
+  if(idMovimiento===15 && (!encargadoDeBodegaId || !encargadoDeNombre)) return mostrarError('Ingrese el encargado de la bodega que recibio la importacion.')
 
-  /* if (parseFloat(pesoFinal) <= 0) {
-    setMsg('El peso final debe ser mayor que 0.')
-    funError(true)
-    return false
-  } */
+  if(idMovimiento === 15 && !sacosDescargados) return mostrarError('Ingrese los sacos descargados en la bodega.')
 
-  /**
-   * Parte de las direcciones
-   */
-  if(proceso==1 && !idDestino && (idMovimiento!=11 && idMovimiento!=10)){
-    setMsg('Ingrese todos los datos de direcciones.')
-    funError(true)
-    return false
-  }
+  if(idMovimiento === 15 && sacosDescargados == 0) return mostrarError('Los sacos descargados no pueden ser 0.')
 
-  if((idMovimiento==11 || idMovimiento==10) && (!idTrasladoDestino || !idTrasladoOrigen)){
-    setMsg('Ingrese todos los datos de direcciones.')
-    funError(true)
-    return false
-  }
-
-  console.log(aplicaAlerta)
-  /* Parte de Aplica Alerta */
-  if(aplicaAlerta==='' && idCliente ==1 && proceso==1 && (idEmpresa ==1 || idEmpresa ==1014 || idEmpresa ==1015)) {
-    setMsg('Ingrese si el vehículo queda dentro de las instalaciones de BAPROSA.')
-    funError(true)
-    return false
-  }
-
-  if(idMovimiento===15 && (!encargadoDeBodegaId || !encargadoDeNombre)) {
-    setMsg('Ingrese el encargado de la bodega que recibio la importacion.')
-    funError(true)
-    return false
-  }
-
-  if(idMovimiento === 15 && !sacosDescargados) {
-    setMsg('Ingrese los sacos descargados en la bodega.')
-    funError(true)
-    return false
-  }
-
-  if(idMovimiento === 15 && sacosDescargados == 0) {
-    setMsg('Los sacos descargados no pueden ser 0.')
-    funError(true)
-    return false
-  }
-
-  if(documentoAgregado && typeof documentoAgregado !== 'number') {
-    setMsg('Documento auxiliar debe de ser un numero valido.')
-    funError(true)
-    return false
-  }
+  if (documentoAgregado && !regexSoloNumeros.test(documentoAgregado)) return mostrarError('Documento auxiliar debe ser un número válido.')
 
   return true
 }
