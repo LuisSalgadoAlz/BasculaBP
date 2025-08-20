@@ -118,9 +118,10 @@ export const getDataBoletasPorID = async (id, setIsLoading) => {
   }
 };
 
-export const formaterDataNewPlaca = (formBoletas, marchamos) => {
+export const formaterDataNewPlaca = (formBoletas, marchamos, dataSelects) => {
   const typeSocio = formBoletas?.Socios ==-998 ?  formBoletas?.Cliente : formBoletas?.Proveedor
-  console.log(formBoletas)
+  const requiereIngresoDeFurgon = dataSelects['Rastras']?.some(r => r.placa === formBoletas?.Placa)
+
   const allData = {
     proceso: formBoletas?.Proceso, 
     idCliente : formBoletas?.Socios,
@@ -129,10 +130,12 @@ export const formaterDataNewPlaca = (formBoletas, marchamos) => {
     idMotorista: formBoletas?.Motoristas,
     pesoInicial: formBoletas?.pesoIn,
     idPlaca: formBoletas?.Placa,
+    furgon: requiereIngresoDeFurgon ? formBoletas?.Furgon : null,
     idEmpresa: formBoletas?.Transportes,
     ...(formBoletas?.Proceso == 0 && {
       idProducto: formBoletas?.Producto|| null, 
       idMovimiento: formBoletas?.Movimiento ||  null,
+      factura: formBoletas?.Factura || null,
       ...((formBoletas?.Movimiento==10 || formBoletas?.Movimiento==11) && {
         idTrasladoOrigen: formBoletas['Traslado Origen'],
         manifiesto: formBoletas?.Documento,
@@ -144,8 +147,13 @@ export const formaterDataNewPlaca = (formBoletas, marchamos) => {
       NViajes:  formBoletas.NViajes  || null,
       Nbodega: formBoletas?.Nbodega || null,
       FechaPuerto: formBoletas?.FechaPuerto || null,
-      tolvaAsignada: formBoletas?.TolvaAsignada || null,  
-      ...(formBoletas?.Movimiento==2 && {
+      tolvaAsignada: formBoletas?.TolvaAsignada || null,
+      ...(formBoletas?.Movimiento==15 && {
+        contenedor : formBoletas?.contenedor || null, 
+        sacosDeOrigen : formBoletas?.sacosDeOrigen || null, 
+        marchamoOrigen : formBoletas?.marchamoOrigen || null, 
+      }), 
+      ...((formBoletas?.Movimiento==2 || formBoletas?.Movimiento==15) && {
         sello1 : marchamos[0] || null,
         sello2 : marchamos[1] || null,
         sello3 : marchamos[2] || null,
@@ -196,6 +204,7 @@ export const getDataParaForm = async (setFormBoletas, data, setMove, setIsLoadin
     valueSocio : response?.socio,
     Motoristas: response.idMotorista ?? response.motorista,
     Placa: response.placa,
+    Furgon: response.furgon,
     Proceso: response.proceso,
     Producto: response.idProducto,
     Movimiento: response.idMovimiento,
@@ -208,6 +217,10 @@ export const getDataParaForm = async (setFormBoletas, data, setMove, setIsLoadin
     pesoOut: 0,
     idBoleta: data.Id,
     tipoSocio: response?.clienteBoleta?.tipo,
+    contenedor: response?.impContenerizada?.contenedor, 
+    marchamoOrigen: response?.impContenerizada?.marchamoDeOrigen, 
+    sacosDeOrigen: response?.impContenerizada?.sacosTeoricos, 
+    onlyContenerizada: response?.encargados,
   }));
 };
 
@@ -440,7 +453,7 @@ export const getToleranciaValue = async () => {
   }
 };
 
-export const formaterData = (formBoletas, valor, marchamos) => {
+export const formaterData = (formBoletas, valor, marchamos, dataSelects) => {
   const pesoNeto = Math.abs(formBoletas?.pesoOut - formBoletas?.pesoIn);
 
   const tolerancia = (formBoletas['Peso Teorico']) ? (formBoletas['Peso Teorico'] * valor) : 0;
@@ -452,6 +465,9 @@ export const formaterData = (formBoletas, valor, marchamos) => {
     acc[`sello${index + 1}`] = sello;
     return acc;
   }, {});
+
+  const requiereIngresoDeFurgon = dataSelects['Rastras']?.some(r => r.placa === formBoletas?.Placa)
+
 
   const allData = {
     idCliente : formBoletas?.Socios,
@@ -480,14 +496,18 @@ export const formaterData = (formBoletas, valor, marchamos) => {
     desviacion: desviacion, 
     allSellos,
     aplicaAlerta: formBoletas['¿Sale hoy?'] ? (formBoletas['¿Sale hoy?'] ===  2 ? false : true) : '',
-    documentoAgregado : formBoletas['documentoAgregado'], 
+    documentoAgregado : formBoletas['documentoAgregado'],
+    encargadoDeBodegaId: formBoletas?.encargadoDeBodega || null, 
+    encargadoDeNombre : formBoletas?.onlyContenerizada?.find(item => Number(item.id) === Number(formBoletas?.encargadoDeBodega))?.Nombre || null,
+    sacosDescargados: formBoletas?.sacosDescargados || null,
+    furgon: requiereIngresoDeFurgon ? formBoletas?.Furgon : null, 
   }
   console.log(allData)
   return allData
 }
 
 
-export const verificarDataNewPlaca = (funError, data, setMsg, marchamos) => {
+export const verificarDataNewPlaca = (funError, data, setMsg, marchamos, dataSelects) => {
   const { 
     idCliente, 
     idUsuario, 
@@ -504,7 +524,12 @@ export const verificarDataNewPlaca = (funError, data, setMsg, marchamos) => {
     idTrasladoOrigen,
     tolvaAsignada,
     Nbodega,
-    FechaPuerto
+    FechaPuerto,
+    factura,
+    contenedor, 
+    sacosDeOrigen, 
+    marchamoOrigen,
+    furgon, 
   } = data;
 
   const mostrarError = (mensaje) => {
@@ -515,6 +540,10 @@ export const verificarDataNewPlaca = (funError, data, setMsg, marchamos) => {
 
   if (!idCliente || !idUsuario || !idMotorista || !idPlaca || !idEmpresa) {
     return mostrarError('Por favor, complete todos los campos antes de continuar. (Cliente, Motorista, Placa y Empresa)');
+  }
+
+  if(dataSelects['Rastras']?.some(r => r.placa === idPlaca) && !furgon) {
+    return mostrarError('Por favor, ingrese la placa del furgon.')
   }
 
   if (proceso === 0) {
@@ -532,9 +561,11 @@ export const verificarDataNewPlaca = (funError, data, setMsg, marchamos) => {
     }
   }
 
-  // Validaciones específicas para Granza importada
-  const esImportacionProducto18 = idProducto === 18 && idMovimiento === 2;
-  if (esImportacionProducto18) {
+  // Validaciones importaciones a granel
+  const esImportacionesAgranel = idMovimiento === 2;
+  const esImportacionesContenerizada = idMovimiento === 15;
+
+  if (esImportacionesAgranel) {
     if (!NSalida || !NViajes) {
       return mostrarError('Por favor, ingresar numero de viaje y de salida');
     }
@@ -560,6 +591,24 @@ export const verificarDataNewPlaca = (funError, data, setMsg, marchamos) => {
     }
   }
 
+  if(esImportacionesContenerizada) {
+    if(!contenedor) {
+      return mostrarError('Por favor, ingresar el numero de contenedor');
+    }
+
+    if(!sacosDeOrigen) {
+      return mostrarError('Por favor, ingresar el numero de sacos de origen');
+    }
+
+    if(sacosDeOrigen<0){
+      return mostrarError('Por favor, la cantidad de sacos de origen positiva y mayor que cero.')
+    }
+
+    if(!marchamoOrigen) {
+      return mostrarError('Por favor, ingresar el numero de marchamo de origen');
+    }
+  }
+
   const esClienteEspecial = idCliente === -998 || idCliente === -999;
   if (esClienteEspecial && !regexPlca.test(idPlaca)) {
     return mostrarError(
@@ -571,8 +620,16 @@ export const verificarDataNewPlaca = (funError, data, setMsg, marchamos) => {
     return mostrarError('Por favor, el peso inicial no debe de ser menor o igual a 0');
   }
 
-  if (idMovimiento === 2 && marchamos.length === 0) {
-    return mostrarError('Las importaciones deben de llevar al menos 1 marchamo.');
+  if (idMovimiento === 2 && marchamos.length < 3) {
+    return mostrarError('Las importaciones a granel deben de llevar al menos 3 marchamo.');
+  }
+
+  if (idMovimiento === 15 && marchamos.length < 1){
+    return mostrarError('Las importaciones contenerizadas deben de llevar al menos 1 marchamo.')
+  }
+
+  if([2, 15].includes(idMovimiento) && !factura) {
+    return mostrarError('Las importaciones a granel / contenerizada deben contenter una factura.')
   }
 
   return true;
@@ -594,99 +651,72 @@ export const verificarDataCompleto = (funError, data, setMsg, pesoIn) => {
     proceso, 
     ordenDeTransferencia,
     pesoFinal,
+    pesoTeorico, 
     aplicaAlerta,
-    documentoAgregado, 
+    documentoAgregado,
+    encargadoDeBodegaId,
+    encargadoDeNombre,
+    sacosDescargados,  
   } = data;
+
+  
+  const regexSoloNumeros = /^\d+$/;
+
+  const mostrarError = (mensaje) => {
+    funError(true);
+    setMsg(mensaje);
+    return false;
+  };
 
   /* idPlaca observaciones ordenDeTransferencia pesoInicial pesoTeorico*/
 
+  if (!idCliente || !idEmpresa || !idMotorista || !idMovimiento || !idProducto) return mostrarError('Por favor, ingresar todos los datos primer nivel: cliente, transporte, motorista, movimiento, producto')
+
+  if(proceso==1 && !idDestino && (idMovimiento!=11 && idMovimiento!=10)) return mostrarError('Ingrese todos los datos de direcciones.')
+
+  if((idMovimiento==11 || idMovimiento==10) && (!idTrasladoDestino || !idTrasladoOrigen)) return mostrarError('Ingrese todos los datos de direcciones.')
+  
+  if ((idMovimiento==11 || idMovimiento==10) && (idTrasladoOrigen == idTrasladoDestino)) return mostrarError('Traslado origen y destino deben de ser diferentes')
+
+  if ((idMovimiento!=11 && idMovimiento!=10) && (idOrigen == idDestino)) return mostrarError('Origen y destino deben de ser diferentes')
+  
+  if (parseFloat(pesoFinal) <= 0) return mostrarError('El peso final debe ser mayor que 0.')
+
   if(proceso == 0 && parseFloat(pesoIn)<=parseFloat(pesoFinal)){
     if (idMovimiento!=10 && idMovimiento!=11) {
-      setMsg('Peso inicial debe ser mayor al peso final)')
-      funError(true)
-      return false
+      return mostrarError('Peso inicial debe ser mayor al peso final')
     }
   }
 
   if(proceso == 1 && parseFloat(pesoIn)>=parseFloat(pesoFinal)){
     if (idMovimiento!=13 && idMovimiento!=12) {
-      setMsg('Peso final debe ser mayor al peso de inicio')
-      funError(true)
-      return false
+      return mostrarError('Peso final debe ser mayor al peso de inicio')
     }
   }
+
+  if(proceso==0 && !ordenDeCompra && (idMovimiento!=11 && idMovimiento!=10)) return mostrarError('Por favor, ingresar todos los datos segundo nivel: orden de compra.')
+
+  if (proceso === 1) {
+    if (!manifiesto || !regexSoloNumeros.test(manifiesto)) {
+      return mostrarError('Por favor, ingresar un manifiesto válido (solo números) para el proceso de tercer nivel.');
+    }
+  }
+
+  if (pesoTeorico && !regexSoloNumeros.test(pesoTeorico)) {
+    return mostrarError('El peso teorico debe de ser numerico.');
+  }
+
+  if ((idMovimiento==11 || idMovimiento==10) && !ordenDeTransferencia) return mostrarError('Por favor, ingresar todos los datos tercer nivel: proceso, manifiesto.')
   
-  if (!idCliente || !idEmpresa || !idMotorista || !idMovimiento || !idProducto) {
-    setMsg('Por favor, ingresar todos los datos primer nivel: cliente, transporte, motorista, movimiento, producto')
-    funError(true)
-    return false
-  }
+  if(aplicaAlerta==='' && idCliente ==1 && proceso==1 && (idEmpresa ==1 || idEmpresa ==1014 || idEmpresa ==1015)) return mostrarError('Ingrese si el vehículo queda dentro de las instalaciones de BAPROSA.')
 
-  if ((idMovimiento==11 || idMovimiento==10) && (idTrasladoOrigen == idTrasladoDestino)) {
-    setMsg('Traslado origen y destino deben de ser diferentes')
-    funError(true)
-    return false
-  }
+  if(idMovimiento===15 && (!encargadoDeBodegaId || !encargadoDeNombre)) return mostrarError('Ingrese el encargado de la bodega que recibio la importacion.')
 
-  if ((idMovimiento!=11 && idMovimiento!=10) && (idOrigen == idDestino)) {
-    setMsg('Origen y destino deben de ser diferentes')
-    funError(true)
-    return false
-  }
+  if(idMovimiento === 15 && !sacosDescargados) return mostrarError('Ingrese los sacos descargados en la bodega.')
 
-  if(proceso==0 && !ordenDeCompra && (idMovimiento!=11 && idMovimiento!=10)){
-    setMsg('Por favor, ingresar todos los datos segundo nivel: orden de compra.')
-    funError(true)
-    return false
-  }
+  if(idMovimiento === 15 && sacosDescargados == 0) return mostrarError('Los sacos descargados no pueden ser 0.')
 
-  if(proceso==1 && !manifiesto){
-    setMsg('Por favor, ingresar todos los datos tercer nivel: proceso, manifiesto.')
-     funError(true)
-    return false
-  }
-
-  if ((idMovimiento==11 || idMovimiento==10) && !ordenDeTransferencia) {
-    setMsg('Por favor, ingresar todos los datos cuarto nivel: orden de transferencia.')
-    funError(true)
-    return false
-  }
-
-  if (parseFloat(pesoFinal) <= 0) {
-    setMsg('El peso final debe ser mayor que 0.')
-    funError(true)
-    return false
-  }
-
-  /**
-   * Parte de las direcciones
-   */
-  if(proceso==1 && !idDestino && (idMovimiento!=11 && idMovimiento!=10)){
-    setMsg('Ingrese todos los datos de direcciones.')
-    funError(true)
-    return false
-  }
-
-  if((idMovimiento==11 || idMovimiento==10) && (!idTrasladoDestino || !idTrasladoOrigen)){
-    setMsg('Ingrese todos los datos de direcciones.')
-    funError(true)
-    return false
-  }
-
-  /* Parte de Aplica Alerta */
-  if(aplicaAlerta==='' && idCliente ==1 && proceso==1 && (idEmpresa ==1 || idEmpresa ==1014 || idEmpresa ==1015)) {
-    setMsg('Ingrese si el vehículo queda dentro de las instalaciones de BAPROSA.')
-    funError(true)
-    return false
-  }
-
-  console.log(idCliente, proceso, idEmpresa, aplicaAlerta)
-
-  if(documentoAgregado && typeof documentoAgregado !== 'number') {
-    setMsg('Documento auxiliar debe de ser un numero valido.')
-    funError(true)
-    return false
-  }
+  if (documentoAgregado && !regexSoloNumeros.test(documentoAgregado)) return mostrarError('Documento auxiliar debe ser un número válido.')
 
   return true
 }

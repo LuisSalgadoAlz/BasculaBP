@@ -1,6 +1,7 @@
 const db = require('../lib/prisma')
 const dotenv = require("dotenv");
 const {setLogger} = require('../utils/logger');
+const jwt = require("jsonwebtoken");
 
 const getSocios = async (req, res) => {
   try{
@@ -294,6 +295,176 @@ const putDireccionesPorID = async (req, res) => {
   }
 };
 
+const getFacturaPorId = async(req, res) => {
+  try{
+    const { id } = req.query;
+    if(!id) return res.send({err: 'Faltan campos obligatorios, para mostrar los datos'})
+
+    const factura = await db.facturas.findUnique({
+      where: {
+        id: parseInt(id)
+      }
+    })
+
+    if(!factura) return res.status(200).send({err: 'Factura no encontrada'})
+
+    return res.status(200).send(factura)
+  }catch(err){
+    console.log(err)
+  }
+}
+
+const getFacturasPorSocios = async(req, res) => {
+  try{
+    const idSocio = parseInt(req.params.id);
+    if(!idSocio) return res.send({err: 'Faltan campos obligatorios, para mostrar los datos'})
+
+    const facturas = await db.facturas.findMany({
+      select: {
+        id:true, 
+        factura: true,
+        codigoProveedor: true,
+        Proveedor: true,
+        Cantidad: true,
+        Proceso: true,
+        createdAt: true,
+      }, 
+      where: {
+        idSocio: idSocio,
+      },
+    })
+
+    const refactorFacturas = facturas.map((el) => ({
+      id: el.id,
+      factura: el.factura,
+      codigoProveedor: el.codigoProveedor,
+      Proveedor: el.Proveedor,
+      Cantidad: el.Cantidad,
+      Proceso: el.Proceso == 1 ? 'RECIBIENDO' : el.Proceso == 2 ? 'COMPLETADO' : 'CANCELADO', 
+      Creada: el.createdAt.toLocaleString()
+    }))
+
+
+    return res.send(refactorFacturas)
+  }catch(err){
+    console.log(err)
+  }
+}
+
+const putFacturasPorId = async (req, res) => {
+  const { Proceso, Id } = req.body;
+  try {
+    const inv = await db.facturas.findUnique({ where: { id: parseInt(Id) } })
+    
+    const [boletasPendientes, boletasCompletadas] = await Promise.all([
+      db.boleta.count({
+        where: {
+          factura: inv.factura,
+          estado: 'Pendiente'
+        }
+      }),
+      db.boleta.count({
+        where: {
+          factura: inv.factura,
+          estado: {
+            not: { in: ['Cancelada', 'Pendiente'] },
+          },
+        },
+      }) 
+    ])
+
+    // Total de boletas (pendientes + completadas)
+    const totalBoletas = boletasPendientes + boletasCompletadas;
+
+    // Validaciones para Proceso 3 (Cacnelar Factura)
+    if (Proceso == 3) {
+      if (totalBoletas > 0) {
+        return res.status(200).send({
+          err: 'Esta factura contiene boletas pendientes o completadas, no se puede cancelar.'
+        });
+      }
+    }
+
+    // Validaciones para Proceso 2 (Completar la factura)
+    if (Proceso == 2) {
+      if (boletasCompletadas === 0) {
+        return res.status(200).send({
+          err: 'Esta factura debe tener al menos una boleta completada para poder completarse.'
+        });
+      }
+      
+      if (boletasPendientes > 0) {
+        return res.status(200).send({
+          err: 'Esta factura no puede completarse mientras tenga boletas pendientes.'
+        });
+      }
+    }
+
+    const updateFacturas = await db.facturas.update({
+      where: {
+        id: parseInt(Id),
+      },
+      data: {
+        Proceso: parseInt(Proceso),
+      },
+    });
+
+    res.status(200).send({msg: "Se ha modificado el proceso correctamente."});
+  } catch (error) {
+    console.log(error);
+    res.status(200).send({err: `Ha ocurrido un error, intente de nuevo. ${error}`});
+  }
+};
+
+const postCrearFacturasPorSocios  = async(req, res) =>{
+  const { factura, codigoProveedor, proveedor, cantidad, idSocio } = req.body;
+  const verificado = jwt.verify(req.header('Authorization'), process.env.SECRET_KEY);
+  
+  const exits = await db.facturas.count({
+    where: {
+      factura: factura,
+      Proceso: {
+        in: [1, 2]
+      }
+    }
+  })
+  
+  if(exits!==0) return res.send({err: 'Factura ya existe.'})
+
+  const [getUser, getSocio] = await Promise.all([
+    db.usuarios.findUnique({
+      where: {
+        usuarios: verificado.usuarios,
+      }
+    }),
+    db.socios.findUnique({
+      where: {
+        id: parseInt(idSocio)
+      }
+    })
+  ])
+
+  try {
+    const crearNuevaFactura = await db.facturas.create({
+      data:{
+        factura: factura,
+        codigoProveedor,
+        Proveedor: proveedor,
+        Cantidad: parseFloat(cantidad),
+        idSocio: parseInt(getSocio.id),
+        socio: getSocio.nombre, 
+        createdByUserID: parseInt(getUser.id), 
+        createdByUserName: getUser.name,
+        Proceso:1, 
+      }
+    })
+    return res.send( { msg: 'Factura Creada exitosamente.', data:crearNuevaFactura } )
+  }catch(err){
+    console.log(err)
+    return res.send( { err: `Error interno, intente denuevo ${err}` } )
+  }
+}
+
 module.exports = {
   getSocios,
   postSocios,
@@ -303,5 +474,9 @@ module.exports = {
   getDireccionesPorSocios,
   postDirecciones,
   getDireccionesPorID, 
-  putDireccionesPorID
+  putDireccionesPorID, 
+  postCrearFacturasPorSocios,
+  getFacturasPorSocios,
+  getFacturaPorId,
+  putFacturasPorId, 
 };

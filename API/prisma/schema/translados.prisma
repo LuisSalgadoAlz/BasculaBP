@@ -4,4 +4,6 @@ model Translado {
     nombre String
     tipo Int /* 0: Interno, 1: Externo*/
     estado Boolean 
+
+    encargados encargadosDeBodega[]
 }

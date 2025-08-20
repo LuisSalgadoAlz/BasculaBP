@@ -187,31 +187,60 @@ const updateEmpresasPorId = async (req, res) => {
 
 const getVehiculosPorEmpresa = async (req, res) => {
   const { id } = req.params;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 7;
+  const skip = (page - 1) * limit;
+  const search = req.query.search?.trim() || '';
+
   try {
-    const vehiculos = await db.vehiculo.findMany({
-      omit: {
-        idEmpresa: true,
+    const whereClause = {
+      idEmpresa: parseInt(id),
+      placa: {
+        contains: search,
       },
-      where: {
-        idEmpresa: parseInt(id),
+    };
+
+    const [vehiculos, totalVehiculos] = await Promise.all([
+      db.vehiculo.findMany({
+        where: whereClause,
+        skip,
+        take: limit,
+        select: {
+          id: true,
+          placa: true,
+          modelo: true,
+          estado: true,
+          tipo: true
+        },
+      }),
+      db.vehiculo.count({
+        where: whereClause,
+      }),
+    ]);
+
+    const totalPages = Math.ceil(totalVehiculos / limit);
+    const dataClean = vehiculos.map(el => ({
+      ...el,
+      estado: el.estado ? 'Activa' : 'Inactiva',
+    }));
+
+    return res.json({
+      data: dataClean,
+      pagination: {
+        totalVehiculos,
+        totalPages,
+        limit,
+        page,
       },
     });
 
-    if (!vehiculos) {
-      return res.status(404).json({ message: "Socio no encontrado" });
-    }
-
-    const dataClean = vehiculos.map((el) => ({
-      ...el,
-      estado: el.estado ? "Activa" : "Inactiva",
-    }));
-    return res.status(200).json(dataClean);
   } catch (err) {
     console.error(err);
-    setLogger('VEHICULOS', 'OBTENER VEHICULOS DE EMPRESA', req, null, 3)  
-    return res.status(500).json({ message: "Error en el servidor" });
+    setLogger('VEHICULOS', 'OBTENER VEHICULOS DE EMPRESA', req, null, 3);
+    return res.status(500).json({ message: 'Error en el servidor' });
   }
 };
+
 
 const postVehiculosDeEmpresa = async (req, res) => {
   try {
@@ -311,31 +340,60 @@ const updateVehiculosPorID = async (req, res) => {
  */
 const getMotoristaPorEmpresa = async (req, res) => {
   const { id } = req.params;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 7;
+  const skip = (page - 1) * limit;
+  const search = req.query.search?.trim() || '';
+
   try {
-    const motoristas = await db.motoristas.findMany({
-      omit: {
-        idEmpresa: true,
+    const whereClause = {
+      idEmpresa: parseInt(id),
+      nombre: {
+        contains: search,
       },
-      where: {
-        idEmpresa: parseInt(id),
+    };
+
+    const [motoristas, totalMotoristas] = await Promise.all([
+      db.motoristas.findMany({
+        select:{
+          id: true,
+          nombre: true,
+          telefono: true,
+          correo: true,
+          estado: true,
+        },
+        where: whereClause,
+        skip,
+        take: limit,
+      }),
+      db.motoristas.count({
+        where: whereClause,
+      }),
+    ]);
+
+    const totalPages = Math.ceil(totalMotoristas / limit);
+    const dataClean = motoristas.map(el => ({
+      ...el,
+      estado: el.estado ? 'Activa' : 'Inactiva',
+    }));
+
+    return res.status(200).json({
+      data: dataClean,
+      pagination: {
+        totalMotoristas,
+        totalPages,
+        limit,
+        page,
       },
     });
 
-    if (!motoristas) {
-      return res.status(404).json({ message: "Socio no encontrado" });
-    }
-
-    const dataClean = motoristas.map((el) => ({
-      ...el,
-      estado: el.estado ? "Activa" : "Inactiva",
-    }));
-    return res.status(200).json(dataClean);
   } catch (err) {
     console.error(err);
-    setLogger('MOTORISTAS', 'OBTENER MOTORISTAS DE EMPRESA', req, null, 3)  
-    return res.status(500).json({ message: "Error en el servidor" });
+    setLogger('MOTORISTAS', 'OBTENER MOTORISTAS DE EMPRESA', req, null, 3);
+    return res.status(500).json({ message: 'Error en el servidor' });
   }
 };
+
 
 const postMotoristasDeLaEmpresa = async (req, res) => {
   try {

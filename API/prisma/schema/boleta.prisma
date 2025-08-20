@@ -3,7 +3,9 @@ model Boleta {
     numBoleta Int?
     boletaType Int?
     idPlaca Int?
-    placa String 
+    placa String
+    idFurgon Int?
+    furgon String? 
     idEmpresa Int?
     empresa String
     idSocio Int?
@@ -51,13 +53,15 @@ model Boleta {
     sello4 String?
     sello5 String?
     sello6 String?
+    factura String?
     
     tolvaAsignada Int?
     bodegaPuerto String?
     fechaDespachoPuerto DateTime?
 
     /* Relaciones dentro de la boleta */
-    placasBoletas Vehiculo? @relation(fields: [idPlaca], references: [id], onDelete: NoAction, onUpdate: NoAction)
+    placasBoletas Vehiculo? @relation("PlacaBoleta", fields: [idPlaca], references: [id], onDelete: NoAction, onUpdate: NoAction)
+    furgonBoletas Vehiculo? @relation("FurgonBoleta", fields: [idFurgon], references: [id], onDelete: NoAction, onUpdate: NoAction)
     despachador Usuarios @relation(fields: [idUsuario], references: [id])
     empresaBoleta Empresa? @relation(fields: [idEmpresa], references: [id], onDelete: NoAction, onUpdate: NoAction)
     clienteBoleta Socios? @relation(fields: [idSocio], references: [id])
@@ -67,6 +71,9 @@ model Boleta {
     
     tolva Tolva[]
     paseDeSalida PasesDeSalida[]
+
+    /* Relacion con importacion contenerizada */
+    impContenerizada impContenerizada?
 
     /* Indices */
     @@index([estado])
@@ -131,4 +138,36 @@ model PasesDeSalida {
   estado Boolean?
 
   boleta Boleta @relation(fields: [idBoleta], references: [id])
+}
+
+model impContenerizada {
+  id Int @id @default(autoincrement())
+  idBoleta Int @unique
+
+  contenedor String
+  sacosTeoricos Int
+  marchamoDeOrigen String
+
+  /* Opcionales */
+  encargadoDeBodegaID Int?
+  encargadoDeNombre String?
+  sacosCargados Int?
+  
+  /* Relaciones */
+  boletaContenerizada Boleta @relation(fields: [idBoleta], references: [id], onDelete: Cascade)
+  encargadoDeBodega    encargadosDeBodega? @relation(fields: [encargadoDeBodegaID], references: [id], onDelete: SetNull)
+
+}
+
+model encargadosDeBodega{
+  id Int @id @default(autoincrement())
+  Nombre String
+
+  BodegaEncargado Int
+
+  /* Relaciones con impContenerizada */
+  contenedores impContenerizada[]
+  
+  /* Relación con Traslado */
+  bodegaPorEncargado Translado @relation(fields: [BodegaEncargado], references: [id], onDelete: Cascade)
 }

@@ -414,7 +414,7 @@ const imprimirQRTolva = (boleta) => {
 };
 
 /**
- * ! Sustituto de la funcion de imprimirQRTolva por los momentos
+ * ! imprimirTikets (obsoleta) - remplazado por - imprimirQRTolva
  */
 
 const imprimirTikets = (boleta, despachador) => {
@@ -485,7 +485,7 @@ const imprimirTikets = (boleta, despachador) => {
 }
 
 /**
- * Reimpresion de lo de arriba
+ * ! reImprimirTikets (obsoleta) - remplazado por - imprimirQRTolva
  */
 
 const reImprimirTikets = (boleta, despachador) => {
@@ -784,7 +784,7 @@ function generarContenidoTercioCarta(copia, esPrimera = false, colors, boleta, d
   /* SALIDA DE DOCUMENTO */
   const manifiesto = boleta?.manifiesto ? `Manifiesto(s)    : ${[boleta.manifiesto, boleta.manifiestoDeAgregado].filter(Boolean).join(', ')}` : null;
   const ordenCompra = boleta?.ordenDeCompra ? `Orden de Compra  : ${boleta.ordenDeCompra}` : null;
-  const ultimoDocumento = manifiesto || ordenCompra || 'N/A';
+  const ultimoDocumento = manifiesto || ordenCompra || '';
 
   /**
    * Identificador de fuera de tolerancia

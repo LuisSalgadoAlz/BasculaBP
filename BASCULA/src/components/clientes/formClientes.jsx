@@ -106,5 +106,75 @@ export const FormDireccionesEdit = ({ fun, data }) => {
   );
 };
 
+export const FormFacturas = ({ fun }) => {
+  return (
+    <>
+      <div className="mt-5">
+        <label className="block mb-2 text-sm font-medium text-gray-900 ">
+          Factura
+        </label>
+        <input type="text" name={"factura"} className={claseFormInputs} placeholder={`Ingrese factura`} required onChange={fun}   />
+      </div>
+      <div className="mt-5">
+        <label className="block mb-2 text-sm font-medium text-gray-900 ">
+          Código Proveedor
+        </label>
+        <input type="text" name={"codigoProveedor"} className={claseFormInputs} placeholder={`Ingrese código de proveedor`} required onChange={fun}   />
+      </div>
+      <div className="mt-5">
+        <label className="block mb-2 text-sm font-medium text-gray-900 ">
+          Proveedor
+        </label>
+        <input type="text" name={"proveedor"} className={claseFormInputs} placeholder={`Ingrese proveedor`} required onChange={fun}   />
+      </div>
+      <div className="mt-5">
+        <label className="block mb-2 text-sm font-medium text-gray-900 ">
+          Cantidad
+        </label>
+        <input type="number" name={"cantidad"} className={claseFormInputs} placeholder={`Ingrese cantidad(TM)`} required onChange={fun} />
+      </div>
+    </>
+  );
+};
 
-
+export const FormFacturasEdit = ({ fun, data, isLoadingData }) => {
+  return (
+    <>
+      <div className="mt-5">
+        <label className="block mb-2 text-sm font-medium text-gray-900 ">
+          Factura
+        </label>
+        <input type="text" name={"factura"} className={claseFormInputs} placeholder={`Ingrese factura`} required onChange={fun} value={isLoadingData ? 'Cargando...' : data?.factura} disabled  />
+      </div>
+      <div className="mt-5">
+        <label className="block mb-2 text-sm font-medium text-gray-900 ">
+          Código Proveedor
+        </label>
+        <input type="text" name={"codigoProveedor"} className={claseFormInputs} placeholder={`Ingrese código de proveedor`} required onChange={fun} value={isLoadingData ? 'Cargando...' : data?.codigoProveedor} disabled />
+      </div>
+      <div className="mt-5">
+        <label className="block mb-2 text-sm font-medium text-gray-900 ">
+          Proveedor
+        </label>
+        <input type="text" name={"proveedor"} className={claseFormInputs} placeholder={`Ingrese proveedor`} required onChange={fun} value={isLoadingData ? 'Cargando...' : data?.proveedor} disabled/>
+      </div>
+      <div className="mt-5">
+        <label className="block mb-2 text-sm font-medium text-gray-900 ">
+          Cantidad
+        </label>
+        <input type="number" name={"cantidad"} className={claseFormInputs} placeholder={`Ingrese cantidad(TM)`} required onChange={fun} value={isLoadingData ? 0 : data?.cantidad} disabled />
+      </div>
+      <div className="mt-5">
+        <label className="block mb-2 text-sm font-medium text-gray-900 ">
+          Cantidad
+        </label>
+        <select name="Proceso" className={claseFormInputs} onChange={fun} value={data?.Proceso} disabled={(data?.ProcesoTemp == 2 || data?.ProcesoTemp == 3) ? true : false} required>
+          {isLoadingData && <option value="Cargando...">Cargando...</option>}
+          <option value="1">Recibiendo</option>
+          <option value="2">Completado</option>
+          <option value="3">Cancelado</option>
+        </select>
+      </div>
+    </>
+  );
+};

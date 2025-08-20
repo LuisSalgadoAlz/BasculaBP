@@ -1,5 +1,6 @@
 import { CiEdit } from "react-icons/ci";
 import { useNavigate } from "react-router";
+import { tiposCamion } from "../../constants/boletas";
 
 export const TableEmpresas = ({ datos = [{}] }) => {
   const navigate = useNavigate();
@@ -114,17 +115,13 @@ export const TableVehiculos = ({ datos = [{}], fun }) => {
                       <td key={key} className="px-6 py-3 text-gray-700">
                         {key == 0 ? (
                           ""
-                        ) : typeof el === "boolean" ? (
-                          el == 1 ? (
-                            <h1 className="text-green-600 border rounded-2xl text-center ">
-                              Activos
-                            </h1>
-                          ) : (
-                            <h1 className="text-red-600 border rounded-2xl text-center">
-                              Inactivo
-                            </h1>
+                        ) : key==4 ? (
+                          tiposCamion.find((item) => item.id == el)?.nombre || (
+                            <span className="text-gray-400 italic text-xs">
+                              No disponible
+                            </span>
                           )
-                        ) : (
+                        ):(
                           el ||  (<span className="text-gray-400 italic text-xs">No disponible</span>)
                         )}
                       </td>

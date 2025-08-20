@@ -14,4 +14,28 @@ model Socios{
 
     /* Relacion de Empresa */
     rEmpresa Empresa[]
+
+    /* Relacion con la factura */
+    rFactura Facturas[]
+
+}
+
+model Facturas {
+    /* Campos principales clave */
+    id Int @id @default(autoincrement())
+    factura String
+    codigoProveedor String
+    Proveedor String
+    Cantidad Float
+    Proceso Int
+
+    /* Campos de re relaciones */
+    idSocio Int
+    socio String
+    rfSocios Socios? @relation(fields: [idSocio], references: [id])
+    
+    /* Campos de logs internos */
+    createdByUserID Int
+    createdByUserName String
+    createdAt DateTime @default(now())
 }

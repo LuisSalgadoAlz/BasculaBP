@@ -9,7 +9,11 @@ model Vehiculo {
     idEmpresa Int
 
     /* Relaciones con boleta */
-    rlPlacasBoletas Boleta[]
+    // relación con boletas como "placa principal"
+    boletasPlaca Boleta[] @relation("PlacaBoleta")
+
+    // relación con boletas como "furgón"
+    boletasFurgon Boleta[] @relation("FurgonBoleta")
 
     rEmpresaVehiculo Empresa @relation(fields: [idEmpresa], references: [id])
 }

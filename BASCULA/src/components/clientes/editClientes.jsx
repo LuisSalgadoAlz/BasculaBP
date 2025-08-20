@@ -11,10 +11,14 @@ import {
   postDirecciones,
   getDireccionesPorID,
   updateDireccionesPorID,
+  postCrearFactura,
+  getFacturasPorSocio,
+  getFacturaInfo,
+  updateFacturaProceso,
 } from "../../hooks/formClientes";
-import { TableDirecciones } from "./tableClientes";
+import { TableComponent, TableDirecciones, TableFacturas } from "./tableClientes";
 import { ModalSuccess, ModalErr, NoData, Spinner } from "../alerts";
-import { ModalDirecciones, ModalDireccionesEdit } from "./modal";
+import { ModalDirecciones, ModalDireccionesEdit, ModalFacturas, ModalFacturasEdit } from "./modal";
 
 const EditClientes = () => {
   /* Estados / Datos del aplicativo */
@@ -28,6 +32,13 @@ const EditClientes = () => {
   const [direcciones, setDirecciones] = useState();
   const [modalDirecciones, setModalDirecciones] = useState();
   const [modalDireccionesEdit, setModalDireccionesEdit] = useState();
+  const [modalFacturas, setModalFacturas] = useState(false)
+  const [modalFacturasEdit, setModalFacturasEdit] = useState(false)
+  const [isLoadingInfoFactura, setIsLoadingInforFactura] = useState(false)
+  const [isLoadingSaveFactura, setIsLoadingSaveFactura] = useState(false)
+  const [isLoadingUpdateFactura, setIsLoadingUpdateFactura] = useState(false)
+  const [dataFacturas, setDataFacturas] = useState()
+  const [isLoadDataFacturas, setIsLoadDataFacturas] = useState(false)
   const [dataDireccion, setDataDireccion] = useState({});
   const [formData, setFormData] = useState({
     nombre: "",
@@ -42,6 +53,12 @@ const EditClientes = () => {
     estado: "",
     telefono: "",
   });
+  const [facturas, setFacturas] = useState({
+    factura: "",
+    codigoProveedor: "",
+    proveedor: "",
+    cantidad: 0,
+  })
 
   /* ID global */
   const { id } = useParams();
@@ -49,6 +66,7 @@ const EditClientes = () => {
   /* Limpieza de componentes */
   const hanldeCleanState = () => {
     setFormData({ nombre: "", tipo: -1, descripcion: "", estado: 1 });
+    setFacturas({ factura: "", codigoProveedor: "", proveedor: "", cantidad: 0, })
   };
 
   const navigate = useNavigate();
@@ -62,6 +80,82 @@ const EditClientes = () => {
     }));
   };
 
+  const handleChangeFacturas = (e) => {
+    const {value, name} = e.target;
+
+    setFacturas((prev) => ({
+      ...prev,
+      [name]: value
+    }))
+  }
+
+  const verificarFactura = (facturas) => {
+    if(!facturas.factura || !facturas.codigoProveedor || !facturas.proveedor || !facturas.cantidad){
+      setErrorModal(true)
+      setMsg('No deben de haber campos vacios en el formulario de facturas. Intente denuevo.')
+      return false
+    }
+     // Validación para factura: solo números, 9-10 dígitos
+    const facturaRegex = /^\d{9,10}$/;
+    if(!facturaRegex.test(facturas.factura)){
+      setErrorModal(true)
+      setMsg('El número de factura debe contener únicamente dígitos numéricos y tener entre 9 y 10 dígitos. No se permiten símbolos especiales.')
+      return false
+    }
+    
+    if(facturas.cantidad <= 0) {
+      setErrorModal(true) 
+      setMsg('La cantidad no puede ser negativa o cero. Revise la cantidad e intente denuevo.')
+      return false
+    }
+    /* No se agregaron mas validaciones porque se espera que surgan mas en las reuniones */
+    return true
+  }
+
+  const handleSaveFacturas = async() => {
+    const isCorrect = verificarFactura(facturas)
+    if(isCorrect) {
+      const arrSendFactura = {...facturas, idSocio: id}
+      const crearFactura = await postCrearFactura(arrSendFactura, setIsLoadingSaveFactura)
+      if(crearFactura?.err){
+        setErrorModal(true)
+        setMsg(crearFactura?.err)
+        return
+      }
+      setMsg(crearFactura?.msg)
+      getFacturasPorSocio(setDataFacturas, setIsLoadDataFacturas, id)
+      setModalFacturas(false)
+      setSuccess(true)
+    }
+  }
+
+  const handleOpenModalFacturasEdit = async(item) => {
+    setModalFacturasEdit(true)
+    const resposne = await getFacturaInfo(setFacturas, setIsLoadingInforFactura, item.id)
+  }
+
+  const handleUpdateFactura = async()=>{
+    if(facturas?.ProcesoTemp === 2 || facturas?.ProcesoTemp === 3){
+      setErrorModal(true)
+      setMsg('No es posible modificar una factura completada o cancelada.')
+      return
+    }
+    if (facturas?.ProcesoTemp === facturas?.Proceso) {
+      setErrorModal(true)
+      setMsg('No ha modificado el proceso de la factura. Intente denuevo')
+      return
+    }
+    const statusRequest = await updateFacturaProceso(facturas, setIsLoadingUpdateFactura)
+    if(statusRequest.err) {
+      setErrorModal(true)
+      setMsg(statusRequest.err)
+      return
+    }
+    setMsg(statusRequest.msg)
+    setSuccess(true)
+    getFacturasPorSocio(setDataFacturas, setIsLoadDataFacturas, id)
+  }
+
   const handleClik = () => {
     navigate(-1);
   };
@@ -70,11 +164,17 @@ const EditClientes = () => {
     setModalDirecciones(true);
   };
 
+  const handleModalFacturas =() => {
+    setModalFacturas(true)
+  }
+
   const handleClose = () => {
     setErrorModal(false);
     setSuccess(false);
     setModalDirecciones(false);
     setModalDireccionesEdit(false);
+    setModalFacturas(false)
+    setModalFacturasEdit(false)
     hanldeCleanState()
   };
 
@@ -148,6 +248,7 @@ const EditClientes = () => {
   const fetchData = useCallback(() => {
     getDireccionesPorSocios(setDirecciones, id, setIsLoadDireccion);
     getClientesPorID(setSc, id);
+    getFacturasPorSocio(setDataFacturas, setIsLoadDataFacturas, id)
   }, []);
 
   useEffect(() => {
@@ -253,6 +354,29 @@ const EditClientes = () => {
         <hr className="text-gray-400 mt-7" />
         <div className="flex justify-between gap-5 mt-7 max-sm:flex-col">
           <div className="parte-izq">
+            <h1 className="text-3xl font-bold titulo">Agregar Facturas</h1>
+            <h1 className="text-gray-600">
+              {" "}
+              Gestión de facturas activas de socios
+            </h1>
+          </div>
+          <div className="parte-izq self-center">
+            <ButtonAdd
+              name={"Agregar Factura"}
+              fun={handleModalFacturas}
+            />
+          </div>
+        </div>
+        <div className="gap-5 mt-7">
+          {(isLoadDataFacturas && !dataFacturas) ? <Spinner /> : (!dataFacturas || dataFacturas.length == 0) ? (
+            <NoData />
+          ) : (
+            <TableFacturas datos={dataFacturas} fun={handleOpenModalFacturasEdit} />
+          )}
+        </div>
+        <hr className="text-gray-400 mt-7" />
+        <div className="flex justify-between gap-5 mt-7 max-sm:flex-col">
+          <div className="parte-izq">
             <h1 className="text-3xl font-bold titulo">Agregar Direcciones</h1>
             <h1 className="text-gray-600">
               {" "}
@@ -297,6 +421,24 @@ const EditClientes = () => {
           hdlSubmit={handleUpdateDireccionFinish}
           dtDir={dataDireccion}
           isLoading={isLoadingUpdateDirection}
+        />
+      )}
+      {modalFacturas && (
+        <ModalFacturas
+          tglModal={handleClose}
+          hdlData={handleChangeFacturas}
+          hdlSubmit={handleSaveFacturas}
+          isLoading={isLoadingSaveFactura}
+        />
+      )}
+      {modalFacturasEdit && (
+        <ModalFacturasEdit
+          tglModal={handleClose}
+          hdlData={handleChangeFacturas}
+          hdlSubmit={handleUpdateFactura}
+          isLoading={isLoadingUpdateFactura}
+          isLoadingData={isLoadingInfoFactura}
+          data={facturas}
         />
       )}
     </>

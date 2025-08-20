@@ -19,6 +19,7 @@ const getBuscarPlaca = async (req, res) => {
                 producto: true,
                 origen: true,
                 destino: true,
+                furgon: true, 
                 trasladoOrigen: true,
                 trasladoDestino: true,
                 movimiento: true,
