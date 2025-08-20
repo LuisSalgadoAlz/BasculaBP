@@ -6,34 +6,57 @@ const ExcelJS = require('exceljs');
 
 const buquesBoletas = async(req, res) => {
     try{
-        const resultado = await db.boleta.groupBy({
-            by: ['socio', 'idSocio'], 
-            where:{
-                idMovimiento: IMPORTACIONES, 
-                idProducto: GRANZA,
-                estado:{
-                    not: {
-                        in: ['Pendiente', 'Cancelada'],
+        const buque = req.query.buque!==undefined ? parseInt(req.query.buque) : null;
+        const typeImp = req.query.typeImp!==undefined ? parseInt(req.query.typeImp) : null;
+        
+        const [sociosImp, facturasImp] = await Promise.all([
+            typeImp ? (
+                db.boleta.groupBy({
+                    by: ['socio', 'idSocio'], 
+                    where:{
+                        idMovimiento: parseInt(typeImp), 
+                        estado:{
+                            not: {
+                                in: ['Pendiente', 'Cancelada'],
+                            },
+                        },
+                        factura: {
+                            not: null,
+                        }, 
+                        fechaFin: {
+                            gt: new Date('2025-06-25'), // Fecha en la que se empezo a utlizar bien el sistema.
+                        },
                     },
-                },
-                fechaFin: {
-                    gt: new Date('2025-06-25'), // Fecha en la que se empezo a utlizar bien el sistema.
-                },
-            },
-            orderBy:{
-                idSocio: 'asc'
-            } 
-        })
-        res.send(resultado)
+                    orderBy:{
+                        idSocio: 'asc'
+                    } 
+                })
+            ) : null, 
+            (buque && typeImp) ? db.facturas.findMany({
+                where: {
+                    idSocio: parseInt(buque), 
+                }
+            }) : null,
+        ])
+        
+        res.status(200).send( { sociosImp, facturasImp } )
     }catch(err){
         console.log(err)
     }
 }
 
+/**
+ * Listo para producion - Revisar Luego
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 const getResumenBFH = async(req, res) => {
     try{
         const buque = req.query.buque || null;
-        
+        const factura = req.query.factura || null;
+        const typeImp = req.query.typeImp || null;
+
         const dataEmpty = [{
             socio: 'No seleccionado',
             fecha: 'No seleccionado', 
@@ -45,39 +68,28 @@ const getResumenBFH = async(req, res) => {
 
         if(buque==undefined || buque==null || isNaN(Number(buque))) return res.status(200).send(dataEmpty)
 
-        
-        const rawData = await db.$queryRaw`
-        WITH numerados AS (
-            SELECT *,
-                ROW_NUMBER() OVER (PARTITION BY nviajes ORDER BY numBoleta) AS factura
-            FROM boleta
-            WHERE estado != 'Pendiente' AND estado != 'Cancelada' AND idSocio = ${buque} AND idMovimiento = ${IMPORTACIONES} AND idProducto = ${GRANZA} AND Nviajes is not null
-        )
-        SELECT socio, fechaFin, pesoNeto, pesoTeorico, desviacion, factura
-        FROM numerados
-        ORDER BY factura ASC, fechaFin ASC`;
-        
-        /* 
-            const rawData = await db.boleta.findMany({
-                where: {
-                    idMovimiento: IMPORTACIONES, 
-                    idProducto: GRANZA,
-                    idSocio: parseInt(buque), 
-                    estado: {
-                        not: {
-                            in: ['Pendiente', 'Cancelada'],
-                        },
-                    }
-                },
-                select: {
-                    socio: true,
-                    fechaFin: true, 
-                    pesoNeto: true,
-                    pesoTeorico: true,
-                    desviacion: true,   
+    
+     
+        const rawData = await db.boleta.findMany({
+            where: {
+                idMovimiento: parseInt(typeImp), 
+                idSocio: parseInt(buque),
+                factura: factura, 
+                estado: {
+                    not: {
+                        in: ['Pendiente', 'Cancelada'],
+                    },
                 }
-            }); 
-        */
+            },
+            select: {
+                socio: true,
+                factura: true, 
+                fechaFin: true, 
+                pesoNeto: true,
+                pesoTeorico: true,
+                desviacion: true,   
+            }
+        }); 
 
         const grouped = rawData.reduce((acc, item) => {
             // Convertir fecha UTC a zona horaria de Honduras (UTC-6)
@@ -117,42 +129,41 @@ const getResumenBFH = async(req, res) => {
 const getBuqueStats = async(req, res) => {
     try{
         const buque = req.query.buque || null;
+        const factura = req.query.factura || null;
+        const typeImp = req.query.typeImp || null;
+
         if (!buque || isNaN(Number(buque))) return res.status(200).json({ error: 'Parámetro buque inválido o no seleccionado' });
 
         const [facturas, total] = await Promise.all([
-            db.$queryRaw`
-            WITH numerados AS (
-                SELECT *,
-                    ROW_NUMBER() OVER (PARTITION BY nviajes ORDER BY numBoleta) AS factura
-                FROM boleta
-                WHERE estado != 'Pendiente' AND estado != 'Cancelada' AND idSocio = ${buque} AND idMovimiento = ${IMPORTACIONES} AND idProducto = ${GRANZA} AND Nviajes is not null
-            )
-            SELECT count(DISTINCT (factura)) as CantidadFacturas
-            FROM numerados
-            `, 
+            db.facturas.findMany({
+                where: {
+                    idSocio: parseInt(buque), 
+                }
+            }), 
             db.boleta.groupBy({
-            by: ['idSocio'],
-            where: {
-                idSocio: parseInt(buque), 
-                estado: {
-                    not: {
-                        in: ['Pendiente', 'Cancelada'],
-                    },
+                by: ['idSocio'],
+                where: {
+                    idSocio: parseInt(buque), 
+                    estado: {
+                        not: {
+                            in: ['Pendiente', 'Cancelada'],
+                        },
+                    }, 
+                    idMovimiento: parseInt(typeImp), 
+                    factura: factura,
                 }, 
-                idMovimiento: IMPORTACIONES, 
-                idProducto: GRANZA,
-            }, 
-            _sum:{
-                pesoNeto: true, 
-                pesoTeorico: true, 
-                desviacion: true,
-            }
-        })
+                _sum:{
+                    pesoNeto: true, 
+                    pesoTeorico: true, 
+                    desviacion: true,
+                }
+            })
         ])
         if(total.length==0) return res.status(200).send({err: 'Buque no seleecionado'})
         const {_sum} = total[0]
         const refactorData = {
-            facturas: facturas[0].CantidadFacturas || 1,
+            facturas: facturas.length || 'No cuenta con facturas',
+            cantidad: facturas[0].Cantidad,
             pesoNeto: (_sum.pesoNeto/QUINTALTONELADA).toFixed(2), 
             pesoTeorico: (_sum.pesoTeorico/QUINTALTONELADA).toFixed(2),
             desviacion: (_sum.desviacion/QUINTALTONELADA).toFixed(2),
@@ -164,89 +175,114 @@ const getBuqueStats = async(req, res) => {
     }
 }
 
-const getBuqueDetalles = async(req, res) =>{
-    try{
+const getBuqueDetalles = async (req, res) => {
+    try {
         const buque = req.query.buque || null;
+        const factura = req.query.factura || null;
+        const typeImp = req.query.typeImp || null;
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
+        const limit = Math.min(parseInt(req.query.limit) || 10, 100); // Limitar máximo 100
         const skip = (page - 1) * limit;
 
         const dataEmpty = {
             data: [{
-                numBoleta:'No seleccionado',
-                Nviajes: 'No seleccionado',
-                factura: 'No seleccionado', 
-                bodegaPuerto: 'No seleccionado',
-                pesoTeorico: 'No seleccionado', 
-                pesoNeto: 'No seleccionado',
-                desviacion: 'No seleccionado', 
+                Buque: 'No seleccionado',
             }],
             pagination: {
                 totalData: 1,
                 totalPages: 1,
                 currentPage: 1,
-                limit:1,
+                limit: 1,
             },
+        };
+
+        if (!buque || isNaN(Number(buque))) {
+            return res.status(200).json(dataEmpty);
         }
-        
-        if(!buque || buque===undefined || isNaN(Number(buque))) return res.status(200).send(dataEmpty)
-        
-        const where = {
+
+        const whereCondition = {
             idSocio: parseInt(buque),
-            idMovimiento: IMPORTACIONES,
-            idProducto: GRANZA,
-            Nviajes: {
-                not: null,
-            },
+            idMovimiento: parseInt(typeImp),
+            factura: factura,
             estado: {
                 not: {
                     in: ['Pendiente', 'Cancelada'],
                 },
-            },  
-        }
+            },
+        };
 
         const [data, totalData] = await Promise.all([
-            db.$queryRaw`
-                WITH numerados AS (
-                    SELECT *,
-                    ROW_NUMBER() OVER (PARTITION BY Nviajes ORDER BY numBoleta) AS factura
-                    FROM boleta
-                    WHERE estado != 'Pendiente' 
-                    AND estado != 'Cancelada' 
-                    AND idSocio = ${buque} 
-                    AND idMovimiento = ${IMPORTACIONES} 
-                    AND idProducto = ${GRANZA} 
-                    AND Nviajes IS NOT NULL
-                )
-                SELECT socio, numBoleta, fechaFin, pesoNeto, pesoTeorico, desviacion, bodegaPuerto, Nviajes, factura
-                FROM numerados
-                ORDER BY factura ASC, Nviajes ASC
-                OFFSET ${skip} ROWS
-                FETCH NEXT ${limit} ROWS ONLY;
-            `, 
-            db.boleta.count({where})
-        ])
+            db.boleta.findMany({ 
+                select:{
+                    numBoleta: true, 
+                    placa: true,
+                    motorista: true,
+                    empresa: true,
+                    producto:true, 
+                    origen: true, 
+                    destino: true,
+                    usuario: true,
+                    ordenDeCompra: true,
+                },
+                where: whereCondition,
+                include: {
+                tolva: {
+                    include: {
+                        principal: { select: { nombre: true } },
+                        secundario: { select: { nombre: true } },
+                        terciario: { select: { nombre: true } },
+                    }
+                },
+                impContenerizada: true
+                },
+                take: limit,
+                skip: skip,
+            }),
+            db.boleta.count({
+                where: whereCondition
+            })
+        ]);
 
-        if(data.length==0) return res.status(200).send(dataEmpty)
+        if (data.length === 0) {
+            return res.status(200).json(dataEmpty);
+        }
 
         const parsedData = data.map(row => ({
             ...row,
-            factura: Number(row.factura),
+            factura: Number(row.factura) || 0,
+            pesoTeorico: row.pesoTeorico ? (row.pesoTeorico / 2204.62).toFixed(2) : 0, // libras → TM
+            pesoNeto: row.pesoNeto ? (row.pesoNeto / 2204.62).toFixed(2) : 0,           // libras → TM
+            siloPrincipalNombre: row.tolva[0]?.principal?.nombre || ' - ',
+            siloSecundarioNombre: row.tolva[0]?.secundario?.nombre || ' - ',
+            siloTerciarioNombre: row.tolva[0]?.terciario?.nombre || ' - ',
+            desviacion: row.desviacion,
         }));
 
-        return res.send({
+        const totalPages = Math.ceil(totalData / limit);
+
+        return res.status(200).json({
+            success: true,
             data: parsedData,
             pagination: {
                 totalData,
-                totalPages: Math.ceil(totalData / limit),
+                totalPages,
                 currentPage: page,
                 limit,
+                hasNextPage: page < totalPages,
+                hasPrevPage: page > 1,
             },
         });
-    }catch(err) {
-        console.log(err)
+
+    } catch (err) {
+        console.error('Error en getBuqueDetalles:', err);
+        
+        return res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor',
+            error: process.env.NODE_ENV === 'development' ? err.message : undefined
+        });
     }
-}
+};
 
 const exportR1Importaciones =  async(req, res) => {
     try{

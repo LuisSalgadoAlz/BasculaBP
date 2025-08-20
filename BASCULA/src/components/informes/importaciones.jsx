@@ -1,24 +1,22 @@
-import { use, useCallback, useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { useState } from "react";
 import { getBuquesDetalles, getDataForSelect, getResumenBFH, getStatsBuque } from "../../hooks/informes/granza";
 import { BuqueDetalles, BuqueDetallesLoader, ModalReportes, TablaResumenBFH, TablaResumenBFHLoader } from "./tables";
 import { Pagination, StatCard } from "../../components/buttons";
 import { FiCalendar, FiClock } from "react-icons/fi";
-import { 
-  AiOutlineTeam, 
-  AiOutlineDollarCircle, 
-} from 'react-icons/ai';
+import { AiOutlineDollarCircle } from 'react-icons/ai';
 import { LuPackage2 } from "react-icons/lu";
 import { IoAlertSharp } from "react-icons/io5";
+import { Toaster, toast } from "sonner";
 
 const Importaciones = () => {
-  const [buques, setBuques] = useState([])
+  const [buques, setBuques] = useState({sociosImp: [], facturasImp: []})
   const [isLoadingBuques, setIsLoadingBuques] = useState(false)
   const [resumenBFH, setResumenBFH] = useState([{}])
   const [resumenBFHLoad, setResumenBFHLoad] = useState(false)
   const [buquesDetails, setBuquesDetails] = useState([{}])
   const [isLoadingBuquesDetails, setIsLoadingBuquesDetails] = useState(false)
-  const [selected, setBuqueSelected] = useState()
+  const [selected, setBuqueSelected] = useState({ typeImp: '', buque: '' })
   const [selectedName, setSelectedName] = useState('')
   const [stats, setStats] = useState()
   const [isLoadStats, setIsLoadStats] = useState(false)
@@ -29,23 +27,34 @@ const Importaciones = () => {
     setIsOpen(false);
   };
   
-  const handleChangeBuque = (e) => {
-    const nombreVisible = e.target.options[e.target.selectedIndex].text
-    setSelectedName(nombreVisible)
-    setBuqueSelected(e.target.value)
-    setPagination(1)
-  }
+  const handleChangeFilters = (e) => {  
+    const { name, value } = e.target;
+    
+    if (name === 'typeImp') {
+      setBuqueSelected({
+        typeImp: value, 
+      });
+    } else {
+      setBuqueSelected((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
+    
+    setPagination(1);
+  };
 
   const fetchBuques = useCallback(()=>{
-    getDataForSelect(setBuques, setIsLoadingBuques)
-  }, [])
+    getDataForSelect(setBuques, setIsLoadingBuques, selected)
+  }, [selected])
 
   const fetchResumenBFH = useCallback(()=>{
     getResumenBFH(setResumenBFH, setResumenBFHLoad)
   }, [])
 
   const fetchBuquesDetalles = useCallback(()=> {
-    getBuquesDetalles(setBuquesDetails, setIsLoadingBuquesDetails, selected, pagination)
+    const { typeImp, buque, facturasImp } = selected
+    getBuquesDetalles(setBuquesDetails, setIsLoadingBuquesDetails,buque, pagination, facturasImp, typeImp)
   }, [pagination])
 
   const fetchStats = useCallback(()=>{
@@ -53,9 +62,25 @@ const Importaciones = () => {
   }, [])
 
   const handleApplicarFiltro = () => {
-    getResumenBFH(setResumenBFH, setResumenBFHLoad, selected)
-    getBuquesDetalles(setBuquesDetails, setIsLoadingBuquesDetails, selected)
-    getStatsBuque(setStats, setIsLoadStats, selected)
+    if(resumenBFHLoad || isLoadingBuquesDetails) return toast.error('Cargando busqueda anterior...', {style:{background:'#ff4d4f'}, id:'error'});
+    const { typeImp, buque, facturasImp } = selected
+    if ((!buque || buque == -99) && typeImp !== '') return toast.error('Filtros vacios (socio)', {style:{background:'#ff4d4f'}, id:'error'});
+    if ((!facturasImp || facturasImp == -99) && typeImp !== '') return toast.error('Filtros vacios (facturas)', {style:{background:'#ff4d4f'}, id:'error'}); 
+    getResumenBFH(setResumenBFH, setResumenBFHLoad, buque, facturasImp, typeImp)
+    getBuquesDetalles(setBuquesDetails, setIsLoadingBuquesDetails,buque, pagination, facturasImp, typeImp)
+    getStatsBuque(setStats, setIsLoadStats, buque, facturasImp, typeImp)
+    setPagination(1)
+    if(typeImp===''){
+      setSelectedName('')
+      return toast.success('Reset completo.', {style:{background:'#4CAF50'}, id:'completado'});
+    }
+    
+    const selectSocio = buques?.sociosImp.find((item)=>item.idSocio==buque)?.socio
+    const selectFactura = buques?.facturasImp.find((item)=>item.factura==facturasImp)?.factura
+    /* Colocar nombre en el progress bar */
+    setSelectedName(`${selectSocio} - SAP ${selectFactura}`)
+
+    return toast.success('Busqueda completa.', {style:{background:'#4CAF50'}, id:'completado'});
   }
 
   const handlePagination = (item) => {
@@ -71,9 +96,12 @@ const Importaciones = () => {
     fetchBuquesDetalles()
   }, [fetchBuquesDetalles])
 
+  useEffect(()=> {
+    fetchBuques()
+  }, [fetchBuques])
+
   useEffect(()=>{
     setBuqueSelected('')
-    fetchBuques()
     fetchResumenBFH()
     fetchStats()
   }, [])
@@ -136,7 +164,7 @@ const Importaciones = () => {
     <>
       <div className="flex justify-between w-full gap-5 max-sm:flex-col max-md:flex-col mb-4">
         <div className="parte-izq">
-          <h1 className="text-3xl font-bold titulo">Importacion: Granza</h1>
+          <h1 className="text-3xl font-bold titulo">Importaciones</h1>
           <h1 className="text-gray-600 max-sm:text-sm">
             {" "}
             Análisis detallado de importaciones - Período Actual {new Date().getFullYear()}
@@ -146,22 +174,46 @@ const Importaciones = () => {
           <div className="flex gap-4 items-end">
               <div className="flex-1">
               <div className="relative">
+                <div className="flex gap-2">
                   <select 
-                  name="socio"
-                  onChange={handleChangeBuque}
-                  value={selected}
-                  disabled={isLoadingBuques} 
-                  className="appearance-none w-full bg-white text-gray-900 border border-gray-300 rounded-lg py-3 pl-4 pr-10 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#955e37] focus:border-[#955e37 ] hover:border-gray-400 transition-colors duration-200"
+                    name="typeImp"
+                    onChange={handleChangeFilters}
+                    className="appearance-none w-48 bg-white text-gray-900 border border-gray-300 rounded-lg py-3 pl-4 pr-10 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#955e37] focus:border-[#955e37 ] hover:border-gray-400 transition-colors duration-200"
+                    value={selected.typeImp}
                   >
-                  <option value="">{isLoadingBuques ? 'Cargando...' : 'Seleccione un buque'}</option>
-                  {buques.map((item)=>(
-                    <option key={item?.idSocio} value={item?.idSocio}>{item?.socio}</option>
-                  ))}
+                    <option value=''>Tipo de importacion</option>
+                    <option value={2}>A Granel</option>
+                    <option value={15}>Contenerizada</option>
                   </select>
+                  <select 
+                    name="buque"
+                    onChange={handleChangeFilters}
+                    value={selected.buque}
+                    disabled={isLoadingBuques} 
+                    className="appearance-none w-48 bg-white text-gray-900 border border-gray-300 rounded-lg py-3 pl-4 pr-10 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#955e37] focus:border-[#955e37 ] hover:border-gray-400 transition-colors duration-200"
+                  >
+                    {buques?.sociosImp ? <option value={-99}>Seleccionar</option> : <option value={-99}> - </option>}
+                    {buques?.sociosImp && buques?.sociosImp.map((item)=>(
+                      <option key={item?.idSocio} value={item?.idSocio}>{item?.socio}</option>
+                    ))} 
+                  </select>
+                  <select 
+                    name="facturasImp"
+                    onChange={handleChangeFilters}
+                    value={selected.facturasImp}
+                    className="appearance-none w-48 bg-white text-gray-900 border border-gray-300 rounded-lg py-3 pl-4 pr-10 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#955e37] focus:border-[#955e37 ] hover:border-gray-400 transition-colors duration-200"
+                  >
+                    {buques?.facturasImp ? <option value={-99}>Seleccionar</option> : <option value={-99}> - </option>}
+                    {buques?.facturasImp && buques?.facturasImp.map((item)=>(
+                      <option key={item?.id} value={item?.factura}>{item?.factura}</option>
+                    ))} 
+                  </select>
+                </div>
+                  
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
+                    <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
                   </div>
               </div>
               </div>
@@ -185,9 +237,9 @@ const Importaciones = () => {
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
-        <ProgressBar current={stats?.pesoNeto || 0} limit={9000} unit="Toneladas" label={`${selectedName ? selectedName : 'Seleccione un buque'} ${stats?.facturas ? `- Facturas: ${stats?.facturas}`: ''}`}/>
-        {statsdata?.map((stat, index) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+            <ProgressBar current={stats?.pesoNeto || 0} limit={stats?.cantidad || 0} unit="Toneladas" label={`${selectedName ? selectedName : 'Seleccione un buque'}`}/>        
+            {statsdata?.map((stat, index) => (
             <StatCard
               key={index}
               icon={stat.icon}
@@ -209,11 +261,26 @@ const Importaciones = () => {
           <BuqueDetallesLoader page={pagination} />
         ):(
           <div className="max-h-[700px]">
-            <BuqueDetalles datos={buquesDetails?.data} />
+            <BuqueDetalles datos={buquesDetails?.data}  />
             {buquesDetails && buquesDetails?.pagination?.totalPages > 1 && <Pagination pg={pagination} sp={setPagination} hp={handlePagination} dt={buquesDetails}/>}
           </div>
         )}
       </div>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          style: {
+            background: '#333', // estilo general
+            color: 'white',
+          },
+          error: {
+            style: {
+              background: '#ff4d4f', // rojo fuerte
+              color: '#fff',
+            },
+          },
+        }}
+      />
       {isOpen && <ModalReportes reports={reports} hdlClose={handleClose}/>}
     </>
   );
@@ -223,7 +290,7 @@ function ProgressBar({ current, limit, label = "Progreso", unit = "productos" })
   const percentage = limit > 0 ? Math.min((current / limit) * 100, 100) : 0;
   
   return (
-    <div className="w-full mx-auto row-span-2">
+    <div className="w-full mx-auto row-span-2 col-span-2 lg:col-span-1">
       <div className="bg-white rounded-xl shadow-lg border border-gray-100 px-7 py-7">
         {/* Header */}
         <div className="flex justify-between items-center mb-4">
@@ -274,7 +341,7 @@ function ProgressBar({ current, limit, label = "Progreso", unit = "productos" })
         {/* Additional Info */}
         <div className="mt-4 pt-4 border-t border-gray-100">
           <div className="flex justify-between text-xs text-gray-500">
-            <span>Restante: {(limit - current).toLocaleString()} {unit}</span>
+            <span> {(current - limit) > 0 ? 'Sobrante' : 'Faltante'} : {(current - limit).toLocaleString()} {unit}</span>
             <span>{percentage < 100 ? `${(100 - percentage).toFixed(1)}% por completar` : '¡Completado!'}</span>
           </div>
         </div>

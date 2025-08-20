@@ -60,7 +60,7 @@ const navRutas = createBrowserRouter([
       { path: "/socios", element: <Clientes />, },
       { path: "/calendario", element: <CalendarioView />, },
       { path: "/informes", element: <Informes />, },
-      { path: "/informes/importaciones-granza", element: <ViewDisabled />, },
+      { path: "/informes/importaciones-granza", element: <Importaciones />, },
       { path: "/informes/diarios", element: <ViewDisabled />, },
       { path: "/informes/semanales", element: <ViewDisabled />, },
       { path: "/socios/:id", element: <EditClientes />, errorElement: <NoFoundData /> },

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { 
   AiOutlineClose, 
   AiOutlineDownload,
@@ -145,7 +145,7 @@ export const TablaResumenBFHLoader = () => {
     </div>
   );
 };
-
+/* 
 export const BuqueDetalles = ({datos=[]}) => {
   return (
     <div className=" mt-10 mb-4">
@@ -221,7 +221,185 @@ export const BuqueDetalles = ({datos=[]}) => {
     </div>
   );
 };
+ */
+export const BuqueDetalles = ({ datos = [], typeImp }) => {
+  const [columnasDisponibles, setColumnasDisponibles] = useState([]);
+  const [columnasSeleccionadas, setColumnasSeleccionadas] = useState([]);
+  const [mostrarMenu, setMostrarMenu] = useState(false);
+  const menuRef = useRef(null);
 
+  const columnasInicialesAGranel = [
+    'buque', 
+    'numBoleta',
+    'Nviajes', 
+    'bodegaPuerto',
+    'pesoTeorico',
+    'pesoNeto',
+    'desviacion',
+    'empresa'
+  ];
+
+  const columnasInicialesContenerizadas= [
+    'buque', 
+    'numBoleta', 
+    'producto', 
+    'pesoTeorico',
+    'pesoNeto',
+    'desviacion',
+    'empresa'
+  ]
+
+  const columnasOcultas = [
+    // 'numBoleta',  
+    // 'Nviajes',
+    // 'factura', 
+    // 'bodegaPuerto',
+    // 'pesoTeorico',
+    // 'pesoNeto',
+    // 'desviacion',
+    // 'empresa',
+    
+    // También puedes ocultar campos que no sean útiles para el usuario:
+    'id',
+    'idDestino',
+    'idEmpresa', 
+    'idFurgon',
+    'idMotorista',
+    'idMovimiento',
+    'idOrigen',
+    'idPlaca',
+    'idProducto',
+    'idSocio',
+    'idTrasladoDestino',
+    'idTrasladoOrigen',
+    'idUsuario',
+    'boletaType',
+    'proceso', 
+    'furgon'
+  ];
+
+  // Extraer todas las columnas disponibles de los datos
+  useEffect(() => {
+    if (datos.length > 0) {
+      const todasLasColumnas = Object.keys(datos[0])
+        .filter(key => !columnasOcultas.includes(key)) // Filtrar columnas ocultas
+        .map(key => ({
+          key,
+          titulo: key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()),
+          seleccionada: typeImp === 2 ? columnasInicialesAGranel.includes(key) : columnasInicialesContenerizadas.includes(key),
+        }));
+      setColumnasDisponibles(todasLasColumnas);
+    }
+  }, [datos]);
+
+  // Cerrar menú al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setMostrarMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Manejar selección de columnas
+  const toggleColumna = (key) => {
+    setColumnasDisponibles(prev => 
+      prev.map(col => 
+        col.key === key ? { ...col, seleccionada: !col.seleccionada } : col
+      )
+    );
+  };
+
+  // Actualizar columnas seleccionadas
+  useEffect(() => {
+    const seleccionadas = columnasDisponibles.filter(col => col.seleccionada);
+    setColumnasSeleccionadas(seleccionadas);
+  }, [columnasDisponibles]);
+
+  return (
+    <div className="mt-10 mb-4">
+      <div className="mx-auto">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold text-gray-500">Detalles</h2>
+          
+          {/* Botón y menú flotante */}
+          <div className="relative" ref={menuRef}>
+            <button
+              onClick={() => setMostrarMenu(!mostrarMenu)}
+              className="bg-[#725033] hover:bg-[#725033] text-white px-4 py-2 rounded text-sm flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+              </svg>
+              Columnas ({columnasSeleccionadas.length})
+            </button>
+
+            {/* Menú flotante compacto */}
+            {mostrarMenu && (
+              <div className="absolute right-0 mt-2 w-60 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                <div className="max-h-64 overflow-y-auto p-2">
+                  {columnasDisponibles.map((columna) => (
+                    <label 
+                      key={columna.key} 
+                      className="flex items-center space-x-2 p-1 hover:bg-gray-50 rounded cursor-pointer text-sm"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={columna.seleccionada}
+                        onChange={() => toggleColumna(columna.key)}
+                        className="rounded text-blue-500"
+                      />
+                      <span className="text-gray-700">{columna.titulo}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Tabla */}
+        {columnasSeleccionadas.length > 0 ? (
+          <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full table-auto">
+                <thead className="bg-[#725033] text-white">
+                  <tr>
+                    {columnasSeleccionadas.map((columna, index) => (
+                      <th key={index} className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">
+                        {columna.titulo}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {datos.map((fila, index) => (
+                    <tr key={index} className="hover:bg-gray-50 transition-colors duration-200">
+                      {columnasSeleccionadas.map((columna, colIndex) => (
+                        <td key={colIndex} className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                          {typeof fila[columna.key] === 'object' && fila[columna.key] !== null
+                            ? JSON.stringify(fila[columna.key])
+                            : String(fila[columna.key] ?? '')
+                          }
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg shadow-lg p-8 text-center text-gray-500">
+            Selecciona al menos una columna para mostrar los datos
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 export const BuqueDetallesLoader = ({page}) => {
   const skeletonRows = Array(page!==1 ? 10 : 1).fill(null);
   return (
