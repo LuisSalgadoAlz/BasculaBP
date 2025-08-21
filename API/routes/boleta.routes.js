@@ -15,10 +15,10 @@ const {
   updateCancelBoletas,
   getMovimientosYProductos,
   getConfigTolerancia,
-  getReimprimirTicket
+  getReimprimirTicket,
 } = require("../controllers/boleta.controller");
 const { exportToExcel } = require("../controllers/exportaciones.controller.js");
-const { imprimirPDF, imprimirWorkForce } = require("../controllers/impresiones.controller.js");
+const { imprimirPDF, imprimirWorkForce, reimprimirComprobante } = require("../controllers/impresiones.controller.js");
 const verificarToken = require("../middlewares/authJWT.js");
 
 boletas.get("/", getAllData);
@@ -33,6 +33,7 @@ boletas.get("/calendario/mes/detalles", getTimeLineForComponent)
 boletas.get("/pdf/bol/:id", imprimirPDF)
 boletas.get("/export/excel/", exportToExcel)
 boletas.get("/reimprimir/ticket/", getReimprimirTicket)
+boletas.get("/reimprimir/comprobante/:id", reimprimirComprobante)
 boletas.post("/print/workforce/", imprimirWorkForce)
 boletas.get("/informes/", getMovimientosYProductos)
 boletas.get("/config/tolerancia", getConfigTolerancia)
