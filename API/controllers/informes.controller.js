@@ -338,6 +338,7 @@ const getInformePagoAtrasnporte = async (req, res) => {
                 where: {
                     idMovimiento: ID_MOVIMIENTO,
                     idSocio: buque,
+                    factura: factura,
                     estado: {
                         not: {
                             in: ['Pendiente', 'Cancelada'],

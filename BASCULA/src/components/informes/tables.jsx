@@ -3,6 +3,7 @@ import {
   AiOutlineClose, 
   AiOutlineDownload,
 } from 'react-icons/ai';
+import { URLHOST } from '../../constants/global';
 
 export const TablaResumenBFH = ({datos=[]}) => {
   return (
@@ -461,16 +462,43 @@ export const BuqueDetallesLoader = ({page}) => {
   );
 };
 
-export const ModalReportes=({reports, hdlClose}) => {
+export const ModalReportes=({reports, hdlClose, buque = 1058, factura='110016055'}) => {
   const [selectedReport, setSelectedReport] = useState(null);
+  const [isLoadingDescargasExcel, setIsLoadingDescargasExcel] = useState(false);
 
   const handleSelectReport = (report) => {
     setSelectedReport(report);
   };
 
-  const handleGenerateReport = () => {
+  const handleGenerateReport = async() => {
     if (selectedReport) {
-      alert(`Generando reporte: ${selectedReport.id}${selectedReport.title}`);
+      if(selectedReport.id === 2) {
+          try {
+            setIsLoadingDescargasExcel(true);
+        
+            const url = `${URLHOST}informes/generar/pagos/${buque}/${factura}`;
+            
+            const response = await fetch(url, {
+              method: "GET",
+            });
+        
+            if (!response.ok) throw new Error("Error en la exportación");
+        
+            const blob = await response.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = downloadUrl;
+            a.download = `${selectedReport.title}_${factura}.xlsx`; // nombre del archivo
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+          } catch (err) {
+            console.error(err);
+            alert('Algo salió mal al generar el reporte, verifique su conexión a la red, e intente denuevo')
+          } finally {
+            setIsLoadingDescargasExcel(false);
+          }
+      }
       setSelectedReport(null);
     }
   };
@@ -571,7 +599,7 @@ export const ModalReportes=({reports, hdlClose}) => {
                   `}
                 >
                   <AiOutlineDownload size={14} />
-                  Generar
+                  {isLoadingDescargasExcel ? 'Generando...' : 'Generar'}
                 </button>
               </div>
             </div>

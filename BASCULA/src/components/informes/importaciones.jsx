@@ -109,8 +109,8 @@ const Importaciones = () => {
   const reports = [
     {
       id: 1,
-      title: "Importaciones",
-      description: "Análisis de importaciones",
+      title: "Registros: Granza ",
+      description: "Importación a Granel",
       icon: LuPackage2,
       category: "Financiero",
       color: "bg-gray-500"
@@ -118,16 +118,19 @@ const Importaciones = () => {
     {
       id: 2,
       title: "Liquidacion",
-      description: "Liquidacion de importaciones (Desarrollo)",
+      description: "Liquidacion de importaciones",
       icon: AiOutlineDollarCircle,
       category: "Financiero",
       color: "bg-gray-500"
     },
+  ];
+
+  const reportsContenerizada = [
     {
-      id: 3,
-      title: "Desviaciones",
-      description: "Camiones arriba de 200 QQ (No desarrollado)",
-      icon: IoAlertSharp,
+      id: 1,
+      title: "Registros: Importación contenerizada",
+      description: "Análisis de importaciones",
+      icon: LuPackage2,
       category: "Financiero",
       color: "bg-gray-500"
     },
@@ -281,7 +284,7 @@ const Importaciones = () => {
           },
         }}
       />
-      {isOpen && <ModalReportes reports={reports} hdlClose={handleClose}/>}
+      {isOpen && <ModalReportes reports={selected.typeImp==2 ? reports : reportsContenerizada} buque={selected.buque} factura={selected.facturasImp} handleClose={handleClose} hdlClose={handleClose}/>}
     </>
   );
 };
