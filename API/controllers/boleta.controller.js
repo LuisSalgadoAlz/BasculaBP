@@ -1766,6 +1766,9 @@ const getTimeLineForComponent = async (req, res) => {
           lt: fechaMasUno.toISOString(), // fecha + 1 día
         },
       },
+      orderBy:{
+        id: 'asc', 
+      }
     });
     const groups = data.map((el) => ({
       id: el.id,

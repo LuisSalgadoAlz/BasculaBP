@@ -780,7 +780,7 @@ export const VisualizarBoletas = (props) => {
                   </p>
                 </div>
                 <button 
-                  className="self-end sm:self-center text-gray-400 hover:text-gray-600 transition-colors p-1"
+                  className="self-end sm:self-center text-gray-400 hover:text-gray-600 transition-colors p-1 noCalendar"
                   onClick={hdlClose}
                 >
                   <IoCloseSharp size={28} />

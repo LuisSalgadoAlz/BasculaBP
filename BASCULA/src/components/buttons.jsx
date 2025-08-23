@@ -68,7 +68,7 @@ export const ButtonPrint = ({ name, fun, isLoad, color }) => {
         type="button"
         onClick={fun}
         disabled={isLoad}
-        className={`px-5 py-3  text-sm font-medium text-white focus:outline-none ${color} rounded-lg border border-gray-200 flex items-center gap-3 transition-transform duration-300 ease-in-out hover:scale-105`}>
+        className={`px-5 py-3  text-sm font-medium text-white focus:outline-none ${color} rounded-lg border border-gray-200 flex items-center gap-3 transition-transform duration-300 ease-in-out hover:scale-105 noCalendar`}>
         {!isLoad ? <GrPrint /> : <MiniSpinner />}
         <span>{name}</span>
       </button>

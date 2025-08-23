@@ -297,6 +297,7 @@ const getInformePagoAtrasnporte = async (req, res) => {
         const PAGO_POR_VIAJE = 317.4;
         const PAGO_DOLAR_COMPRA = parseInt(req.query.compra) || 26.0430;
         const PAGO_DOLAR_VENTA = parseInt(req.query.venta) || 26.1732;
+        const COSTE_DEL_QUINTAL = parseInt(req.query.cquintal) || 545;
 
         const ID_MOVIMIENTO = 2;
 
@@ -400,7 +401,7 @@ const getInformePagoAtrasnporte = async (req, res) => {
             }),
             db.boleta.findMany({
                 where: {
-                    idSocio: 1058,
+                    idSocio: buque,
                     desviacion: { lt: -199 }
                 }
             }) 
@@ -690,9 +691,17 @@ const getInformePagoAtrasnporte = async (req, res) => {
 
 
         /* Parte Inicial */
+        const empresasTitle = sheet1.addRow(['TRANSPORTES CON DESVIACIÓN']);
+        sheet1.mergeCells(`A${empresasTitle.number}:F${empresasTitle.number}`);
+        const empresasTitleCell = sheet1.getCell(`A${empresasTitle.number}`);
+        Object.assign(empresasTitleCell.style, styles.sectionTitle);
+
         let totalViajes2 = 0;
         let totalPesoNeto2 = 0;
         let totalDesviacion2 = 0;
+
+        // Objeto para almacenar desviaciones por empresa
+        let desviacionesPorEmpresa = {};
 
         Object.entries(boletasPorEmpresa).forEach(([empresa, boletas]) => {
             // Fila de título por empresa
@@ -700,6 +709,9 @@ const getInformePagoAtrasnporte = async (req, res) => {
             sheet1.mergeCells(`A${headerRow.number}:F${headerRow.number}`);
             const headerCell = sheet1.getCell(`A${headerRow.number}`);
             Object.assign(headerCell.style, styles.sectionTitle);
+
+            // Inicializar desviación para esta empresa
+            let desviacionEmpresa = 0;
 
             // Recorres las boletas de esa empresa
             boletas.forEach((boleta, i) => {
@@ -709,6 +721,9 @@ const getInformePagoAtrasnporte = async (req, res) => {
                 totalViajes2 += boleta.Nviajes || 0;
                 totalPesoNeto2 += boleta.pesoNeto || 0;
                 totalDesviacion2 += boleta.desviacion || 0;
+
+                // Sumar desviación de esta empresa
+                desviacionEmpresa += boleta.desviacion || 0;
 
                 // Los datos que quieres mostrar por cada boleta
                 const rowData = [
@@ -742,8 +757,39 @@ const getInformePagoAtrasnporte = async (req, res) => {
                     }
                 });
             });
-             sheet1.addRow([]);
+            
+            // Guardar la desviación total de esta empresa
+            desviacionesPorEmpresa[empresa] = desviacionEmpresa;
+            
+            sheet1.addRow([]);
         });
+
+        // Agregar título para la sección de costos por desviación
+        const costoTitleRow = sheet1.addRow(['COSTO POR DESVIACIÓN EN GRANZA']);
+        sheet1.mergeCells(`A${costoTitleRow.number}:F${costoTitleRow.number}`);
+        const costoTitleCell = sheet1.getCell(`A${costoTitleRow.number}`);
+        Object.assign(costoTitleCell.style, styles.sectionTitle);
+
+        // Agregar una fila vacía
+        sheet1.addRow([]);
+
+        // Calcular y agregar al Excel las desviaciones en quintales multiplicadas por 545 lps
+        Object.entries(desviacionesPorEmpresa).forEach(([empresa, desviacion]) => {
+            const desviacionQuintales = desviacion/100; // Ya viene en quintales
+            const costoLempiras = desviacionQuintales * COSTE_DEL_QUINTAL;
+            
+            const costoRow = sheet1.addRow([`${empresa}: ${costoLempiras.toLocaleString()} lps`]);
+            sheet1.mergeCells(`A${costoRow.number}:F${costoRow.number}`);
+            
+            const costoCell = sheet1.getCell(`A${costoRow.number}`);
+            costoCell.style = {
+                font: { bold: true, size: 12 },
+                alignment: { horizontal: 'left', vertical: 'middle' },
+                fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE6F3FF' } }
+            };
+        });
+
+
 
         /* Parte Fin */
 
