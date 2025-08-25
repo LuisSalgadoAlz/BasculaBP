@@ -9,7 +9,7 @@ export const TablaResumenBFH = ({datos=[]}) => {
   return (
     <div className=" mt-10">
       <div className=" mx-auto">
-        <h2 className="text-xl font-bold text-gray-500 mb-2">Resumen BFH</h2>
+        <h2 className="text-xl font-bold text-gray-500 mb-2">Resumen por día</h2>
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full table-auto">
@@ -79,7 +79,7 @@ export const TablaResumenBFHLoader = () => {
   return (
     <div className="mt-10">
       <div className="mx-auto">
-        <h2 className="text-xl font-bold text-gray-500 mb-2">Resumen BFH</h2>
+        <h2 className="text-xl font-bold text-gray-500 mb-2">Resumen por día</h2>
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full table-auto">
@@ -503,6 +503,8 @@ export const ModalReportes=({reports, hdlClose, buque = 1058, factura='110016055
     // Construir URL según el tipo de reporte
     if (selectedReport.id === 1) {
       url = `${URLHOST}informes/export/r1/excel?buque=${buque}&factura=${factura}`;
+    } else if(selectedReport.id === 3) {
+      url = `${URLHOST}informes/export/r2/excel?socio=${buque}&factura=${factura}`;
     } else if (selectedReport.id === 2) {
       url = `${URLHOST}informes/generar/pagos/${buque}/${factura}`;
       
@@ -699,7 +701,7 @@ export const ModalReportes=({reports, hdlClose, buque = 1058, factura='110016055
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tarifa
+                  Tarifa de pago de transporte
                 </label>
                 <input
                   type="number"
@@ -707,7 +709,7 @@ export const ModalReportes=({reports, hdlClose, buque = 1058, factura='110016055
                   value={parameters.tarifa}
                   onChange={(e) => handleParameterChange('tarifa', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#725033] focus:border-transparent outline-none transition-all"
-                  placeholder="Ingrese la tarifa"
+                  placeholder="Ingrese la tarifa de pago de transporte"
                 />
               </div>
 
@@ -741,7 +743,7 @@ export const ModalReportes=({reports, hdlClose, buque = 1058, factura='110016055
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Coste del Quintal
+                  Coste del quintal para cobro de transporte
                 </label>
                 <input
                   type="number"

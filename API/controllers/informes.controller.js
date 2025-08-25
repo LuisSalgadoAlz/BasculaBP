@@ -168,7 +168,8 @@ const getBuqueStats = async(req, res) => {
             pesoNeto: (_sum.pesoNeto/QUINTALTONELADA).toFixed(2), 
             pesoTeorico: (_sum.pesoTeorico/QUINTALTONELADA).toFixed(2),
             desviacion: (_sum.desviacion/QUINTALTONELADA).toFixed(2),
-            porcentaje: ((_sum.desviacion/QUINTALTONELADA)/(_sum.pesoTeorico/QUINTALTONELADA)*100).toFixed(2)
+            porcentaje: ((_sum.desviacion/QUINTALTONELADA)/(_sum.pesoTeorico/QUINTALTONELADA)*100).toFixed(2), 
+            status: facturas[0].Proceso || 'No seleccionado'
         }
         return res.status(200).send({...refactorData})
     }catch(err) {
@@ -295,10 +296,10 @@ const getInformePagoAtrasnporte = async (req, res) => {
         const factura = req.params.factura || null;
 
         const LB_TO_QQ = 100;
-        const PAGO_POR_VIAJE = parseInt(req.query.tarifa) || 317.4;
+        const PAGO_POR_VIAJE = parseFloat(req.query.tarifa) || 317.4;
         const PAGO_DOLAR_COMPRA = parseFloat(req.query.tasaCompraDolar) || 26.0430;
         const PAGO_DOLAR_VENTA = parseFloat(req.query.tasaVentaDolar) || 26.1732;
-        const COSTE_DEL_QUINTAL = parseInt(req.query.costeQuintal) || 545;
+        const COSTE_DEL_QUINTAL = parseFloat(req.query.costeQuintal) || 545.0;
 
         const ID_MOVIMIENTO = 2;
 
@@ -308,7 +309,7 @@ const getInformePagoAtrasnporte = async (req, res) => {
             });
         }
 
-        const [silos, pagos, statsBaprosa, primeraUnidad, ultimaUnidad, empresasCobro] = await Promise.all([
+        const [getSilos, pagos, statsBaprosa, primeraUnidad, ultimaUnidad, empresasCobro] = await Promise.all([
             db.$queryRaw`
                 WITH BoletasUnicas AS (
                     SELECT 
@@ -409,6 +410,10 @@ const getInformePagoAtrasnporte = async (req, res) => {
             }) 
         ]);
 
+        const silos = getSilos.sort((a, b) =>
+            a.nombre.localeCompare(b.nombre, undefined, { numeric: true, sensitivity: 'base' })
+        );
+
         const boletasPorEmpresa = empresasCobro.reduce((acc, boleta) => {
             const empresa = boleta.empresa; // campo directo
             if (!acc[empresa]) {
@@ -490,49 +495,66 @@ const getInformePagoAtrasnporte = async (req, res) => {
         Object.assign(subtitleCell.style, styles.subtitle);
 
         // Información de la factura
-        sheet1.mergeCells("A3:E3");
-        const productCell = sheet1.getCell("A3");
-        productCell.value = `GRANZA AMERICANA`;
+        sheet1.getCell("A3").value = "PRODUCTO:";
+        Object.assign(sheet1.getCell("A3").style, styles.dateInfo);
+        sheet1.mergeCells("B3:E3");
+        const productCell = sheet1.getCell("B3");
+        productCell.value = "GRANZA AMERICANA";
         Object.assign(productCell.style, styles.dateInfo);
 
-        // Información de la factura
-        sheet1.mergeCells("A4:E4");
-        const proveedorCell = sheet1.getCell("A4");
-        proveedorCell.value = `Proveedor: ${dataFactura?.Proveedor || 'N/A'}`;
+        sheet1.getCell("A4").value = "PROVEEDOR:";
+        Object.assign(sheet1.getCell("A4").style, styles.dateInfo);
+        sheet1.mergeCells("B4:E4");
+        const proveedorCell = sheet1.getCell("B4");
+        proveedorCell.value = dataFactura?.Proveedor || 'N/A';
         Object.assign(proveedorCell.style, styles.dateInfo);
 
-        // Información de la factura
-        sheet1.mergeCells("A5:E5");
-        const infoCell = sheet1.getCell("A5");
-        infoCell.value = `Factura: ${factura || 'N/A'}`;
+        // Fila 5 - Factura
+        sheet1.getCell("A5").value = "FACTURA:";
+        Object.assign(sheet1.getCell("A5").style, styles.dateInfo);
+        sheet1.mergeCells("B5:E5");
+        const infoCell = sheet1.getCell("B5");
+        infoCell.value = factura || 'N/A';
         Object.assign(infoCell.style, styles.dateInfo);
 
-        sheet1.mergeCells("A6:E6");
-        const buqueCell = sheet1.getCell("A6");
-        buqueCell.value = `Buque: ${ingresoBaprosa[0].socio.toUpperCase()} `;
-        Object.assign(buqueCell.style, styles.dateInfo  );
+        // Fila 6 - Buque
+        sheet1.getCell("A6").value = "BUQUE:";
+        Object.assign(sheet1.getCell("A6").style, styles.dateInfo);
+        sheet1.mergeCells("B6:E6");
+        const buqueCell = sheet1.getCell("B6");
+        buqueCell.value = ingresoBaprosa[0].socio.toUpperCase();
+        Object.assign(buqueCell.style, styles.dateInfo);
 
-        sheet1.mergeCells("A7:E7");
-        const transportesUsados = sheet1.getCell("A7");
-        transportesUsados.value = `Buque: ${pagos.map(item => item.empresa).join(', ').toUpperCase()} `;
-        Object.assign(transportesUsados.style, styles.dateInfo  );
+        // Fila 7 - Transportes (corregido el label)
+        sheet1.getCell("A7").value = "TRANSPORTES:";
+        Object.assign(sheet1.getCell("A7").style, styles.dateInfo);
+        sheet1.mergeCells("B7:E7");
+        const transportesUsados = sheet1.getCell("B7");
+        transportesUsados.value = pagos.map(item => item.empresa).join(', ').toUpperCase();
+        Object.assign(transportesUsados.style, styles.dateInfo);
 
-        sheet1.mergeCells("A8:E8");
-        const fechasDeInicioYfin = sheet1.getCell("A8");
-        fechasDeInicioYfin.value = `Inicio: ${new Date(primeraUnidad[0].fechaInicio).toLocaleString()} - Fin: ${new Date(ultimaUnidad[0].fechaInicio).toLocaleString()}`;
-        Object.assign(fechasDeInicioYfin.style, styles.dateInfo  );
-        
+        // Fila 8 - Fechas de inicio y fin
+        sheet1.getCell("A8").value = "PERÍODO:";
+        Object.assign(sheet1.getCell("A8").style, styles.dateInfo);
+        sheet1.mergeCells("B8:E8");
+        const fechasDeInicioYfin = sheet1.getCell("B8");
+        fechasDeInicioYfin.value = `Inicio: ${new Date(primeraUnidad[0].fechaInicio).toLocaleString()} - Hasta: ${new Date(ultimaUnidad[0].fechaInicio).toLocaleString()}`;
+        Object.assign(fechasDeInicioYfin.style, styles.dateInfo);
+
+        // Fila 9 - Fecha de generación
         const now = new Date();
-        sheet1.mergeCells("A9:E9");
-        const dateCell = sheet1.getCell("A9");
-        dateCell.value = `Generado el: ${now.toLocaleDateString('es-ES', { 
+        sheet1.getCell("A9").value = "GENERADO:";
+        Object.assign(sheet1.getCell("A9").style, styles.dateInfo);
+        sheet1.mergeCells("B9:E9");
+        const dateCell = sheet1.getCell("B9");
+        dateCell.value = now.toLocaleDateString('es-ES', { 
             weekday: 'long', 
             year: 'numeric', 
             month: 'long', 
             day: 'numeric',
             hour: '2-digit',
             minute: '2-digit'
-        })}`;
+        });
         Object.assign(dateCell.style, styles.dateInfo);
 
         sheet1.addRow([]);
@@ -633,11 +655,11 @@ const getInformePagoAtrasnporte = async (req, res) => {
         
         sheet1.addRow([]);
 
-        const transporteHeaders2 = sheet1.addRow(['Empresa', 'Total Viajes', 'Pago USD', 'TASA USD','Pago LPS']);
+        const transporteHeaders2 = sheet1.addRow(['Empresa', 'Total Viajes', 'Tarifa Viaje','Pago USD', 'TASA USD','Pago LPS']);
         transporteHeaders2.height = 25;
         
         // Aplicar estilos a encabezados de transporte
-        ['Empresa', 'Total Viajes', 'Pago USD', 'TASA USD', 'Pago LPS'].forEach((header, index) => {
+        ['Empresa', 'Total Viajes', 'Tarifa USD', 'Pago USD', 'TASA USD', 'Pago LPS'].forEach((header, index) => {
             const cell = sheet1.getCell(sheet1.rowCount, index + 1);
             Object.assign(cell.style, styles.header);
         });
@@ -650,7 +672,7 @@ const getInformePagoAtrasnporte = async (req, res) => {
             
             totalApagar += pago.pagosLempiras;
             
-            const transporteData = [pago.socio, pago.totalViajes, pago.pagosDolares, pago.tasaAplicada, pago.pagosLempiras];
+            const transporteData = [pago.socio,pago.totalViajes,PAGO_POR_VIAJE, pago.pagosDolares, pago.tasaAplicada, pago.pagosLempiras];
             transporteData.forEach((value, colIndex) => {
                 const cell = sheet1.getCell(sheet1.rowCount, colIndex + 1);
                 cell.value = value;
@@ -663,9 +685,9 @@ const getInformePagoAtrasnporte = async (req, res) => {
                 
                 if (colIndex >= 1) {
                     cell.alignment = { horizontal: 'right', vertical: 'middle' };
-                    if (colIndex === 2) {
+                    if (colIndex === 2 || colIndex === 3) {
                         cell.numFmt = '$#,##0.00';
-                    } else if (colIndex >= 3) {
+                    } else if (colIndex >= 4) {
                         cell.numFmt = 'L#,##0.00';
                     }
                 }
@@ -674,15 +696,15 @@ const getInformePagoAtrasnporte = async (req, res) => {
         
         
         // Totales de transportes en lempiras
-        const pagosEnLempiras = sheet1.addRow(['TOTALES:', totalViajesTransporte, totalPagosUSD, '-',totalApagar]);
+        const pagosEnLempiras = sheet1.addRow(['TOTALES:', totalViajesTransporte, '-',totalPagosUSD, '-',totalApagar]);
         pagosEnLempiras.eachCell((cell, colIndex) => {
             if (colIndex === 1) {
                 Object.assign(cell.style, styles.summary);
             } else {
                 Object.assign(cell.style, styles.summaryValue);
-                if (colIndex === 3) {
+                if (colIndex === 4) {
                     cell.numFmt = '$#,##0.00';
-                } else if (colIndex >= 4) {
+                } else if (colIndex >= 5) {
                     cell.numFmt = 'L#,##0.00';
                 }
             }
@@ -698,7 +720,7 @@ const getInformePagoAtrasnporte = async (req, res) => {
         const empresasTitleCell = sheet1.getCell(`A${empresasTitle.number}`);
         Object.assign(empresasTitleCell.style, styles.sectionTitle);
 
-        let totalViajes2 = 0;
+        let totalPesoTeorico2 = 0;
         let totalPesoNeto2 = 0;
         let totalDesviacion2 = 0;
 
@@ -706,11 +728,24 @@ const getInformePagoAtrasnporte = async (req, res) => {
         let desviacionesPorEmpresa = {};
 
         Object.entries(boletasPorEmpresa).forEach(([empresa, boletas]) => {
-            // Fila de título por empresa
             const headerRow = sheet1.addRow([empresa]);
             sheet1.mergeCells(`A${headerRow.number}:F${headerRow.number}`);
             const headerCell = sheet1.getCell(`A${headerRow.number}`);
             Object.assign(headerCell.style, styles.sectionTitle);
+
+            const columnHeaderRow = sheet1.addRow([
+                'N° Boleta',
+                'Placa',
+                'Motorista', 
+                'Peso Neto',
+                'Peso Teórico',
+                'Desviación'
+            ]);
+            
+            ['N° Boleta', 'Placa', 'Motorista',  'Peso Neto', 'Peso Teórico', 'Desviación'].forEach((header, index) => {
+                const cell = sheet1.getCell(sheet1.rowCount, index + 1);
+                Object.assign(cell.style, styles.header);
+            });
 
             // Inicializar desviación para esta empresa
             let desviacionEmpresa = 0;
@@ -720,7 +755,7 @@ const getInformePagoAtrasnporte = async (req, res) => {
                 const dataRow = sheet1.addRow([]);
                 dataRow.height = 20;
 
-                totalViajes2 += boleta.Nviajes || 0;
+                totalPesoTeorico2 += boleta.pesoTeorico || 0;
                 totalPesoNeto2 += boleta.pesoNeto || 0;
                 totalDesviacion2 += boleta.desviacion || 0;
 
@@ -732,8 +767,8 @@ const getInformePagoAtrasnporte = async (req, res) => {
                     boleta.numBoleta,
                     boleta.placa,
                     boleta.motorista,
-                    boleta.Nviajes,
                     boleta.pesoNeto,
+                    boleta.pesoTeorico,
                     boleta.desviacion
                 ];
 
@@ -766,42 +801,58 @@ const getInformePagoAtrasnporte = async (req, res) => {
             sheet1.addRow([]);
         });
 
-        // Agregar título para la sección de costos por desviación
         const costoTitleRow = sheet1.addRow(['COBRO A TRANSPORTES']);
         sheet1.mergeCells(`A${costoTitleRow.number}:F${costoTitleRow.number}`);
         const costoTitleCell = sheet1.getCell(`A${costoTitleRow.number}`);
         Object.assign(costoTitleCell.style, styles.sectionTitle);
 
-        // Agregar una fila vacía
         sheet1.addRow([]);
 
-        // Calcular y agregar al Excel las desviaciones en quintales multiplicadas por 545 lps
-        Object.entries(desviacionesPorEmpresa).forEach(([empresa, desviacion]) => {
-            const desviacionQuintales = desviacion/100; // Ya viene en quintales
-            const costoLempiras = desviacionQuintales * COSTE_DEL_QUINTAL;
+        const headerRow = sheet1.addRow(['Empresa', 'Precio Quintal', 'Total']);
+        const empresaHeader = sheet1.getCell(`A${headerRow.number}`);
+        const cobroHeader = sheet1.getCell(`B${headerRow.number}`);
+        const costoQuintalHeader = sheet1.getCell(`C${headerRow.number}`);
+
+        Object.assign(empresaHeader.style, styles.header);
+        Object.assign(cobroHeader.style, styles.header);
+        Object.assign(costoQuintalHeader.style, styles.header);
+
+        Object.entries(desviacionesPorEmpresa).forEach(([empresa, desviacion], i) => {
+            const desviacionQuintales = desviacion/100; 
+            const costoLempiras = Math.abs(desviacionQuintales * COSTE_DEL_QUINTAL); 
             
-            const costoRow = sheet1.addRow([`${empresa}: ${costoLempiras.toLocaleString()} lps`]);
-            sheet1.mergeCells(`A${costoRow.number}:F${costoRow.number}`);
+            const costoRow = sheet1.addRow([empresa, COSTE_DEL_QUINTAL, costoLempiras]);
+            costoRow.height = 20;
             
-            const costoCell = sheet1.getCell(`A${costoRow.number}`);
-            costoCell.style = {
-                font: { bold: true, size: 12 },
-                alignment: { horizontal: 'left', vertical: 'middle' },
-                fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE6F3FF' } }
-            };
+            const empresaCell = sheet1.getCell(`A${costoRow.number}`);
+            const costoCell = sheet1.getCell(`B${costoRow.number}`);
+            const costoQuintalCell = sheet1.getCell(`C${costoRow.number}`);
+            
+            if (i % 2 !== 0) {
+                empresaCell.style = { ...styles.data, ...styles.alternateRow };
+                costoCell.style = { ...styles.data, ...styles.alternateRow };
+                costoQuintalCell.style = { ...styles.data, ...styles.alternateRow };
+            } else {
+                Object.assign(empresaCell.style, styles.data);
+                Object.assign(costoCell.style, styles.data);
+                Object.assign(costoQuintalCell.style, styles.data);
+            }
+            
+            empresaCell.alignment = { horizontal: 'left', vertical: 'middle' };
+            costoCell.alignment = { horizontal: 'right', vertical: 'middle' };
+            costoQuintalCell.alignment = { horizontal: 'right', vertical: 'middle' };
+            
+            costoCell.numFmt = 'L#,##0';
+            costoQuintalCell.numFmt = 'L#,##0';
         });
-
-
 
         /* Parte Fin */
 
-        // Configurar anchos de columna para hoja 1
         const columnWidths1 = [25, 15, 20, 20, 20, 20];
         columnWidths1.forEach((width, i) => {
             sheet1.getColumn(i + 1).width = width;
         });
 
-        // Pie de página para hoja 1
         sheet1.addRow([]);
         sheet1.addRow([]);
         const footerRow1 = sheet1.rowCount + 1;
@@ -846,49 +897,66 @@ const getInformePagoAtrasnporte = async (req, res) => {
         subtitleCell2.value = `IMPORTACIÓN ${ingresoBaprosa[0].socio.toUpperCase()} `;
         Object.assign(subtitleCell2.style, styles.subtitle);
 
-        // Información de la factura
-        sheet2.mergeCells("A3:E3");
-        const productCell2 = sheet2.getCell("A3");
-        productCell2.value = `GRANZA AMERICANA`;
+        sheet2.getCell("A3").value = "PRODUCTO:";
+        Object.assign(sheet2.getCell("A3").style, styles.dateInfo);
+        sheet2.mergeCells("B3:E3");
+        const productCell2 = sheet2.getCell("B3");
+        productCell2.value = "GRANZA AMERICANA";
         Object.assign(productCell2.style, styles.dateInfo);
 
-        // Información de la factura
-        sheet2.mergeCells("A4:E4");
-        const proveedorCell2 = sheet2.getCell("A4");
-        proveedorCell2.value = `Proveedor: ${dataFactura?.Proveedor || 'N/A'}`;
+        // Fila 4 - Proveedor
+        sheet2.getCell("A4").value = "PROVEEDOR:";
+        Object.assign(sheet2.getCell("A4").style, styles.dateInfo);
+        sheet2.mergeCells("B4:E4");
+        const proveedorCell2 = sheet2.getCell("B4");
+        proveedorCell2.value = dataFactura?.Proveedor || 'N/A';
         Object.assign(proveedorCell2.style, styles.dateInfo);
 
-        // Información de la factura
-        sheet2.mergeCells("A5:E5");
-        const infoCell2 = sheet2.getCell("A5");
-        infoCell2.value = `Factura: ${factura || 'N/A'}`;
+        // Fila 5 - Factura
+        sheet2.getCell("A5").value = "FACTURA:";
+        Object.assign(sheet2.getCell("A5").style, styles.dateInfo);
+        sheet2.mergeCells("B5:E5");
+        const infoCell2 = sheet2.getCell("B5");
+        infoCell2.value = factura || 'N/A';
         Object.assign(infoCell2.style, styles.dateInfo);
 
-        sheet2.mergeCells("A6:E6");
-        const buqueCell2 = sheet2.getCell("A6");
-        buqueCell2.value = `Buque: ${ingresoBaprosa[0].socio.toUpperCase()} `;
-        Object.assign(buqueCell2.style, styles.dateInfo  );
+        // Fila 6 - Buque
+        sheet2.getCell("A6").value = "BUQUE:";
+        Object.assign(sheet2.getCell("A6").style, styles.dateInfo);
+        sheet2.mergeCells("B6:E6");
+        const buqueCell2 = sheet2.getCell("B6");
+        buqueCell2.value = ingresoBaprosa[0].socio.toUpperCase();
+        Object.assign(buqueCell2.style, styles.dateInfo);
 
-        sheet2.mergeCells("A7:E7");
-        const transportesUsados2 = sheet2.getCell("A7");
-        transportesUsados2.value = `Buque: ${pagos.map(item => item.empresa).join(', ').toUpperCase()} `;
-        Object.assign(transportesUsados2.style, styles.dateInfo  );
+        // Fila 7 - Transportes
+        sheet2.getCell("A7").value = "TRANSPORTES:";
+        Object.assign(sheet2.getCell("A7").style, styles.dateInfo);
+        sheet2.mergeCells("B7:E7");
+        const transportesUsados2 = sheet2.getCell("B7");
+        transportesUsados2.value = pagos.map(item => item.empresa).join(', ').toUpperCase();
+        Object.assign(transportesUsados2.style, styles.dateInfo);
 
-        sheet2.mergeCells("A8:E8");
-        const fechasDeInicioYfin2 = sheet2.getCell("A8");
-        fechasDeInicioYfin2.value = `Inicio: ${new Date(primeraUnidad[0].fechaInicio).toLocaleString()} - Fin: ${new Date(ultimaUnidad[0].fechaInicio).toLocaleString()}`;
-        Object.assign(fechasDeInicioYfin2.style, styles.dateInfo  );
-        
-        sheet2.mergeCells("A9:E9");
-        const dateCell2 = sheet2.getCell("A9");
-        dateCell2.value = `Generado el: ${now.toLocaleDateString('es-ES', { 
+        // Fila 8 - Fechas de inicio y fin
+        sheet2.getCell("A8").value = "PERÍODO:";
+        Object.assign(sheet2.getCell("A8").style, styles.dateInfo);
+        sheet2.mergeCells("B8:E8");
+        const fechasDeInicioYfin2 = sheet2.getCell("B8");
+        fechasDeInicioYfin2.value = `Inicio: ${new Date(primeraUnidad[0].fechaInicio).toLocaleString()} - Hasta: ${new Date(ultimaUnidad[0].fechaInicio).toLocaleString()}`;
+        Object.assign(fechasDeInicioYfin2.style, styles.dateInfo);
+
+        // Fila 9 - Fecha de generación
+        sheet2.getCell("A9").value = "GENERADO:";
+        Object.assign(sheet2.getCell("A9").style, styles.dateInfo);
+        sheet2.mergeCells("B9:E9");
+        const dateCell2 = sheet2.getCell("B9");
+        dateCell2.value = now.toLocaleDateString('es-ES', { 
             weekday: 'long', 
             year: 'numeric', 
             month: 'long', 
             day: 'numeric',
             hour: '2-digit',
             minute: '2-digit'
-        })}`;
+        });
         Object.assign(dateCell2.style, styles.dateInfo);
 
         sheet2.addRow([]);
@@ -1237,7 +1305,6 @@ const exportR1Importaciones = async (req, res) => {
 
         const ID_MOVIMIENTO = 2;
 
-        // Obtener datos del reporte y información adicional
         const [datosReporte, dataFactura, primeraUnidad, ultimaUnidad, statsGeneral] = await Promise.all([
             db.boleta.findMany({
                 include: {
@@ -1429,7 +1496,7 @@ const exportR1Importaciones = async (req, res) => {
         if (primeraUnidad.length > 0 && ultimaUnidad.length > 0) {
             sheet1.mergeCells("A7:H7");
             const fechasCell = sheet1.getCell("A7");
-            fechasCell.value = `Inicio: ${new Date(primeraUnidad[0].fechaInicio).toLocaleString()} - Fin: ${new Date(ultimaUnidad[0].fechaInicio).toLocaleString()}`;
+            fechasCell.value = `Inicio: ${new Date(primeraUnidad[0].fechaInicio).toLocaleString()} - Hasta: ${new Date(ultimaUnidad[0].fechaInicio).toLocaleString()}`;
             Object.assign(fechasCell.style, styles.dateInfo);
         }
         
@@ -1577,11 +1644,525 @@ const exportR1Importaciones = async (req, res) => {
         });
     }
 };
+
+const getRerportContenerizada = async (req, res) => {
+    try {
+        const socio = req.query.socio || null;
+        const factura = req.query.factura || 1;
+        
+        if (!socio || socio === undefined || socio === 'undefined' || isNaN(socio)) {
+            return res.status(400).json({ 
+                error: 'Parámetro socio requerido y debe ser un número válido' 
+            });
+        }
+
+        const [datosReporte, dataFactura, primeraUnidad, ultimaUnidad, statsGeneral] = await Promise.all([
+            db.boleta.findMany({
+                select: {
+                    id: true,
+                    fechaInicio: true,
+                    fechaFin: true,
+                    numBoleta: true, 
+                    placa: true,
+                    sello1: true,
+                    sello2: true,
+                    sello3: true,
+                    sello4: true,
+                    sello5: true,
+                    sello6: true,
+                    motorista: true, 
+                    pesoNeto: true,
+                    pesoTeorico: true,
+                    desviacion: true,
+                    socio: true,
+                    empresa: true,
+                    movimiento: true,
+                    producto: true,
+                    estado: true,
+                    proceso: true,
+                    impContenerizada: {
+                        select: {
+                            contenedor: true,
+                            sacosTeoricos: true, 
+                            marchamoDeOrigen: true, 
+                            encargadoDeNombre: true,
+                            sacosCargados: true,
+                            bodega: true,
+                        }
+                    }, 
+                },
+                where: {
+                    idSocio: parseInt(socio), 
+                    factura: factura,
+                }
+            }),
+
+            db.facturas.findFirst({
+                where: {
+                    factura: factura,
+                },
+            }),
+
+            db.boleta.findMany({
+                select: {
+                    id: true,
+                    fechaInicio: true,
+                }, 
+                where: {
+                    idSocio: parseInt(socio),
+                    factura: factura,
+                }, 
+                orderBy: {
+                    id: 'asc', 
+                }, 
+                take: 1,   
+            }), 
+
+            db.boleta.findMany({
+                select: {
+                    id: true,
+                    fechaInicio: true,
+                }, 
+                where: {
+                    idSocio: parseInt(socio),
+                    factura: factura,
+                }, 
+                orderBy: {
+                    id: 'desc', 
+                }, 
+                take: 1,   
+            }),
+
+            db.boleta.groupBy({
+                by: ['idSocio', 'socio'],
+                where: {
+                    idSocio: parseInt(socio), 
+                    factura: factura,
+                    estado: {
+                        not: {
+                            in: ['Pendiente', 'Cancelada'],
+                        },
+                    },
+                },
+                _count: { _all: true },
+                _sum: {
+                    pesoNeto: true,
+                    pesoTeorico: true,
+                    desviacion: true
+                }
+            })
+        ]);
+
+        // Procesar datos de boletas contenerizadas
+        const boletasContenerizadas = datosReporte.map((el) => {
+            const fechaInicio = el.fechaInicio ? new Date(el.fechaInicio) : null;
+            const fechaFin = el.fechaFin ? new Date(el.fechaFin) : null;
+
+            const diferenciaMs = fechaInicio && fechaFin ? fechaFin - fechaInicio : null;
+
+            let diferenciaTiempo = 'N/A';
+            if (diferenciaMs !== null) {
+                const minutos = Math.floor(diferenciaMs / 60000);
+                const horas = Math.floor(minutos / 60);
+                const mins = minutos % 60;
+                diferenciaTiempo = `${horas}h ${mins}m`;
+            }
+
+            return {
+                Boleta: el.numBoleta,
+                Proceso: el.proceso == 0 ? 'Entrada' : 'Salida',
+                Placa: el.placa,
+                Transporte: el.empresa,
+                Motorista: el.motorista,
+                Contenedor: el.impContenerizada?.contenedor || '-',
+                SacosTeoricos: el.impContenerizada?.sacosTeoricos || 0,
+                SacosCargados: el.impContenerizada?.sacosCargados || 0,
+                MarchamoOrigen: el.impContenerizada?.marchamoDeOrigen || '-',
+                EncargadoNombre: el.impContenerizada?.encargadoDeNombre || '-',
+                Bodega: el.impContenerizada?.bodega || '-',
+                PesoNeto: el.pesoNeto || 0,
+                PesoTeorico: el.pesoTeorico || 0,
+                Desviación: el.desviacion || 0,
+                FechaFinalizacion: fechaFin ? fechaFin.toLocaleString() : 'N/A',
+                TiempoTotal: diferenciaTiempo,
+                Sello1: el.sello1 || '-', 
+            };
+        });
+
+        // Calcular acumulados
+        const totalPesoNetoLibras = boletasContenerizadas.reduce((sum, boleta) => sum + (boleta.PesoNeto || 0), 0);
+        const totalPesoNetoQuintales = totalPesoNetoLibras / 100; // Conversión de libras a quintales (1 quintal = 100 libras)
+        const totalSacosCargados = boletasContenerizadas.reduce((sum, boleta) => sum + (boleta.SacosCargados || 0), 0);
+
+        // Crear el libro de trabajo Excel
+        const workbook = new ExcelJS.Workbook();
+        workbook.creator = 'BAPROSA';
+        workbook.lastModifiedBy = 'Sistema de Básculas';
+        workbook.created = new Date();
+        workbook.modified = new Date();
+
+        // ===== HOJA 1: DETALLE DE IMPORTACIONES CONTENERIZADAS =====
+        const sheet1 = workbook.addWorksheet("Detalle Contenerizada", CONFIGPAGE);
+
+        // Logo o placeholder
+        try {
+            const logoId = workbook.addImage({
+                filename: "logo.png",
+                extension: "png",
+            });
+            sheet1.addImage(logoId, {
+                tl: { col: 4, row: 0 },
+                br: { col: 6, row: 3 },
+                editAs: 'oneCell'
+            });
+        } catch (error) {
+            sheet1.mergeCells("A1:A3");
+            const placeholderCell = sheet1.getCell("A1");
+            placeholderCell.value = "BAPROSA";
+            placeholderCell.style = {
+                font: { name: 'Arial', bold: true, size: 18, color: { argb: COLORS.primary } },
+                alignment: { horizontal: 'center', vertical: 'middle' },
+                border: { outline: { style: 'medium', color: { argb: COLORS.primary } } }
+            };
+        }
+
+        // Declarar la fecha actual al inicio
+        const now = new Date();
+
+        // Encabezado del reporte
+        sheet1.mergeCells("A1:Q1");
+        const titleCell = sheet1.getCell("A1");
+        titleCell.value = "REPORTE DE BASCULA - MP IMPORTADA CONTENERIZADA";
+        Object.assign(titleCell.style, styles.title);
+        
+        // Información en la esquina superior derecha
+        sheet1.mergeCells("R1:T1");
+        const codigoCell = sheet1.getCell("R1");
+        codigoCell.value = "Código: AD.R05";
+        codigoCell.style = {
+            font: { name: 'Arial', bold: true, size: 10 },
+            alignment: { horizontal: 'right', vertical: 'middle' },
+            border: { 
+                top: { style: 'thin' },
+                bottom: { style: 'thin' },
+                left: { style: 'thin' },
+                right: { style: 'thin' }
+            }
+        };
+
+        sheet1.mergeCells("R2:T2");
+        const fechaEmisionCell = sheet1.getCell("R2");
+        fechaEmisionCell.value = `Fecha de Emisión: ${now.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
+        fechaEmisionCell.style = {
+            font: { name: 'Arial', bold: true, size: 10 },
+            alignment: { horizontal: 'right', vertical: 'middle' },
+            border: { 
+                top: { style: 'thin' },
+                bottom: { style: 'thin' },
+                left: { style: 'thin' },
+                right: { style: 'thin' }
+            }
+        };
+
+        sheet1.mergeCells("R3:T3");
+        const edicionCell = sheet1.getCell("R3");
+        edicionCell.value = "EDICIÓN: 02";
+        edicionCell.style = {
+            font: { name: 'Arial', bold: true, size: 12 },
+            alignment: { horizontal: 'right', vertical: 'middle' },
+            border: { 
+                top: { style: 'thin' },
+                bottom: { style: 'thin' },
+                left: { style: 'thin' },
+                right: { style: 'thin' }
+            }
+        };
+
+        sheet1.mergeCells("R4:T4");
+        const paginaCell = sheet1.getCell("R4");
+        paginaCell.value = "Página 1 de 1";
+        paginaCell.style = {
+            font: { name: 'Arial', bold: true, size: 10 },
+            alignment: { horizontal: 'right', vertical: 'middle' },
+            border: { 
+                top: { style: 'thin' },
+                bottom: { style: 'thin' },
+                left: { style: 'thin' },
+                right: { style: 'thin' }
+            }
+        };
+
+        // Información de la importación
+        sheet1.mergeCells("A2:Q2");
+        const productCell = sheet1.getCell("A2");
+        productCell.value = `ARROZ ORO. PARAGUAY`;
+        Object.assign(productCell.style, styles.dateInfo);
+
+        sheet1.mergeCells("A3:Q3");
+        const proveedorCell = sheet1.getCell("A3");
+        proveedorCell.value = `Proveedor: ${dataFactura?.Proveedor || 'N/A'}`;
+        Object.assign(proveedorCell.style, styles.dateInfo);
+
+        sheet1.mergeCells("A4:Q4");
+        const infoCell = sheet1.getCell("A4");
+        infoCell.value = `Factura: ${factura || 'N/A'}`;
+        Object.assign(infoCell.style, styles.dateInfo);
+
+        sheet1.mergeCells("A5:Q5");
+        const socioCell = sheet1.getCell("A5");
+        socioCell.value = `Socio: ${statsGeneral.length > 0 ? statsGeneral[0].socio.toUpperCase() : 'N/A'}`;
+        Object.assign(socioCell.style, styles.dateInfo);
+
+        if (primeraUnidad.length > 0 && ultimaUnidad.length > 0) {
+            sheet1.mergeCells("A6:Q6");
+            const fechasCell = sheet1.getCell("A6");
+            fechasCell.value = `Inicio: ${new Date(primeraUnidad[0].fechaInicio).toLocaleString()} - Hasta: ${new Date(ultimaUnidad[0].fechaInicio).toLocaleString()}`;
+            Object.assign(fechasCell.style, styles.dateInfo);
+        }
+        
+        sheet1.mergeCells("A7:Q7");
+        const dateCell = sheet1.getCell("A7");
+        dateCell.value = `Generado el: ${now.toLocaleDateString('es-ES', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        })}`;
+        Object.assign(dateCell.style, styles.dateInfo);
+
+        sheet1.addRow([]);
+
+        // ===== SECCIÓN DE RESUMEN ACUMULADO =====
+        const resumenRow = sheet1.addRow([]);
+        sheet1.mergeCells(`A${sheet1.rowCount}:Q${sheet1.rowCount}`);
+        const resumenTitle = sheet1.getCell(`A${sheet1.rowCount}`);
+        resumenTitle.value = "RESUMEN ACUMULADO";
+        Object.assign(resumenTitle.style, styles.sectionTitle);
+        
+        sheet1.addRow([]);
+
+        // Fila para mostrar los totales
+        const totalRow = sheet1.addRow([
+            'TOTALES:', '', '', '', '', '', '', 
+            totalSacosCargados, '', '', '', 
+            totalPesoNetoLibras, '', '', '', '', ''
+        ]);
+        totalRow.height = 25;
+
+        // Estilo para la fila de totales
+        totalRow.eachCell((cell, colIndex) => {
+            if (colIndex === 1) {
+                // Celda "TOTALES:"
+                cell.style = {
+                    font: { name: 'Arial', bold: true, size: 12, color: { argb: COLORS.primary } },
+                    alignment: { horizontal: 'left', vertical: 'middle' },
+                    border: {
+                        top: { style: 'medium', color: { argb: COLORS.primary } },
+                        bottom: { style: 'medium', color: { argb: COLORS.primary } },
+                        left: { style: 'medium', color: { argb: COLORS.primary } },
+                        right: { style: 'thin' }
+                    }
+                };
+            } else if (colIndex === 8) {
+                // Total sacos cargados
+                cell.style = {
+                    font: { name: 'Arial', bold: true, size: 11, color: { argb: COLORS.primary } },
+                    alignment: { horizontal: 'right', vertical: 'middle' },
+                    numFmt: '#,##0',
+                    border: { 
+                        top: { style: 'medium', color: { argb: COLORS.primary } },
+                        bottom: { style: 'medium', color: { argb: COLORS.primary } },
+                        left: { style: 'thin' },
+                        right: { style: 'thin' }
+                    }
+                };
+            } else if (colIndex === 12) {
+                // Total peso neto en libras
+                cell.style = {
+                    font: { name: 'Arial', bold: true, size: 11, color: { argb: COLORS.primary } },
+                    alignment: { horizontal: 'right', vertical: 'middle' },
+                    numFmt: '#,##0.00',
+                    border: { 
+                        top: { style: 'medium', color: { argb: COLORS.primary } },
+                        bottom: { style: 'medium', color: { argb: COLORS.primary } },
+                        left: { style: 'thin' },
+                        right: { style: 'thin' }
+                    }
+                };
+            } else {
+                // Celdas vacías con bordes
+                cell.style = {
+                    border: { 
+                        top: { style: 'medium', color: { argb: COLORS.primary } },
+                        bottom: { style: 'medium', color: { argb: COLORS.primary } },
+                        left: { style: 'thin' },
+                        right: { style: 'thin' }
+                    }
+                };
+            }
+        });
+
+        // Fila adicional para mostrar el peso en quintales
+        const quintalesRow = sheet1.addRow([
+            '', '', '', '', '', '', '', 
+            '', '', '', '', 
+            `${totalPesoNetoQuintales.toFixed(2)} QQ`, '', '', '', '', ''
+        ]);
+        quintalesRow.height = 20;
+
+        // Estilo para la fila de quintales
+        quintalesRow.eachCell((cell, colIndex) => {
+            if (colIndex === 12) {
+                // Peso en quintales
+                cell.style = {
+                    font: { name: 'Arial', bold: true, size: 10, color: { argb: '808080' } },
+                    alignment: { horizontal: 'right', vertical: 'middle' },
+                    border: { 
+                        top: { style: 'thin' },
+                        bottom: { style: 'thin' },
+                        left: { style: 'thin' },
+                        right: { style: 'thin' }
+                    }
+                };
+            } else {
+                // Celdas vacías con bordes ligeros
+                cell.style = {
+                    border: { 
+                        top: { style: 'thin' },
+                        bottom: { style: 'thin' },
+                        left: { style: 'thin' },
+                        right: { style: 'thin' }
+                    }
+                };
+            }
+        });
+
+        sheet1.addRow([]);
+
+        // ===== DETALLE DE BOLETAS CONTENERIZADAS =====
+        const detalleRow = sheet1.addRow([]);
+        sheet1.mergeCells(`A${sheet1.rowCount}:Q${sheet1.rowCount}`);
+        const detalleTitle = sheet1.getCell(`A${sheet1.rowCount}`);
+        detalleTitle.value = "DETALLE DE BOLETAS CONTENERIZADAS";
+        Object.assign(detalleTitle.style, styles.sectionTitle);
+        
+        sheet1.addRow([]);
+
+        // Encabezados principales para el detalle contenerizado
+        const mainHeaders = [
+            'Boleta', 'Proceso', 'Placa', 'Transporte', 'Motorista',
+            'Contenedor', 'Sacos Teóricos', 'Sacos Cargados', 'Marchamo Origen', 'Encargado', 'Bodega',
+            'Peso Neto (Lbs)', 'Peso Teórico', 'Desviación', 
+            'Fecha Finalización', 'Tiempo Total', 'Sello1'
+        ];
+
+        const headerRow = sheet1.addRow(mainHeaders);
+        headerRow.height = 25;
+        
+        mainHeaders.forEach((header, index) => {
+            const cell = sheet1.getCell(sheet1.rowCount, index + 1);
+            Object.assign(cell.style, styles.header);
+        });
+
+        // Datos de boletas contenerizadas
+        boletasContenerizadas.forEach((boleta, i) => {
+            const dataRow = sheet1.addRow([
+                boleta.Boleta,
+                boleta.Proceso,
+                boleta.Placa,
+                boleta.Transporte,
+                boleta.Motorista,
+                boleta.Contenedor,
+                boleta.SacosTeoricos,
+                boleta.SacosCargados,
+                boleta.MarchamoOrigen,
+                boleta.EncargadoNombre,
+                boleta.Bodega,
+                boleta.PesoNeto,
+                boleta.PesoTeorico,
+                boleta.Desviación,
+                boleta.FechaFinalizacion,
+                boleta.TiempoTotal,
+                boleta.Sello1,
+            ]);
+            dataRow.height = 20;
+            
+            // Aplicar estilos alternados
+            dataRow.eachCell((cell, colIndex) => {
+                if (i % 2 !== 0) {
+                    cell.style = {...styles.data, ...styles.alternateRow};
+                } else {
+                    Object.assign(cell.style, styles.data);
+                }
+                
+                // Formateo específico por columna
+                if (colIndex >= 7 && colIndex <= 8) { // Columnas de sacos
+                    cell.alignment = { horizontal: 'right', vertical: 'middle' };
+                    cell.numFmt = '#,##0';
+                }
+                
+                if (colIndex >= 12 && colIndex <= 14) { // Columnas de peso
+                    cell.alignment = { horizontal: 'right', vertical: 'middle' };
+                    cell.numFmt = '#,##0.00';
+                    
+                    // Colorear desviación
+                    if (colIndex === 14) { // Desviación
+                        const value = boleta.Desviación;
+                        if (value >= 0) {
+                            cell.font = { name: 'Calibri', bold: true, size: 11, color: { argb: COLORS.success } };
+                        } else {
+                            cell.font = { name: 'Calibri', bold: true, size: 11, color: { argb: COLORS.danger } };
+                        }
+                    }
+                }
+            });
+        });
+
+        // Configurar anchos de columna
+        const columnWidths = [
+            12, 12, 12, 20, 20, 18, 15, 15, 18, 20, 15, 
+            12, 12, 12, 20, 15, 12
+        ];
+        columnWidths.forEach((width, i) => {
+            sheet1.getColumn(i + 1).width = width;
+        });
+
+        // Pie de página
+        sheet1.addRow([]);
+        sheet1.addRow([]);
+        const footerRowNum = sheet1.rowCount + 1;
+        sheet1.mergeCells(`A${footerRowNum}:Q${footerRowNum}`);
+        const footerCell = sheet1.getCell(`A${footerRowNum}`);
+        footerCell.value = 'BENEFICIO DE ARROZ PROGRESO, S.A. DE C.V. © ' + new Date().getFullYear();
+        Object.assign(footerCell.style, styles.footer);
+
+        // Configurar la respuesta para descargar el archivo Excel
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename="reporte_contenerizada_${factura || 'sin_factura'}_${new Date().toISOString().split('T')[0]}.xlsx"`);
+        
+        // Escribir el archivo Excel a la respuesta
+        await workbook.xlsx.write(res);
+        res.end();
+
+    } catch (error) {
+        console.error('Error en getReportContenerizada:', error);
+        
+        return res.status(500).json({
+            success: false,
+            error: 'Error interno del servidor',
+            message: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};
+
 module.exports = {
     buquesBoletas, 
     getResumenBFH,
     getBuqueDetalles, 
     getBuqueStats,
     exportR1Importaciones, 
-    getInformePagoAtrasnporte, 
+    getInformePagoAtrasnporte,
+    getRerportContenerizada,
 }

@@ -7,6 +7,7 @@ import { AiOutlineDollarCircle } from 'react-icons/ai';
 import { LuPackage2 } from "react-icons/lu";
 import { Toaster, toast } from "sonner";
 import { IoIosStats } from "react-icons/io";
+import { FaSpinner } from "react-icons/fa";
 
 const Importaciones = () => {
   const [buques, setBuques] = useState({sociosImp: [], facturasImp: []})
@@ -126,7 +127,7 @@ const Importaciones = () => {
 
   const reportsContenerizada = [
     {
-      id: 1,
+      id: 3,
       title: "Registros: Importación contenerizada",
       description: "Análisis de importaciones",
       icon: LuPackage2,
@@ -138,7 +139,7 @@ const Importaciones = () => {
   const statsdata = [
     {
       icon: <IoIosStats size={24} className="text-white" />,
-      title: "Peso Neto (TM)  - Peso Teorico (TEH)",
+      title: "Bascula  - Puerto",
       value: `${stats?.pesoNeto || `0.00`} TM - ${stats?.pesoTeorico || `0.00`} TM`,
       color: "bg-blue-500",
     },
@@ -151,7 +152,7 @@ const Importaciones = () => {
     },
     {
       icon: <IoIosStats size={24} className="text-white" />,
-      title: "Peso Según Factura (TM)  - Peso Neto (TEH)",
+      title: "Bascula  - Factura",
       value: `${stats?.pesoNeto || `0.00`} TM - ${stats?.cantidad || `0.00`} TM`,
       color: "bg-blue-500",
     },
@@ -186,7 +187,7 @@ const Importaciones = () => {
           <h1 className="text-3xl font-bold titulo">Importaciones</h1>
           <h1 className="text-gray-600 max-sm:text-sm">
             {" "}
-            Análisis detallado de importaciones - Período Actual {new Date().getFullYear()}
+            Análisis detallado de importaciones
           </h1>
         </div>
         <div className="parte-der flex items-center justify-center gap-3 max-sm:text-sm max-sm:flex-col">
@@ -258,7 +259,7 @@ const Importaciones = () => {
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-            <ProgressBar current={stats?.pesoNeto || 0} limit={stats?.cantidad || 0} unit="Toneladas" label={`${selectedName ? selectedName : 'Seleccione un buque'}`}/>        
+            <ProgressBar current={stats?.pesoNeto || 0} limit={stats?.cantidad || 0} status={stats?.status} unit="Toneladas" label={`${selectedName ? selectedName : 'Seleccione un buque'}`}/>        
             {statsdata?.map((stat, index) => (
             <StatCard
               key={index}
@@ -307,7 +308,7 @@ const Importaciones = () => {
   );
 };
 
-function ProgressBar({ current, limit, label = "Progreso", unit = "productos" }) {
+function ProgressBar({ current, limit, label = "Progreso", unit = "productos", status }) {
   const percentage = limit > 0 ? Math.min((current / limit) * 100, 100) : 0;
   
   return (
@@ -318,9 +319,9 @@ function ProgressBar({ current, limit, label = "Progreso", unit = "productos" })
           <h3 className="text-lg font-semibold text-gray-800">{label}</h3>
           <div className="flex items-center space-x-2 ML-">
             <span className="text-2xl font-bold text-[#5a3f27]">
-              {Math.round(percentage)}%
+              {percentage.toFixed(2)}%
             </span>
-            <span className="text-sm text-gray-500">completado</span>
+            <span className="text-sm text-gray-500">Recibido</span>
           </div>
         </div>
         
@@ -340,7 +341,7 @@ function ProgressBar({ current, limit, label = "Progreso", unit = "productos" })
             {percentage > 15 && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-white text-sm font-medium drop-shadow-sm">
-                  {Math.round(percentage)}%
+                  {percentage.toFixed(2)}%
                 </span>
               </div>
             )}
@@ -359,11 +360,23 @@ function ProgressBar({ current, limit, label = "Progreso", unit = "productos" })
           <span className="text-sm text-gray-500 capitalize">{unit}</span>
         </div>
         
-        {/* Additional Info */}
         <div className="mt-4 pt-4 border-t border-gray-100">
           <div className="flex justify-between text-xs text-gray-500">
-            <span> {(current - limit) > 0 ? 'Sobrante' : 'Faltante'} : {(current - limit).toLocaleString()} {unit}</span>
-            <span>{percentage < 100 ? `${(100 - percentage).toFixed(1)}% por completar` : '¡Completado!'}</span>
+            <span className={`${status === 1 ? 'text-red-500' : status === 2 ? 'text-green-700 text-sm font-bold' : ''}`}>
+              {status === 1 ? (
+                <span className="text-[#955e37] font-bold flex items-center gap-2 text-sm">
+                  <FaSpinner className="animate-spin text-xs" />
+                  Recibiendo
+                </span>
+              ) : status === 2 ? 'Completado' : '-'}
+            </span>
+            <span className="text-sm font-bold text-gray-600">
+              {
+                status === 1 ? (percentage >= 100 ? ' - ' : `${(100 - percentage).toFixed(2)}% por completar`) : 
+                status === 2 ? (percentage >= 100 ? ` - ` : ` - `) : 
+                status === 3 ? 'Cancelado' : '-'
+              }
+            </span>
           </div>
         </div>
       </div>
