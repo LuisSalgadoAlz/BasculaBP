@@ -137,7 +137,8 @@ const getBuqueStats = async(req, res) => {
         const [facturas, total] = await Promise.all([
             db.facturas.findMany({
                 where: {
-                    idSocio: parseInt(buque), 
+                    idSocio: parseInt(buque),
+                    factura: factura, 
                 }
             }), 
             db.boleta.groupBy({
