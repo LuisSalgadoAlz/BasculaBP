@@ -19,10 +19,7 @@ export const TablaResumenBFH = ({datos=[]}) => {
                     FECHA
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">
-                    Factura
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider">
-                    # VIAJE TEH
+                    CANTIDAD VIAJES
                   </th>
                   <th className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider">
                     QQ T.E.H
@@ -43,9 +40,6 @@ export const TablaResumenBFH = ({datos=[]}) => {
                   <tr key={index} className="hover:bg-gray-50 transition-colors duration-200">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {fila.fecha}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      # Fact. {fila.factura}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                       {fila.total}
@@ -465,46 +459,121 @@ export const BuqueDetallesLoader = ({page}) => {
 export const ModalReportes=({reports, hdlClose, buque = 1058, factura='110016055'}) => {
   const [selectedReport, setSelectedReport] = useState(null);
   const [isLoadingDescargasExcel, setIsLoadingDescargasExcel] = useState(false);
+  const [showParametersModal, setShowParametersModal] = useState(false);
+  const [parameters, setParameters] = useState({
+    tarifa: '',
+    tasaCompraDolar: '',
+    tasaVentaDolar: '',
+    costeQuintal: ''
+  });
 
   const handleSelectReport = (report) => {
     setSelectedReport(report);
   };
 
+  const handleParameterChange = (field, value) => {
+    setParameters(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const validateParameters = () => {
+    return Object.values(parameters).every(value => value.trim() !== '');
+  };
+
   const handleGenerateReport = async() => {
     if (selectedReport) {
       if(selectedReport.id === 2) {
-          try {
-            setIsLoadingDescargasExcel(true);
-        
-            const url = `${URLHOST}informes/generar/pagos/${buque}/${factura}`;
-            
-            const response = await fetch(url, {
-              method: "GET",
-            });
-        
-            if (!response.ok) throw new Error("Error en la exportación");
-        
-            const blob = await response.blob();
-            const downloadUrl = window.URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = downloadUrl;
-            a.download = `${selectedReport.title}_${factura}.xlsx`; // nombre del archivo
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-          } catch (err) {
-            console.error(err);
-            alert('Algo salió mal al generar el reporte, verifique su conexión a la red, e intente denuevo')
-          } finally {
-            setIsLoadingDescargasExcel(false);
-          }
+        // Mostrar modal de parámetros para liquidaciones
+        setShowParametersModal(true);
+        return;
       }
-      setSelectedReport(null);
+      
+      // Para otros reportes, generar directamente
+      await generateReport();
     }
+  };
+
+  const generateReport = async () => {
+  try {
+    setIsLoadingDescargasExcel(true);
+    let url = '';
+
+    // Construir URL según el tipo de reporte
+    if (selectedReport.id === 1) {
+      url = `${URLHOST}informes/export/r1/excel?buque=${buque}&factura=${factura}`;
+    } else if (selectedReport.id === 2) {
+      url = `${URLHOST}informes/generar/pagos/${buque}/${factura}`;
+      
+      const params = new URLSearchParams({
+        tarifa: parameters.tarifa,
+        tasaCompraDolar: parameters.tasaCompraDolar,
+        tasaVentaDolar: parameters.tasaVentaDolar,
+        costeQuintal: parameters.costeQuintal
+      });
+      url += `?${params.toString()}`;
+    } else {
+      throw new Error('Tipo de reporte no válido');
+    }
+
+    // Realizar petición HTTP
+    const response = await fetch(url, {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    // Descargar archivo
+    const blob = await response.blob();
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = downloadUrl;
+    a.download = `${selectedReport.title}_${factura}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    
+    // Limpiar URL del blob para liberar memoria
+    window.URL.revokeObjectURL(downloadUrl);
+
+    // Limpiar estado solo para reporte tipo 2
+    if (selectedReport.id === 2) {
+      setShowParametersModal(false);
+      setParameters({
+        tarifa: '',
+        tasaCompraDolar: '',
+        tasaVentaDolar: '',
+        costeQuintal: ''
+      });
+    }
+    
+    // Limpiar selección de reporte
+    setSelectedReport(null);
+
+  } catch (err) {
+    console.error('Error al generar el reporte:', err);
+    alert('Algo salió mal al generar el reporte. Verifique su conexión a la red e intente de nuevo.');
+  } finally {
+    setIsLoadingDescargasExcel(false);
+  }
+};
+
+  const handleCloseParametersModal = () => {
+    setShowParametersModal(false);
+    setParameters({
+      tarifa: '',
+      tasaCompraDolar: '',
+      tasaVentaDolar: '',
+      costeQuintal: ''
+    });
   };
 
   return (
     <>
+      {/* Modal principal de selección de reportes */}
       <div className="fixed inset-0 bg-black bg-opa-50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[70vh] overflow-hidden">
             {/* Header */}
@@ -599,12 +668,118 @@ export const ModalReportes=({reports, hdlClose, buque = 1058, factura='110016055
                   `}
                 >
                   <AiOutlineDownload size={14} />
-                  {isLoadingDescargasExcel ? 'Generando...' : 'Generar'}
+                  {isLoadingDescargasExcel ? 'Generando...' : selectedReport?.id === 2 ? 'Ingresar Parametros' : 'Generar'}
                 </button>
               </div>
             </div>
           </div>
       </div>
+
+      {/* Modal de parámetros para reporte 2 */}
+      {showParametersModal && (
+        <div className="fixed inset-0 bg-black/60 z-60 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
+            {/* Header */}
+            <div className="bg-gradient-to-r bg-[#725033] text-white p-4 rounded-t-xl">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-bold">Parámetros del Reporte</h2>
+                <button
+                  onClick={handleCloseParametersModal}
+                  className="text-white hover:text-gray-200 hover:bg-red-400 rounded-2xl p-1 hover:scale-105 transition-colors"
+                >
+                  <AiOutlineClose size={20} />
+                </button>
+              </div>
+              <p className="text-blue-100 mt-1 text-sm">
+                Complete los siguientes campos
+              </p>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tarifa
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={parameters.tarifa}
+                  onChange={(e) => handleParameterChange('tarifa', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#725033] focus:border-transparent outline-none transition-all"
+                  placeholder="Ingrese la tarifa"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tasa de Compra del Dólar
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={parameters.tasaCompraDolar}
+                  onChange={(e) => handleParameterChange('tasaCompraDolar', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#725033] focus:border-transparent outline-none transition-all"
+                  placeholder="Ingrese la tasa de compra"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tasa de Venta del Dólar
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={parameters.tasaVentaDolar}
+                  onChange={(e) => handleParameterChange('tasaVentaDolar', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#725033] focus:border-transparent outline-none transition-all"
+                  placeholder="Ingrese la tasa de venta"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Coste del Quintal
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={parameters.costeQuintal}
+                  onChange={(e) => handleParameterChange('costeQuintal', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#725033] focus:border-transparent outline-none transition-all"
+                  placeholder="Ingrese el coste del quintal"
+                />
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="bg-gray-50 px-6 py-4 flex items-center justify-end gap-3 rounded-b-xl">
+              <button
+                onClick={handleCloseParametersModal}
+                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors hover:scale-105"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={generateReport}
+                disabled={!validateParameters() || isLoadingDescargasExcel}
+                className={`
+                  px-4 py-2 text-sm rounded-lg font-semibold transition-all duration-200 flex items-center gap-2 hover:scale-105
+                  ${validateParameters() && !isLoadingDescargasExcel
+                    ? 'bg-[#725033] hover:bg-[#8f6c4c] text-white' 
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }
+                `}
+              >
+                <AiOutlineDownload size={14} />
+                {isLoadingDescargasExcel ? 'Generando...' : 'Generar Reporte'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

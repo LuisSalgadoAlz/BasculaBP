@@ -841,7 +841,7 @@ const getStatsBoletas = async (req, res) => {
 
 const getBoletaID = async (req, res) => {
   try {
-    const [boleta, encargados] = await Promise.all([
+    const [boleta, encargados, translado] = await Promise.all([
       db.boleta.findUnique({
         where: {
           id: parseInt(req.params.id),
@@ -879,10 +879,15 @@ const getBoletaID = async (req, res) => {
           id: true, 
           Nombre: true,
         }
-      }) 
+      }), 
+      db.translado.findMany({
+        select: {
+          nombre: true,
+        }
+      })
     ])
     const data = {
-      ...boleta, encargados
+      ...boleta, encargados, translado
     }
     return res.json(data);
   } catch (err) {
@@ -1063,7 +1068,8 @@ const updateBoletaOut = async (req, res) => {
       encargadoDeBodegaId, 
       encargadoDeNombre, 
       sacosDescargados,
-      furgon
+      furgon,
+      bodegaParaContenerizada, 
     } = req.body;
 
     const verificado = jwt.verify(idUsuario, process.env.SECRET_KEY);
@@ -1215,7 +1221,8 @@ const updateBoletaOut = async (req, res) => {
             update:{
               encargadoDeBodegaID: parseInt(encargadoDeBodegaId),
               encargadoDeNombre: encargadoDeNombre,
-              sacosCargados: parseInt(sacosDescargados), 
+              sacosCargados: parseInt(sacosDescargados),
+              bodega: bodegaParaContenerizada,  
             }
           }
         })

@@ -149,6 +149,7 @@ model impContenerizada {
   marchamoDeOrigen String
 
   /* Opcionales */
+  bodega String?
   encargadoDeBodegaID Int?
   encargadoDeNombre String?
   sacosCargados Int?

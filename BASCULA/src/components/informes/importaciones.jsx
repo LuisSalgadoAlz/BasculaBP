@@ -3,11 +3,10 @@ import { useState } from "react";
 import { getBuquesDetalles, getDataForSelect, getResumenBFH, getStatsBuque } from "../../hooks/informes/granza";
 import { BuqueDetalles, BuqueDetallesLoader, ModalReportes, TablaResumenBFH, TablaResumenBFHLoader } from "./tables";
 import { Pagination, StatCard } from "../../components/buttons";
-import { FiCalendar, FiClock } from "react-icons/fi";
 import { AiOutlineDollarCircle } from 'react-icons/ai';
 import { LuPackage2 } from "react-icons/lu";
-import { IoAlertSharp } from "react-icons/io5";
 import { Toaster, toast } from "sonner";
+import { IoIosStats } from "react-icons/io";
 
 const Importaciones = () => {
   const [buques, setBuques] = useState({sociosImp: [], facturasImp: []})
@@ -137,30 +136,47 @@ const Importaciones = () => {
   ];
   
   const statsdata = [
-      {
-        icon: <FiCalendar size={24} className="text-white" />,
-        title: "Peso Neto (TM)",
-        value:  stats?.pesoNeto || 0,
-        color: "bg-blue-500",
-      },
-      {
-        icon: <FiClock size={24} className="text-white" />,
-        title: "TM TEH (TM)",
-        value:  stats?.pesoTeorico || 0,
-        color: "bg-amber-500",
-      },
-      {
-        icon: <FiClock size={24} className="text-white" />,
-        title: "Desviacion Total (TM)",
-        value:  stats?.desviacion || 0,
-        color: "bg-amber-500",
-      },
-      {
-        icon: <FiClock size={24} className="text-white" />,
-        title: "Desviacion (%)",
-        value:  stats?.porcentaje || 0,
-        color: "bg-amber-500",
-      },
+    {
+      icon: <IoIosStats size={24} className="text-white" />,
+      title: "Peso Neto (TM)  - Peso Teorico (TEH)",
+      value: `${stats?.pesoNeto || `0.00`} TM - ${stats?.pesoTeorico || `0.00`} TM`,
+      color: "bg-blue-500",
+    },
+    {
+      icon: <IoIosStats size={24} className="text-white" />,
+      title: "Desviacion Total (TM) (%)",
+      value: `${stats?.desviacion || `0.00`} (${stats?.porcentaje || `0.00`}%)`,
+      color: "bg-amber-500",
+      status: `${(stats?.desviacion || 0) >= 0 ? 'text-green-700' : 'text-red-700'}`
+    },
+    {
+      icon: <IoIosStats size={24} className="text-white" />,
+      title: "Peso Según Factura (TM)  - Peso Neto (TEH)",
+      value: `${stats?.pesoNeto || `0.00`} TM - ${stats?.cantidad || `0.00`} TM`,
+      color: "bg-blue-500",
+    },
+    {
+      icon: <IoIosStats size={24} className="text-white" />,
+      title: "Desviacion Total (TM) (%)",
+      value: (() => {
+        const pesoNeto = Number(stats?.pesoNeto) || 0;
+        const cantidad = Number(stats?.cantidad) || 0;
+        const diferencia = pesoNeto - cantidad;
+        
+        // Evitar división por cero
+        const porcentaje = pesoNeto !== 0 ? (diferencia / pesoNeto) * 100 : 0;
+        
+        return `${diferencia.toFixed(2)} (${porcentaje.toFixed(2)}%)`;
+      })(),
+      color: "bg-amber-500",
+      status: (() => {
+        const pesoNeto = Number(stats?.pesoNeto) || 0;
+        const cantidad = Number(stats?.cantidad) || 0;
+        const diferencia = pesoNeto - cantidad;
+        
+        return diferencia >= 0 ? 'text-green-700' : 'text-red-700';
+      })()
+    },
   ];
 
   return (
@@ -196,6 +212,7 @@ const Importaciones = () => {
                     className="appearance-none w-48 bg-white text-gray-900 border border-gray-300 rounded-lg py-3 pl-4 pr-10 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#955e37] focus:border-[#955e37 ] hover:border-gray-400 transition-colors duration-200"
                   >
                     {buques?.sociosImp ? <option value={-99}>Seleccionar</option> : <option value={-99}> - </option>}
+                    {console.log(buques)}
                     {buques?.sociosImp && buques?.sociosImp.map((item)=>(
                       <option key={item?.idSocio} value={item?.idSocio}>{item?.socio}</option>
                     ))} 
@@ -249,6 +266,7 @@ const Importaciones = () => {
               title={stat.title}
               value={stat.value}
               color={stat.color}
+              status={stat.status}
             />
           ))}
       </div>  
