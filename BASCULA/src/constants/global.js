@@ -1,5 +1,5 @@
-export const URLHOST = 'http://192.9.100.56:3000/api/'
-export const URLWEBSOCKET = 'ws://192.9.100.56:3000'
+export const URLHOST = 'http://localhost:3000/api/'
+export const URLWEBSOCKET = 'ws://localhost:3000'
 export const VERSION = '1.0.15'
 
 export const AUTH_CONFIG = {

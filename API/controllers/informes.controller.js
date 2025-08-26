@@ -687,6 +687,8 @@ const getInformePagoAtrasnporte = async (req, res) => {
                     cell.alignment = { horizontal: 'right', vertical: 'middle' };
                     if (colIndex === 2 || colIndex === 3) {
                         cell.numFmt = '$#,##0.00';
+                    } else if (colIndex === 4) {
+                        cell.numFmt = 'L#,##0.0000';
                     } else if (colIndex >= 4) {
                         cell.numFmt = 'L#,##0.00';
                     }
@@ -715,7 +717,7 @@ const getInformePagoAtrasnporte = async (req, res) => {
 
 
         /* Parte Inicial */
-        const empresasTitle = sheet1.addRow(['TRANSPORTES CON DESVIACIÓN']);
+        const empresasTitle = sheet1.addRow(['TRANSPORTES CON DESVIACIÓN Y COBROS']);
         sheet1.mergeCells(`A${empresasTitle.number}:F${empresasTitle.number}`);
         const empresasTitleCell = sheet1.getCell(`A${empresasTitle.number}`);
         Object.assign(empresasTitleCell.style, styles.sectionTitle);
@@ -724,15 +726,14 @@ const getInformePagoAtrasnporte = async (req, res) => {
         let totalPesoNeto2 = 0;
         let totalDesviacion2 = 0;
 
-        // Objeto para almacenar desviaciones por empresa
-        let desviacionesPorEmpresa = {};
-
-        Object.entries(boletasPorEmpresa).forEach(([empresa, boletas]) => {
+        Object.entries(boletasPorEmpresa).forEach(([empresa, boletas], empresaIndex) => {
+            // Título de la empresa
             const headerRow = sheet1.addRow([empresa]);
             sheet1.mergeCells(`A${headerRow.number}:F${headerRow.number}`);
             const headerCell = sheet1.getCell(`A${headerRow.number}`);
             Object.assign(headerCell.style, styles.sectionTitle);
 
+            // Encabezados de las columnas para las boletas
             const columnHeaderRow = sheet1.addRow([
                 'N° Boleta',
                 'Placa',
@@ -742,24 +743,25 @@ const getInformePagoAtrasnporte = async (req, res) => {
                 'Desviación'
             ]);
             
-            ['N° Boleta', 'Placa', 'Motorista',  'Peso Neto', 'Peso Teórico', 'Desviación'].forEach((header, index) => {
+            ['N° Boleta', 'Placa', 'Motorista', 'Peso Neto', 'Peso Teórico', 'Desviación'].forEach((header, index) => {
                 const cell = sheet1.getCell(sheet1.rowCount, index + 1);
                 Object.assign(cell.style, styles.header);
             });
 
-            // Inicializar desviación para esta empresa
+            // Inicializar totales para esta empresa
             let desviacionEmpresa = 0;
 
-            // Recorres las boletas de esa empresa
+            // Procesar las boletas de la empresa
             boletas.forEach((boleta, i) => {
                 const dataRow = sheet1.addRow([]);
                 dataRow.height = 20;
 
+                // Acumular totales generales
                 totalPesoTeorico2 += boleta.pesoTeorico || 0;
                 totalPesoNeto2 += boleta.pesoNeto || 0;
                 totalDesviacion2 += boleta.desviacion || 0;
 
-                // Sumar desviación de esta empresa
+                // Acumular desviación de esta empresa
                 desviacionEmpresa += boleta.desviacion || 0;
 
                 // Los datos que quieres mostrar por cada boleta
@@ -786,7 +788,7 @@ const getInformePagoAtrasnporte = async (req, res) => {
                     // formato numérico
                     if (colIndex >= 3) {
                         cell.alignment = { horizontal: 'right', vertical: 'middle' };
-                        if (colIndex === 4) { // peso neto
+                        if (colIndex === 3 || colIndex === 4) { // peso neto y teórico
                             cell.numFmt = '#,##0';
                         } else if (colIndex === 5) { // desviación
                             cell.numFmt = '#,##0';
@@ -794,56 +796,83 @@ const getInformePagoAtrasnporte = async (req, res) => {
                     }
                 });
             });
+
+            // RESUMEN DE COBRO PARA ESTA EMPRESA (ABAJO DE LAS BOLETAS)
+            sheet1.addRow([]); // Fila vacía separadora
+
+            // Título del resumen de cobro
+            const cobroTitleRow = sheet1.addRow(['COBRO PARA ' + empresa.toUpperCase()]);
+            sheet1.mergeCells(`A${cobroTitleRow.number}:F${cobroTitleRow.number}`);
+            const cobroTitleCell = sheet1.getCell(`A${cobroTitleRow.number}`);
+            Object.assign(cobroTitleCell.style, {
+                ...styles.sectionTitle,
+                fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE7E6E6' } }
+            });
+
+            // Encabezados del resumen
+            const resumenHeaderRow = sheet1.addRow([
+                'Concepto',
+                'Precio Quintal',
+                'Desviación QQ',
+                'Total USD',
+                'Tasa Dólar',
+                'TOTAL LPS'
+            ]);
             
-            // Guardar la desviación total de esta empresa
-            desviacionesPorEmpresa[empresa] = desviacionEmpresa;
-            
+            ['Concepto', 'Precio Quintal', 'Desviación QQ', 'Total USD', 'Tasa Dólar', 'TOTAL LPS'].forEach((header, index) => {
+                const cell = sheet1.getCell(sheet1.rowCount, index + 1);
+                Object.assign(cell.style, styles.header);
+            });
+
+            // Calcular valores para el resumen
+            const desviacionQuintales = Math.abs(desviacionEmpresa / 100);
+            const costoDolar = desviacionQuintales * COSTE_DEL_QUINTAL;
+            const tasaAplicada = empresa === 'Transportes Esher' ? PAGO_DOLAR_COMPRA : PAGO_DOLAR_VENTA;
+            const costoLempiras = costoDolar * tasaAplicada;
+
+            // Fila de datos del resumen
+            const resumenDataRow = sheet1.addRow([
+                'Cobro por Desviación',
+                COSTE_DEL_QUINTAL,
+                desviacionQuintales,
+                costoDolar,
+                tasaAplicada,
+                costoLempiras
+            ]);
+            resumenDataRow.height = 20;
+
+            // Aplicar estilos y formatos al resumen
+            const conceptoCell = sheet1.getCell(`A${resumenDataRow.number}`);
+            const precioCell = sheet1.getCell(`B${resumenDataRow.number}`);
+            const desviacionCell = sheet1.getCell(`C${resumenDataRow.number}`);
+            const totalUSDCell = sheet1.getCell(`D${resumenDataRow.number}`);
+            const tasaCell = sheet1.getCell(`E${resumenDataRow.number}`);
+            const totalLPSCell = sheet1.getCell(`F${resumenDataRow.number}`);
+
+            // Estilos para todas las celdas del resumen
+            [conceptoCell, precioCell, desviacionCell, totalUSDCell, tasaCell].forEach(cell => {
+                Object.assign(cell.style, styles.data);
+            });
+
+            // Estilo especial para el total final (destacado)
+            Object.assign(totalLPSCell.style, styles.data);
+
+            // Alineaciones
+            conceptoCell.alignment = { horizontal: 'left', vertical: 'middle' };
+            [precioCell, desviacionCell, totalUSDCell, tasaCell, totalLPSCell].forEach(cell => {
+                cell.alignment = { horizontal: 'right', vertical: 'middle' };
+            });
+
+            // Formatos numéricos
+            precioCell.numFmt = '$#,##0.00';
+            desviacionCell.numFmt = '#,##0.00';
+            totalUSDCell.numFmt = '$#,##0.00';
+            tasaCell.numFmt = '#,##0.0000';
+            totalLPSCell.numFmt = 'L #,##0.00';
+
+            // Espacio entre empresas
             sheet1.addRow([]);
-        });
-
-        const costoTitleRow = sheet1.addRow(['COBRO A TRANSPORTES']);
-        sheet1.mergeCells(`A${costoTitleRow.number}:F${costoTitleRow.number}`);
-        const costoTitleCell = sheet1.getCell(`A${costoTitleRow.number}`);
-        Object.assign(costoTitleCell.style, styles.sectionTitle);
-
-        sheet1.addRow([]);
-
-        const headerRow = sheet1.addRow(['Empresa', 'Precio Quintal', 'Total']);
-        const empresaHeader = sheet1.getCell(`A${headerRow.number}`);
-        const cobroHeader = sheet1.getCell(`B${headerRow.number}`);
-        const costoQuintalHeader = sheet1.getCell(`C${headerRow.number}`);
-
-        Object.assign(empresaHeader.style, styles.header);
-        Object.assign(cobroHeader.style, styles.header);
-        Object.assign(costoQuintalHeader.style, styles.header);
-
-        Object.entries(desviacionesPorEmpresa).forEach(([empresa, desviacion], i) => {
-            const desviacionQuintales = desviacion/100; 
-            const costoLempiras = Math.abs(desviacionQuintales * COSTE_DEL_QUINTAL); 
-            
-            const costoRow = sheet1.addRow([empresa, COSTE_DEL_QUINTAL, costoLempiras]);
-            costoRow.height = 20;
-            
-            const empresaCell = sheet1.getCell(`A${costoRow.number}`);
-            const costoCell = sheet1.getCell(`B${costoRow.number}`);
-            const costoQuintalCell = sheet1.getCell(`C${costoRow.number}`);
-            
-            if (i % 2 !== 0) {
-                empresaCell.style = { ...styles.data, ...styles.alternateRow };
-                costoCell.style = { ...styles.data, ...styles.alternateRow };
-                costoQuintalCell.style = { ...styles.data, ...styles.alternateRow };
-            } else {
-                Object.assign(empresaCell.style, styles.data);
-                Object.assign(costoCell.style, styles.data);
-                Object.assign(costoQuintalCell.style, styles.data);
-            }
-            
-            empresaCell.alignment = { horizontal: 'left', vertical: 'middle' };
-            costoCell.alignment = { horizontal: 'right', vertical: 'middle' };
-            costoQuintalCell.alignment = { horizontal: 'right', vertical: 'middle' };
-            
-            costoCell.numFmt = 'L#,##0';
-            costoQuintalCell.numFmt = 'L#,##0';
+            sheet1.addRow([]);
         });
 
         /* Parte Fin */
@@ -1678,8 +1707,10 @@ const getRerportContenerizada = async (req, res) => {
                     empresa: true,
                     movimiento: true,
                     producto: true,
+                    origen: true, 
                     estado: true,
                     proceso: true,
+                    ordenDeCompra: true, 
                     impContenerizada: {
                         select: {
                             contenedor: true,
@@ -1694,6 +1725,9 @@ const getRerportContenerizada = async (req, res) => {
                 where: {
                     idSocio: parseInt(socio), 
                     factura: factura,
+                },
+                orderBy: {
+                    id: 'asc'
                 }
             }),
 
@@ -1753,176 +1787,208 @@ const getRerportContenerizada = async (req, res) => {
             })
         ]);
 
-        // Procesar datos de boletas contenerizadas
+        let acumuladoQuintales = 0;
+        let acumuladoToneladas = 0; 
+        let acumuladoUnidades = 0;
+
         const boletasContenerizadas = datosReporte.map((el) => {
-            const fechaInicio = el.fechaInicio ? new Date(el.fechaInicio) : null;
             const fechaFin = el.fechaFin ? new Date(el.fechaFin) : null;
+            const pesoNeto = el.pesoNeto || 0;
+            const pesoNetoQQ = pesoNeto / 100; 
+            const pesoNetoTM = pesoNeto / 2204.62; // libras a toneladas métricas (1 TM = 2204.62 libras)
+            const sacosCargados = el.impContenerizada?.sacosCargados || 0;
 
+            acumuladoQuintales += pesoNetoQQ;
+            acumuladoToneladas += pesoNetoTM; 
+            acumuladoUnidades += sacosCargados;
+
+            const fechaInicio = el.fechaInicio ? new Date(el.fechaInicio) : null;
             const diferenciaMs = fechaInicio && fechaFin ? fechaFin - fechaInicio : null;
-
-            let diferenciaTiempo = 'N/A';
+            let tiempoBascula = 'N/A';
             if (diferenciaMs !== null) {
                 const minutos = Math.floor(diferenciaMs / 60000);
                 const horas = Math.floor(minutos / 60);
                 const mins = minutos % 60;
-                diferenciaTiempo = `${horas}h ${mins}m`;
+                tiempoBascula = `${horas}h ${mins}m`;
             }
 
             return {
+                Fecha: fechaFin ? fechaFin.toLocaleDateString('es-ES') : 'N/A',
+                Item: datosReporte.indexOf(el) + 1, 
                 Boleta: el.numBoleta,
-                Proceso: el.proceso == 0 ? 'Entrada' : 'Salida',
                 Placa: el.placa,
-                Transporte: el.empresa,
-                Motorista: el.motorista,
                 Contenedor: el.impContenerizada?.contenedor || '-',
-                SacosTeoricos: el.impContenerizada?.sacosTeoricos || 0,
-                SacosCargados: el.impContenerizada?.sacosCargados || 0,
-                MarchamoOrigen: el.impContenerizada?.marchamoDeOrigen || '-',
-                EncargadoNombre: el.impContenerizada?.encargadoDeNombre || '-',
-                Bodega: el.impContenerizada?.bodega || '-',
-                PesoNeto: el.pesoNeto || 0,
-                PesoTeorico: el.pesoTeorico || 0,
-                Desviación: el.desviacion || 0,
-                FechaFinalizacion: fechaFin ? fechaFin.toLocaleString() : 'N/A',
-                TiempoTotal: diferenciaTiempo,
-                Sello1: el.sello1 || '-', 
+                PrecintosOrigen: el.impContenerizada?.marchamoDeOrigen || '-',
+                SelloOPC: el.sello1 || '-',
+                Motorista: el.motorista,
+                EncargadoBodega: el.impContenerizada?.encargadoDeNombre || '-',
+                BodegaDescarga: el.impContenerizada?.bodega || '-',
+                PesoNetoQQ: pesoNetoQQ,
+                PesoNetoTM: pesoNetoTM, 
+                TiempoBascula: tiempoBascula,
+                AcumuladoQQ: acumuladoQuintales,
+                AcumuladoTM: acumuladoToneladas, 
+                CantidadContenedor: el.impContenerizada?.sacosTeoricos || 0,
+                CantidadRecibida: sacosCargados,
+                UnidadesAcumuladas: acumuladoUnidades
             };
         });
 
-        // Calcular acumulados
-        const totalPesoNetoLibras = boletasContenerizadas.reduce((sum, boleta) => sum + (boleta.PesoNeto || 0), 0);
-        const totalPesoNetoQuintales = totalPesoNetoLibras / 100; // Conversión de libras a quintales (1 quintal = 100 libras)
-        const totalSacosCargados = boletasContenerizadas.reduce((sum, boleta) => sum + (boleta.SacosCargados || 0), 0);
+        const resumenGeneral = {
+            bascula : {
+                toneladaMetrica : acumuladoToneladas.toFixed(2),
+                quintales : acumuladoQuintales.toFixed(2),
+            }, 
+            factura: {
+                toneladaMetrica: (dataFactura.Cantidad.toFixed(2)),
+                quintales: (dataFactura.Cantidad * 22.0462).toFixed(2),
+            }, 
+            diferencias: {
+                toneladaMetrica: (acumuladoToneladas - dataFactura.Cantidad).toFixed(2),
+                quintales: (acumuladoQuintales - (dataFactura.Cantidad * 22.0462)).toFixed(2),
+            }
+        }
 
-        // Crear el libro de trabajo Excel
         const workbook = new ExcelJS.Workbook();
         workbook.creator = 'BAPROSA';
         workbook.lastModifiedBy = 'Sistema de Básculas';
         workbook.created = new Date();
         workbook.modified = new Date();
 
-        // ===== HOJA 1: DETALLE DE IMPORTACIONES CONTENERIZADAS =====
         const sheet1 = workbook.addWorksheet("Detalle Contenerizada", CONFIGPAGE);
 
-        // Logo o placeholder
+        // Logo 
         try {
             const logoId = workbook.addImage({
                 filename: "logo.png",
                 extension: "png",
             });
             sheet1.addImage(logoId, {
-                tl: { col: 4, row: 0 },
-                br: { col: 6, row: 3 },
+                tl: { col: 0, row: 0 }, 
+                br: { col: 2, row: 3 }, 
                 editAs: 'oneCell'
             });
         } catch (error) {
-            sheet1.mergeCells("A1:A3");
+            sheet1.mergeCells("A1:B3");
             const placeholderCell = sheet1.getCell("A1");
             placeholderCell.value = "BAPROSA";
             placeholderCell.style = {
                 font: { name: 'Arial', bold: true, size: 18, color: { argb: COLORS.primary } },
                 alignment: { horizontal: 'center', vertical: 'middle' },
-                border: { outline: { style: 'medium', color: { argb: COLORS.primary } } }
+                border: { 
+                    top: { style: 'medium', color: { argb: COLORS.secondary } },
+                    left: { style: 'medium', color: { argb: COLORS.secondary } },
+                    bottom: { style: 'medium', color: { argb: COLORS.secondary } },
+                    right: { style: 'medium', color: { argb: COLORS.secondary } }
+                }
             };
         }
 
-        // Declarar la fecha actual al inicio
         const now = new Date();
 
-        // Encabezado del reporte
-        sheet1.mergeCells("A1:Q1");
+        sheet1.mergeCells("A1:R3"); 
         const titleCell = sheet1.getCell("A1");
-        titleCell.value = "REPORTE DE BASCULA - MP IMPORTADA CONTENERIZADA";
-        Object.assign(titleCell.style, styles.title);
-        
-        // Información en la esquina superior derecha
-        sheet1.mergeCells("R1:T1");
-        const codigoCell = sheet1.getCell("R1");
-        codigoCell.value = "Código: AD.R05";
-        codigoCell.style = {
-            font: { name: 'Arial', bold: true, size: 10 },
-            alignment: { horizontal: 'right', vertical: 'middle' },
-            border: { 
-                top: { style: 'thin' },
-                bottom: { style: 'thin' },
-                left: { style: 'thin' },
-                right: { style: 'thin' }
+        titleCell.value = "REPORTE DE BÁSCULA - IMPORTACIÓN CONTENERIZADA";
+
+        titleCell.style = {
+            font: styles.title?.font || { name: 'Arial', bold: true, size: 16 },
+            fill: styles.title?.fill || { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF' } },
+            border: {
+                top: { style: 'thick', color: { argb: '000000' } },    
+                left: { style: 'thick', color: { argb: '000000' } },
+                bottom: { style: 'thick', color: { argb: '000000' } },
+                right: { style: 'thick', color: { argb: '000000' } }
+            },
+            alignment: { 
+                horizontal: 'center', 
+                vertical: 'middle',
+                wrapText: true 
             }
         };
 
-        sheet1.mergeCells("R2:T2");
-        const fechaEmisionCell = sheet1.getCell("R2");
-        fechaEmisionCell.value = `Fecha de Emisión: ${now.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
-        fechaEmisionCell.style = {
-            font: { name: 'Arial', bold: true, size: 10 },
-            alignment: { horizontal: 'right', vertical: 'middle' },
-            border: { 
-                top: { style: 'thin' },
-                bottom: { style: 'thin' },
-                left: { style: 'thin' },
-                right: { style: 'thin' }
+        // Aplicar bordes a todas las celdas del rango A1:R3
+        sheet1.eachRow((row, rowNumber) => {
+            if (rowNumber >= 1 && rowNumber <= 3) {
+                row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+                    if (colNumber >= 1 && colNumber <= 18) { // A hasta R
+                        if (!cell.style) cell.style = {};
+                        cell.style.border = {
+                            top: { style: 'thick', color: { argb: '000000' } },
+                            bottom: { style: 'thick', color: { argb: '000000' } },
+                            left: { style: 'thick', color: { argb: '000000' } },
+                            right: { style: 'thick', color: { argb: '000000' } }
+                        };
+                    }
+                });
             }
-        };
+        });
 
-        sheet1.mergeCells("R3:T3");
-        const edicionCell = sheet1.getCell("R3");
-        edicionCell.value = "EDICIÓN: 02";
-        edicionCell.style = {
-            font: { name: 'Arial', bold: true, size: 12 },
-            alignment: { horizontal: 'right', vertical: 'middle' },
-            border: { 
-                top: { style: 'thin' },
-                bottom: { style: 'thin' },
-                left: { style: 'thin' },
-                right: { style: 'thin' }
-            }
-        };
+        sheet1.getRow(1).height = 25;
+        sheet1.getRow(2).height = 25;
+        sheet1.getRow(3).height = 25;
+                
+        // Producto
+        const productLabelCell = sheet1.getCell("A5");
+        productLabelCell.value = "Producto:";
+        Object.assign(productLabelCell.style, styles.dateInfo);
 
-        sheet1.mergeCells("R4:T4");
-        const paginaCell = sheet1.getCell("R4");
-        paginaCell.value = "Página 1 de 1";
-        paginaCell.style = {
-            font: { name: 'Arial', bold: true, size: 10 },
-            alignment: { horizontal: 'right', vertical: 'middle' },
-            border: { 
-                top: { style: 'thin' },
-                bottom: { style: 'thin' },
-                left: { style: 'thin' },
-                right: { style: 'thin' }
-            }
-        };
+        const productValueCell = sheet1.getCell("B5");
+        productValueCell.value = `${datosReporte[0].producto ? `${datosReporte[0].producto} - ${datosReporte[0].origen || 'N/A'}` : `N/A` }`;
+        Object.assign(productValueCell.style, styles.dateInfo);
 
-        // Información de la importación
-        sheet1.mergeCells("A2:Q2");
-        const productCell = sheet1.getCell("A2");
-        productCell.value = `ARROZ ORO. PARAGUAY`;
-        Object.assign(productCell.style, styles.dateInfo);
+        // Proveedor
+        const proveedorLabelCell = sheet1.getCell("A6");
+        proveedorLabelCell.value = "Proveedor:";
+        Object.assign(proveedorLabelCell.style, styles.dateInfo);
 
-        sheet1.mergeCells("A3:Q3");
-        const proveedorCell = sheet1.getCell("A3");
-        proveedorCell.value = `Proveedor: ${dataFactura?.Proveedor || 'N/A'}`;
-        Object.assign(proveedorCell.style, styles.dateInfo);
+        const proveedorValueCell = sheet1.getCell("B6");
+        proveedorValueCell.value = `${dataFactura?.Proveedor || 'N/A'}`;
+        Object.assign(proveedorValueCell.style, styles.dateInfo);
 
-        sheet1.mergeCells("A4:Q4");
-        const infoCell = sheet1.getCell("A4");
-        infoCell.value = `Factura: ${factura || 'N/A'}`;
-        Object.assign(infoCell.style, styles.dateInfo);
+        // Factura
+        const facturaLabelCell = sheet1.getCell("A7");
+        facturaLabelCell.value = "Factura:";
+        Object.assign(facturaLabelCell.style, styles.dateInfo);
 
-        sheet1.mergeCells("A5:Q5");
-        const socioCell = sheet1.getCell("A5");
-        socioCell.value = `Socio: ${statsGeneral.length > 0 ? statsGeneral[0].socio.toUpperCase() : 'N/A'}`;
-        Object.assign(socioCell.style, styles.dateInfo);
+        const facturaValueCell = sheet1.getCell("B7");
+        facturaValueCell.value = `${factura || 'N/A'}`;
+        Object.assign(facturaValueCell.style, styles.dateInfo);
 
+        // Socio
+        const socioLabelCell = sheet1.getCell("A8");
+        socioLabelCell.value = "Socio:";
+        Object.assign(socioLabelCell.style, styles.dateInfo);
+
+        const socioValueCell = sheet1.getCell("B8");
+        socioValueCell.value = `${statsGeneral.length > 0 ? statsGeneral[0].socio.toUpperCase() : 'N/A'}`;
+        Object.assign(socioValueCell.style, styles.dateInfo);
+
+        // Fechas (si existen datos)
         if (primeraUnidad.length > 0 && ultimaUnidad.length > 0) {
-            sheet1.mergeCells("A6:Q6");
-            const fechasCell = sheet1.getCell("A6");
-            fechasCell.value = `Inicio: ${new Date(primeraUnidad[0].fechaInicio).toLocaleString()} - Hasta: ${new Date(ultimaUnidad[0].fechaInicio).toLocaleString()}`;
-            Object.assign(fechasCell.style, styles.dateInfo);
+            const inicioLabelCell = sheet1.getCell("A9");
+            inicioLabelCell.value = "Inicio:";
+            Object.assign(inicioLabelCell.style, styles.dateInfo);
+
+            const inicioValueCell = sheet1.getCell("B9");
+            inicioValueCell.value = `${new Date(primeraUnidad[0].fechaInicio).toLocaleString()}`;
+            Object.assign(inicioValueCell.style, styles.dateInfo);
+
+            const hastaLabelCell = sheet1.getCell("A10");
+            hastaLabelCell.value = "Hasta:";
+            Object.assign(hastaLabelCell.style, styles.dateInfo);
+
+            const hastaValueCell = sheet1.getCell("B10");
+            hastaValueCell.value = `${new Date(ultimaUnidad[0].fechaInicio).toLocaleString()}`;
+            Object.assign(hastaValueCell.style, styles.dateInfo);
         }
-        
-        sheet1.mergeCells("A7:Q7");
-        const dateCell = sheet1.getCell("A7");
-        dateCell.value = `Generado el: ${now.toLocaleDateString('es-ES', { 
+
+        // Fecha de generación
+        const dateLabelCell = sheet1.getCell("A11");
+        dateLabelCell.value = "Generado el:";
+        Object.assign(dateLabelCell.style, styles.dateInfo);
+
+        const dateValueCell = sheet1.getCell("B11");
+        dateValueCell.value = `${now.toLocaleDateString('es-ES', { 
             weekday: 'long', 
             year: 'numeric', 
             month: 'long', 
@@ -1930,136 +1996,29 @@ const getRerportContenerizada = async (req, res) => {
             hour: '2-digit',
             minute: '2-digit'
         })}`;
-        Object.assign(dateCell.style, styles.dateInfo);
-
-        sheet1.addRow([]);
-
-        // ===== SECCIÓN DE RESUMEN ACUMULADO =====
-        const resumenRow = sheet1.addRow([]);
-        sheet1.mergeCells(`A${sheet1.rowCount}:Q${sheet1.rowCount}`);
-        const resumenTitle = sheet1.getCell(`A${sheet1.rowCount}`);
-        resumenTitle.value = "RESUMEN ACUMULADO";
-        Object.assign(resumenTitle.style, styles.sectionTitle);
-        
-        sheet1.addRow([]);
-
-        // Fila para mostrar los totales
-        const totalRow = sheet1.addRow([
-            'TOTALES:', '', '', '', '', '', '', 
-            totalSacosCargados, '', '', '', 
-            totalPesoNetoLibras, '', '', '', '', ''
-        ]);
-        totalRow.height = 25;
-
-        // Estilo para la fila de totales
-        totalRow.eachCell((cell, colIndex) => {
-            if (colIndex === 1) {
-                // Celda "TOTALES:"
-                cell.style = {
-                    font: { name: 'Arial', bold: true, size: 12, color: { argb: COLORS.primary } },
-                    alignment: { horizontal: 'left', vertical: 'middle' },
-                    border: {
-                        top: { style: 'medium', color: { argb: COLORS.primary } },
-                        bottom: { style: 'medium', color: { argb: COLORS.primary } },
-                        left: { style: 'medium', color: { argb: COLORS.primary } },
-                        right: { style: 'thin' }
-                    }
-                };
-            } else if (colIndex === 8) {
-                // Total sacos cargados
-                cell.style = {
-                    font: { name: 'Arial', bold: true, size: 11, color: { argb: COLORS.primary } },
-                    alignment: { horizontal: 'right', vertical: 'middle' },
-                    numFmt: '#,##0',
-                    border: { 
-                        top: { style: 'medium', color: { argb: COLORS.primary } },
-                        bottom: { style: 'medium', color: { argb: COLORS.primary } },
-                        left: { style: 'thin' },
-                        right: { style: 'thin' }
-                    }
-                };
-            } else if (colIndex === 12) {
-                // Total peso neto en libras
-                cell.style = {
-                    font: { name: 'Arial', bold: true, size: 11, color: { argb: COLORS.primary } },
-                    alignment: { horizontal: 'right', vertical: 'middle' },
-                    numFmt: '#,##0.00',
-                    border: { 
-                        top: { style: 'medium', color: { argb: COLORS.primary } },
-                        bottom: { style: 'medium', color: { argb: COLORS.primary } },
-                        left: { style: 'thin' },
-                        right: { style: 'thin' }
-                    }
-                };
-            } else {
-                // Celdas vacías con bordes
-                cell.style = {
-                    border: { 
-                        top: { style: 'medium', color: { argb: COLORS.primary } },
-                        bottom: { style: 'medium', color: { argb: COLORS.primary } },
-                        left: { style: 'thin' },
-                        right: { style: 'thin' }
-                    }
-                };
-            }
-        });
-
-        // Fila adicional para mostrar el peso en quintales
-        const quintalesRow = sheet1.addRow([
-            '', '', '', '', '', '', '', 
-            '', '', '', '', 
-            `${totalPesoNetoQuintales.toFixed(2)} QQ`, '', '', '', '', ''
-        ]);
-        quintalesRow.height = 20;
-
-        // Estilo para la fila de quintales
-        quintalesRow.eachCell((cell, colIndex) => {
-            if (colIndex === 12) {
-                // Peso en quintales
-                cell.style = {
-                    font: { name: 'Arial', bold: true, size: 10, color: { argb: '808080' } },
-                    alignment: { horizontal: 'right', vertical: 'middle' },
-                    border: { 
-                        top: { style: 'thin' },
-                        bottom: { style: 'thin' },
-                        left: { style: 'thin' },
-                        right: { style: 'thin' }
-                    }
-                };
-            } else {
-                // Celdas vacías con bordes ligeros
-                cell.style = {
-                    border: { 
-                        top: { style: 'thin' },
-                        bottom: { style: 'thin' },
-                        left: { style: 'thin' },
-                        right: { style: 'thin' }
-                    }
-                };
-            }
-        });
+        Object.assign(dateValueCell.style, styles.dateInfo);
 
         sheet1.addRow([]);
 
         // ===== DETALLE DE BOLETAS CONTENERIZADAS =====
         const detalleRow = sheet1.addRow([]);
-        sheet1.mergeCells(`A${sheet1.rowCount}:Q${sheet1.rowCount}`);
+        sheet1.mergeCells(`A${sheet1.rowCount}:R${sheet1.rowCount}`);
         const detalleTitle = sheet1.getCell(`A${sheet1.rowCount}`);
         detalleTitle.value = "DETALLE DE BOLETAS CONTENERIZADAS";
         Object.assign(detalleTitle.style, styles.sectionTitle);
         
         sheet1.addRow([]);
 
-        // Encabezados principales para el detalle contenerizado
+        // Encabezados principales
         const mainHeaders = [
-            'Boleta', 'Proceso', 'Placa', 'Transporte', 'Motorista',
-            'Contenedor', 'Sacos Teóricos', 'Sacos Cargados', 'Marchamo Origen', 'Encargado', 'Bodega',
-            'Peso Neto (Lbs)', 'Peso Teórico', 'Desviación', 
-            'Fecha Finalización', 'Tiempo Total', 'Sello1'
+            'FECHA', 'ITEM', 'BOLETA', 'PLACA', 'CONTENEDOR', 'PRECINTOS ORIGEN', 
+            'SELLO OPC', 'MOTORISTA', 'ENCARGADO DE BODEGA', 'BODEGA DESCARGA', 
+            'PESO NETO(QQ)', 'PESO NETO(TM)', 'ACUM. QQ', 'ACUM. TM',
+            'CANTIDAD TEÓRICA', 'CANTIDAD RECIBIDA', 'CANTIDAD ACUMULADA', 'DURACIÓN',
         ];
 
         const headerRow = sheet1.addRow(mainHeaders);
-        headerRow.height = 25;
+        headerRow.height = 30;
         
         mainHeaders.forEach((header, index) => {
             const cell = sheet1.getCell(sheet1.rowCount, index + 1);
@@ -2069,71 +2028,226 @@ const getRerportContenerizada = async (req, res) => {
         // Datos de boletas contenerizadas
         boletasContenerizadas.forEach((boleta, i) => {
             const dataRow = sheet1.addRow([
+                boleta.Fecha,
+                boleta.Item,
                 boleta.Boleta,
-                boleta.Proceso,
                 boleta.Placa,
-                boleta.Transporte,
-                boleta.Motorista,
                 boleta.Contenedor,
-                boleta.SacosTeoricos,
-                boleta.SacosCargados,
-                boleta.MarchamoOrigen,
-                boleta.EncargadoNombre,
-                boleta.Bodega,
-                boleta.PesoNeto,
-                boleta.PesoTeorico,
-                boleta.Desviación,
-                boleta.FechaFinalizacion,
-                boleta.TiempoTotal,
-                boleta.Sello1,
+                boleta.PrecintosOrigen,
+                boleta.SelloOPC,
+                boleta.Motorista,
+                boleta.EncargadoBodega,
+                boleta.BodegaDescarga,
+                boleta.PesoNetoQQ,
+                boleta.PesoNetoTM,
+                boleta.AcumuladoQQ,
+                boleta.AcumuladoTM,
+                boleta.CantidadContenedor,
+                boleta.CantidadRecibida,
+                boleta.UnidadesAcumuladas, 
+                boleta.TiempoBascula,
             ]);
             dataRow.height = 20;
             
             // Aplicar estilos alternados
             dataRow.eachCell((cell, colIndex) => {
-                if (i % 2 !== 0) {
-                    cell.style = {...styles.data, ...styles.alternateRow};
-                } else {
-                    Object.assign(cell.style, styles.data);
-                }
+                const baseStyle = i % 2 !== 0 ? {...styles.data, ...styles.alternateRow} : styles.data;
+                Object.assign(cell.style, baseStyle);
                 
                 // Formateo específico por columna
-                if (colIndex >= 7 && colIndex <= 8) { // Columnas de sacos
-                    cell.alignment = { horizontal: 'right', vertical: 'middle' };
-                    cell.numFmt = '#,##0';
+                if (colIndex === 2) { // Item - número entero
+                    cell.alignment = { horizontal: 'center', vertical: 'middle' };
+                    cell.numFmt = '0';
                 }
                 
-                if (colIndex >= 12 && colIndex <= 14) { // Columnas de peso
+                if (colIndex === 11 || colIndex === 12) { // Peso Neto QQ y TM
                     cell.alignment = { horizontal: 'right', vertical: 'middle' };
                     cell.numFmt = '#,##0.00';
-                    
-                    // Colorear desviación
-                    if (colIndex === 14) { // Desviación
-                        const value = boleta.Desviación;
-                        if (value >= 0) {
-                            cell.font = { name: 'Calibri', bold: true, size: 11, color: { argb: COLORS.success } };
-                        } else {
-                            cell.font = { name: 'Calibri', bold: true, size: 11, color: { argb: COLORS.danger } };
-                        }
-                    }
+                }
+
+                if (colIndex === 13 || colIndex === 14) { // Acum. QQ y TM
+                    cell.alignment = { horizontal: 'right', vertical: 'middle' };
+                    cell.numFmt = '#,##0.00';
+                }
+
+                if (colIndex === 15 || colIndex === 16 || colIndex === 17) { // Cantidades y unidades
+                    cell.alignment = { horizontal: 'right', vertical: 'middle' };
+                    cell.numFmt = '#,##0';
                 }
             });
         });
 
-        // Configurar anchos de columna
+        // Configurar anchos de columna ajustados para las nuevas columnas
         const columnWidths = [
-            12, 12, 12, 20, 20, 18, 15, 15, 18, 20, 15, 
-            12, 12, 12, 20, 15, 12
+            12, 8, 12, 12, 18, 18, 12, 20, 20, 20, 
+            20, 20, 20, 20, 20, 20, 18, 20
         ];
         columnWidths.forEach((width, i) => {
             sheet1.getColumn(i + 1).width = width;
         });
 
+        // ===== RESUMEN GENERAL =====
+        sheet1.addRow([]);
+        sheet1.addRow([]);
+
+        // Título principal del resumen
+        const resumenMainTitleRow = sheet1.addRow([]);
+        sheet1.mergeCells(`A${sheet1.rowCount}:G${sheet1.rowCount}`);
+        const resumenMainTitleCell = sheet1.getCell(`A${sheet1.rowCount}`);
+        resumenMainTitleCell.value = "RESUMEN GENERAL";
+        resumenMainTitleCell.style = styles.header;
+        sheet1.getRow(sheet1.rowCount).height = 20;
+
+        // Información de factura y producto
+        const numContenedores = [...new Set(datosReporte.map(item => item.impContenerizada?.contenedor).filter(Boolean))].length;
+        const facturaInfoRow = sheet1.addRow([]);
+        sheet1.mergeCells(`A${sheet1.rowCount}:G${sheet1.rowCount}`);
+        const facturaInfoCell = sheet1.getCell(`A${sheet1.rowCount}`);
+        facturaInfoCell.value = `ORDEN DE COMPRA: ${datosReporte[0].ordenDeCompra || 'N/A'} | CONTENEDORES: ${numContenedores}`;
+        facturaInfoCell.style = {
+            font: { name: 'Arial', bold: true, size: 10, color: { argb: '000000' } },
+            alignment: { horizontal: 'center', vertical: 'middle' },
+        };
+        sheet1.getRow(sheet1.rowCount).height = 20;
+
+        sheet1.addRow([]);
+
+        const headerRow1 = sheet1.addRow(['', 'CANTIDAD SEGÚN FACTURA', '', 'CANTIDAD RECIBIDA (BÁSCULA)', '', 'DIFERENCIA', '']);
+        
+        // Merge para los títulos principales
+        sheet1.mergeCells(`B${sheet1.rowCount}:C${sheet1.rowCount}`); // CANTIDAD SEGÚN FACTURA
+        sheet1.mergeCells(`D${sheet1.rowCount}:E${sheet1.rowCount}`); // CANTIDAD RECIBIDA
+        sheet1.mergeCells(`F${sheet1.rowCount}:G${sheet1.rowCount}`); // DIFERENCIA
+        
+        ['A', 'B', 'D', 'F'].forEach(col => {
+            const cell = sheet1.getCell(`${col}${sheet1.rowCount}`);
+            Object.assign(cell.style, styles.header);   
+        });
+
+        sheet1.getCell(`A${sheet1.rowCount}`).value = 'CONCEPTO';
+        sheet1.getCell(`B${sheet1.rowCount}`).value = 'CANTIDAD SEGÚN FACTURA';
+        sheet1.getCell(`D${sheet1.rowCount}`).value = 'CANTIDAD RECIBIDA (BÁSCULA)';
+        sheet1.getCell(`F${sheet1.rowCount}`).value = 'DIFERENCIA';
+
+        // Subencabezados - segunda fila
+        const headerRow2 = sheet1.addRow(['', 'TM', 'QQ', 'TM', 'QQ', 'TM', 'QQ']);
+        headerRow2.eachCell((cell, colIndex) => {
+            if (colIndex <= 7) {
+                cell.style = {
+                    font: { name: "Calibri", size: 11, color: { argb: COLORS.text } },
+                    alignment: { vertical: "middle", horizontal: "center" },
+                    border: {
+                        top: { style: "thin", color: { argb: COLORS.darkGray } },
+                        left: { style: "thin", color: { argb: COLORS.darkGray } },
+                        bottom: { style: "thin", color: { argb: COLORS.darkGray } },
+                        right: { style: "thin", color: { argb: COLORS.darkGray } },
+                    },
+                };
+            }
+        });
+
+        // Datos del resumen
+        const dataRow = sheet1.addRow([
+            'TOTALES',
+            parseFloat(resumenGeneral.factura.toneladaMetrica),
+            parseFloat(resumenGeneral.factura.quintales),
+            parseFloat(resumenGeneral.bascula.toneladaMetrica),
+            parseFloat(resumenGeneral.bascula.quintales),
+            parseFloat(resumenGeneral.diferencias.toneladaMetrica),
+            parseFloat(resumenGeneral.diferencias.quintales)
+        ]);
+
+        dataRow.eachCell((cell, colIndex) => {
+            if (colIndex <= 7) {
+                let baseStyle = {
+                    font: { name: 'Arial', bold: colIndex === 1, size: 11 },
+                    alignment: { horizontal: colIndex === 1 ? 'left' : 'center', vertical: 'middle' },
+                };
+
+                let foramatInit = {
+                    border: {
+                        top: { style: "thin", color: { argb: COLORS.darkGray } },
+                        left: { style: "thin", color: { argb: COLORS.darkGray } },
+                        bottom: { style: "thin", color: { argb: COLORS.darkGray } },
+                        right: { style: "thin", color: { argb: COLORS.darkGray } },
+                    },
+                }
+
+                // Formato numérico para columnas de datos
+                if (colIndex > 1) {
+                    baseStyle.numFmt = '#,##0.00';
+                }
+
+                // Color de fondo para las diferencias
+                if (colIndex === 6 || colIndex === 7) {
+                    const valor = parseFloat(cell.value);
+                    if (valor > 0) {
+                        baseStyle.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'C6EFCE' } }; // Verde claro
+                        baseStyle.font.color = { argb: '006100' }; // Verde oscuro
+                    } else if (valor < 0) {
+                        baseStyle.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC7CE' } }; // Rojo claro
+                        baseStyle.font.color = { argb: '9C0006' }; // Rojo oscuro
+                    } else {
+                        baseStyle.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF' } }; // Blanco
+                    }
+                } else if (colIndex === 1) {
+                    baseStyle.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'F2F2F2' } }; // Gris claro
+                } else {
+                    baseStyle.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF' } }; // Blanco
+                }
+
+                cell.style = {...baseStyle, ...foramatInit};
+            }
+        });
+
+        sheet1.getRow(sheet1.rowCount).height = 25;
+
+        sheet1.addRow([]); // Espacio
+
+        // Información adicional en una sola fila organizada
+        const infoAdicionalRow = sheet1.addRow([]);
+        sheet1.mergeCells(`A${sheet1.rowCount}:D${sheet1.rowCount}`);
+        sheet1.mergeCells(`E${sheet1.rowCount}:G${sheet1.rowCount}`);
+
+        const sacosCell = sheet1.getCell(`A${sheet1.rowCount}`);
+        sacosCell.value = `SACOS RECIBIDOS: ${acumuladoUnidades.toLocaleString()} Unidades`;
+        sacosCell.style = {
+            font: { name: 'Arial', bold: true, size: 12 },
+            alignment: { horizontal: 'left', vertical: 'middle' },
+        };
+
+        const estadoCell = sheet1.getCell(`E${sheet1.rowCount}`);
+        const diferenciaTM = parseFloat(resumenGeneral.diferencias.toneladaMetrica);
+        const estadoTexto = diferenciaTM > 0 ? 'SOBRANTE' : diferenciaTM < 0 ? 'FALTANTE' : 'EXACTO';
+        estadoCell.value = `RESULTADO: ${estadoTexto}`;
+        estadoCell.style = {
+            font: { name: 'Arial', bold: true, size: 12, color: { argb: 'FFFFFF' } },
+            fill: { 
+                type: 'pattern', 
+                pattern: 'solid', 
+                fgColor: { 
+                    argb: diferenciaTM > 0 ? '70AD47' : diferenciaTM < 0 ? 'C5504B' : '4472C4' 
+                } 
+            },
+            alignment: { horizontal: 'center', vertical: 'middle' },
+        };
+
+        sheet1.getRow(sheet1.rowCount).height = 30;
+
+        // Ajustar anchos de las primeras columnas para el resumen
+        sheet1.getColumn(1).width = 25; // CONCEPTO
+        sheet1.getColumn(2).width = 15; // TM Factura
+        sheet1.getColumn(3).width = 15; // QQ Factura
+        sheet1.getColumn(4).width = 15; // TM Báscula
+        sheet1.getColumn(5).width = 15; // QQ Báscula
+        sheet1.getColumn(6).width = 15; // TM Diferencia
+        sheet1.getColumn(7).width = 15; // QQ Diferencia
+
         // Pie de página
         sheet1.addRow([]);
         sheet1.addRow([]);
         const footerRowNum = sheet1.rowCount + 1;
-        sheet1.mergeCells(`A${footerRowNum}:Q${footerRowNum}`);
+        sheet1.mergeCells(`A${footerRowNum}:R${footerRowNum}`);
         const footerCell = sheet1.getCell(`A${footerRowNum}`);
         footerCell.value = 'BENEFICIO DE ARROZ PROGRESO, S.A. DE C.V. © ' + new Date().getFullYear();
         Object.assign(footerCell.style, styles.footer);
