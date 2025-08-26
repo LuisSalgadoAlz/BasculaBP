@@ -2,6 +2,7 @@ const db = require("../lib/prisma");
 const ExcelJS = require("exceljs");
 const e = require("express");
 const { setLogger } = require("../utils/logger");
+const { CONFIGPAGE, styles, COLORS } = require("../lib/configExcel");
 
 const exportToExcel = async (req, res) => {
   try {
@@ -140,100 +141,8 @@ const exportToExcel = async (req, res) => {
     workbook.created = new Date();
     workbook.modified = new Date();
     
-    // Configuración de colores corporativos
-    const COLORS = {
-      primary: '1F4E79',        // Azul oscuro para elementos principales
-      secondary: '2E75B6',      // Azul medio para elementos secundarios
-      accent: '4472C4',         // Azul acento para destacados
-      light: 'D9E1F2',          // Azul claro para fondos suaves
-      white: 'FFFFFF',          // Blanco
-      gray: 'F2F2F2',           // Gris claro para filas alternadas
-      darkGray: 'A6A6A6',       // Gris oscuro para bordes y textos secundarios
-      success: '70AD47',        // Verde para estados positivos
-      warning: 'ED7D31',        // Naranja para alertas
-      danger: 'C00000',         // Rojo para errores
-      text: '333333',           // Color texto principal
-      lightText: '666666'       // Color texto secundario
-    };
-    
     // HOJA 1: REPORTE PRINCIPAL DE BOLETAS
-    const sheet = workbook.addWorksheet("Reporte de Boletas", {
-      pageSetup: {
-        paperSize: 9, // A4
-        orientation: 'landscape',
-        fitToPage: true,
-        fitToWidth: 1,
-        fitToHeight: 0,
-        printArea: 'A1:M100',
-        margins: {
-          top: 0.7,
-          left: 0.7,
-          bottom: 0.7,
-          right: 0.7,
-          header: 0.3,
-          footer: 0.3
-        }
-      },
-      properties: {
-        tabColor: {argb: COLORS.primary}
-      }
-    });
-
-    // Estilos generales
-    const styles = {
-      title: {
-        font: { name: 'Calibri', bold: true, size: 20, color: { argb: COLORS.primary } },
-        alignment: { horizontal: 'center', vertical: 'middle' },
-        border: {
-          bottom: { style: 'medium', color: { argb: COLORS.primary } }
-        }
-      },
-      
-      subtitle: {
-        font: { name: 'Calibri', bold: true, size: 16, color: { argb: COLORS.secondary } },
-        alignment: { horizontal: 'center', vertical: 'middle' }
-      },
-      
-      dateInfo: {
-        font: { name: 'Calibri', bold: true, size: 11, color: { argb: COLORS.lightText } },
-        alignment: { horizontal: 'center', vertical: 'middle' }
-      },
-      
-      header: {
-        font: { name: 'Calibri', bold: true, size: 12, color: { argb: COLORS.white } },
-        fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.primary } },
-        alignment: { horizontal: 'center', vertical: 'middle', wrapText: true },
-        border: {
-          top: { style: 'thin', color: { argb: COLORS.primary } },
-          left: { style: 'thin', color: { argb: COLORS.primary } },
-          bottom: { style: 'thin', color: { argb: COLORS.primary } },
-          right: { style: 'thin', color: { argb: COLORS.primary } }
-        }
-      },
-      
-      data: {
-        font: { name: 'Calibri', size: 11, color: { argb: COLORS.text } },
-        alignment: { vertical: 'middle' },
-        border: {
-          top: { style: 'thin', color: { argb: COLORS.darkGray } },
-          left: { style: 'thin', color: { argb: COLORS.darkGray } },
-          bottom: { style: 'thin', color: { argb: COLORS.darkGray } },
-          right: { style: 'thin', color: { argb: COLORS.darkGray } }
-        }
-      },
-      
-      alternateRow: {
-        fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.light } }
-      },
-      
-      footer: {
-        font: { name: 'Calibri', italic: true, size: 10, color: { argb: COLORS.lightText } },
-        alignment: { horizontal: 'center', vertical: 'middle' },
-        border: {
-          top: { style: 'thin', color: { argb: COLORS.primary } }
-        }
-      }
-    };
+    const sheet = workbook.addWorksheet("Reporte de Boletas", CONFIGPAGE);
 
     // Logo para hoja principal
     try {
