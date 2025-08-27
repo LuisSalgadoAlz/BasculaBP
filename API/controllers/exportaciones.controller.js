@@ -614,11 +614,14 @@ const exportToExcel = async (req, res) => {
       "Content-Disposition",
       `attachment; filename=reporte_boletas_${new Date().toISOString().split('T')[0]}.xlsx`
     );
+    
+    setLogger('REPORTES', `CREO REPORTE CON: ${columnas.filter(Boolean).join(', ')}`, req, null, 1, null);
 
     await workbook.xlsx.write(res);
     res.end();
   } catch (err) {
     console.error("Error generando el reporte Excel:", err);
+    setLogger('BOLETA', 'ERROR AL CREAR REPORTE PERSONALIZABLE', req, null, 3);
     res.status(500).json({ error: "Error interno generando el reporte Excel" });
   }
 };

@@ -4,6 +4,9 @@ import {
   AiOutlineDownload,
 } from 'react-icons/ai';
 import { URLHOST } from '../../constants/global';
+import Cookies from 'js-cookie';
+import { BsArrowsAngleExpand } from "react-icons/bs";
+
 
 export const TablaResumenBFH = ({datos=[]}) => {
   return (
@@ -522,6 +525,7 @@ export const ModalReportes=({reports, hdlClose, buque = 1058, factura='110016055
     // Realizar petición HTTP
     const response = await fetch(url, {
       method: "GET",
+      headers: { "Authorization" : Cookies.get('token') },
     });
 
     if (!response.ok) {
@@ -785,3 +789,55 @@ export const ModalReportes=({reports, hdlClose, buque = 1058, factura='110016055
     </>
   )
 }
+
+export const TableComponentCasulla = ({ datos = [{}], fun }) => {
+
+  const handleGetInfo = (data) => {
+    console.log(data)
+  };
+
+  return (
+    <>
+      <div className="relative overflow-x-auto rounded-sm">
+        <table className="w-full text-sm text-left rtl:text-right text-gray-700 dark:text-gray-400">
+          <thead className="text-xs uppercase bg-[#725033] rounded-2xl text-white">
+            <tr>
+              {Object.keys(datos[0]).map((el, keys) => (
+                <th key={keys} scope="col" className={`px-6 py-4 ${keys > 1 && 'text-right' }`}>
+                  {el}
+                </th>
+              ))}
+              <th scope="col" className="px-6 py-3 text-center">
+                Editar
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {datos.map((fila, index) => (
+              <tr
+                key={index}
+                className={`${index % 2 === 0 && 'bg-gray-50'} border-b border-gray-200 hover:bg-[#FDF5D4]`}
+              >
+                {Object.values(fila).map((el, key) => (
+                  <td key={key} className={`px-6 py-3 text-gray-700 text-sm font-mono ${key > 1 && 'text-right ' } `}>
+                    {el}
+                  </td>
+                ))}
+                <td className="py-3 text-center">
+                  <button
+                    className="font-medium text-gray-800 hover:underline text-center"
+                    onClick={() => handleGetInfo(fila)}
+                  >
+                    <span className="text-center">
+                      <BsArrowsAngleExpand className="text-xl" />
+                    </span>
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
+  );
+};

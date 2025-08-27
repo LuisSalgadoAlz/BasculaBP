@@ -2,6 +2,8 @@ export const FiltrosReporteria = ({
   handleChange,
   dataSelect,
   handlePushFilter,
+  formFiltros, 
+  handleCleanFilters
 }) => {
   return (
     <>
@@ -15,6 +17,7 @@ export const FiltrosReporteria = ({
             onChange={handleChange}
             className="w-full px-3 py-2 text-sm font-medium text-gray-600  rounded-lg border border-gray-200 max-sm:hidden"
             type="date"
+            value={formFiltros.dateIn}
           />
         </div>
 
@@ -27,6 +30,7 @@ export const FiltrosReporteria = ({
             onChange={handleChange}
             className="w-full px-3 py-2 text-sm font-medium text-gray-600  rounded-lg border border-gray-200 max-sm:hidden"
             type="date"
+            value={formFiltros.dateOut}
           />
         </div>
 
@@ -35,8 +39,8 @@ export const FiltrosReporteria = ({
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Socio
           </label>
-          <select name="socio" onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" defaultValue={0}>
-            <option disabled value={0}> Ingrese un socio </option>
+          <select name="socio" onChange={handleChange} value={formFiltros.socio} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" defaultValue={0}>
+            <option value={''} className="text-gray-200"> Ingrese un socio </option>
             {dataSelect &&
               Object.keys(dataSelect).length > 0 &&
               dataSelect.socios?.map(({ socio }) => (
@@ -55,9 +59,10 @@ export const FiltrosReporteria = ({
             name="producto"
             onChange={handleChange}
             defaultValue={0}
+            value={formFiltros.producto}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
-            <option disabled value={0}>
+            <option value={''} className="text-gray-200">
               Ingrese un producto
             </option>
             {dataSelect && Object.keys(dataSelect).length > 0 &&
@@ -77,10 +82,11 @@ export const FiltrosReporteria = ({
           <select
             name="movimiento"
             onChange={handleChange}
+            value={formFiltros.movimiento}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             defaultValue={0}
           >
-            <option disabled value={0}>
+            <option value={''} className="text-gray-200">
               Ingrese un movimiento
             </option>
 
@@ -97,7 +103,9 @@ export const FiltrosReporteria = ({
         <div className="flex items-center justify-end col-span-5">
           {/* Area de los botones de filtros que sirve tanto para la exportacion comoo a la tabla */}
           <div className="flex justify-end mt-4">
-            <button className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 mr-2 text-sm font-medium">
+            <button 
+              onClick={handleCleanFilters}
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 mr-2 text-sm font-medium">
               Limpiar Filtros
             </button>
             <button

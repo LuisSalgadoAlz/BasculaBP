@@ -5,6 +5,7 @@ import "./index.css";
 import VerificarLog from "./utils/verificarLog";
 import { Spinner } from "./components/alerts";
 import ViewDisabled from "./views/viewDisabled";
+import Casulla from "./components/informes/casulla";
 const DashboardTolva = lazy(()=>import('./views/tolva/dashboard'));
 const Users = lazy(()=>import('./views/admin/users'))
 const Logs = lazy(()=>import('./views/admin/logs'))
@@ -61,6 +62,7 @@ const navRutas = createBrowserRouter([
       { path: "/calendario", element: <CalendarioView />, },
       { path: "/informes", element: <Informes />, },
       { path: "/informes/importaciones-granza", element: <Importaciones />, },
+      { path: "/informes/casulla", element: <Casulla />, },
       { path: "/informes/diarios", element: <ViewDisabled />, },
       { path: "/informes/semanales", element: <ViewDisabled />, },
       { path: "/socios/:id", element: <EditClientes />, errorElement: <NoFoundData /> },

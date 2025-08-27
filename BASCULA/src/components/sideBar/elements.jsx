@@ -406,7 +406,13 @@ export const ReportsSection = ({ isExtendido, userRole }) => {
                     to="/informes/importaciones-granza"
                     className="flex items-center gap-x-1 px-3 rounded-md py-2 text-sm font-medium text-white hover:bg-gray-600 transition-colors"
                   >
-                    <span className="flex-1 text-sm">Importacion: Granza</span>
+                    <span className="flex-1 text-sm">Importaciones</span>
+                  </NavLink>
+                  <NavLink
+                    to="/informes/casulla"
+                    className="flex items-center gap-x-1 px-3 rounded-md py-2 text-sm font-medium text-white hover:bg-gray-600 transition-colors"
+                  >
+                    <span className="flex-1 text-sm">Casulla</span>
                   </NavLink>
                 </div>
               )}
@@ -449,7 +455,13 @@ export const ReportsSection = ({ isExtendido, userRole }) => {
                 to="/informes/importaciones-granza"
                 className="flex items-center gap-x-1 px-3 rounded-md py-2 text-sm font-medium text-white"
               >
-                <span className="flex-1 text-sm">Importacion: Granza</span>
+                <span className="flex-1 text-sm">Importaciones</span>
+              </NavLink>
+              <NavLink
+                to="/informes/casulla"
+                className="flex items-center gap-x-1 px-3 rounded-md py-2 text-sm font-medium text-white"
+              >
+                <span className="flex-1 text-sm">Casulla</span>
               </NavLink>
             </ul>
           </>

@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const { QUINTALTONELADA, GRANZA, IMPORTACIONES } = require("../utils/variablesInformes");
 const ExcelJS = require('exceljs');
 const { CONFIGPAGE, COLORS, styles } = require("../lib/configExcel");
+const { setLogger } = require("../utils/logger");
 
 const buquesBoletas = async(req, res) => {
     try{
@@ -1306,13 +1307,15 @@ const getInformePagoAtrasnporte = async (req, res) => {
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         res.setHeader('Content-Disposition', `attachment; filename="informe_pago_transporte_${factura || 'sin_factura'}_${new Date().toISOString().split('T')[0]}.xlsx"`);
         
+        setLogger('REPORTES', `CREO REPORTE DE LIQUIDACIÓN PARA ${ingresoBaprosa[0].socio.toUpperCase()} - SAP ${factura}: TARIFA: ${PAGO_POR_VIAJE}, DOLAR COMPRA: ${PAGO_DOLAR_COMPRA}, DOLAR VENTA: ${PAGO_DOLAR_VENTA}, COSTE DEL QUINTAL: ${COSTE_DEL_QUINTAL}`, req, null, 1, null);
+
         // Escribir el archivo Excel a la respuesta
         await workbook.xlsx.write(res);
         res.end();
 
     } catch (error) {
         console.error('Error en exportInformePagoTransporte:', error);
-        
+        setLogger('REPORTES', 'EN GENERAR REPORTE DE LIQUIDACIÓN', req, null, 3);
         return res.status(500).json({
             success: false,
             error: 'Error interno del servidor',
@@ -1659,13 +1662,16 @@ const exportR1Importaciones = async (req, res) => {
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         res.setHeader('Content-Disposition', `attachment; filename="reporte_importaciones_${factura || 'sin_factura'}_${new Date().toISOString().split('T')[0]}.xlsx"`);
         
+        setLogger('REPORTES', `CREO REPORTE DE REGISTROS DE ${statsGeneral[0].socio.toUpperCase()} - SAP ${factura} `, req, null, 1, null);
+
         // Escribir el archivo Excel a la respuesta
         await workbook.xlsx.write(res);
         res.end();
 
     } catch (error) {
         console.error('Error en exportR1Importaciones:', error);
-        
+        setLogger('REPORTES', 'EN GENERAR REPORTE DE REGISTROS DE IMPORTACIONES', req, null, 3);
+
         return res.status(500).json({
             success: false,
             error: 'Error interno del servidor',
@@ -2256,13 +2262,16 @@ const getRerportContenerizada = async (req, res) => {
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         res.setHeader('Content-Disposition', `attachment; filename="reporte_contenerizada_${factura || 'sin_factura'}_${new Date().toISOString().split('T')[0]}.xlsx"`);
         
+        setLogger('REPORTES', `CREO REPORTE DE IMPORTACIÓN CONTENEDORIZADA DE ${statsGeneral[0].socio.toUpperCase()} - SAP ${factura} `, req, null, 1, null);
+
         // Escribir el archivo Excel a la respuesta
         await workbook.xlsx.write(res);
         res.end();
 
     } catch (error) {
         console.error('Error en getReportContenerizada:', error);
-        
+        setLogger('REPORTES', 'EN GENERAR REPORTE DE CONTENEDORIZADA', req, null, 3);
+
         return res.status(500).json({
             success: false,
             error: 'Error interno del servidor',
@@ -2270,6 +2279,93 @@ const getRerportContenerizada = async (req, res) => {
         });
     }
 };
+
+/* Parte de casulla */
+
+const getBoletasCasulla = async (req, res) => {
+    try{
+        const dateIn = req.query.dateIn || null;
+        const dateOut = req.query.dateOut || null;
+
+        const CASULLA = 11
+
+        const fechasValidas = dateIn && dateOut && 
+                            dateIn !== "undefined" && dateOut !== "undefined" && 
+                            dateIn !== "null" && dateOut !== "null" && 
+                            dateIn.trim() !== "" && dateOut.trim() !== "";
+                            
+        if (fechasValidas) {
+            const [y1, m1, d1] = dateIn.split("-").map(Number);
+            startOfDay = new Date(Date.UTC(y1, m1 - 1, d1, 6, 0, 0));
+            const [y2, m2, d2] = dateOut.split("-").map(Number);
+            endOfDay = new Date(Date.UTC(y2, m2 - 1, d2 + 1, 6, 0, 0));
+        }
+
+        const casulla = await db.boleta.groupBy({
+            by: ['destino', 'socio'],
+            _count: {
+                _all: true 
+            },
+            _sum: {
+                pesoNeto: true  
+            },
+            where: {
+                idProducto: CASULLA,
+                destino: {
+                    not: null  
+                },
+                ...(fechasValidas ? { fechaFin: { gte: startOfDay, lte: endOfDay } } : {}),
+            },
+            orderBy: {
+                destino: 'asc'  
+            },
+            take: 20,
+        });
+
+        const casulaFormatted = casulla.map(item => {
+            const pesoNetoLb = item._sum.pesoNeto || 0;
+            
+            const pesoNetoQq = pesoNetoLb / 100;
+            const pesoNetoTm = pesoNetoLb / 2204.62;
+            
+            return {
+                socio: item.socio,
+                destino: item.destino,
+                viajes: item._count._all,
+                totalLb: pesoNetoLb,
+                totalQq: pesoNetoQq,
+                totalTm: pesoNetoTm,
+                porcentaje: null // Se calcula después
+            };
+        });
+
+        const totalBoletas = casulaFormatted.reduce((sum, item) => sum + item.viajes, 0);
+        const casulaWithPercentage = casulaFormatted.map(item => ({
+            ...item,
+            porcentaje: ((item.viajes / totalBoletas) * 100).toFixed(2)
+        }));
+
+        const totalPesoLb = casulaFormatted.reduce((sum, item) => sum + item.totalLb, 0);
+        const casulaWithPesoPercentage = casulaWithPercentage.map(item => ({
+            Socio: item.socio,
+            Destino: item.destino,
+            Viajes: item.viajes,
+            "Total(lb)": `${item.totalLb} lb`,
+            "Total(qq)": `${item.totalQq.toFixed(2)} qq`,
+            "Total(tm)": `${item.totalTm.toFixed(2)} tm`,
+            "Porcentaje": `${((item.totalLb / totalPesoLb) * 100).toFixed(3)} %`,
+            /* porcentajeViajes: `${item.porcentaje} %` */ /* Lo quieto porque es irrelevante y podria confundir */
+        }));
+
+        
+
+        res.status(200).json({
+            data: casulaWithPesoPercentage
+        })
+    }catch(err){
+        console.log(err)
+    }
+}
 
 module.exports = {
     buquesBoletas, 
@@ -2279,4 +2375,5 @@ module.exports = {
     exportR1Importaciones, 
     getInformePagoAtrasnporte,
     getRerportContenerizada,
+    getBoletasCasulla, 
 }
