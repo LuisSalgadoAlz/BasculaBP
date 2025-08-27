@@ -111,6 +111,10 @@ const handleExportToExcel = async () => {
     
     const response = await fetch(url, {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json" // 👈 importante
+      },
+      body: JSON.stringify({columnas: [...columnasVisibles]}) // convierte el Set en array
     });
 
     if (!response.ok) throw new Error("Error en la exportación");

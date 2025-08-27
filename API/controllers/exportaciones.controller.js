@@ -6,6 +6,14 @@ const { CONFIGPAGE, styles, COLORS } = require("../lib/configExcel");
 
 const exportToExcel = async (req, res) => {
   try {
+    const { columnas } = req.body;
+    console.log('Columnas recibidas:', columnas);
+    
+    // Validar que se recibieron columnas
+    if (!columnas || !Array.isArray(columnas) || columnas.length === 0) {
+      return res.status(400).json({ error: "No se especificaron columnas para exportar" });
+    }
+    
     const dateIn = req.query.dateIn;
     const dateOut = req.query.dateOut;
     const producto = req.query.producto || null;
@@ -48,16 +56,12 @@ const exportToExcel = async (req, res) => {
     const datosCompletos = data;
     const datosReporte = data.filter(el => el.estado !== "Cancelada");
 
-    /**
-     * Aqui se ocupa cambiar cuando se implemente la ventana de JAVI
-     */
-    const boletas = datosReporte.map((el) => {
+    // Crear objeto completo con todos los datos posibles
+    const createFullDataObject = (el) => {
       const fechaInicio = el.fechaInicio ? new Date(el.fechaInicio) : null;
       const fechaFin = el.fechaFin ? new Date(el.fechaFin) : null;
-
       const diferenciaMs = fechaInicio && fechaFin ? fechaFin - fechaInicio : null;
-
-      const isEspecialTraslado = el.proceso === 0 && (el.idMovimiento===10 || el.idMovimiento===11)
+      const isEspecialTraslado = el.proceso === 0 && (el.idMovimiento===10 || el.idMovimiento===11);
 
       let diferenciaTiempo = 'N/A';
       if (diferenciaMs !== null) {
@@ -67,6 +71,13 @@ const exportToExcel = async (req, res) => {
         diferenciaTiempo = `${horas}h ${mins}m`;
       }
 
+      // Crear la cadena de marchamos (todos los sellos concatenados)
+      const sellos = [el.sello1, el.sello2, el.sello3, el.sello4, el.sello5, el.sello6]
+        .filter(Boolean)
+        .join(', ');
+      
+      const marchamos = sellos || '-';
+
       return {
         Boleta: el.numBoleta,
         Proceso: el.proceso == 0 ? 'Entrada' : 'Salida',
@@ -74,11 +85,13 @@ const exportToExcel = async (req, res) => {
         Cliente: el.socio,
         Transporte: el.empresa,
         Motorista: el.motorista,
-        Movimiento: el.movimiento, // Agregado como solicitaste
+        Movimiento: el.movimiento,
         Producto: el.producto,
         Manifiesto: el.manifiesto || '-',
         OrdenDeCompra: el.ordenDeCompra || '-',
         OrdenDeTransferencia: el.ordenDeTransferencia || '-',
+        Factura: el.factura || '-', // Nueva propiedad para factura
+        ManifiestoDeAgregados: el.manifiestoAgregados || '-', // Nueva propiedad
         Origen: (el.movimiento == 'Traslado Interno' || el.movimiento == 'Traslado Externo') ? el.trasladoOrigen : el.origen,
         Destino: (el.movimiento == 'Traslado Interno' || el.movimiento == 'Traslado Externo') ? el.trasladoDestino : el.destino,
         Tara: isEspecialTraslado ? el.pesoInicial : ((el.proceso == 0 ? el.pesoFinal : el.pesoInicial) || 0),
@@ -91,6 +104,7 @@ const exportToExcel = async (req, res) => {
         FechaDeEntrada: fechaInicio ? fechaInicio.toLocaleString() : 'N/A',
         FechaFinalizacion: fechaFin ? fechaFin.toLocaleString() : 'N/A',
         TiempoTotal: diferenciaTiempo,
+        Marchamos: marchamos, // Todos los sellos concatenados
         Sello1: el.sello1 || '-', 
         Sello2: el.sello2 || '-',
         Sello3: el.sello3 || '-',
@@ -98,9 +112,112 @@ const exportToExcel = async (req, res) => {
         Sello5: el.sello5 || '-',
         Sello6: el.sello6 || '-', 
       };
+    };
+
+    // Mapeo entre nombres del frontend y propiedades de datos
+    const columnMapping = {
+      'Boleta': 'Boleta',
+      'Proceso': 'Proceso', 
+      'Placa': 'Placa',
+      'Cliente': 'Cliente',
+      'Transporte': 'Transporte',
+      'Motorista': 'Motorista',
+      'Movimiento': 'Movimiento',
+      'Producto': 'Producto',
+      'Manifiesto': 'Manifiesto',
+      'OrdenDeCompra': 'OrdenDeCompra',
+      'OrdenDeTransferencia': 'OrdenDeTransferencia',
+      'Origen': 'Origen',
+      'Destino': 'Destino',
+      'Tara': 'Tara',
+      'PesoBruto': 'PesoBruto',
+      'PesoNeto': 'PesoNeto',
+      'PesoTeorico': 'PesoTeorico',
+      'Desviación': 'Desviación',
+      'Tolerancia': 'Tolerancia',
+      'Estado': 'Estado',
+      'FechaDeEntrada': 'FechaDeEntrada',
+      'FechaFinalizacion': 'FechaFinalizacion',
+      'TiempoTotal': 'TiempoTotal',
+      'Sello1': 'Sello1',
+      'Sello2': 'Sello2',
+      'Sello3': 'Sello3',
+      'Sello4': 'Sello4',
+      'Sello5': 'Sello5',
+      'Sello6': 'Sello6',
+      // Mapeos para nombres del frontend que no coinciden exactamente
+      'Desviacion': 'Desviación',
+      'Fecha Final': 'FechaFinalizacion',
+      'Fecha inicial': 'FechaDeEntrada',
+      'Duración': 'TiempoTotal',
+      'Factura': 'OrdenDeCompra', // Asumiendo que Factura se refiere a Orden de Compra
+      'Manifiesto de agregados': 'OrdenDeTransferencia', // Asumiendo que se refiere a esto
+      'Marchamos': 'Marchamos' // Asumiendo que Marchamos se refiere a los sellos, puedes cambiar a Sello2, etc.
+    };
+
+    // Generar datos completos para todas las boletas
+    const boletasCompletas = datosReporte.map(createFullDataObject);
+
+    // Filtrar solo las columnas solicitadas usando el mapeo
+    const boletasFiltradas = boletasCompletas.map(boleta => {
+      const boletaFiltrada = {};
+      columnas.forEach(columnaFrontend => {
+        const propiedadReal = columnMapping[columnaFrontend];
+        if (propiedadReal && boleta.hasOwnProperty(propiedadReal)) {
+          boletaFiltrada[columnaFrontend] = boleta[propiedadReal];
+        } else {
+          console.warn(`Columna '${columnaFrontend}' no mapeada o no encontrada. Propiedad real buscada: '${propiedadReal}'`);
+          boletaFiltrada[columnaFrontend] = '-'; // Valor por defecto
+        }
+      });
+      return boletaFiltrada;
     });
 
-    // Preparar datos para hoja de resumen
+    // Definir anchos de columna por tipo de campo (actualizado con nombres del frontend)
+    const getColumnWidth = (columnName) => {
+      const widthMap = {
+        'Boleta': 10,
+        'Proceso': 12,
+        'Placa': 15,
+        'Cliente': 30,
+        'Transporte': 30,
+        'Motorista': 30,
+        'Movimiento': 25,
+        'Producto': 30,
+        'Manifiesto': 20,
+        'OrdenDeCompra': 20,
+        'OrdenDeTransferencia': 25,
+        'Origen': 20,
+        'Destino': 20,
+        'Tara': 15,
+        'PesoBruto': 15,
+        'PesoNeto': 12,
+        'PesoTeorico': 14,
+        'Desviación': 12,
+        'Tolerancia': 14,
+        'Estado': 30,
+        'FechaDeEntrada': 20,
+        'FechaFinalizacion': 20,
+        'TiempoTotal': 15,
+        'Sello1': 10,
+        'Sello2': 10,
+        'Sello3': 10,
+        'Sello4': 10,
+        'Sello5': 10,
+        'Sello6': 10,
+        // Anchos para nombres del frontend
+        'Desviacion': 12,
+        'Fecha Final': 20,
+        'Fecha inicial': 20,
+        'Duración': 15,
+        'Factura': 20,
+        'Manifiesto de agregados': 25,
+        'Marchamos': 25
+      };
+      return widthMap[columnName] || 15; // Ancho por defecto
+    };
+
+    // Preparar datos para hoja de resumen (mantener lógica original)
     const boletasCanceladas = datosCompletos.filter(el => el.estado === "Cancelada").map(el => ({
       Boleta: el.numBoleta,
       Proceso: el.proceso == 0 ? 'Entrada' : 'Salida',
@@ -127,7 +244,6 @@ const exportToExcel = async (req, res) => {
           countFueraTol++;
           break;
         case 'Cancelada':
-          // Ya contadas arriba
           break;
         default:
           countOtros++;
@@ -168,17 +284,18 @@ const exportToExcel = async (req, res) => {
     }
 
     // Encabezado del reporte
-    sheet.mergeCells("C1:K1");
+    const lastColumn = String.fromCharCode(64 + Math.min(columnas.length, 26)); // Convertir número a letra
+    sheet.mergeCells(`C1:${lastColumn}1`);
     const titleCell = sheet.getCell("C1");
     titleCell.value = "BENEFICIO DE ARROZ PROGRESO S.A. DE C.V.";
     Object.assign(titleCell.style, styles.title);
     
-    sheet.mergeCells("C2:K2");
+    sheet.mergeCells(`C2:${lastColumn}2`);
     const subtitleCell = sheet.getCell("C2");
-    subtitleCell.value = `REPORTE DE BOLETAS DE PESO ${dateIn} - ${dateOut}` + (producto ? ` DE: ${producto}` : '') + (movimiento ? ` DE: ${movimiento}` : '');
+    subtitleCell.value = `REPORTE DE BOLETAS DE PESO`;
     Object.assign(subtitleCell.style, styles.subtitle);
     
-    sheet.mergeCells("C3:K3");
+    sheet.mergeCells(`C3:${lastColumn}3`);
     const dateCell = sheet.getCell("C3");
     const now = new Date();
     dateCell.value = `Generado el: ${now.toLocaleDateString('es-ES', { 
@@ -188,63 +305,31 @@ const exportToExcel = async (req, res) => {
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
-    })}`;
+    })} | Columnas: ${columnas.length}`;
     Object.assign(dateCell.style, styles.dateInfo);
 
     // Espacio antes de la tabla de datos
     sheet.addRow([]);
     
-    // Encabezados de columnas
-    const headerRow = sheet.addRow(Object.keys(boletas[0]));
+    // Encabezados de columnas (solo las seleccionadas)
+    const headerRow = sheet.addRow(columnas);
     headerRow.height = 30;
     headerRow.eachCell((cell) => {
       Object.assign(cell.style, styles.header);
     });
     
     // Configuración de anchos de columna
-    const columnWidths = [
-      { header: 'Boleta', width: 10 },
-      { header: 'Proceso', width: 12 },
-      { header: 'Placa', width: 15 },
-      { header: 'Cliente', width: 30 },
-      { header: 'Transporte', width: 30 },
-      { header: 'Motorista', width: 30 },
-      { header: 'Movimiento', width: 25 }, // Agregado
-      { header: 'Producto', width: 30 },
-      { header: 'Manifiesto', width: 20 },
-      { header: 'OrdenDeCompra', width: 20 },
-      { header: 'OrdenDeTransferencia', width: 25 },
-      { header: 'Origen', width: 20 },
-      { header: 'Destino', width: 20 },
-      { header: 'Tara', width: 20 },
-      { header: 'PesoBruto', width: 20 },
-      { header: 'PesoNeto', width: 12 },
-      { header: 'PesoTeorico', width: 14 },
-      { header: 'Desviación', width: 12 },
-      { header: 'Tolerado', width: 14 },
-      { header: 'Estado', width: 30 },
-      { header: 'FechaDeEntrada', width: 20 },
-      { header: 'FechaFinalizacion', width: 20 },
-      { header: 'TiempoTotal', width: 20 },
-      { header: 'Sello1', width: 10 },
-      { header: 'Sello2', width: 10 },
-      { header: 'Sello3', width: 10 },
-      { header: 'Sello4', width: 10 },
-      { header: 'Sello5', width: 10 },
-      { header: 'Sello6', width: 10 }
-    ];
-
-    columnWidths.forEach((col, i) => {
-      sheet.getColumn(i + 1).width = col.width;
+    columnas.forEach((columna, index) => {
+      sheet.getColumn(index + 1).width = getColumnWidth(columna);
     });
 
     // Añadir datos de boletas
-    boletas.forEach((boleta, index) => {
+    boletasFiltradas.forEach((boleta, rowIndex) => {
       const dataRow = sheet.addRow(Object.values(boleta));
       dataRow.height = 22;
       
       // Aplicar estilo alternado a las filas
-      if (index % 2 !== 0) {
+      if (rowIndex % 2 !== 0) {
         dataRow.eachCell((cell) => {
           cell.style = {...styles.data, ...styles.alternateRow};
         });
@@ -254,73 +339,73 @@ const exportToExcel = async (req, res) => {
         });
       }
       
-      // Formato especial para proceso
-      const procesoCell = dataRow.getCell(2);
-      if (procesoCell.value === 'Entrada') {
-        procesoCell.font = { name: 'Calibri', size: 11, color: { argb: COLORS.white } };
-        procesoCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.secondary } };
-      } else {
-        procesoCell.font = { name: 'Calibri', size: 11, color: { argb: COLORS.white } };
-        procesoCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.accent } };
-      }
-      procesoCell.alignment = { horizontal: 'center', vertical: 'middle' };
-      
-      // Formato para valores numéricos (ajustadas las posiciones por el nuevo campo Movimiento)
-      const pesoTaraCell = dataRow.getCell(14);
-      pesoTaraCell.numFmt = '#,##0.00 "lb"';
-      pesoTaraCell.alignment = { horizontal: 'right', vertical: 'middle' };
-
-      const pesoBrutoCell = dataRow.getCell(15);
-      pesoBrutoCell.numFmt = '#,##0.00 "lb"';
-      pesoBrutoCell.alignment = { horizontal: 'right', vertical: 'middle' };
-
-      const pesoNetoCell = dataRow.getCell(16);
-      pesoNetoCell.numFmt = '#,##0.00 "lb"';
-      pesoNetoCell.alignment = { horizontal: 'right', vertical: 'middle' };
-
-      const pesoTeoricoCell = dataRow.getCell(17);
-      pesoTeoricoCell.numFmt = '#,##0.00 "lb"';
-      pesoTeoricoCell.alignment = { horizontal: 'right', vertical: 'middle' };
-
-      const desviacionCell = dataRow.getCell(18);
-      desviacionCell.numFmt = '#,##0.00 "lb"';
-      desviacionCell.alignment = { horizontal: 'right', vertical: 'middle' };
-
-      const toleranciaCell = dataRow.getCell(19);
-      toleranciaCell.numFmt = '#,##0.00 "lb"';
-      toleranciaCell.alignment = { horizontal: 'right', vertical: 'middle' };
-      
-      // Colorear desviación según su valor
-      const desviacionValue = parseFloat(boleta.Desviación) || 0;
-      if (desviacionValue > -100 && desviacionValue<100) {
-        desviacionCell.font = { name: 'Calibri', bold: true, size: 11, color: { argb: COLORS.success } };
-      } else if (desviacionValue < -100 || desviacionValue > 100) {
-        desviacionCell.font = { name: 'Calibri', bold: true, size: 11, color: { argb: COLORS.danger } };
-      }
-      
-      // Colorear estado según su valor
-      const estadoCell = dataRow.getCell(20);
-      estadoCell.alignment = { horizontal: 'center', vertical: 'middle' };
-      
-      switch (estadoCell.value) {
-        case 'Completado':
-          estadoCell.font = { name: 'Calibri', bold: true, size: 11, color: { argb: COLORS.white } };
-          estadoCell.fill = {type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.success } };
-          break;
-        case 'Completo(Fuera de tolerancia)':
-          estadoCell.font = { name: 'Calibri', bold: true, size: 11, color: { argb: COLORS.white } };
-          estadoCell.fill = {type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.danger } };
-          break;
-        default:
-          estadoCell.font = { name: 'Calibri', bold: true, size: 11, color: { argb: COLORS.white } };
-          estadoCell.fill = {type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.warning } };
-      }
-      
-      // Formato para fechas
-      const fechaIncial = dataRow.getCell(21);
-      fechaIncial.alignment = { horizontal: 'center', vertical: 'middle' };
-      const fechaFinaCell = dataRow.getCell(22);
-      fechaFinaCell.alignment = { horizontal: 'center', vertical: 'middle' };
+      // Aplicar formatos específicos según el tipo de columna
+      columnas.forEach((columnaFrontend, colIndex) => {
+        const cell = dataRow.getCell(colIndex + 1);
+        const propiedadReal = columnMapping[columnaFrontend];
+        const valor = boleta[columnaFrontend];
+        
+        // Determinar el tipo de columna basado en la propiedad real o el nombre del frontend
+        const tipoColumna = propiedadReal || columnaFrontend;
+        
+        switch (tipoColumna) {
+          case 'Proceso':
+            if (cell.value === 'Entrada') {
+              cell.font = { name: 'Calibri', size: 11, color: { argb: COLORS.white } };
+              cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.secondary } };
+            } else {
+              cell.font = { name: 'Calibri', size: 11, color: { argb: COLORS.white } };
+              cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.accent } };
+            }
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+            break;
+            
+          case 'Tara':
+          case 'PesoBruto':
+          case 'PesoNeto':
+          case 'PesoTeorico':
+          case 'Tolerancia':
+            cell.numFmt = '#,##0.00 "lb"';
+            cell.alignment = { horizontal: 'right', vertical: 'middle' };
+            break;
+            
+          case 'Desviación':
+          case 'Desviacion':
+            cell.numFmt = '#,##0.00 "lb"';
+            cell.alignment = { horizontal: 'right', vertical: 'middle' };
+            const desviacionValue = parseFloat(valor) || 0;
+            if (desviacionValue > -100 && desviacionValue < 100) {
+              cell.font = { name: 'Calibri', bold: true, size: 11, color: { argb: COLORS.success } };
+            } else if (desviacionValue < -100 || desviacionValue > 100) {
+              cell.font = { name: 'Calibri', bold: true, size: 11, color: { argb: COLORS.danger } };
+            }
+            break;
+            
+          case 'Estado':
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+            switch (cell.value) {
+              case 'Completado':
+                cell.font = { name: 'Calibri', bold: true, size: 11, color: { argb: COLORS.white } };
+                cell.fill = {type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.success } };
+                break;
+              case 'Completo(Fuera de tolerancia)':
+                cell.font = { name: 'Calibri', bold: true, size: 11, color: { argb: COLORS.white } };
+                cell.fill = {type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.danger } };
+                break;
+              default:
+                cell.font = { name: 'Calibri', bold: true, size: 11, color: { argb: COLORS.white } };
+                cell.fill = {type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.warning } };
+            }
+            break;
+            
+          case 'FechaDeEntrada':
+          case 'FechaFinalizacion':
+          case 'Fecha inicial':
+          case 'Fecha Final':
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+            break;
+        }
+      });
     });
 
     // Añadir pie de página
@@ -328,18 +413,19 @@ const exportToExcel = async (req, res) => {
     sheet.addRow([]);
     
     const footerRow = sheet.rowCount + 1;
-    sheet.mergeCells(`A${footerRow}:M${footerRow}`);
+    sheet.mergeCells(`A${footerRow}:${lastColumn}${footerRow}`);
     const footerCell = sheet.getCell(`A${footerRow}`);
     footerCell.value = 'BAPROSA - Sistema de Gestión de Básculas © ' + new Date().getFullYear();
     Object.assign(footerCell.style, styles.footer);
     
-    // HOJA 2: RESUMEN Y BOLETAS CANCELADAS
+    // HOJA 2: RESUMEN Y BOLETAS CANCELADAS (mantener lógica original)
     const resumenSheet = workbook.addWorksheet("Resumen", {
       properties: {
         tabColor: {argb: COLORS.warning}
       }
     });
 
+    // [Aquí mantener toda la lógica de la hoja de resumen como estaba originalmente]
     // Título de la hoja de resumen
     resumenSheet.mergeCells("A1:H1");
     const resumenTitleCell = resumenSheet.getCell("A1");
@@ -489,16 +575,15 @@ const exportToExcel = async (req, res) => {
       });
 
       // Configurar anchos para tabla de canceladas
-      resumenSheet.getColumn(1).width = 12; // Boleta
-      resumenSheet.getColumn(2).width = 12; // Proceso
-      resumenSheet.getColumn(3).width = 15; // Placa
-      resumenSheet.getColumn(4).width = 30; // Cliente
-      resumenSheet.getColumn(5).width = 25; // Movimiento
-      resumenSheet.getColumn(6).width = 30; // Producto
-      resumenSheet.getColumn(7).width = 20; // Fecha Cancelación
-      resumenSheet.getColumn(8).width = 40; // Motivo
+      resumenSheet.getColumn(1).width = 12;
+      resumenSheet.getColumn(2).width = 12;
+      resumenSheet.getColumn(3).width = 15;
+      resumenSheet.getColumn(4).width = 30;
+      resumenSheet.getColumn(5).width = 25;
+      resumenSheet.getColumn(6).width = 30;
+      resumenSheet.getColumn(7).width = 20;
+      resumenSheet.getColumn(8).width = 40;
     } else {
-      // Si no hay canceladas, mostrar mensaje
       resumenSheet.addRow([]);
       resumenSheet.addRow([]);
       resumenSheet.addRow(['BOLETAS CANCELADAS', '', '', '', '', '', '', '']);
@@ -531,7 +616,6 @@ const exportToExcel = async (req, res) => {
     );
 
     await workbook.xlsx.write(res);
-    /* setLogger('REPORTE', 'SE GENERO REPORTE DE EXCEL', req, null, 1, null) */  
     res.end();
   } catch (err) {
     console.error("Error generando el reporte Excel:", err);
