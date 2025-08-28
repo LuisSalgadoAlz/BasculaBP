@@ -1,16 +1,24 @@
 import { useCallback, useEffect, useState } from "react";
-import { TableComponentCasulla } from "./tables";
-import { getDataCasulla } from "../../hooks/informes/casulla";
+import TableSheet, { TableComponentCasulla } from "./tables";
+import { getDataCasulla, getDataCasullaDetalles } from "../../hooks/informes/casulla";
 import { NoData } from "../alerts";
 
 const Casulla = () => {
     const [filters, setfilters] = useState({dateIn: '', dateOut: ''})
     const [casulla, setCasulla] = useState([{}])
     const [isLoading, setIsLoading] =  useState(false)
+    const [openSheet, setOpenSheet] = useState(false)
+    const [tableData, setTableData] = useState([{}])
+    const [isLoadingTableData, setIsLoadingTableData] = useState(false)
 
     const handleChangeFilters = (e) => {
-        
         setfilters({...filters, [e.target.name]: e.target.value})
+    }
+
+    const handleOpenSheetData = (data) => {
+        console.log(data)
+        getDataCasullaDetalles(setTableData, setIsLoadingTableData,filters, data?.Socio, data?.Destino)
+        setOpenSheet(true)
     }
 
     const fetchCasulla = useCallback(() => {
@@ -20,6 +28,11 @@ const Casulla = () => {
     useEffect(()=>{
         fetchCasulla()
     }, [fetchCasulla])
+
+
+    const sheetProps = {
+        openSheet, setOpenSheet, tableData, 
+    }
 
     return ( 
         <>
@@ -54,9 +67,10 @@ const Casulla = () => {
                 {!casulla || casulla?.data?.length === 0 ? (
                     <NoData />
                 ) : (
-                    <TableComponentCasulla datos={casulla['data']} />
+                    <TableComponentCasulla datos={casulla['data']} fun={handleOpenSheetData} />
                 )}
             </div>
+            <TableSheet {...sheetProps} />
         </>
     );
 }

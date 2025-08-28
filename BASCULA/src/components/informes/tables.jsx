@@ -6,6 +6,7 @@ import {
 import { URLHOST } from '../../constants/global';
 import Cookies from 'js-cookie';
 import { BsArrowsAngleExpand } from "react-icons/bs";
+import {  AiOutlineUser, AiOutlineMail, AiOutlinePhone, AiOutlineEnvironment, AiOutlineCalendar } from 'react-icons/ai';
 
 
 export const TablaResumenBFH = ({datos=[]}) => {
@@ -791,14 +792,9 @@ export const ModalReportes=({reports, hdlClose, buque = 1058, factura='110016055
 }
 
 export const TableComponentCasulla = ({ datos = [{}], fun }) => {
-
-  const handleGetInfo = (data) => {
-    console.log(data)
-  };
-
   return (
     <>
-      <div className="relative overflow-x-auto rounded-sm">
+      {<div className="relative overflow-x-auto rounded-sm">
         <table className="w-full text-sm text-left rtl:text-right text-gray-700 dark:text-gray-400">
           <thead className="text-xs uppercase bg-[#725033] rounded-2xl text-white">
             <tr>
@@ -826,7 +822,7 @@ export const TableComponentCasulla = ({ datos = [{}], fun }) => {
                 <td className="py-3 text-center">
                   <button
                     className="font-medium text-gray-800 hover:underline text-center"
-                    onClick={() => handleGetInfo(fila)}
+                    onClick={() => fun(fila)}
                   >
                     <span className="text-center">
                       <BsArrowsAngleExpand className="text-xl" />
@@ -837,7 +833,106 @@ export const TableComponentCasulla = ({ datos = [{}], fun }) => {
             ))}
           </tbody>
         </table>
-      </div>
+      </div>}
     </>
   );
 };
+
+const TableSheet = ({tableData = [{}], openSheet = true, setOpenSheet}) => {
+  return (
+    <div className="p-8 bg-gray-50 min-h-screen">
+      <div className="max-w-4xl mx-auto">
+        {/* Overlay */}
+        {openSheet && (
+          <div className="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300" />
+        )}
+
+        {/* Sheet */}
+        <div
+          className={`fixed top-0 right-0 h-full w-full max-w-4xl bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-50 ${
+            openSheet ? 'translate-x-0' : 'translate-x-full'
+          }`}
+        >
+          {/* Header del Sheet */}
+          <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-white sticky top-0 z-10">
+            <div>
+              <h2 className="text-2xl font-semibold text-gray-900">Detalles casulla</h2>
+              <p className="text-sm text-gray-500 mt-1">Visualización de los datos de Casulla</p>
+            </div>
+            <button
+              onClick={() => setOpenSheet(false)}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+            >
+              <AiOutlineClose className="w-6 h-6 text-gray-500" />
+            </button>
+          </div>
+
+           {/* Contenido del Sheet con la tabla */}
+          {tableData.length == 0 || !tableData ? (
+            <>No data</>
+          ) : (
+            <div className="p-6 overflow-auto h-full pb-20">
+              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        {/* Generar encabezados dinámicamente */}
+                        {tableData.length > 0 && Object.keys(tableData[0]).map((key) => (
+                          <th key={key} className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {tableData.map((item, index) => (
+                        <tr key={item.id || index} className="hover:bg-gray-50 transition-colors duration-150">
+                          {/* Generar celdas dinámicamente */}
+                          {Object.entries(item).map(([key, value]) => (
+                            <td key={key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {typeof value === 'object' && value !== null ? 
+                                JSON.stringify(value) : 
+                                String(value)
+                              }
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Estadísticas dinámicas */}
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <div className="flex items-center">
+                    <AiOutlineUser className="w-8 h-8 text-blue-600" />
+                    <div className="ml-3">
+                      <p className="text-sm font-medium text-blue-600">Total Registros</p>
+                      <p className="text-2xl font-semibold text-blue-900">{tableData.length}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                  <div className="flex items-center">
+                    <AiOutlineEnvironment className="w-8 h-8 text-green-600" />
+                    <div className="ml-3">
+                      <p className="text-sm font-medium text-green-600">Columnas</p>
+                      <p className="text-2xl font-semibold text-green-900">
+                        {tableData.length > 0 ? Object.keys(tableData[0]).length : 0}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default TableSheet;

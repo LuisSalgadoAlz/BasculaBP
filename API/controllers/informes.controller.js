@@ -2367,6 +2367,65 @@ const getBoletasCasulla = async (req, res) => {
     }
 }
 
+const getBoletasCasullaDetalleSocio = async (req, res) => {
+    try {
+        const socio = req.query.socio; 
+        const destino = req.query.destino;
+        const dateIn = req.query.dateIn || null;
+        const dateOut = req.query.dateOut || null;
+
+        const CASULLA = 11;
+
+        if (!socio || !destino) {
+            return res.status(400).json({
+                error: 'El parámetro es requerido'
+            });
+        }
+
+        const fechasValidas = dateIn && dateOut && 
+                            dateIn !== "undefined" && dateOut !== "undefined" && 
+                            dateIn !== "null" && dateOut !== "null" && 
+                            dateIn.trim() !== "" && dateOut.trim() !== "";
+                            
+        if (fechasValidas) {
+            const [y1, m1, d1] = dateIn.split("-").map(Number);
+            startOfDay = new Date(Date.UTC(y1, m1 - 1, d1, 6, 0, 0));
+            const [y2, m2, d2] = dateOut.split("-").map(Number);
+            endOfDay = new Date(Date.UTC(y2, m2 - 1, d2 + 1, 6, 0, 0));
+        }
+
+        const boletasSocio = await db.boleta.findMany({
+            select: {
+                numBoleta: true,
+                socio: true,
+                placa: true,
+                pesoNeto: true,  
+            }, 
+            where: {
+                idProducto: CASULLA,
+                socio: socio,
+                destino: {
+                    equals: destino, 
+                    not: null
+                },
+                ...(fechasValidas ? { fechaFin: { gte: startOfDay, lte: endOfDay } } : {}),
+            },
+            orderBy: {
+                fechaFin: 'desc' 
+            }
+        });
+
+        res.status(200).json(boletasSocio);
+
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({
+            error: 'Error interno del servidor'
+        });
+    }
+};
+
+
 module.exports = {
     buquesBoletas, 
     getResumenBFH,
@@ -2375,5 +2434,6 @@ module.exports = {
     exportR1Importaciones, 
     getInformePagoAtrasnporte,
     getRerportContenerizada,
-    getBoletasCasulla, 
+    getBoletasCasulla,
+    getBoletasCasullaDetalleSocio 
 }
