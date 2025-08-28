@@ -7,7 +7,6 @@ const { CONFIGPAGE, styles, COLORS } = require("../lib/configExcel");
 const exportToExcel = async (req, res) => {
   try {
     const { columnas } = req.body;
-    console.log('Columnas recibidas:', columnas);
     
     // Validar que se recibieron columnas
     if (!columnas || !Array.isArray(columnas) || columnas.length === 0) {

@@ -791,7 +791,7 @@ export const ModalReportes=({reports, hdlClose, buque = 1058, factura='110016055
   )
 }
 
-export const TableComponentCasulla = ({ datos = [{}], fun }) => {
+export const TableComponentCasulla = ({ datos = [{}], fun, total = [{}] }) => {
   return (
     <>
       {<div className="relative overflow-x-auto rounded-sm">
@@ -814,6 +814,31 @@ export const TableComponentCasulla = ({ datos = [{}], fun }) => {
                 key={index}
                 className={`${index % 2 === 0 && 'bg-gray-50'} border-b border-gray-200 hover:bg-[#FDF5D4]`}
               >
+                {Object.values(fila).map((el, key) => (
+                  <td key={key} className={`px-6 py-3 text-gray-700 text-sm font-mono ${key > 1 && 'text-right ' } `}>
+                    {el}
+                  </td>
+                ))}
+                <td className="py-3 text-center">
+                  <button
+                    className="font-medium text-gray-800 hover:underline text-center"
+                    onClick={() => fun(fila)}
+                  >
+                    <span className="text-center">
+                      <BsArrowsAngleExpand className="text-xl" />
+                    </span>
+                  </button>
+                </td>
+              </tr>
+            ))}
+            {total.map((fila, index) => (
+              <tr
+                key={index}
+                className={`${index % 2 === 0 && 'bg-gray-50'} border-b border-gray-200 hover:bg-[#FDF5D4]`}
+              >
+                <td></td>
+                <td></td>
+                <td></td>
                 {Object.values(fila).map((el, key) => (
                   <td key={key} className={`px-6 py-3 text-gray-700 text-sm font-mono ${key > 1 && 'text-right ' } `}>
                     {el}
@@ -857,7 +882,7 @@ const TableSheet = ({tableData = [{}], openSheet = true, setOpenSheet}) => {
           <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-white sticky top-0 z-10">
             <div>
               <h2 className="text-2xl font-semibold text-gray-900">Detalles casulla</h2>
-              <p className="text-sm text-gray-500 mt-1">Visualización de los datos de Casulla</p>
+              <p className="text-sm text-gray-500 mt-1">Visualización de los datos de Casulla: <span className='text-black font-bold'>{tableData[0].socio}</span></p>
             </div>
             <button
               onClick={() => setOpenSheet(false)}
@@ -905,24 +930,13 @@ const TableSheet = ({tableData = [{}], openSheet = true, setOpenSheet}) => {
               </div>
 
               {/* Estadísticas dinámicas */}
-              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <div className="mt-6 grid grid-cols-1 gap-4">
+                <div className="bg-white p-4 rounded-lg border border-gray-200">
                   <div className="flex items-center">
-                    <AiOutlineUser className="w-8 h-8 text-blue-600" />
+                    <AiOutlineUser className="w-8 h-8 text-gray-600" />
                     <div className="ml-3">
-                      <p className="text-sm font-medium text-blue-600">Total Registros</p>
-                      <p className="text-2xl font-semibold text-blue-900">{tableData.length}</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                  <div className="flex items-center">
-                    <AiOutlineEnvironment className="w-8 h-8 text-green-600" />
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-green-600">Columnas</p>
-                      <p className="text-2xl font-semibold text-green-900">
-                        {tableData.length > 0 ? Object.keys(tableData[0]).length : 0}
-                      </p>
+                      <p className="text-sm font-medium text-gray-600">Total Registros</p>
+                      <p className="text-2xl font-semibold text-gray-900">{tableData.length}</p>
                     </div>
                   </div>
                 </div>

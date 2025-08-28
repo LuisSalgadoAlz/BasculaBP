@@ -163,9 +163,9 @@ const Importaciones = () => {
         const pesoNeto = Number(stats?.pesoNeto) || 0;
         const cantidad = Number(stats?.cantidad) || 0;
         const diferencia = pesoNeto - cantidad;
-        
+        console.log(diferencia)
         // Evitar división por cero
-        const porcentaje = pesoNeto !== 0 ? (diferencia / pesoNeto) * 100 : 0;
+        const porcentaje = pesoNeto !== 0 ? (diferencia / cantidad) * 100 : 0;
         
         return `${diferencia.toFixed(2)} (${porcentaje.toFixed(2)}%)`;
       })(),

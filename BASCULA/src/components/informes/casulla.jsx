@@ -67,7 +67,7 @@ const Casulla = () => {
                 {!casulla || casulla?.data?.length === 0 ? (
                     <NoData />
                 ) : (
-                    <TableComponentCasulla datos={casulla['data']} fun={handleOpenSheetData} />
+                    <TableComponentCasulla datos={casulla['data']} total={casulla['total']} fun={handleOpenSheetData} />
                 )}
             </div>
             <TableSheet {...sheetProps} />

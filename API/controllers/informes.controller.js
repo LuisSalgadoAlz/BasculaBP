@@ -2322,12 +2322,20 @@ const getBoletasCasulla = async (req, res) => {
             take: 20,
         });
 
+        let tototalLb = 0;
+        let tototalQq = 0;
+        let tototalTm = 0;
+
         const casulaFormatted = casulla.map(item => {
             const pesoNetoLb = item._sum.pesoNeto || 0;
             
             const pesoNetoQq = pesoNetoLb / 100;
             const pesoNetoTm = pesoNetoLb / 2204.62;
             
+            tototalLb += pesoNetoLb;
+            tototalQq += pesoNetoQq;
+            tototalTm += pesoNetoTm;
+
             return {
                 socio: item.socio,
                 destino: item.destino,
@@ -2360,7 +2368,13 @@ const getBoletasCasulla = async (req, res) => {
         
 
         res.status(200).json({
-            data: casulaWithPesoPercentage
+            data: casulaWithPesoPercentage,
+            total: [{
+                Tolal: 'Total',
+                totalPesoLb: totalPesoLb.toFixed(2), 
+                totalPesoQq: tototalQq.toFixed(2), 
+                totalPesoTm: tototalTm.toFixed(2)
+            }]
         })
     }catch(err){
         console.log(err)
@@ -2399,7 +2413,8 @@ const getBoletasCasullaDetalleSocio = async (req, res) => {
                 numBoleta: true,
                 socio: true,
                 placa: true,
-                pesoNeto: true,  
+                pesoNeto: true,
+                fechaFin: true,   
             }, 
             where: {
                 idProducto: CASULLA,
@@ -2415,7 +2430,12 @@ const getBoletasCasullaDetalleSocio = async (req, res) => {
             }
         });
 
-        res.status(200).json(boletasSocio);
+        const refactorData =  boletasSocio.map((item) => ({
+            ...item,
+            fechaFin: new Date(item.fechaFin).toLocaleDateString('es-ES')
+        }))
+
+        res.status(200).json(refactorData);
 
     } catch (err) {
         console.log(err);
