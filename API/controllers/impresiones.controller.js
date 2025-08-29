@@ -773,8 +773,17 @@ function generarContenidoTercioCarta(copia, esPrimera = false, colors, boleta, d
    * IDENTIFICADOR DE TARA Y PESO BRUTO
    */
   const isEspecialTraslado = boleta?.proceso === 0 && (boleta?.idMovimiento===10 || boleta?.idMovimiento===11)
-  const TARA = isEspecialTraslado ? boleta.pesoInicial : (boleta.proceso == 0 ? boleta.pesoFinal : boleta.pesoInicial)
-  const PESOBRUTO = isEspecialTraslado ? boleta.pesoFinal : (boleta.proceso == 0 ? boleta.pesoInicial : boleta.pesoFinal)
+  const peso1 = isEspecialTraslado 
+    ? boleta.pesoInicial 
+    : (boleta.proceso == 0 ? boleta.pesoFinal : boleta.pesoInicial);
+
+  const peso2 = isEspecialTraslado 
+    ? boleta.pesoFinal 
+    : (boleta.proceso == 0 ? boleta.pesoInicial : boleta.pesoFinal);
+
+  const TARA = Math.min(peso1 ?? 0, peso2 ?? 0);
+  const PESOBRUTO = Math.max(peso1 ?? 0, peso2 ?? 0);
+
 
   /**
    * Identificador de proceso
@@ -906,8 +915,17 @@ function generarContenidoTercioCartaReimpresion(copia, esPrimera = false, colors
    * IDENTIFICADOR DE TARA Y PESO BRUTO
    */
   const isEspecialTraslado = boleta?.proceso === 0 && (boleta?.idMovimiento===10 || boleta?.idMovimiento===11)
-  const TARA = isEspecialTraslado ? boleta.pesoInicial : (boleta.proceso == 0 ? boleta.pesoFinal : boleta.pesoInicial)
-  const PESOBRUTO = isEspecialTraslado ? boleta.pesoFinal : (boleta.proceso == 0 ? boleta.pesoInicial : boleta.pesoFinal)
+  const peso1 = isEspecialTraslado 
+    ? boleta.pesoInicial 
+    : (boleta.proceso == 0 ? boleta.pesoFinal : boleta.pesoInicial);
+
+  const peso2 = isEspecialTraslado 
+    ? boleta.pesoFinal 
+    : (boleta.proceso == 0 ? boleta.pesoInicial : boleta.pesoFinal);
+
+  const TARA = Math.min(peso1 ?? 0, peso2 ?? 0);
+  const PESOBRUTO = Math.max(peso1 ?? 0, peso2 ?? 0);
+
 
   /**
    * Identificador de proceso

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import TableSheet, { TableComponentCasulla } from "./tables";
+import TableSheet, { CasullaStatsCards, TableComponentCasulla } from "./tables";
 import { getDataCasulla, getDataCasullaDetalles } from "../../hooks/informes/casulla";
 import { NoData } from "../alerts";
 
@@ -63,6 +63,7 @@ const Casulla = () => {
                     </div>
                 </div>
             </div>
+            <CasullaStatsCards total={casulla?.total} />
             <div className="p-2 bg-white rounded-md">
                 {!casulla || casulla?.data?.length === 0 ? (
                     <NoData />

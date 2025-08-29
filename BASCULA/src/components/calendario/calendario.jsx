@@ -47,7 +47,6 @@ export const Calendario = () => {
       setCurrentView('timeGridDay');
       setDetailsSelect({groups:[], items:[]})
       await getTimeLineDetails(setDetailsSelect, date, setIsloading)
-      console.log(detailsDaySeletect)
 
     }
   };
@@ -63,7 +62,6 @@ export const Calendario = () => {
       setCurrentView('timeGridDay');
       setDetailsSelect({groups:[], items:[]})
       await getTimeLineDetails(setDetailsSelect, start, setIsloading)
-      console.log(detailsDaySeletect)
     }
   };
 
@@ -181,16 +179,12 @@ const TimelineComponent = ({groups, items, defaultTime}) => {
 
   const handleOpenDetails = async (data) => {
     setDetails(true)
-    console.log(data)
-    // CORRECCIÓN 1: Cambiar data?.Id por data?.id (minúscula)
     const response = await getDataBoletasPorID(data?.id, setIsLoadingViewBol)
     setDataDetails(response)
   }
 
-  const end = new Date(defaultTime); // Tu fecha local GMT-6
-  // Sumamos 1 día
+  const end = new Date(defaultTime); 
   end.setDate(end.getDate() + 1); 
-  console.log(items)
   const reFactorItems = items.map((el) => ({
     ...el,  start_time:new Date(el.start_time), end_time: el.end_time ? new Date(el.end_time) : new Date(), isDefaultEndTime: !el.end_time
   })) 
@@ -213,7 +207,7 @@ const TimelineComponent = ({groups, items, defaultTime}) => {
         lineHeight={50} 
         itemRenderer={itemRenderer(handleOpenDetails)}
       />
-      {/* CORRECCIÓN 2: Renderizar el modal fuera del timeline y con estilos aislados */}
+      
       {details && (
         <div 
           className="fixed inset-0 z-[9999] bg-black bg-opacity-50 flex items-center justify-center"
@@ -248,7 +242,6 @@ const TimelineComponent = ({groups, items, defaultTime}) => {
   );
 };
 
- // Función para renderizar items personalizados
  const itemRenderer = (handleOpenDetails) => ({ item, itemContext, getItemProps }) => { 
 
   const itemProps = getItemProps({
@@ -260,7 +253,6 @@ const TimelineComponent = ({groups, items, defaultTime}) => {
     }
   });
   
-  // Formatear las fechas para mostrarlas en el tooltip
   const startTime = new Date(item.start_time);
   
   const formatTime = (date) => {

@@ -3,11 +3,11 @@ import {
   AiOutlineClose, 
   AiOutlineDownload,
 } from 'react-icons/ai';
-import { URLHOST } from '../../constants/global';
+import { formatNumber, URLHOST } from '../../constants/global';
 import Cookies from 'js-cookie';
 import { BsArrowsAngleExpand } from "react-icons/bs";
 import {  AiOutlineUser, AiOutlineMail, AiOutlinePhone, AiOutlineEnvironment, AiOutlineCalendar } from 'react-icons/ai';
-
+import Select from "react-select";
 
 export const TablaResumenBFH = ({datos=[]}) => {
   return (
@@ -49,10 +49,10 @@ export const TablaResumenBFH = ({datos=[]}) => {
                       {fila.total}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-right font-mono">
-                      {typeof fila?.pesoTeorico === 'number' ? `${(fila.pesoTeorico/2204.62).toFixed(2)} TM` : fila.pesoTeorico}
+                      {typeof fila?.pesoTeorico === 'number' ? `${formatNumber(fila.pesoTeorico/2204.62)} TM` : fila.pesoTeorico}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-right font-mono">
-                      {typeof fila?.pesoNeto === 'number' ? `${(fila.pesoNeto/2204.62).toFixed(2)} TM` : fila.pesoNeto}
+                      {typeof fila?.pesoNeto === 'number' ? `${formatNumber(fila.pesoNeto/2204.62)} TM` : fila.pesoNeto}
                     </td>
                     <td className={`px-6 py-4 whitespace-nowrap text-sm text-right font-mono font-medium ${
                       fila.desviacion >= 0 ? 'text-green-600' : 'text-red-600'
@@ -792,19 +792,31 @@ export const ModalReportes=({reports, hdlClose, buque = 1058, factura='110016055
 }
 
 export const TableComponentCasulla = ({ datos = [{}], fun, total = [{}] }) => {
+  // Función para extraer el valor numérico del porcentaje
+  const getPercentageValue = (value) => {
+    if (typeof value === 'string' && value.includes('%')) {
+      return parseFloat(value.replace('%', ''));
+    }
+    return parseFloat(value) || 0;
+  };
+
+  // Obtener las claves de las columnas
+  const columnKeys = Object.keys(datos[0]);
+  const lastColumnIndex = columnKeys.length - 1;
+
   return (
     <>
-      {<div className="relative overflow-x-auto rounded-sm">
+      <div className="relative overflow-x-auto rounded-sm">
         <table className="w-full text-sm text-left rtl:text-right text-gray-700 dark:text-gray-400">
           <thead className="text-xs uppercase bg-[#725033] rounded-2xl text-white">
             <tr>
-              {Object.keys(datos[0]).map((el, keys) => (
-                <th key={keys} scope="col" className={`px-6 py-4 ${keys > 1 && 'text-right' }`}>
+              {columnKeys.map((el, keys) => (
+                <th key={keys} scope="col" className={`px-6 py-4 ${(keys > 1 && lastColumnIndex!==keys) && 'text-right'} ${lastColumnIndex===keys && 'text-center'}`}>
                   {el}
                 </th>
               ))}
               <th scope="col" className="px-6 py-3 text-center">
-                Editar
+                Detalles
               </th>
             </tr>
           </thead>
@@ -812,36 +824,28 @@ export const TableComponentCasulla = ({ datos = [{}], fun, total = [{}] }) => {
             {datos.map((fila, index) => (
               <tr
                 key={index}
-                className={`${index % 2 === 0 && 'bg-gray-50'} border-b border-gray-200 hover:bg-[#FDF5D4]`}
+                className={`${index % 2 === 0 && 'bg-gray-50'} border-b border-gray-200 hover:bg-[#FDF5D4] select-none`}
+                onDoubleClick={() => fun(fila)}
               >
                 {Object.values(fila).map((el, key) => (
-                  <td key={key} className={`px-6 py-3 text-gray-700 text-sm font-mono ${key > 1 && 'text-right ' } `}>
-                    {el}
-                  </td>
-                ))}
-                <td className="py-3 text-center">
-                  <button
-                    className="font-medium text-gray-800 hover:underline text-center"
-                    onClick={() => fun(fila)}
-                  >
-                    <span className="text-center">
-                      <BsArrowsAngleExpand className="text-xl" />
-                    </span>
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {total.map((fila, index) => (
-              <tr
-                key={index}
-                className={`${index % 2 === 0 && 'bg-gray-50'} border-b border-gray-200 hover:bg-[#FDF5D4]`}
-              >
-                <td></td>
-                <td></td>
-                <td></td>
-                {Object.values(fila).map((el, key) => (
-                  <td key={key} className={`px-6 py-3 text-gray-700 text-sm font-mono ${key > 1 && 'text-right ' } `}>
-                    {el}
+                  <td key={key} className={`px-6 py-3 text-gray-700 text-sm font-mono ${key > 1 && 'text-right'}`}>
+                    {key === lastColumnIndex ? (
+                      // Renderizar progress bar para la última columna (porcentaje)
+                      <div className="flex items-center space-x-2">
+                        <div className="flex-1 bg-gray-200 rounded-full h-2.5 min-w-[20px] flex-col">
+                          <div
+                            className="bg-[#725033] h-2.5 rounded-full transition-all duration-300"
+                            style={{ width: `${Math.min(getPercentageValue(el), 100)}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-xs font-medium text-gray-600 min-w-[35px]">
+                          {el}
+                        </span>
+                      </div>
+                    ) : (
+                      // Renderizar texto normal para las demás columnas
+                      el
+                    )}
                   </td>
                 ))}
                 <td className="py-3 text-center">
@@ -858,7 +862,7 @@ export const TableComponentCasulla = ({ datos = [{}], fun, total = [{}] }) => {
             ))}
           </tbody>
         </table>
-      </div>}
+      </div>
     </>
   );
 };
@@ -948,5 +952,183 @@ const TableSheet = ({tableData = [{}], openSheet = true, setOpenSheet}) => {
     </div>
   );
 };
+
+
+export const StatsCard = ({ title, value, icon, bgColor = "bg-blue-50", iconColor = "text-blue-600", textColor = "text-blue-800" }) => {
+  return (
+    <div className={`${bgColor} p-6 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200`}>
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium text-gray-600 uppercase tracking-wide">{title}</p>
+          <p className={`text-2xl font-bold ${textColor} mt-1`}>{value}</p>
+        </div>
+        <div className={`${iconColor} p-3 rounded-lg bg-white/50`}>
+          {icon}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const CasullaStatsCards = ({ total }) => {
+  // Extraer los datos del total
+  const totalData = total?.[0] || {};
+  
+  const stats = [
+    {
+      title: "Total Viajes",
+      value: totalData.Viajes || "0",
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+        </svg>
+      ),
+      bgColor: "bg-white",
+      iconColor: "text-[#725033]",
+      textColor: "text-[#725033]"
+    },
+    {
+      title: "Peso Total (lb)",
+      value: totalData.totalPesoLb || "0 lb",
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+      ),
+      bgColor: "bg-white",
+      iconColor: "text-[#725033]",
+      textColor: "text-[#725033]"
+    },
+    {
+      title: "Peso Total (qq)",
+      value: totalData.totalPesoQq || "0 qq",
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+      ),
+      bgColor: "bg-white",
+      iconColor: "text-[#725033]",
+      textColor: "text-[#725033]"
+    },
+    {
+      title: "Peso Total (tm)",
+      value: totalData.totalPesoTm || "0 tm",
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+      ),
+      bgColor: "bg-white",
+      iconColor: "text-[#725033]",
+      textColor: "text-[#725033]"
+    }
+  ];
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      {stats.map((stat, index) => (
+        <StatsCard
+          key={index}
+          title={stat.title}
+          value={stat.value}
+          icon={stat.icon}
+          bgColor={stat.bgColor}
+          iconColor={stat.iconColor}
+          textColor={stat.textColor}
+        />
+      ))}
+    </div>
+  );
+};
+
+export const SelectFormImportaciones = ({ data = {}, name, fun, stt = false, val }) => {
+  const customStyles = {
+    control: (base, state) => ({
+      ...base,
+      appearance: 'none',
+      width: '300px', 
+      backgroundColor: 'white',
+      color: '#111827', 
+      border: state.isFocused 
+        ? '2px solid #955e37' 
+        : '1px solid #d1d5db',
+      borderRadius: '8px',
+      paddingTop: '6px',
+      paddingBottom: '6px',
+      paddingLeft: '16px',
+      paddingRight: '10px', // pr-10
+      boxShadow: state.isFocused 
+        ? '0 0 0 2px rgba(149, 94, 55, 0.1)' 
+        : '0 1px 2px 0 rgba(0, 0, 0, 0.05)', // shadow-sm
+      outline: 'none',
+      maxWidth: '200px',
+      transition: 'colors 200ms',
+      '&:hover': {
+        borderColor: state.isFocused ? '#955e37' : '#9ca3af'
+      },
+      minHeight: 'auto'
+    }),
+    valueContainer: (base) => ({
+      ...base,
+      padding: '0'
+    }),
+    input: (base) => ({
+      ...base,
+      margin: '0',
+      padding: '0'
+    }),
+    indicatorSeparator: (base) => ({
+      ...base,
+      display: 'none'
+    }),
+    dropdownIndicator: (base) => ({
+      ...base,
+      paddingRight: '0'
+    }),
+    menuPortal: (base) => ({ 
+      ...base, 
+      zIndex: 9999 
+    })
+  };
+
+  const opt = data.map((el) => {
+    return {
+      value: el.id,
+      label: el.nombre,
+    };
+  });
+
+  const selectedValue = val !== undefined
+    ? opt.find((item) => item.value === val) || null
+    : undefined; 
+
+  const handleChange = (selectedOption) => {
+    const fakeEvent = {
+      target: {
+        name,
+        value: selectedOption ? selectedOption.value : "",
+        data: selectedOption ? selectedOption.label : ""
+      },
+    };
+    fun(fakeEvent); 
+  };
+
+  return (
+    <>
+      <Select
+        name={name}
+        styles={customStyles}
+        menuPortalTarget={document.body}
+        onChange={handleChange}
+        options={opt}
+        isDisabled={stt}
+        isClearable
+        {...(val !== undefined ? { value: selectedValue } : {})}
+      />
+    </>
+  );
+};
+
 
 export default TableSheet;

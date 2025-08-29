@@ -12,6 +12,8 @@ import { CiLock } from "react-icons/ci";
 import { CiUnlock } from "react-icons/ci";
 import { Toaster, toast } from 'sonner';
 import { IoIosArrowDown, IoIosArrowUp, IoIosArrowForward, IoMdClose   } from "react-icons/io";
+import Cookies from 'js-cookie'
+
 
 const formInputSelect = ['Transportes', 'Placa', 'Furgon', 'Motoristas']
 const guardiaValidacion = [{id: 1, nombre: 'Si'}, {id: 2, nombre: 'No'}]
@@ -669,7 +671,8 @@ export const VisualizarBoletas = (props) => {
   const [isLoadingYellow, setIsLoadingYellow] = useState(false);
   const [isLoadingGreen, setIsLoadingGreen] = useState(false);
   const [isLoadingPink, setIsLoadingPink] = useState(false);
-  
+  const isOnlyBascula = Cookies.get('type') === 'BASCULA';
+
   const opt = ['Entrada de material', 'Salida de material'];
   const isNullData = 'N/A';
   const pesoTolerado = boletas?.pesoTeorico * boletas?.porTolerancia;
@@ -710,19 +713,13 @@ export const VisualizarBoletas = (props) => {
     return `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
   };
   
-  let TARA;
-  let PESOBRUTO;
 
-  const isServicioBascula = boletas?.proceso === 0 && (boletas?.idMovimiento ===12)
-  const isEspecialTraslado = boletas?.proceso === 0 && (boletas?.idMovimiento === 10 || boletas?.idMovimiento === 11);
-  console.log(boletas)
-  if(isServicioBascula) {
-    TARA = boletas?.pesoInicial;
-    PESOBRUTO = boletas?.pesoFinal;
-  } else {
-    TARA = isEspecialTraslado ? boletas?.pesoInicial : ((boletas?.pesoInicial && boletas?.pesoFinal) ? boletas?.proceso == 0 ? boletas?.pesoFinal : boletas?.pesoInicial : 0);
-    PESOBRUTO = isEspecialTraslado ? boletas?.pesoFinal : ((boletas?.pesoInicial && boletas?.pesoFinal) ? boletas?.proceso == 0 ? boletas?.pesoInicial : boletas?.pesoFinal : 0);
-  }
+  const peso1 = boletas?.pesoInicial ?? 0;
+  const peso2 = boletas?.pesoFinal ?? 0;
+
+  const TARA = Math.min(peso1, peso2);
+  const PESOBRUTO = Math.max(peso1, peso2);
+
 
   const getEstadoStyle = (estado) => {
     switch(estado) {
@@ -941,7 +938,7 @@ export const VisualizarBoletas = (props) => {
             </div>
 
             {/* Footer con botones de impresión */}
-            {boletas?.estado !== 'Cancelada' && (
+            {(boletas?.estado !== 'Cancelada' && isOnlyBascula) && (
               <div className="bg-white border-t border-gray-200 p-6 lg:px-4 lg:py-4 shadow-sm">
                 <div className="w-full">
                   <div className="flex flex-col sm:flex-row gap-3 sm:justify-end bg-red">

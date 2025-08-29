@@ -78,3 +78,10 @@ export const propsModalPrevisualHijo = {
     animate:{ scale: 1, y: 0 },
     transition:{ type: "spring", damping: 15 },
 }
+
+export const formatNumber = (num) => {
+    return Number(num || 0).toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  };

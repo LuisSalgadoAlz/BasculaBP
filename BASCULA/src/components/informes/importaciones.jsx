@@ -1,13 +1,14 @@
 import { useCallback, useEffect } from "react";
 import { useState } from "react";
 import { getBuquesDetalles, getDataForSelect, getResumenBFH, getStatsBuque } from "../../hooks/informes/granza";
-import { BuqueDetalles, BuqueDetallesLoader, ModalReportes, TablaResumenBFH, TablaResumenBFHLoader } from "./tables";
+import { BuqueDetalles, BuqueDetallesLoader, ModalReportes, SelectFormImportaciones, TablaResumenBFH, TablaResumenBFHLoader } from "./tables";
 import { Pagination, StatCard } from "../../components/buttons";
 import { AiOutlineDollarCircle } from 'react-icons/ai';
 import { LuPackage2 } from "react-icons/lu";
 import { Toaster, toast } from "sonner";
 import { IoIosStats } from "react-icons/io";
 import { FaSpinner } from "react-icons/fa";
+import { formatNumber } from "../../constants/global";
 
 const Importaciones = () => {
   const [buques, setBuques] = useState({sociosImp: [], facturasImp: []})
@@ -30,16 +31,28 @@ const Importaciones = () => {
   const handleChangeFilters = (e) => {  
     const { name, value } = e.target;
     
-    if (name === 'typeImp') {
-      setBuqueSelected({
-        typeImp: value, 
-      });
-    } else {
-      setBuqueSelected((prev) => ({
+    setBuqueSelected((prev) => {
+      if (name === 'typeImp') {
+        return {
+          typeImp: value,
+          buque: '',
+          facturasImp: '', 
+        };
+      }
+      
+      if (name === 'buque') {
+        return {
+          ...prev,
+          buque: value,
+          facturasImp: '', 
+        };
+      }
+      
+      return {
         ...prev,
         [name]: value,
-      }));
-    }
+      };
+    });
     
     setPagination(1);
   };
@@ -139,21 +152,21 @@ const Importaciones = () => {
   const statsdata = [
     {
       icon: <IoIosStats size={24} className="text-white" />,
-      title: "Bascula  - Puerto",
-      value: `${stats?.pesoNeto || `0.00`} TM - ${stats?.pesoTeorico || `0.00`} TM`,
+      title: "Bascula - Puerto",
+      value: `${formatNumber(stats?.pesoNeto)} TM - ${formatNumber(stats?.pesoTeorico)} TM`,
       color: "bg-blue-500",
     },
     {
       icon: <IoIosStats size={24} className="text-white" />,
       title: "Desviacion Total (TM) (%)",
-      value: `${stats?.desviacion || `0.00`} (${stats?.porcentaje || `0.00`}%)`,
+      value: `${formatNumber(stats?.desviacion)} (${formatNumber(stats?.porcentaje)}%)`,
       color: "bg-amber-500",
-      status: `${(stats?.desviacion || 0) >= 0 ? 'text-green-700' : 'text-red-700'}`
+      status: (Number(stats?.desviacion) || 0) >= 0 ? 'text-green-700' : 'text-red-700'
     },
     {
       icon: <IoIosStats size={24} className="text-white" />,
-      title: "Bascula  - Factura",
-      value: `${stats?.pesoNeto || `0.00`} TM - ${stats?.cantidad || `0.00`} TM`,
+      title: "Bascula - Factura",
+      value: `${formatNumber(stats?.pesoNeto)} TM - ${formatNumber(stats?.cantidad)} TM`,
       color: "bg-blue-500",
     },
     {
@@ -163,18 +176,16 @@ const Importaciones = () => {
         const pesoNeto = Number(stats?.pesoNeto) || 0;
         const cantidad = Number(stats?.cantidad) || 0;
         const diferencia = pesoNeto - cantidad;
-        console.log(diferencia)
-        // Evitar división por cero
-        const porcentaje = pesoNeto !== 0 ? (diferencia / cantidad) * 100 : 0;
-        
-        return `${diferencia.toFixed(2)} (${porcentaje.toFixed(2)}%)`;
+        const porcentaje = cantidad !== 0 ? (diferencia / cantidad) * 100 : 0;
+
+        return `${formatNumber(diferencia)} (${formatNumber(porcentaje)}%)`;
       })(),
       color: "bg-amber-500",
       status: (() => {
         const pesoNeto = Number(stats?.pesoNeto) || 0;
         const cantidad = Number(stats?.cantidad) || 0;
         const diferencia = pesoNeto - cantidad;
-        
+
         return diferencia >= 0 ? 'text-green-700' : 'text-red-700';
       })()
     },
@@ -191,52 +202,24 @@ const Importaciones = () => {
           </h1>
         </div>
         <div className="parte-der flex items-center justify-center gap-3 max-sm:text-sm max-sm:flex-col">
-          <div className="flex gap-4 items-end">
-              <div className="flex-1">
-              <div className="relative">
-                <div className="flex gap-2">
-                  <select 
-                    name="typeImp"
-                    onChange={handleChangeFilters}
-                    className="appearance-none w-48 bg-white text-gray-900 border border-gray-300 rounded-lg py-3 pl-4 pr-10 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#955e37] focus:border-[#955e37 ] hover:border-gray-400 transition-colors duration-200"
-                    value={selected.typeImp}
-                  >
-                    <option value=''>Tipo de importacion</option>
-                    <option value={2}>A Granel</option>
-                    <option value={15}>Contenerizada</option>
-                  </select>
-                  <select 
-                    name="buque"
-                    onChange={handleChangeFilters}
-                    value={selected.buque}
-                    disabled={isLoadingBuques} 
-                    className="appearance-none w-48 bg-white text-gray-900 border border-gray-300 rounded-lg py-3 pl-4 pr-10 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#955e37] focus:border-[#955e37 ] hover:border-gray-400 transition-colors duration-200"
-                  >
-                    {buques?.sociosImp ? <option value={-99}>Seleccionar</option> : <option value={-99}> - </option>}
-                    {console.log(buques)}
-                    {buques?.sociosImp && buques?.sociosImp.map((item)=>(
-                      <option key={item?.idSocio} value={item?.idSocio}>{item?.socio}</option>
-                    ))} 
-                  </select>
-                  <select 
-                    name="facturasImp"
-                    onChange={handleChangeFilters}
-                    value={selected.facturasImp}
-                    className="appearance-none w-48 bg-white text-gray-900 border border-gray-300 rounded-lg py-3 pl-4 pr-10 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#955e37] focus:border-[#955e37 ] hover:border-gray-400 transition-colors duration-200"
-                  >
-                    {buques?.facturasImp ? <option value={-99}>Seleccionar</option> : <option value={-99}> - </option>}
-                    {buques?.facturasImp && buques?.facturasImp.map((item)=>(
-                      <option key={item?.id} value={item?.factura}>{item?.factura}</option>
-                    ))} 
-                  </select>
-                </div>
-                  
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                    <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
+          <div className="flex gap-4 items-end item">
+              <div className="flex-1 items-center">
+                <div className="relative">
+                  <div className="grid grid-cols-3 gap-2">
+                    <select 
+                      name="typeImp"
+                      onChange={handleChangeFilters}
+                      className="appearance-none bg-white text-gray-900 border border-gray-300 rounded-lg py-3 pl-4 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#955e37] focus:border-[#955e37 ] hover:border-gray-400 transition-colors duration-200"
+                      value={selected.typeImp}
+                    >
+                      <option value=''>Tipo de importacion</option>
+                      <option value={2}>A Granel</option>
+                      <option value={15}>Contenerizada</option>
+                    </select>
+                    <SelectFormImportaciones name={'buque'} data={buques?.sociosImp} fun={handleChangeFilters} val={selected.buque}/>
+                    <SelectFormImportaciones name={'facturasImp'} data={buques?.facturasImp} fun={handleChangeFilters} val={selected.facturasImp}/>
                   </div>
-              </div>
+                </div>
               </div>
 
               <button disabled={(!selected.buque || !selected.typeImp || !selected.facturasImp || selected.buque == -99 || selected.facturasImp == -99 ||selected.typeImp == '') ? true: false} onClick={()=>setIsOpen(true)} className="bg-gradient-to-r from-[#955e37] to-[#804e2b] text-white font-medium py-3 px-8 rounded-lg shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]">
@@ -353,8 +336,8 @@ function ProgressBar({ current, limit, label = "Progreso", unit = "productos", s
           <div className="flex items-center space-x-2">
             <div className="w-3 h-3 bg-[#5a3f27] rounded-full"></div>
             <span className="text-sm text-gray-600">
-              <span className="font-semibold text-gray-800">{current.toLocaleString()}</span> de{' '}
-              <span className="font-semibold text-gray-800">{limit.toLocaleString()}</span>
+              <span className="font-semibold text-gray-800">{formatNumber(current)}</span> de{' '}
+              <span className="font-semibold text-gray-800">{formatNumber(limit)}</span>
             </span>
           </div>
           <span className="text-sm text-gray-500 capitalize">{unit}</span>

@@ -11,7 +11,7 @@ const buquesBoletas = async(req, res) => {
         const buque = req.query.buque!==undefined ? parseInt(req.query.buque) : null;
         const typeImp = req.query.typeImp!==undefined ? parseInt(req.query.typeImp) : null;
         
-        const [sociosImp, facturasImp] = await Promise.all([
+        const [dataSocio, dataFacturas] = await Promise.all([
             typeImp ? (
                 db.boleta.groupBy({
                     by: ['socio', 'idSocio'], 
@@ -40,6 +40,16 @@ const buquesBoletas = async(req, res) => {
                 }
             }) : null,
         ])
+
+        const sociosImp = typeImp ? dataSocio.map((item) => ({
+            ...item,
+            id: item.idSocio, nombre: item.socio,
+        })) : [];
+
+        const facturasImp = (buque && typeImp) ? dataFacturas.map((item) => ({
+            ...item,
+            id: item.factura, nombre: item.factura
+        })) : [];
         
         res.status(200).send( { sociosImp, facturasImp } )
     }catch(err){
@@ -1825,7 +1835,7 @@ const getRerportContenerizada = async (req, res) => {
                 Placa: el.placa,
                 Contenedor: el.impContenerizada?.contenedor || '-',
                 PrecintosOrigen: el.impContenerizada?.marchamoDeOrigen || '-',
-                SelloOPC: el.sello1 || '-',
+                SelloOPC: el.sello1 ? `LN${el.sello1}` : '-',
                 Motorista: el.motorista,
                 EncargadoBodega: el.impContenerizada?.encargadoDeNombre || '-',
                 BodegaDescarga: el.impContenerizada?.bodega || '-',
@@ -2016,6 +2026,23 @@ const getRerportContenerizada = async (req, res) => {
         sheet1.addRow([]);
 
         // Encabezados principales
+        const mainHeadersUnits = [
+            '', '', '', '', '', '', 
+            '', '', '', '', 
+            '', '', '', '',
+            'UNIDAD', 'DE', 'SACOS', '',
+        ];
+
+        const headerRowUnits = sheet1.addRow(mainHeadersUnits);
+        headerRowUnits.height = 25;
+
+        sheet1.mergeCells(`O${headerRowUnits.number}:Q${headerRowUnits.number}`);
+
+        const mergedCell = sheet1.getCell(`O${headerRowUnits.number}`);
+        mergedCell.value = 'UNIDAD DE SACOS';
+        Object.assign(mergedCell.style, styles.sectionTitle);
+
+
         const mainHeaders = [
             'FECHA', 'ITEM', 'BOLETA', 'PLACA', 'CONTENEDOR', 'PRECINTOS ORIGEN', 
             'SELLO OPC', 'MOTORISTA', 'ENCARGADO DE BODEGA', 'BODEGA DESCARGA', 
@@ -2025,7 +2052,7 @@ const getRerportContenerizada = async (req, res) => {
 
         const headerRow = sheet1.addRow(mainHeaders);
         headerRow.height = 30;
-        
+
         mainHeaders.forEach((header, index) => {
             const cell = sheet1.getCell(sheet1.rowCount, index + 1);
             Object.assign(cell.style, styles.header);
@@ -2118,7 +2145,7 @@ const getRerportContenerizada = async (req, res) => {
 
         sheet1.addRow([]);
 
-        const headerRow1 = sheet1.addRow(['', 'CANTIDAD SEGÚN FACTURA', '', 'CANTIDAD RECIBIDA (BÁSCULA)', '', 'DIFERENCIA', '']);
+        const headerRow1 = sheet1.addRow(['', 'CANTIDAD SEGÚN FACTURA', '', 'CANTIDAD RECIBIDA BÁSCULA', '', 'DIFERENCIA', '']);
         
         // Merge para los títulos principales
         sheet1.mergeCells(`B${sheet1.rowCount}:C${sheet1.rowCount}`); // CANTIDAD SEGÚN FACTURA
@@ -2130,11 +2157,13 @@ const getRerportContenerizada = async (req, res) => {
             Object.assign(cell.style, styles.header);   
         });
 
-        sheet1.getCell(`A${sheet1.rowCount}`).value = 'CONCEPTO';
+        sheet1.getCell(`A${sheet1.rowCount}`).value = '';
         sheet1.getCell(`B${sheet1.rowCount}`).value = 'CANTIDAD SEGÚN FACTURA';
-        sheet1.getCell(`D${sheet1.rowCount}`).value = 'CANTIDAD RECIBIDA (BÁSCULA)';
-        sheet1.getCell(`F${sheet1.rowCount}`).value = 'DIFERENCIA';
+        sheet1.getCell(`D${sheet1.rowCount}`).value = 'CANTIDAD RECIBIDA SEGÚN BÁSCULA';
+        sheet1.getCell(`F${sheet1.rowCount}`).value = 'DIFERENCIA SEGÚN PESO BÁSCULA';
 
+        sheet1.getRow(sheet1.rowCount).height = 35;
+        
         // Subencabezados - segunda fila
         const headerRow2 = sheet1.addRow(['', 'TM', 'QQ', 'TM', 'QQ', 'TM', 'QQ']);
         headerRow2.eachCell((cell, colIndex) => {
@@ -2216,7 +2245,7 @@ const getRerportContenerizada = async (req, res) => {
         sheet1.mergeCells(`E${sheet1.rowCount}:G${sheet1.rowCount}`);
 
         const sacosCell = sheet1.getCell(`A${sheet1.rowCount}`);
-        sacosCell.value = `SACOS RECIBIDOS: ${acumuladoUnidades.toLocaleString()} Unidades`;
+        sacosCell.value = `CANTIDAD DESACOS RECIBIDOS: ${acumuladoUnidades.toLocaleString()} Unidades`;
         sacosCell.style = {
             font: { name: 'Arial', bold: true, size: 12 },
             alignment: { horizontal: 'left', vertical: 'middle' },
@@ -2311,6 +2340,16 @@ const getBoletasCasulla = async (req, res) => {
             },
             where: {
                 idProducto: CASULLA,
+                id: {
+                    not: {
+                        in: [2] /* Dato creado de prueba testing comoding */
+                    }  
+                },
+                estado: {
+                    not: {
+                        in: ['Pendiente', 'Cancelada'],
+                    },
+                },
                 destino: {
                     not: null  
                 },
@@ -2319,12 +2358,13 @@ const getBoletasCasulla = async (req, res) => {
             orderBy: {
                 destino: 'asc'  
             },
-            take: 20,
         });
 
+        let totalViajes = 0;
         let tototalLb = 0;
         let tototalQq = 0;
         let tototalTm = 0;
+        let percentAll = 0;
 
         const casulaFormatted = casulla.map(item => {
             const pesoNetoLb = item._sum.pesoNeto || 0;
@@ -2335,6 +2375,7 @@ const getBoletasCasulla = async (req, res) => {
             tototalLb += pesoNetoLb;
             tototalQq += pesoNetoQq;
             tototalTm += pesoNetoTm;
+            totalViajes += item._count._all;
 
             return {
                 socio: item.socio,
@@ -2371,11 +2412,13 @@ const getBoletasCasulla = async (req, res) => {
             data: casulaWithPesoPercentage,
             total: [{
                 Tolal: 'Total',
-                totalPesoLb: totalPesoLb.toFixed(2), 
-                totalPesoQq: tototalQq.toFixed(2), 
-                totalPesoTm: tototalTm.toFixed(2)
+                Viajes: totalViajes.toLocaleString('en-US'),
+                totalPesoLb: `${totalPesoLb.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} lb`, 
+                totalPesoQq: `${tototalQq.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} qq`, 
+                totalPesoTm: `${tototalTm.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} tm`
             }]
         })
+
     }catch(err){
         console.log(err)
     }
@@ -2412,6 +2455,7 @@ const getBoletasCasullaDetalleSocio = async (req, res) => {
             select: {
                 numBoleta: true,
                 socio: true,
+                motorista: true,
                 placa: true,
                 pesoNeto: true,
                 fechaFin: true,   
