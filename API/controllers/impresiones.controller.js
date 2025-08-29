@@ -834,7 +834,7 @@ function generarContenidoTercioCarta(copia, esPrimera = false, colors, boleta, d
       body: [
           [`Fecha        : ${new Date().toLocaleString()}`, ''],
           [`${TYPEOFUSER}: ${boleta.socio}`, `Hora Entrada     : ${boleta.fechaInicio.toLocaleString()}`],
-          [`Placa        : ${boleta.placa}`, `Hora de Salida   : ${boleta.fechaFin ? boleta.fechaFin.toLocaleString() : 'Pendiente'}`],
+          [`Placa        : ${boleta.placa} ${boleta.furgon ? `- Furgón: ${boleta.furgon}` : ''}`, `Hora de Salida   : ${boleta.fechaFin ? boleta.fechaFin.toLocaleString() : 'Pendiente'}`],
           [`Motorista    : ${boleta.motorista}`, `${ultimoDocumento}`],
           [`Transporte   : ${boleta.empresa}`, `Marchamos        : ${[boleta?.sello1, boleta?.sello2, boleta?.sello3, boleta?.sello4, boleta?.sello5, boleta?.sello6].filter(Boolean).join(', ') || 'N/A'}`],
           [`Origen       : ${boleta.origen || boleta.trasladoOrigen}`, ''],
@@ -976,7 +976,7 @@ function generarContenidoTercioCartaReimpresion(copia, esPrimera = false, colors
       body: [
           [`Fecha        : ${isPrint ? new Date(datePrint).toLocaleString() : new Date().toLocaleString()}`, isPrint ? `Reimpresión      : ${new Date().toLocaleString()}`: ''],
           [`${TYPEOFUSER}: ${boleta.socio}`, `Hora Entrada     : ${boleta.fechaInicio.toLocaleString()}`],
-          [`Placa        : ${boleta.placa}`, `Hora de Salida   : ${boleta.fechaFin ? boleta.fechaFin.toLocaleString() : 'Pendiente'}`],
+          [`Placa        : ${boleta.placa} ${boleta.furgon ? `- Furgón: ${boleta.furgon}` : ''}`, `Hora de Salida   : ${boleta.fechaFin ? boleta.fechaFin.toLocaleString() : 'Pendiente'}`],
           [`Motorista    : ${boleta.motorista}`, `${ultimoDocumento}`],
           [`Transporte   : ${boleta.empresa}`, `Marchamos        : ${[boleta?.sello1, boleta?.sello2, boleta?.sello3, boleta?.sello4, boleta?.sello5, boleta?.sello6].filter(Boolean).join(', ') || 'N/A'}`],
           [`Origen       : ${boleta.origen || boleta.trasladoOrigen}`, ''],
