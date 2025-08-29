@@ -686,7 +686,7 @@ export const verificarDataCompleto = (funError, data, setMsg, pesoIn) => {
   if (parseFloat(pesoFinal) <= 0) return mostrarError('El peso final debe ser mayor que 0.')
 
   if(proceso == 0 && parseFloat(pesoIn)<=parseFloat(pesoFinal)){
-    if (idMovimiento!=10 && idMovimiento!=11) {
+    if (idMovimiento!=10 && idMovimiento!=11 && idMovimiento!=12) {
       return mostrarError('Peso inicial debe ser mayor al peso final')
     }
   }
