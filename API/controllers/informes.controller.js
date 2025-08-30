@@ -171,6 +171,41 @@ const getBuqueStats = async(req, res) => {
                 }
             })
         ])
+
+        const sacosContenerizados = await db.boleta.findMany({
+            where: {
+                idSocio: parseInt(buque), 
+                estado: {
+                    not: {
+                        in: ['Pendiente', 'Cancelada'],
+                    },
+                }, 
+                idMovimiento: parseInt(typeImp), 
+                factura: factura,
+            },
+            include: {
+                impContenerizada: true,
+            } 
+        })
+
+        let acumuladasUnidadesRecibidas = 0;
+        let acumuladasunidadesTeoricas = 0;
+
+        
+
+        const allTypeSacos = sacosContenerizados.map((items) => {
+            acumuladasUnidadesRecibidas += items.impContenerizada.sacosCargados;
+            acumuladasunidadesTeoricas += items.impContenerizada.sacosTeoricos
+            console.log(items)
+            return {
+                acumuladasUnidadesRecibidas,
+                acumuladasunidadesTeoricas 
+            }
+        })
+
+        console.log(allTypeSacos)
+
+
         if(total.length==0) return res.status(200).send({err: 'Buque no seleecionado'})
         const {_sum} = total[0]
         const refactorData = {
@@ -187,6 +222,7 @@ const getBuqueStats = async(req, res) => {
         console.log(err)
     }
 }
+
 
 const getBuqueDetalles = async (req, res) => {
     try {

@@ -150,6 +150,7 @@ const Importaciones = () => {
   ];
   
   const statsdata = [
+  ...(selected.typeImp == 2 ? [
     {
       icon: <IoIosStats size={24} className="text-white" />,
       title: "Bascula - Puerto",
@@ -163,33 +164,48 @@ const Importaciones = () => {
       color: "bg-amber-500",
       status: (Number(stats?.desviacion) || 0) >= 0 ? 'text-green-700' : 'text-red-700'
     },
+  ] : [
     {
       icon: <IoIosStats size={24} className="text-white" />,
-      title: "Bascula - Factura",
-      value: `${formatNumber(stats?.pesoNeto)} TM - ${formatNumber(stats?.cantidad)} TM`,
+      title: "Sacos Recibidos - Sacos Teóricos",
+      value: `${formatNumber(stats?.pesoNeto)} - ${formatNumber(stats?.pesoTeorico)}`,
       color: "bg-blue-500",
     },
     {
       icon: <IoIosStats size={24} className="text-white" />,
       title: "Desviacion Total (TM) (%)",
-      value: (() => {
-        const pesoNeto = Number(stats?.pesoNeto) || 0;
-        const cantidad = Number(stats?.cantidad) || 0;
-        const diferencia = pesoNeto - cantidad;
-        const porcentaje = cantidad !== 0 ? (diferencia / cantidad) * 100 : 0;
-
-        return `${formatNumber(diferencia)} (${formatNumber(porcentaje)}%)`;
-      })(),
+      value: `${formatNumber(stats?.desviacion)} (${formatNumber(stats?.porcentaje)}%)`,
       color: "bg-amber-500",
-      status: (() => {
-        const pesoNeto = Number(stats?.pesoNeto) || 0;
-        const cantidad = Number(stats?.cantidad) || 0;
-        const diferencia = pesoNeto - cantidad;
-
-        return diferencia >= 0 ? 'text-green-700' : 'text-red-700';
-      })()
+      status: (Number(stats?.desviacion) || 0) >= 0 ? 'text-green-700' : 'text-red-700'
     },
-  ];
+  ]),
+  {
+    icon: <IoIosStats size={24} className="text-white" />,
+    title: "Bascula - Factura",
+    value: `${formatNumber(stats?.pesoNeto)} TM - ${formatNumber(stats?.cantidad)} TM`,
+    color: "bg-blue-500",
+  },
+  {
+    icon: <IoIosStats size={24} className="text-white" />,
+    title: "Desviacion Total (TM) (%)",
+    value: (() => {
+      const pesoNeto = Number(stats?.pesoNeto) || 0;
+      const cantidad = Number(stats?.cantidad) || 0;
+      const diferencia = pesoNeto - cantidad;
+      const porcentaje = cantidad !== 0 ? (diferencia / cantidad) * 100 : 0;
+
+      return `${formatNumber(diferencia)} (${formatNumber(porcentaje)}%)`;
+    })(),
+    color: "bg-amber-500",
+    status: (() => {
+      const pesoNeto = Number(stats?.pesoNeto) || 0;
+      const cantidad = Number(stats?.cantidad) || 0;
+      const diferencia = pesoNeto - cantidad;
+
+      return diferencia >= 0 ? 'text-green-700' : 'text-red-700';
+    })()
+  },
+];
 
   return (
     <>
