@@ -1,6 +1,6 @@
 import { NavLink, useNavigate } from "react-router";
 import { MdOutlineDashboard } from "react-icons/md";
-import { BsClipboard2Pulse, BsFileBarGraph } from "react-icons/bs";
+import { BsCalendarWeek, BsClipboard2Data, BsClipboard2Pulse, BsFileBarGraph } from "react-icons/bs";
 import { RiTruckLine } from "react-icons/ri";
 import { FiUsers } from "react-icons/fi";
 import { PiSignOutFill } from "react-icons/pi";
@@ -69,6 +69,29 @@ const RUTAS_GUARDIA = [
     icon: <MdOutlineDashboard />,
   },
 ]
+
+const RUTAS_REPORTES = [
+  {
+    path: "/calendario",
+    name: "Calendario",
+    icon: <BsCalendarWeek />,
+  },
+  {
+    path: "/informes",
+    name: "Informes",
+    icon: <BsClipboard2Data  />,
+  },
+  {
+    path: "/importaciones-granza",
+    name: "Importaciones",
+    icon: <BsClipboard2Data />,
+  },
+  {
+    path: "/casulla",
+    name: "Casulla",
+    icon: <BsClipboard2Data/>,
+  }
+];
 
 export const CerrarSession = ({ onClick }) => (
   <button
@@ -185,4 +208,8 @@ export const SideBarCelTolva = ({ hdlClose }) => (
 
 export const SideBarCelGuardia = ({ hdlClose }) => (
   <BaseSidebar routes={RUTAS_GUARDIA} onClose={hdlClose} />
+);
+
+export const SideBarCelReportes = ({ hdlClose }) => (
+  <BaseSidebar routes={RUTAS_REPORTES} onClose={hdlClose} />
 );

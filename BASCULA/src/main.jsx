@@ -53,7 +53,7 @@ const navRutas = createBrowserRouter([
     ]
   },
   {
-    element: <VerificarLog userType='ADMINISTRADOR,BASCULA' />,
+    element: <VerificarLog userType='ADMINISTRADOR,BASCULA,REPORTES' />,
     children: [
       { path: "/Dashboard", element: <Dashboard />, },
       { path: "/Boletas", element: <Boletas />, },
@@ -61,10 +61,8 @@ const navRutas = createBrowserRouter([
       { path: "/socios", element: <Clientes />, },
       { path: "/calendario", element: <CalendarioView />, },
       { path: "/informes", element: <Informes />, },
-      { path: "/informes/importaciones-granza", element: <Importaciones />, },
-      { path: "/informes/casulla", element: <Casulla />, },
-      { path: "/informes/diarios", element: <ViewDisabled />, },
-      { path: "/informes/semanales", element: <ViewDisabled />, },
+      { path: "/importaciones-granza", element: <Importaciones />, },
+      { path: "/casulla", element: <Casulla />, },
       { path: "/socios/:id", element: <EditClientes />, errorElement: <NoFoundData /> },
       { path: "/empresas/:id", element: <EditTransporte />, errorElement: <NoFoundData /> },
     ],

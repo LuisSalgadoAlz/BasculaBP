@@ -6,7 +6,8 @@ export const AUTH_CONFIG = {
   BASCULA: '/boletas',
   ADMINISTRADOR: '/admin/dashboard',
   TOLVA: '/tolva/dashboard', 
-  GUARDIA: '/guardia'
+  GUARDIA: '/guardia', 
+  REPORTES: '/importaciones-granza'
 };
 
 export const TOKEN_EXPIRY_MINUTES = 30;

@@ -218,10 +218,10 @@ const Importaciones = () => {
           </h1>
         </div>
         <div className="parte-der flex items-center justify-center gap-3 max-sm:text-sm max-sm:flex-col">
-          <div className="flex gap-4 items-end item">
+          <div className="flex gap-4 items-end item max-sm:flex-col">
               <div className="flex-1 items-center">
                 <div className="relative">
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-3 max-sm:grid-cols-1 gap-2 max-sm:w-full">
                     <select 
                       name="typeImp"
                       onChange={handleChangeFilters}

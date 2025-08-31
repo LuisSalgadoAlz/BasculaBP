@@ -2,7 +2,7 @@ import {URLHOST} from '../../constants/global'
 import Cookies from 'js-cookie'
 import { regexEmail } from '../../constants/regex';
 
-const typesOfUsers = ['VACIO','BASCULA', 'CONTABILIDAD', 'TOLVA', 'ADMINISTRADOR', 'GUARDIA']
+const typesOfUsers = ['VACIO','BASCULA', 'CONTABILIDAD', 'TOLVA', 'ADMINISTRADOR', 'GUARDIA', 'REPORTES']
 const typesOfState = [0,true, false]
 
 export const getMetrics = async (fun, setIsLoading) => {
