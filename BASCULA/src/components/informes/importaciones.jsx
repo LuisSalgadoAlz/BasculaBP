@@ -168,15 +168,15 @@ const Importaciones = () => {
     {
       icon: <IoIosStats size={24} className="text-white" />,
       title: "Sacos Recibidos - Sacos Teóricos",
-      value: `${formatNumber(stats?.pesoNeto)} - ${formatNumber(stats?.pesoTeorico)}`,
+      value: `${formatNumber(stats?.sacosDescargados)} - ${formatNumber(stats?.sacosTeroicos)}`,
       color: "bg-blue-500",
     },
     {
       icon: <IoIosStats size={24} className="text-white" />,
-      title: "Desviacion Total (TM) (%)",
-      value: `${formatNumber(stats?.desviacion)} (${formatNumber(stats?.porcentaje)}%)`,
+      title: "Desviacion Total (Unidad Sacos) (%)",
+      value: `${formatNumber(stats?.diferenciaSacos)} (${formatNumber(stats?.porcentajeSacosDiff)}%)`,
       color: "bg-amber-500",
-      status: (Number(stats?.desviacion) || 0) >= 0 ? 'text-green-700' : 'text-red-700'
+      status: (Number(stats?.diferenciaSacos) || 0) >= 0 ? 'text-green-700' : 'text-red-700'
     },
   ]),
   {

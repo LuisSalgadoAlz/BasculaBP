@@ -145,7 +145,7 @@ const getBuqueStats = async(req, res) => {
 
         if (!buque || isNaN(Number(buque))) return res.status(200).json({ error: 'Parámetro buque inválido o no seleccionado' });
 
-        const [facturas, total] = await Promise.all([
+        const [facturas, total, sacosContenerizados] = await Promise.all([
             db.facturas.findMany({
                 where: {
                     idSocio: parseInt(buque),
@@ -169,42 +169,35 @@ const getBuqueStats = async(req, res) => {
                     pesoTeorico: true, 
                     desviacion: true,
                 }
-            })
+            }),
+            typeImp == 15 ? db.boleta.findMany({
+                where: {
+                    idSocio: parseInt(buque), 
+                    estado: {
+                        not: {
+                            in: ['Pendiente', 'Cancelada'],
+                        },
+                    }, 
+                    idMovimiento: parseInt(typeImp), 
+                    factura: factura,
+                },
+                include: {
+                    impContenerizada: true,
+                } 
+            }) : null,
         ])
 
-        const sacosContenerizados = await db.boleta.findMany({
-            where: {
-                idSocio: parseInt(buque), 
-                estado: {
-                    not: {
-                        in: ['Pendiente', 'Cancelada'],
-                    },
-                }, 
-                idMovimiento: parseInt(typeImp), 
-                factura: factura,
-            },
-            include: {
-                impContenerizada: true,
-            } 
-        })
 
+        
         let acumuladasUnidadesRecibidas = 0;
         let acumuladasunidadesTeoricas = 0;
 
-        
-
-        const allTypeSacos = sacosContenerizados.map((items) => {
-            acumuladasUnidadesRecibidas += items.impContenerizada.sacosCargados;
-            acumuladasunidadesTeoricas += items.impContenerizada.sacosTeoricos
-            console.log(items)
-            return {
-                acumuladasUnidadesRecibidas,
-                acumuladasunidadesTeoricas 
-            }
-        })
-
-        console.log(allTypeSacos)
-
+        if(typeImp==15) {
+            sacosContenerizados.forEach((items) => {
+                acumuladasUnidadesRecibidas += items.impContenerizada.sacosCargados;
+                acumuladasunidadesTeoricas += items.impContenerizada.sacosTeoricos;
+            });
+        }
 
         if(total.length==0) return res.status(200).send({err: 'Buque no seleecionado'})
         const {_sum} = total[0]
@@ -215,7 +208,11 @@ const getBuqueStats = async(req, res) => {
             pesoTeorico: (_sum.pesoTeorico/QUINTALTONELADA).toFixed(2),
             desviacion: (_sum.desviacion/QUINTALTONELADA).toFixed(2),
             porcentaje: ((_sum.desviacion/QUINTALTONELADA)/(_sum.pesoTeorico/QUINTALTONELADA)*100).toFixed(2), 
-            status: facturas[0].Proceso || 'No seleccionado'
+            status: facturas[0].Proceso || 'No seleccionado', 
+            sacosTeroicos: acumuladasunidadesTeoricas,
+            sacosDescargados: acumuladasUnidadesRecibidas, 
+            diferenciaSacos: acumuladasUnidadesRecibidas - acumuladasunidadesTeoricas, 
+            porcentajeSacosDiff: acumuladasunidadesTeoricas !== 0 ? ((acumuladasUnidadesRecibidas - acumuladasunidadesTeoricas) / acumuladasunidadesTeoricas) * 100 : 0,
         }
         return res.status(200).send({...refactorData})
     }catch(err) {
