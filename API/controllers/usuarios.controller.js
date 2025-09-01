@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { setLogger } = require('../utils/logger');
 
-const typesOfUsers = ['VACIO','ADMINISTRADOR', 'BASCULA', 'TOLVA', 'CONTABILIDAD', 'GUARDIA']
+const typesOfUsers = ['VACIO','ADMINISTRADOR', 'BASCULA', 'TOLVA', 'CONTABILIDAD', 'GUARDIA', 'REPORTES']
 const typesOfState = ['VACIO', true, false]
 
 /* Listar usuarios */

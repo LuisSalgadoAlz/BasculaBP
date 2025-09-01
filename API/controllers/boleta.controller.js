@@ -841,7 +841,7 @@ const getStatsBoletas = async (req, res) => {
 
 const getBoletaID = async (req, res) => {
   try {
-    const [boleta, encargados] = await Promise.all([
+    const [boleta, encargados, translado] = await Promise.all([
       db.boleta.findUnique({
         where: {
           id: parseInt(req.params.id),
@@ -879,10 +879,15 @@ const getBoletaID = async (req, res) => {
           id: true, 
           Nombre: true,
         }
-      }) 
+      }), 
+      db.translado.findMany({
+        select: {
+          nombre: true,
+        }
+      })
     ])
     const data = {
-      ...boleta, encargados
+      ...boleta, encargados, translado
     }
     return res.json(data);
   } catch (err) {
@@ -1063,7 +1068,8 @@ const updateBoletaOut = async (req, res) => {
       encargadoDeBodegaId, 
       encargadoDeNombre, 
       sacosDescargados,
-      furgon
+      furgon,
+      bodegaParaContenerizada, 
     } = req.body;
 
     const verificado = jwt.verify(idUsuario, process.env.SECRET_KEY);
@@ -1215,7 +1221,8 @@ const updateBoletaOut = async (req, res) => {
             update:{
               encargadoDeBodegaID: parseInt(encargadoDeBodegaId),
               encargadoDeNombre: encargadoDeNombre,
-              sacosCargados: parseInt(sacosDescargados), 
+              sacosCargados: parseInt(sacosDescargados),
+              bodega: bodegaParaContenerizada,  
             }
           }
         })
@@ -1449,22 +1456,30 @@ const getBoletasHistorial = async (req, res) => {
     // Parámetros de búsqueda
     const search = req.query.search || "";
 
-    if (!dateIn || !dateOut || 
-        dateIn === "undefined" || dateOut === "undefined" || 
-        dateIn === "null" || dateOut === "null" ||
-        dateIn.trim() === "" || dateOut.trim() === "") {
+    // Verificar si las fechas están presentes y son válidas
+    const fechasValidas = dateIn && dateOut && 
+                         dateIn !== "undefined" && dateOut !== "undefined" && 
+                         dateIn !== "null" && dateOut !== "null" && 
+                         dateIn.trim() !== "" && dateOut.trim() !== "";
+    
+    /* if (!fechasValidas) {
       return res.status(400).send({ msg: "No se ha ingresado ninguna fecha." });
-    }
+    } */
 
-    const [y1, m1, d1] = dateIn.split("-").map(Number);
-    const startOfDay = new Date(Date.UTC(y1, m1 - 1, d1, 6, 0, 0));
-    const [y2, m2, d2] = dateOut.split("-").map(Number);
-    const endOfDay = new Date(Date.UTC(y2, m2 - 1, d2 + 1, 6, 0, 0));
+    let startOfDay, endOfDay;
+    
+    // Solo procesar fechas si son válidas
+    if (fechasValidas) {
+      const [y1, m1, d1] = dateIn.split("-").map(Number);
+      startOfDay = new Date(Date.UTC(y1, m1 - 1, d1, 6, 0, 0));
+      const [y2, m2, d2] = dateOut.split("-").map(Number);
+      endOfDay = new Date(Date.UTC(y2, m2 - 1, d2 + 1, 6, 0, 0));
+    }
 
     // Construir condiciones base
     const baseConditions = {
       ...(socios ? { socio: socios } : {}),
-      fechaFin: { gte: startOfDay, lte: endOfDay },
+      ...(fechasValidas ? { fechaFin: { gte: startOfDay, lte: endOfDay } } : {}),
       estado: { not: "Pendiente" },
       ...(movimiento ? { movimiento: movimiento } : {}),
       ...(producto ? { producto: producto } : {}),
@@ -1504,7 +1519,7 @@ const getBoletasHistorial = async (req, res) => {
           ],
           ...(socios ? { socio: socios } : {}),
           proceso: 0,
-          fechaFin: { gte: startOfDay, lte: endOfDay },
+          ...(fechasValidas ? { fechaFin: { gte: startOfDay, lte: endOfDay } } : {}),
           ...(movimiento ? { movimiento: movimiento } : {}),
           ...(producto ? { producto: producto } : {}),
         },
@@ -1517,7 +1532,7 @@ const getBoletasHistorial = async (req, res) => {
           ],
           ...(socios ? { socio: socios } : {}),
           proceso: 1,
-          fechaFin: { gte: startOfDay, lte: endOfDay },
+          ...(fechasValidas ? { fechaFin: { gte: startOfDay, lte: endOfDay } } : {}),
           ...(movimiento ? { movimiento: movimiento } : {}),
           ...(producto ? { producto: producto } : {}),
         },
@@ -1526,7 +1541,7 @@ const getBoletasHistorial = async (req, res) => {
         where: {
           AND: [{ estado: { not: "Pendiente" } }, { estado: "Cancelada" }],
           ...(socios ? { socio: socios } : {}),
-          fechaFin: { gte: startOfDay, lte: endOfDay },
+          ...(fechasValidas ? { fechaFin: { gte: startOfDay, lte: endOfDay } } : {}),
           ...(movimiento ? { movimiento: movimiento } : {}),
           ...(producto ? { producto: producto } : {}),
         },
@@ -1535,7 +1550,7 @@ const getBoletasHistorial = async (req, res) => {
         where: {
           AND: [{ estado: { not: "Pendiente" } }, { estado: "Completado" }],
           ...(socios ? { socio: socios } : {}),
-          fechaFin: { gte: startOfDay, lte: endOfDay },
+          ...(fechasValidas ? { fechaFin: { gte: startOfDay, lte: endOfDay } } : {}),
           ...(movimiento ? { movimiento: movimiento } : {}),
           ...(producto ? { producto: producto } : {}),
         },
@@ -1544,7 +1559,7 @@ const getBoletasHistorial = async (req, res) => {
         where: {
           AND: [{ estado: { not: "Pendiente" } }, { estado: "Completo(Fuera de tolerancia)" }],
           ...(socios ? { socio: socios } : {}),
-          fechaFin: { gte: startOfDay, lte: endOfDay },
+          ...(fechasValidas ? { fechaFin: { gte: startOfDay, lte: endOfDay } } : {}),
           ...(movimiento ? { movimiento: movimiento } : {}),
           ...(producto ? { producto: producto } : {}),
         },
@@ -1625,7 +1640,6 @@ const getBoletasHistorial = async (req, res) => {
         Factura: el.factura, 
       };
     });
-
 
     // Calcular información de paginación
     const totalPages = Math.ceil(totalRecords / limit);
@@ -1766,6 +1780,9 @@ const getTimeLineForComponent = async (req, res) => {
           lt: fechaMasUno.toISOString(), // fecha + 1 día
         },
       },
+      orderBy:{
+        id: 'asc', 
+      }
     });
     const groups = data.map((el) => ({
       id: el.id,

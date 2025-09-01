@@ -1,5 +1,5 @@
 import { Navigate, Outlet, useNavigate } from "react-router";
-import {Cuerpo, CuerpoAdmin, CuerpoGuardia, CuerpoTolva} from "../components/cuerpo";
+import {Cuerpo, CuerpoAdmin, CuerpoGuardia, CuerpoReportes, CuerpoTolva} from "../components/cuerpo";
 import Cookies from 'js-cookie';
 import { useEffect, useMemo } from "react";
 import { ModalErr } from '../components/alerts'
@@ -12,6 +12,7 @@ const VerificarLog = ({Children, redirectTo='/', userType}) => {
     const cuerpoAdmin = useMemo(()=> <CuerpoAdmin><Outlet /></CuerpoAdmin>, [])
     const cuerpoTolva = useMemo(()=> <CuerpoTolva><Outlet /></CuerpoTolva>, [])
     const cuerpoGuardia = useMemo(()=> <CuerpoGuardia><Outlet/> </CuerpoGuardia>, [])
+    const cuerpoReportes = useMemo(()=> <CuerpoReportes><Outlet/></CuerpoReportes>, [])
 
     const sessionActive = () => {
         if (Cookies.get('token')) {
@@ -65,8 +66,8 @@ const VerificarLog = ({Children, redirectTo='/', userType}) => {
             return cuerpoTolva;
         case 'GUARDIA':
             return cuerpoGuardia;
-        case 'CONTABILIDAD':
-            return cuerpoAdmin; 
+        case 'REPORTES':
+            return cuerpoReportes; 
         default:
             return <Navigate to={redirectTo} />
     }

@@ -773,8 +773,17 @@ function generarContenidoTercioCarta(copia, esPrimera = false, colors, boleta, d
    * IDENTIFICADOR DE TARA Y PESO BRUTO
    */
   const isEspecialTraslado = boleta?.proceso === 0 && (boleta?.idMovimiento===10 || boleta?.idMovimiento===11)
-  const TARA = isEspecialTraslado ? boleta.pesoInicial : (boleta.proceso == 0 ? boleta.pesoFinal : boleta.pesoInicial)
-  const PESOBRUTO = isEspecialTraslado ? boleta.pesoFinal : (boleta.proceso == 0 ? boleta.pesoInicial : boleta.pesoFinal)
+  const peso1 = isEspecialTraslado 
+    ? boleta.pesoInicial 
+    : (boleta.proceso == 0 ? boleta.pesoFinal : boleta.pesoInicial);
+
+  const peso2 = isEspecialTraslado 
+    ? boleta.pesoFinal 
+    : (boleta.proceso == 0 ? boleta.pesoInicial : boleta.pesoFinal);
+
+  const TARA = Math.min(peso1 ?? 0, peso2 ?? 0);
+  const PESOBRUTO = Math.max(peso1 ?? 0, peso2 ?? 0);
+
 
   /**
    * Identificador de proceso
@@ -825,7 +834,7 @@ function generarContenidoTercioCarta(copia, esPrimera = false, colors, boleta, d
       body: [
           [`Fecha        : ${new Date().toLocaleString()}`, ''],
           [`${TYPEOFUSER}: ${boleta.socio}`, `Hora Entrada     : ${boleta.fechaInicio.toLocaleString()}`],
-          [`Placa        : ${boleta.placa}`, `Hora de Salida   : ${boleta.fechaFin ? boleta.fechaFin.toLocaleString() : 'Pendiente'}`],
+          [`Placa        : ${boleta.placa} ${boleta.furgon ? `- Furgón: ${boleta.furgon}` : ''}`, `Hora de Salida   : ${boleta.fechaFin ? boleta.fechaFin.toLocaleString() : 'Pendiente'}`],
           [`Motorista    : ${boleta.motorista}`, `${ultimoDocumento}`],
           [`Transporte   : ${boleta.empresa}`, `Marchamos        : ${[boleta?.sello1, boleta?.sello2, boleta?.sello3, boleta?.sello4, boleta?.sello5, boleta?.sello6].filter(Boolean).join(', ') || 'N/A'}`],
           [`Origen       : ${boleta.origen || boleta.trasladoOrigen}`, ''],
@@ -906,8 +915,17 @@ function generarContenidoTercioCartaReimpresion(copia, esPrimera = false, colors
    * IDENTIFICADOR DE TARA Y PESO BRUTO
    */
   const isEspecialTraslado = boleta?.proceso === 0 && (boleta?.idMovimiento===10 || boleta?.idMovimiento===11)
-  const TARA = isEspecialTraslado ? boleta.pesoInicial : (boleta.proceso == 0 ? boleta.pesoFinal : boleta.pesoInicial)
-  const PESOBRUTO = isEspecialTraslado ? boleta.pesoFinal : (boleta.proceso == 0 ? boleta.pesoInicial : boleta.pesoFinal)
+  const peso1 = isEspecialTraslado 
+    ? boleta.pesoInicial 
+    : (boleta.proceso == 0 ? boleta.pesoFinal : boleta.pesoInicial);
+
+  const peso2 = isEspecialTraslado 
+    ? boleta.pesoFinal 
+    : (boleta.proceso == 0 ? boleta.pesoInicial : boleta.pesoFinal);
+
+  const TARA = Math.min(peso1 ?? 0, peso2 ?? 0);
+  const PESOBRUTO = Math.max(peso1 ?? 0, peso2 ?? 0);
+
 
   /**
    * Identificador de proceso
@@ -958,7 +976,7 @@ function generarContenidoTercioCartaReimpresion(copia, esPrimera = false, colors
       body: [
           [`Fecha        : ${isPrint ? new Date(datePrint).toLocaleString() : new Date().toLocaleString()}`, isPrint ? `Reimpresión      : ${new Date().toLocaleString()}`: ''],
           [`${TYPEOFUSER}: ${boleta.socio}`, `Hora Entrada     : ${boleta.fechaInicio.toLocaleString()}`],
-          [`Placa        : ${boleta.placa}`, `Hora de Salida   : ${boleta.fechaFin ? boleta.fechaFin.toLocaleString() : 'Pendiente'}`],
+          [`Placa        : ${boleta.placa} ${boleta.furgon ? `- Furgón: ${boleta.furgon}` : ''}`, `Hora de Salida   : ${boleta.fechaFin ? boleta.fechaFin.toLocaleString() : 'Pendiente'}`],
           [`Motorista    : ${boleta.motorista}`, `${ultimoDocumento}`],
           [`Transporte   : ${boleta.empresa}`, `Marchamos        : ${[boleta?.sello1, boleta?.sello2, boleta?.sello3, boleta?.sello4, boleta?.sello5, boleta?.sello6].filter(Boolean).join(', ') || 'N/A'}`],
           [`Origen       : ${boleta.origen || boleta.trasladoOrigen}`, ''],
@@ -1266,6 +1284,102 @@ const generarPaseDeSalidaTemporal = async(boleta, numPaseSalida) => {
   }
 }
 
+const reimprimirComprobante = async(req, res) => {
+  try {
+    const tux = path.join(__dirname, 'logo.png');
+    const { device, printer } = getPrinter();
+      
+    const boleta = await db.boleta.findUnique({
+      where: {
+        id: parseInt(req.params.id),
+      },
+    });
+
+
+    if (!device || !printer) {
+      return res.status(500).json({
+        success: false,
+        message: 'No se pudo acceder al dispositivo de impresión'
+      });
+    }
+
+    const companyName = 'BENEFICIO DE ARROZ PROGRESO, S.A.';
+    const fecha = new Date(boleta.fechaFin).toLocaleString('es-ES');
+    /* 42 */
+    escpos.Image.load(tux, function(image){
+      device.open((err) => {
+        if (err) {
+          return {
+            success: false,
+            message: `Error al abrir conexión con la impresora: ${err.message}`
+          }
+        }
+      
+        // Configurar e imprimir la boleta
+        printer
+          .model('qsprinter')
+          .align('ct')
+          .encode('utf8')
+          .size(0, 0.5)
+          .text('--------------------------------')
+          .style('B')
+            .text(companyName)
+            .style('NORMAL')
+            .text('--------------------------------')
+            .text(` `)
+            .align('ct')
+            .text(`COMPROBANTE DE DESCARGA`)
+            .text(`${fecha} No. ${addCero(boleta.numBoleta)}`)
+            .text(` `)
+            .align('lt')
+            .tableCustom([
+              { text: "PRODUCTO:", align: "LEFT", width: 0.4, style: 'B' }, 
+              { text: "Granza Americana", align: "RIGHT", width: 0.4 }
+            ])
+            .tableCustom([
+              { text: "MOTORISTA:", align: "LEFT", width: 0.4, style: 'B' }, 
+              { text: `${boleta.motorista}`, align: "RIGHT", width: 0.4 }
+            ])
+            .tableCustom([
+              { text: "TICKET:", align: "LEFT", width: 0.4, style: 'B' }, 
+              { text: `#${boleta.Nviajes} (${boleta.NSalida})`, align: "RIGHT", width: 0.4 }
+            ])
+            .text('------------------------------------------')
+            .tableCustom([
+              { text: "PESO TEORICO:", align: "LEFT", width: 0.4, style: 'B' }, 
+              { text: `${(boleta.pesoTeorico/100).toFixed(2)} QQ`, align: "RIGHT", width: 0.4 }
+            ])
+            .tableCustom([
+              { text: "TOTAL QQ. DESCARGA:", align: "LEFT", width: 0.4, style: 'B' }, 
+              { text: `${(boleta.pesoNeto/100).toFixed(2)} QQ`, align: "RIGHT", width: 0.4 }
+            ])
+            .tableCustom([
+              { text: `${parseFloat(boleta.desviacion || 0) < 0 ? `DESVIACION:` : ''}`, align: "LEFT", width: 0.4, style: 'B' }, 
+              { text: `${parseFloat(boleta.desviacion || 0) < 0 ? `${(boleta.desviacion/100).toFixed(2)+' QQ'}` : ''}`, align: "RIGHT", width: 0.4 }
+            ])
+            .text('------------------------------------------')
+            .text(`Observaciones: ${boleta.observaciones? boleta.observaciones: 'Ninguna.'}`)
+            .style(`NORMAL`)
+            .text(` `)
+            .text(` `)
+            .align(`ct`)
+            .text(`________________________________`)
+            .text(`Aprobado Por: Axel Romero`)
+            .text(' ')
+            .size(0, 0.5)
+            .image(image, 'd24')
+            .then(() => {
+              printer.text(' ')
+                     .cut()
+                     .close()
+            });
+        });
+    })
+  } catch (error) {
+    console.error('Error en el proceso de impresión:', error);
+  }
+}
+
 module.exports = {
   imprimirPDF, 
   imprimirQRTolva,
@@ -1276,4 +1390,5 @@ module.exports = {
   reImprimirTikets,
   generarPaseDeSalidaTemporal,
   ImprimirTicketEmpresaContratada,
+  reimprimirComprobante, 
 };

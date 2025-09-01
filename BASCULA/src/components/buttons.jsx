@@ -68,7 +68,7 @@ export const ButtonPrint = ({ name, fun, isLoad, color }) => {
         type="button"
         onClick={fun}
         disabled={isLoad}
-        className={`px-5 py-3  text-sm font-medium text-white focus:outline-none ${color} rounded-lg border border-gray-200 flex items-center gap-3 transition-transform duration-300 ease-in-out hover:scale-105`}>
+        className={`px-5 py-3  text-sm font-medium text-white focus:outline-none ${color} rounded-lg border border-gray-200 flex items-center gap-3 transition-transform duration-300 ease-in-out hover:scale-105 noCalendar`}>
         {!isLoad ? <GrPrint /> : <MiniSpinner />}
         <span>{name}</span>
       </button>
@@ -109,14 +109,14 @@ export const Pagination = ({ pg, sp, hp, dt }) => {
 };
 
 
-export const StatCard = ({ icon, title, value, color }) => {
+export const StatCard = ({ icon, title, value, color, status = 'text-gray-700' }) => {
   return (
     <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 max-sm:p-3 transition-all duration-300 hover:shadow-lg">
       <div className="flex items-center">
         <div className={`p-3 rounded-full ${color} mr-4 max-sm:hidden`}>{icon}</div>
         <div>
           <p className="text-sm font-medium text-gray-500 max-sm:text-sm">{title}</p>
-          <h4 className="text-2xl font-bold text-gray-800 max-sm:text-sm">{value}</h4>
+          <h4 className={`text-xl font-bold max-sm:text-sm ${status}`}>{value}</h4>
         </div>
       </div>
     </div>

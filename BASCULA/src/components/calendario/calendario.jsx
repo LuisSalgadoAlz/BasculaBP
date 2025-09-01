@@ -4,7 +4,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import esLocale from '@fullcalendar/core/locales/es';
-import { getBoletasMes, getTimeLineDetails } from "../../hooks/formDataBoletas";
+import { getBoletasMes, getDataBoletasPorID, getTimeLineDetails } from "../../hooks/formDataBoletas";
 import { motion, AnimatePresence } from "framer-motion";
 import { calendarVariants, expandedVariants } from "../../constants/boletas";
 import Timeline from 'react-calendar-timeline';
@@ -12,6 +12,7 @@ import {BigSpinner, NoData, Spinner} from '../alerts'
 import 'react-calendar-timeline/style.css';
 import moment from 'moment';
 import 'moment/locale/es';
+import { VisualizarBoletas } from "../boletas/formBoletas";
 
 moment.locale('es'); // Establecer idioma a español
 
@@ -34,6 +35,7 @@ export const Calendario = () => {
   const [detailsDaySeletect, setDetailsSelect] = useState({groups:[], items:[]});
   const [isLoading, setIsloading]= useState(false)
   const [isLoadData, setIsLoadData] = useState(false)
+  
   /**
    * Clicks en el dia
    * @param {} info 
@@ -45,7 +47,6 @@ export const Calendario = () => {
       setCurrentView('timeGridDay');
       setDetailsSelect({groups:[], items:[]})
       await getTimeLineDetails(setDetailsSelect, date, setIsloading)
-      console.log(detailsDaySeletect)
 
     }
   };
@@ -61,7 +62,6 @@ export const Calendario = () => {
       setCurrentView('timeGridDay');
       setDetailsSelect({groups:[], items:[]})
       await getTimeLineDetails(setDetailsSelect, start, setIsloading)
-      console.log(detailsDaySeletect)
     }
   };
 
@@ -169,11 +169,22 @@ export const Calendario = () => {
 };
 
 const TimelineComponent = ({groups, items, defaultTime}) => {
+  const [details, setDetails] = useState(false)
+  const [dataDetails, setDataDetails] = useState()
+  const [isLoadingViewBol, setIsLoadingViewBol] = useState(false)
 
-  const end = new Date(defaultTime); // Tu fecha local GMT-6
-  // Sumamos 1 día
+  const handleCloseDetails = () => { 
+    setDetails(false)
+  }
+
+  const handleOpenDetails = async (data) => {
+    setDetails(true)
+    const response = await getDataBoletasPorID(data?.id, setIsLoadingViewBol)
+    setDataDetails(response)
+  }
+
+  const end = new Date(defaultTime); 
   end.setDate(end.getDate() + 1); 
-  console.log(items)
   const reFactorItems = items.map((el) => ({
     ...el,  start_time:new Date(el.start_time), end_time: el.end_time ? new Date(el.end_time) : new Date(), isDefaultEndTime: !el.end_time
   })) 
@@ -194,14 +205,44 @@ const TimelineComponent = ({groups, items, defaultTime}) => {
         itemHeightRatio={0.75}
         canMove={false}
         lineHeight={50} 
-        itemRenderer={itemRenderer}
+        itemRenderer={itemRenderer(handleOpenDetails)}
       />
+      
+      {details && (
+        <div 
+          className="fixed inset-0 z-[9999] bg-black bg-opacity-50 flex items-center justify-center"
+          style={{ 
+            position: 'fixed', 
+            top: 0, 
+            left: 0, 
+            width: '100vw', 
+            height: '100vh',
+            zIndex: 9999
+          }}
+        >
+          <div 
+            className="bg-white rounded-lg shadow-lg max-w-4xl max-h-[90vh] w-full mx-4 overflow-hidden"
+            style={{
+              // Resetear estilos que puedan verse afectados por el timeline
+              fontFamily: 'inherit',
+              fontSize: 'inherit',
+              lineHeight: 'inherit',
+              color: 'inherit'
+            }}
+          >
+            <VisualizarBoletas 
+              hdlClose={handleCloseDetails} 
+              boletas={dataDetails} 
+              isLoad={isLoadingViewBol}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
- // Función para renderizar items personalizados
- const itemRenderer = ({ item, itemContext, getItemProps }) => { 
+ const itemRenderer = (handleOpenDetails) => ({ item, itemContext, getItemProps }) => { 
 
   const itemProps = getItemProps({
     className: item.isDefaultEndTime ? "item-red transition-transform duration-300 ease-in-out hover:scale-105" : `${CONFIG_COLORS[item.estado]} transition-transform duration-300 ease-in-out hover:scale-105`, 
@@ -212,7 +253,6 @@ const TimelineComponent = ({groups, items, defaultTime}) => {
     }
   });
   
-  // Formatear las fechas para mostrarlas en el tooltip
   const startTime = new Date(item.start_time);
   
   const formatTime = (date) => {
@@ -226,7 +266,7 @@ const TimelineComponent = ({groups, items, defaultTime}) => {
   const {key, ...restPropsItems} = itemProps
 
   return (
-    <div key={key} {...restPropsItems} onClick={()=>console.log('Testing')}>
+    <div key={key} {...restPropsItems} onClick={()=>handleOpenDetails(item)}>
       <div style={{ 
         padding: "4px 8px",
         height: "100%",

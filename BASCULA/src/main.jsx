@@ -5,6 +5,7 @@ import "./index.css";
 import VerificarLog from "./utils/verificarLog";
 import { Spinner } from "./components/alerts";
 import ViewDisabled from "./views/viewDisabled";
+import Casulla from "./components/informes/casulla";
 const DashboardTolva = lazy(()=>import('./views/tolva/dashboard'));
 const Users = lazy(()=>import('./views/admin/users'))
 const Logs = lazy(()=>import('./views/admin/logs'))
@@ -52,7 +53,7 @@ const navRutas = createBrowserRouter([
     ]
   },
   {
-    element: <VerificarLog userType='ADMINISTRADOR,BASCULA' />,
+    element: <VerificarLog userType='ADMINISTRADOR,BASCULA,REPORTES' />,
     children: [
       { path: "/Dashboard", element: <Dashboard />, },
       { path: "/Boletas", element: <Boletas />, },
@@ -60,9 +61,8 @@ const navRutas = createBrowserRouter([
       { path: "/socios", element: <Clientes />, },
       { path: "/calendario", element: <CalendarioView />, },
       { path: "/informes", element: <Informes />, },
-      { path: "/informes/importaciones-granza", element: <ViewDisabled />, },
-      { path: "/informes/diarios", element: <ViewDisabled />, },
-      { path: "/informes/semanales", element: <ViewDisabled />, },
+      { path: "/importaciones-granza", element: <Importaciones />, },
+      { path: "/casulla", element: <Casulla />, },
       { path: "/socios/:id", element: <EditClientes />, errorElement: <NoFoundData /> },
       { path: "/empresas/:id", element: <EditTransporte />, errorElement: <NoFoundData /> },
     ],

@@ -172,11 +172,12 @@ a.active {
 .custom-day-cell:hover div {
   color: white !important;
 }
-.calendario button {
+.calendario button:not(.noCalendar) {
   background-color: hsl(var(--sidebar)) !important;
   border-radius: 2px !important;
   border: none !important;
 }
+
 
 .calendario button:focus,
 .calendario button:active {

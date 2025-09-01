@@ -1,10 +1,10 @@
 import { URLHOST } from "../../constants/global";
 import Cookies from 'js-cookie'
 
-export const getDataForSelect = async (fun, setIsLoading) => {
+export const getDataForSelect = async (fun, setIsLoading, selected) => {
   try {
     setIsLoading(true)
-    const response = await fetch(`${URLHOST}informes/buques`, {
+    const response = await fetch(`${URLHOST}informes/buques?typeImp=${selected.typeImp}&buque=${selected.buque}`, {
       method: "GET",
       headers: {
         Authorization: Cookies.get('token'),
@@ -24,10 +24,10 @@ export const getDataForSelect = async (fun, setIsLoading) => {
   }
 };
 
-export const getResumenBFH = async (fun, setIsLoading, selected) => {
+export const getResumenBFH = async (fun, setIsLoading, selected, factura, typeImp) => {
   try {
     setIsLoading(true)
-    const response = await fetch(`${URLHOST}informes/resumenBFH?buque=${selected}`, {
+    const response = await fetch(`${URLHOST}informes/resumenBFH?buque=${selected}&factura=${factura}&typeImp=${typeImp}`, {
       method: "GET",
       headers: {
         Authorization: Cookies.get('token'),
@@ -47,10 +47,10 @@ export const getResumenBFH = async (fun, setIsLoading, selected) => {
   }
 };
 
-export const getBuquesDetalles = async (fun, setIsLoading, selected, page) => {
+export const getBuquesDetalles = async (fun, setIsLoading, selected, page, factura, typeImp) => {
   try {
     setIsLoading(true)
-    const response = await fetch(`${URLHOST}informes/buquedetalles?buque=${selected}&page=${page}`, {
+    const response = await fetch(`${URLHOST}informes/buquedetalles?buque=${selected}&page=${page}&factura=${factura}&typeImp=${typeImp}`, {
       method: "GET",
       headers: {
         Authorization: Cookies.get('token'),
@@ -70,10 +70,10 @@ export const getBuquesDetalles = async (fun, setIsLoading, selected, page) => {
   }
 };
 
-export const getStatsBuque = async (fun, setIsLoading, selected, page) => {
+export const getStatsBuque = async (fun, setIsLoading, selected, factura, typeImp) => {
   try {
     setIsLoading(true)
-    const response = await fetch(`${URLHOST}informes/stats?buque=${selected}`, {
+    const response = await fetch(`${URLHOST}informes/stats?buque=${selected}&factura=${factura}&typeImp=${typeImp}`, {
       method: "GET",
       headers: {
         Authorization: Cookies.get('token'),

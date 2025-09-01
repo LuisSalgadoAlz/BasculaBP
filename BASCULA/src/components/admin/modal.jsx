@@ -15,7 +15,8 @@ const opt = [
     {id:2, nombre:'CONTABILIDAD'}, 
     {id:3, nombre:'TOLVA'}, 
     {id:4, nombre:'ADMINISTRADOR'},
-    {id:5, nombre:'GUARDIA'},  
+    {id:5, nombre:'GUARDIA'},
+    {id:6, nombre:'REPORTES'},  
 ]
 
 const optState = [

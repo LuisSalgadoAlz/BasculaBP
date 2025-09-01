@@ -221,6 +221,7 @@ export const getDataParaForm = async (setFormBoletas, data, setMove, setIsLoadin
     marchamoOrigen: response?.impContenerizada?.marchamoDeOrigen, 
     sacosDeOrigen: response?.impContenerizada?.sacosTeoricos, 
     onlyContenerizada: response?.encargados,
+    bodegasContenerizada: response?.translado, 
   }));
 };
 
@@ -499,6 +500,7 @@ export const formaterData = (formBoletas, valor, marchamos, dataSelects) => {
     documentoAgregado : formBoletas['documentoAgregado'],
     encargadoDeBodegaId: formBoletas?.encargadoDeBodega || null, 
     encargadoDeNombre : formBoletas?.onlyContenerizada?.find(item => Number(item.id) === Number(formBoletas?.encargadoDeBodega))?.Nombre || null,
+    bodegaParaContenerizada: formBoletas?.bodegaSelected || null, 
     sacosDescargados: formBoletas?.sacosDescargados || null,
     furgon: requiereIngresoDeFurgon ? formBoletas?.Furgon : null, 
   }
@@ -656,7 +658,8 @@ export const verificarDataCompleto = (funError, data, setMsg, pesoIn) => {
     documentoAgregado,
     encargadoDeBodegaId,
     encargadoDeNombre,
-    sacosDescargados,  
+    sacosDescargados,
+    bodegaParaContenerizada,    
   } = data;
 
   
@@ -683,7 +686,7 @@ export const verificarDataCompleto = (funError, data, setMsg, pesoIn) => {
   if (parseFloat(pesoFinal) <= 0) return mostrarError('El peso final debe ser mayor que 0.')
 
   if(proceso == 0 && parseFloat(pesoIn)<=parseFloat(pesoFinal)){
-    if (idMovimiento!=10 && idMovimiento!=11) {
+    if (idMovimiento!=10 && idMovimiento!=11 && idMovimiento!=12) {
       return mostrarError('Peso inicial debe ser mayor al peso final')
     }
   }
@@ -709,6 +712,8 @@ export const verificarDataCompleto = (funError, data, setMsg, pesoIn) => {
   if ((idMovimiento==11 || idMovimiento==10) && !ordenDeTransferencia) return mostrarError('Por favor, ingresar todos los datos tercer nivel: proceso, manifiesto.')
   
   if(aplicaAlerta==='' && idCliente ==1 && proceso==1 && (idEmpresa ==1 || idEmpresa ==1014 || idEmpresa ==1015)) return mostrarError('Ingrese si el vehículo queda dentro de las instalaciones de BAPROSA.')
+
+  if(idMovimiento === 15 && (!bodegaParaContenerizada || bodegaParaContenerizada ==-1)) return mostrarError('Debe de seleccionar una bodega.')
 
   if(idMovimiento===15 && (!encargadoDeBodegaId || !encargadoDeNombre)) return mostrarError('Ingrese el encargado de la bodega que recibio la importacion.')
 

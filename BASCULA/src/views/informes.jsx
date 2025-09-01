@@ -95,7 +95,17 @@ const Informes = () => {
     getHistorialBoletas(setData, formFiltros, setIsload, pagination);
   };
 
-  const handleExportToExcel = () => {
+  const handleCleanFilters = () => {
+    setFormFiltros({
+      dateIn: "",
+      dateOut: "",
+      movimiento: "",
+      producto: "",
+      socio: ""
+    });
+  }
+
+  const handleExportToExcel = async () => {
     if (!formFiltros?.dateIn || !formFiltros?.dateOut) {
       setErr(true);
       setMsg(
@@ -104,9 +114,38 @@ const Informes = () => {
       return;
     }
 
-    const url = `${URLHOST}boletas/export/excel?movimiento=${formFiltros?.movimiento}&producto=${formFiltros?.producto}&dateIn=${formFiltros?.dateIn}&dateOut=${formFiltros?.dateOut}&socio=${formFiltros?.socio}`;
-    window.open(url, '_blank');
+    try {
+      setIsLoadingDescargas(true);
+
+      const url = `${URLHOST}boletas/export/excel?movimiento=${formFiltros?.movimiento}&producto=${formFiltros?.producto}&dateIn=${formFiltros?.dateIn}&dateOut=${formFiltros?.dateOut}&socio=${formFiltros?.socio}`;
+      
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization" : Cookies.get('token')
+        },
+        body: JSON.stringify({columnas: [...columnasVisibles]}) // convierte el Set en array
+      });
+
+      if (!response.ok) throw new Error("Error en la exportación");
+
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = downloadUrl;
+      a.download = "boletas.xlsx"; // nombre del archivo
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } catch (err) {
+      console.error(err);
+      setMsg("Error al exportar archivo");
+    } finally {
+      setIsLoadingDescargas(false);
+    }
   };
+
 
   const handleCloseErr = () => {
     setErr(false);
@@ -132,7 +171,7 @@ const Informes = () => {
    * Props para los hijos de los componentes
    * !importante @props actuales
    */
-  const propsFiltros = { handleChange, dataSelect, handlePushFilter };
+  const propsFiltros = { handleChange, dataSelect, handlePushFilter, formFiltros, handleCleanFilters };
   const propsModalErr = { name: msg, hdClose: handleCloseErr };
   const propsTable = { datos: data?.table, imprimirCopia: handlePrint, mostrarConfig, setMostrarConfig, columnasVisibles, setColumnasVisibles, tamanoColumna, setTamanoColumna, handleOpenDetails, isLoad };
   const propsGraficosProceso = {

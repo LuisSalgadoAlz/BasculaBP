@@ -1,12 +1,13 @@
-export const URLHOST = 'http://192.9.100.56:3000/api/'
-export const URLWEBSOCKET = 'ws://192.9.100.56:3000'
-export const VERSION = '1.0.13'
+export const URLHOST = 'http://localhost:3000/api/'
+export const URLWEBSOCKET = 'ws://localhost:3000'
+export const VERSION = '1.0.15'
 
 export const AUTH_CONFIG = {
   BASCULA: '/boletas',
   ADMINISTRADOR: '/admin/dashboard',
   TOLVA: '/tolva/dashboard', 
-  GUARDIA: '/guardia'
+  GUARDIA: '/guardia', 
+  REPORTES: '/importaciones-granza'
 };
 
 export const TOKEN_EXPIRY_MINUTES = 30;
@@ -78,3 +79,10 @@ export const propsModalPrevisualHijo = {
     animate:{ scale: 1, y: 0 },
     transition:{ type: "spring", damping: 15 },
 }
+
+export const formatNumber = (num) => {
+    return Number(num || 0).toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  };

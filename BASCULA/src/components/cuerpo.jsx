@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Cookies from 'js-cookie';
 import Header from "../components/header";
-import { SideBar, SideBarAdmin, SideBarGuardia, SideBarTolva } from "../components/sideBar";
+import { SideBar, SideBarAdmin, SideBarGuardia, SideBarReportes, SideBarTolva } from "../components/sideBar";
 
 // Componente genérico
 const CuerpoBase = ({ children, SideBarComponent, title, type }) => {
@@ -75,5 +75,14 @@ export const CuerpoGuardia = ({ children }) => (
     SideBarComponent={SideBarGuardia}
     title="Guardia - Sistema Báscula"
     type="GUARDIA"
+  />
+);
+
+export const CuerpoReportes = ({ children }) => (
+  <CuerpoBase
+    children={children}
+    SideBarComponent={SideBarReportes}
+    title="Sistema de Gestión de Báscula"
+    type="REPORTES"  
   />
 );
