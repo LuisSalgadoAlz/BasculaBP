@@ -700,7 +700,7 @@ export const VisualizarBoletas = (props) => {
 
   const tiempoDeEstadia = () => {
     const inicio = new Date(boletas?.fechaInicio);
-    const fin = new Date(boletas?.fechaFin);
+    const fin = new Date(boletas?.fechaFin ? boletas?.fechaFin : Date.now());
   
     if (isNaN(inicio) || isNaN(fin)) return '00:00:00';
   
