@@ -784,10 +784,10 @@ const getInformePagoAtrasnporte = async (req, res) => {
                 'Motorista', 
                 'Peso Neto',
                 'Peso Teórico',
-                'Desviación'
+                'Desviación (lb)'
             ]);
             
-            ['N° Boleta', 'Placa', 'Motorista', 'Peso Neto', 'Peso Teórico', 'Desviación'].forEach((header, index) => {
+            ['N° Boleta', 'Placa', 'Motorista', 'Peso Neto', 'Peso Teórico', 'Desviación (lb)'].forEach((header, index) => {
                 const cell = sheet1.getCell(sheet1.rowCount, index + 1);
                 Object.assign(cell.style, styles.header);
             });
@@ -1346,6 +1346,11 @@ const getInformePagoAtrasnporte = async (req, res) => {
         footerCell2.value = 'BENEFICIO DE ARROZ PROGRESO, S.A. DE C.V. © ' + new Date().getFullYear();
         Object.assign(footerCell2.style, styles.footer);
 
+        /* Proteger Reportes */
+        sheet1.protect('baprosa', { formatCells: false, formatColumns: false });
+        sheet2.protect('baprosa', { formatCells: false, formatColumns: false });
+
+
         // Configurar la respuesta para descargar el archivo Excel
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         res.setHeader('Content-Disposition', `attachment; filename="informe_pago_transporte_${factura || 'sin_factura'}_${new Date().toISOString().split('T')[0]}.xlsx"`);
@@ -1700,6 +1705,9 @@ const exportR1Importaciones = async (req, res) => {
         const footerCell = sheet1.getCell(`A${footerRowNum}`);
         footerCell.value = 'BENEFICIO DE ARROZ PROGRESO, S.A. DE C.V. © ' + new Date().getFullYear();
         Object.assign(footerCell.style, styles.footer);
+
+        /* Proteger Hoja */
+        sheet1.protect('baprosa', { formatCells: false, formatColumns: false });
 
         // Configurar la respuesta para descargar el archivo Excel
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -2319,6 +2327,9 @@ const getRerportContenerizada = async (req, res) => {
         const footerCell = sheet1.getCell(`A${footerRowNum}`);
         footerCell.value = 'BENEFICIO DE ARROZ PROGRESO, S.A. DE C.V. © ' + new Date().getFullYear();
         Object.assign(footerCell.style, styles.footer);
+
+        /* Proteger Excel */
+        sheet1.protect('baprosa', { formatCells: false, formatColumns: false });
 
         // Configurar la respuesta para descargar el archivo Excel
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
