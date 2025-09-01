@@ -273,7 +273,9 @@ const getBuqueDetalles = async (req, res) => {
                 ordenDeCompra: true,
                 pesoNeto: true, 
                 pesoTeorico: true,
+                desviacion: true, 
                 factura: true,
+                impContenerizada:true,
                 tolva: {
                     select: {
                         principal: { select: { nombre: true } },
@@ -281,8 +283,7 @@ const getBuqueDetalles = async (req, res) => {
                         terciario: { select: { nombre: true } },
                     },
                 },
-                impContenerizada: true,
-                },
+            },
                 take: limit,
                 skip: skip,
             }),
@@ -305,7 +306,12 @@ const getBuqueDetalles = async (req, res) => {
             siloSecundarioNombre: row.tolva[0]?.secundario?.nombre || ' - ',
             siloTerciarioNombre: row.tolva[0]?.terciario?.nombre || ' - ',
             desviacion: row.desviacion,
-            tolva: undefined, 
+            contenedor: row?.impContenerizada?.contenedor || ' - ',
+            sacosCargados: row?.impContenerizada?.sacosCargados || '-',
+            sacosTeoricos: row?.impContenerizada?.sacosTeoricos || '-',
+            PrecintosOrigen: row?.impContenerizada?.marchamoDeOrigen || '-', 
+            tolva: undefined,
+            impContenerizada: undefined,  
         }));
 
         const totalPages = Math.ceil(totalData / limit);

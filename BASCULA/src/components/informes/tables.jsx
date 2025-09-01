@@ -238,7 +238,7 @@ export const BuqueDetalles = ({ datos = [], typeImp }) => {
     'empresa'
   ];
 
-  const columnasInicialesContenerizadas= [
+  const columnasInicialesContenerizadas = [
     'buque', 
     'numBoleta', 
     'producto', 
@@ -246,19 +246,9 @@ export const BuqueDetalles = ({ datos = [], typeImp }) => {
     'pesoNeto',
     'desviacion',
     'empresa'
-  ]
+  ];
 
   const columnasOcultas = [
-    // 'numBoleta',  
-    // 'Nviajes',
-    // 'factura', 
-    // 'bodegaPuerto',
-    // 'pesoTeorico',
-    // 'pesoNeto',
-    // 'desviacion',
-    // 'empresa',
-    
-    // También puedes ocultar campos que no sean útiles para el usuario:
     'id',
     'idDestino',
     'idEmpresa', 
@@ -277,19 +267,52 @@ export const BuqueDetalles = ({ datos = [], typeImp }) => {
     'furgon'
   ];
 
+  // Clave única para localStorage según el tipo de importación
+  const keyStorageColumnas = `buque-columnas-${typeImp}`;
+
   // Extraer todas las columnas disponibles de los datos
   useEffect(() => {
     if (datos.length > 0) {
       const todasLasColumnas = Object.keys(datos[0])
-        .filter(key => !columnasOcultas.includes(key)) // Filtrar columnas ocultas
-        .map(key => ({
+        .filter(key => !columnasOcultas.includes(key));
+
+      // Intentar cargar configuración guardada
+      let columnasGuardadas = null;
+      try {
+        const stored = localStorage.getItem(keyStorageColumnas);
+        if (stored) {
+          columnasGuardadas = JSON.parse(stored);
+        }
+      } catch (error) {
+        console.warn('Error al cargar columnas desde localStorage:', error);
+        // Si hay error, eliminar el item corrupto
+        localStorage.removeItem(keyStorageColumnas);
+      }
+
+      const columnasConfiguradas = todasLasColumnas.map(key => {
+        let seleccionada;
+        
+        if (columnasGuardadas) {
+          // Si hay configuración guardada, buscar esta columna
+          const columnaGuardada = columnasGuardadas.find(col => col.key === key);
+          seleccionada = columnaGuardada ? columnaGuardada.seleccionada : false;
+        } else {
+          // Si no hay configuración guardada, usar columnas iniciales
+          seleccionada = typeImp === 2 
+            ? columnasInicialesAGranel.includes(key) 
+            : columnasInicialesContenerizadas.includes(key);
+        }
+
+        return {
           key,
           titulo: key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()),
-          seleccionada: typeImp === 2 ? columnasInicialesAGranel.includes(key) : columnasInicialesContenerizadas.includes(key),
-        }));
-      setColumnasDisponibles(todasLasColumnas);
+          seleccionada,
+        };
+      });
+      
+      setColumnasDisponibles(columnasConfiguradas);
     }
-  }, [datos]);
+  }, [datos, typeImp, keyStorageColumnas]);
 
   // Cerrar menú al hacer clic fuera
   useEffect(() => {
@@ -304,11 +327,41 @@ export const BuqueDetalles = ({ datos = [], typeImp }) => {
 
   // Manejar selección de columnas
   const toggleColumna = (key) => {
-    setColumnasDisponibles(prev => 
-      prev.map(col => 
+    setColumnasDisponibles(prev => {
+      const nuevasColumnas = prev.map(col => 
         col.key === key ? { ...col, seleccionada: !col.seleccionada } : col
-      )
-    );
+      );
+      
+      // Guardar configuración en localStorage
+      try {
+        localStorage.setItem(keyStorageColumnas, JSON.stringify(nuevasColumnas));
+      } catch (error) {
+        console.warn('Error al guardar columnas en localStorage:', error);
+      }
+      
+      return nuevasColumnas;
+    });
+  };
+
+  // Función para resetear columnas a la configuración inicial
+  const resetearColumnas = () => {
+    setColumnasDisponibles(prev => {
+      const columnasReset = prev.map(col => ({
+        ...col,
+        seleccionada: typeImp === 2 
+          ? columnasInicialesAGranel.includes(col.key)
+          : columnasInicialesContenerizadas.includes(col.key)
+      }));
+      
+      // Guardar la configuración reseteada
+      try {
+        localStorage.setItem(keyStorageColumnas, JSON.stringify(columnasReset));
+      } catch (error) {
+        console.warn('Error al guardar columnas reseteadas:', error);
+      }
+      
+      return columnasReset;
+    });
   };
 
   // Actualizar columnas seleccionadas
@@ -338,6 +391,14 @@ export const BuqueDetalles = ({ datos = [], typeImp }) => {
             {/* Menú flotante compacto */}
             {mostrarMenu && (
               <div className="absolute right-0 mt-2 w-60 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                <div className="p-2 border-b border-gray-200">
+                  <button
+                    onClick={resetearColumnas}
+                    className="w-full text-left text-xs text-gray-600 hover:text-gray-800 hover:bg-gray-50 px-2 py-1 rounded"
+                  >
+                    🔄 Resetear columnas
+                  </button>
+                </div>
                 <div className="max-h-64 overflow-y-auto p-2">
                   {columnasDisponibles.map((columna) => (
                     <label 
