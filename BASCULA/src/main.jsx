@@ -5,7 +5,8 @@ import "./index.css";
 import VerificarLog from "./utils/verificarLog";
 import { Spinner } from "./components/alerts";
 import ViewDisabled from "./views/viewDisabled";
-import Casulla from "./components/informes/casulla";
+const TolvaReportes  = lazy(()=>import('./components/informes/reportesTolva'));
+const Casulla = lazy(()=>import('./components/informes/casulla'));
 const DashboardTolva = lazy(()=>import('./views/tolva/dashboard'));
 const Users = lazy(()=>import('./views/admin/users'))
 const Logs = lazy(()=>import('./views/admin/logs'))
@@ -65,6 +66,7 @@ const navRutas = createBrowserRouter([
       { path: "/casulla", element: <Casulla />, },
       { path: "/socios/:id", element: <EditClientes />, errorElement: <NoFoundData /> },
       { path: "/empresas/:id", element: <EditTransporte />, errorElement: <NoFoundData /> },
+      { path: "/reporteTolva", element: <TolvaReportes/> }
     ],
   },
 ]);

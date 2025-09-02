@@ -1,0 +1,28 @@
+BEGIN TRY
+
+BEGIN TRAN;
+
+-- CreateTable
+CREATE TABLE [dbo].[ResetSilos] (
+    [id] INT NOT NULL IDENTITY(1,1),
+    [siloId] INT NOT NULL,
+    [numBoleta] INT NOT NULL,
+    [createdAt] DATETIME2 NOT NULL CONSTRAINT [ResetSilos_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT [ResetSilos_pkey] PRIMARY KEY CLUSTERED ([id])
+);
+
+-- AddForeignKey
+ALTER TABLE [dbo].[ResetSilos] ADD CONSTRAINT [ResetSilos_siloId_fkey] FOREIGN KEY ([siloId]) REFERENCES [dbo].[Silos]([id]) ON DELETE NO ACTION ON UPDATE CASCADE;
+
+COMMIT TRAN;
+
+END TRY
+BEGIN CATCH
+
+IF @@TRANCOUNT > 0
+BEGIN
+    ROLLBACK TRAN;
+END;
+THROW
+
+END CATCH

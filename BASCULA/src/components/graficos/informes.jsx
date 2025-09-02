@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   LineChart, 
   Line,
@@ -16,6 +16,7 @@ import {
   AreaChart,
   Area
 } from 'recharts';
+import { Settings, Eye, EyeOff, RotateCcw, Database, ArrowUp, ArrowDown, X, Trash2, Save } from 'lucide-react';
 
 
 // Datos de ejemplo para un sistema de báscula
@@ -570,5 +571,536 @@ export const ReportesBascula = () => {
         <ExportOptions />
       </section>
     </div>
+  );
+};
+
+
+export const BaprosaSiloChart = ({ data, onSiloAction }) => {
+  const [selectedSilos, setSelectedSilos] = useState([]);
+  const [showConfig, setShowConfig] = useState(false);
+  const [showSiloManagement, setShowSiloManagement] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
+  
+  // Clave para localStorage
+  const STORAGE_KEY = 'baprosa_selected_silos';
+  
+  // Filtrar silos válidos
+  const allSilos = data ? data.filter(item => item.peso_total >= 0) : [];
+
+  // Cargar configuración desde localStorage o usar valores por defecto
+  useEffect(() => {
+    if (allSilos.length > 0) {
+      try {
+        const savedSilos = localStorage.getItem(STORAGE_KEY);
+        
+        if (savedSilos) {
+          const parsedSilos = JSON.parse(savedSilos);
+          // Verificar que los silos guardados aún existen en los datos
+          const validSavedSilos = parsedSilos.filter(siloName => 
+            allSilos.some(silo => silo.silo_nombre === siloName)
+          );
+          
+          if (validSavedSilos.length >= 3) {
+            setSelectedSilos(validSavedSilos);
+          } else {
+            // Si no hay suficientes silos válidos guardados, usar por defecto
+            const defaultSilos = allSilos.slice(0, 6).map(silo => silo.silo_nombre);
+            setSelectedSilos(defaultSilos);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultSilos));
+          }
+        } else {
+          // Primera vez, usar configuración por defecto
+          const defaultSilos = allSilos.slice(0, 6).map(silo => silo.silo_nombre);
+          setSelectedSilos(defaultSilos);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultSilos));
+        }
+      } catch (error) {
+        console.error('Error al cargar configuración desde localStorage:', error);
+        // En caso de error, usar configuración por defecto
+        const defaultSilos = allSilos.slice(0, 6).map(silo => silo.silo_nombre);
+        setSelectedSilos(defaultSilos);
+      }
+    }
+  }, [allSilos.length]);
+
+  // Función para guardar en localStorage
+  const saveToLocalStorage = (silos) => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(silos));
+    } catch (error) {
+      console.error('Error al guardar en localStorage:', error);
+    }
+  };
+
+  // Manejar selección/deselección de silos
+  const toggleSilo = (siloName) => {
+    let newSelection;
+    if (selectedSilos.includes(siloName)) {
+      if (selectedSilos.length > 3) {
+        newSelection = selectedSilos.filter(name => name !== siloName);
+      } else {
+        return;
+      }
+    } else {
+      newSelection = [...selectedSilos, siloName];
+    }
+    setSelectedSilos(newSelection);
+    saveToLocalStorage(newSelection);
+  };
+
+  // Restablecer a los primeros 6 silos
+  const resetToDefault = () => {
+    const defaultSilos = allSilos.slice(0, 6).map(silo => silo.silo_nombre);
+    setSelectedSilos(defaultSilos);
+    saveToLocalStorage(defaultSilos);
+  };
+
+  // Función para limpiar configuración guardada
+  const clearSavedConfig = () => {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      const defaultSilos = allSilos.slice(0, 6).map(silo => silo.silo_nombre);
+      setSelectedSilos(defaultSilos);
+      saveToLocalStorage(defaultSilos);
+    } catch (error) {
+      console.error('Error al limpiar configuración:', error);
+    }
+  };
+
+  // Manejar acción de vaciar silos
+  const handleSiloAction = (siloName) => {
+    setConfirmAction({ siloName, action: 'empty' });
+  };
+
+  const confirmSiloAction = () => {
+    if (confirmAction && onSiloAction) {
+      onSiloAction(confirmAction.siloName, confirmAction.action);
+    }
+    setConfirmAction(null);
+    setShowSiloManagement(false);
+    setShowConfig(false);
+  };
+
+  const cancelSiloAction = () => {
+    setConfirmAction(null);
+  };
+
+  // Preparar datos para el gráfico
+  const chartData = allSilos
+    .filter(item => selectedSilos.includes(item.silo_nombre))
+    .map(item => ({
+      ...item,
+      espacio_disponible: (item.capacidad - item.peso_total) >= 0 ? item.capacidad - item.peso_total : 0,
+      pesoColor: item.porcentaje_ocupacion >= 90 ? '#dc2626' : '#059669',
+      pesoColorEnd: item.porcentaje_ocupacion >= 90 ? '#b91c1c' : '#047857'
+    }));
+
+  // Si no hay datos suficientes
+  if (allSilos.length === 0) {
+    return (
+      <div className="bg-white rounded-lg border border-stone-200 shadow-sm p-6">
+        <div className="text-center text-stone-600">
+          No hay datos de silos disponibles
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="bg-white rounded-lg border border-stone-200 shadow-sm overflow-hidden">
+        <div className="px-4 py-4 border-b border-stone-200 flex justify-between items-center">
+          <h3 className="text-lg font-medium text-stone-700">
+            Análisis por Silo ({selectedSilos.length} silos) - TEST -
+          </h3>
+          
+          {/* Botones de configuración */}
+          <div className="flex gap-2">
+            {/* Botón de gestión de silos */}
+            <button
+              onClick={() => {
+                setShowSiloManagement(true);
+                setShowConfig(false);
+              }}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm bg-amber-100 hover:bg-amber-200 rounded-md transition-colors"
+            >
+              <Database size={14} />
+              Gestionar
+            </button>
+
+            {/* Botón de configuración */}
+            <button
+              onClick={() => {
+                setShowConfig(true);
+                setShowSiloManagement(false);
+              }}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm bg-stone-100 hover:bg-stone-200 rounded-md transition-colors"
+            >
+              <Settings size={14} />
+              Configurar
+            </button>
+          </div>
+        </div>
+
+        <div className="p-0">
+          {selectedSilos.length >= 3 ? (
+            <div className="h-[600px] overflow-hidden">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={chartData}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 80 }}
+                  barGap={8}
+                >
+                  <defs>
+                    <linearGradient id="pesoGradNormal" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#059669" />
+                      <stop offset="100%" stopColor="#047857" />
+                    </linearGradient>
+                    <linearGradient id="pesoGradAlerta" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#dc2626" />
+                      <stop offset="100%" stopColor="#b91c1c" />
+                    </linearGradient>
+                    <linearGradient id="disponibleGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#f5f5f4" />
+                      <stop offset="100%" stopColor="#e7e5e4" />
+                    </linearGradient>
+                  </defs>
+
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="#e7e5e4"
+                    horizontal={true}
+                    vertical={false}
+                  />
+
+                  <XAxis
+                    dataKey="silo_nombre"
+                    tick={{
+                      fontSize: 10,
+                      fill: "#78716c",
+                      fontWeight: "500",
+                    }}
+                    tickLine={{ stroke: "#d6d3d1", strokeWidth: 1 }}
+                    axisLine={{ stroke: "#d6d3d1", strokeWidth: 1 }}
+                    angle={-45}
+                    textAnchor="end"
+                    height={80}
+                    interval={0}
+                  />
+
+                  <YAxis
+                    tick={{
+                      fontSize: 11,
+                      fill: "#78716c",
+                      fontWeight: "500",
+                    }}
+                    tickLine={{ stroke: "#d6d3d1", strokeWidth: 1 }}
+                    axisLine={{ stroke: "#d6d3d1", strokeWidth: 1 }}
+                    label={{ 
+                      value: 'Quintales (qq)', 
+                      angle: -90, 
+                      position: 'insideLeft',
+                      style: { textAnchor: 'middle', fontSize: '12px', fill: '#78716c' }
+                    }}
+                  />
+
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "white",
+                      border: "1px solid #d6d3d1",
+                      borderRadius: "8px",
+                      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                      fontSize: "12px",
+                      padding: "12px",
+                    }}
+                    labelStyle={{
+                      color: "#44403c",
+                      fontWeight: "600",
+                      fontSize: "13px",
+                      marginBottom: "6px",
+                    }}
+                    formatter={(value, name, props) => {
+                      if (name === "Peso Actual") {
+                        const ocupacion = props.payload.porcentaje_ocupacion;
+                        return [
+                          `${Number(value).toLocaleString()} qq (${ocupacion.toFixed(1)}%)`,
+                          "Peso Actual",
+                        ];
+                      }
+                      if (name === "Espacio Disponible")
+                        return [
+                          `${Number(value).toLocaleString()} qq`,
+                          "Espacio Disponible",
+                        ];
+                      return [value, name];
+                    }}
+                    cursor={{ fill: "rgba(5, 150, 105, 0.05)" }}
+                  />
+
+                  {/* Renderizado personalizado para cada barra */}
+                  <Bar dataKey="peso_total" stackId="silo" name="Peso Actual" radius={[0, 0, 0, 0]}>
+                    {chartData.map((entry, index) => (
+                      <Cell 
+                        key={`cell-peso-${index}`} 
+                        fill={entry.porcentaje_ocupacion >= 90 ? "url(#pesoGradAlerta)" : "url(#pesoGradNormal)"}
+                        stroke={entry.porcentaje_ocupacion >= 90 ? "#b91c1c" : "#047857"}
+                        strokeWidth={0.5}
+                      />
+                    ))}
+                  </Bar>
+                  
+                  {/* Barra para espacio disponible */}
+                  <Bar
+                    dataKey="espacio_disponible"
+                    stackId="silo"
+                    fill="url(#disponibleGrad)"
+                    name="Espacio Disponible"
+                    stroke="#d6d3d1"
+                    strokeWidth={0.5}
+                    radius={[3, 3, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div className="h-48 flex items-center justify-center text-stone-600">
+              <div className="text-center">
+                <div className="text-lg mb-2">📊</div>
+                <div>Selecciona al menos 3 silos para ver el gráfico</div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Modal de Gestión de Silos */}
+      {showSiloManagement && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg border border-stone-200 shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-stone-200">
+              <div className="flex items-center gap-2">
+                <Database size={20} className="text-amber-600" />
+                <h4 className="text-lg font-medium text-stone-700">
+                  Gestión de Silos
+                </h4>
+              </div>
+              <button
+                onClick={() => setShowSiloManagement(false)}
+                className="p-2 hover:bg-stone-100 rounded-lg transition-colors"
+              >
+                <X size={20} className="text-stone-500" />
+              </button>
+            </div>
+            
+            <div className="p-4">
+              <div className="max-h-96 overflow-y-auto">
+                <div className="space-y-3">
+                  {allSilos.map(silo => (
+                    <div
+                      key={silo.silo_nombre}
+                      className="flex items-center justify-between p-4 bg-stone-50 rounded-lg border border-stone-200 hover:bg-stone-100 transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm text-stone-800 truncate">
+                          {silo.silo_nombre}
+                        </div>
+                        <div className="text-xs text-stone-600 mt-1">
+                          {Number(silo.peso_total).toLocaleString()} qq ({silo.porcentaje_ocupacion.toFixed(1)}% ocupado)
+                        </div>
+                        <div className="text-xs text-stone-500">
+                          Capacidad: {Number(silo.capacidad).toLocaleString()} qq
+                        </div>
+                      </div>
+                      
+                      <div className="ml-4">
+                        <button
+                          onClick={() => handleSiloAction(silo.silo_nombre)}
+                          className="flex items-center gap-1.5 px-3 py-2 text-xs bg-red-100 hover:bg-red-200 text-red-800 rounded-lg transition-colors font-medium"
+                          title="Vaciar silo completamente"
+                        >
+                          <ArrowDown size={14} />
+                          Vaciar Silo
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="mt-4 pt-3 border-t border-stone-200">
+                <div className="text-xs text-stone-500 flex items-center gap-1">
+                  <span>💡</span>
+                  <span>Usa "Vaciar" para vaciar un silo por completo</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Configuración */}
+      {showConfig && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg border border-stone-200 shadow-xl max-w-md w-full mx-4 max-h-[80vh] overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-stone-200">
+              <div className="flex items-center gap-2">
+                <Settings size={20} className="text-stone-600" />
+                <h4 className="text-lg font-medium text-stone-700">
+                  Configurar Silos
+                </h4>
+              </div>
+              <button
+                onClick={() => setShowConfig(false)}
+                className="p-2 hover:bg-stone-100 rounded-lg transition-colors"
+              >
+                <X size={20} className="text-stone-500" />
+              </button>
+            </div>
+            
+            <div className="p-4">
+              <div className="flex justify-between items-center mb-4">
+                <span className="text-sm text-stone-600">
+                  Seleccionar Silos (mín. 3)
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={clearSavedConfig}
+                    className="flex items-center gap-1 px-2 py-1 text-xs bg-red-100 hover:bg-red-200 rounded text-red-600 transition-colors"
+                    title="Limpiar configuración guardada"
+                  >
+                    <Trash2 size={11} />
+                    Limpiar
+                  </button>
+                  <button
+                    onClick={resetToDefault}
+                    className="flex items-center gap-1 px-2 py-1 text-xs bg-stone-100 hover:bg-stone-200 rounded text-stone-600 transition-colors"
+                  >
+                    <RotateCcw size={11} />
+                    Reset
+                  </button>
+                </div>
+              </div>
+              
+              {/* Grid de silos */}
+              <div className="max-h-64 overflow-y-auto">
+                <div className="grid grid-cols-1 gap-2">
+                  {allSilos.map(silo => {
+                    const isSelected = selectedSilos.includes(silo.silo_nombre);
+                    const canDeselect = selectedSilos.length > 3;
+                    
+                    return (
+                      <button
+                        key={silo.silo_nombre}
+                        onClick={() => toggleSilo(silo.silo_nombre)}
+                        disabled={isSelected && !canDeselect}
+                        className={`
+                          flex items-center gap-2 p-3 text-sm rounded border transition-colors text-left w-full
+                          ${isSelected 
+                            ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
+                            : 'bg-white border-stone-200 text-stone-600 hover:bg-stone-50'
+                          }
+                          ${isSelected && !canDeselect ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}
+                        `}
+                        title={`${silo.silo_nombre} - ${silo.porcentaje_ocupacion.toFixed(1)}%`}
+                      >
+                        <div className="flex-shrink-0">
+                          {isSelected ? <Eye size={16} className="text-emerald-600" /> : <EyeOff size={16} className="text-stone-400" />}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="font-medium truncate">
+                            {silo.silo_nombre}
+                          </div>
+                          <div className="text-xs opacity-70 mt-1">
+                            {silo.porcentaje_ocupacion.toFixed(1)}% ocupado • {Number(silo.capacidad).toLocaleString()} qq
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              
+              {selectedSilos.length < 3 && (
+                <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded text-sm text-amber-800">
+                  <div className="flex items-center gap-2">
+                    <span>⚠️</span>
+                    <span>Selecciona al menos 3 silos</span>
+                  </div>
+                </div>
+              )}
+              
+              <div className="mt-4 pt-3 border-t border-stone-200">
+                <div className="text-sm text-stone-600 flex items-center justify-between">
+                  <span>{selectedSilos.length} de {allSilos.length} silos seleccionados</span>
+                  <div className="flex items-center gap-1 text-xs text-stone-500">
+                    <Save size={12} />
+                    <span>Auto-guardado</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmación */}
+      {confirmAction && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg border border-stone-200 shadow-xl p-6 max-w-md w-full mx-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className={`p-2 rounded-full ${
+                confirmAction.action === 'fill' 
+                  ? 'bg-emerald-100 text-emerald-600' 
+                  : 'bg-red-100 text-red-600'
+              }`}>
+                {confirmAction.action === 'fill' ? <ArrowUp size={20} /> : <ArrowDown size={20} />}
+              </div>
+              <div>
+                <h3 className="text-lg font-medium text-stone-800">
+                  Confirmar Acción
+                </h3>
+                <p className="text-sm text-stone-600">
+                  {confirmAction.action === 'fill' 
+                    ? 'Llenar silo al 100% de capacidad'
+                    : 'Vaciar silo completamente'
+                  }
+                </p>
+              </div>
+            </div>
+            
+            <div className="bg-stone-50 rounded-lg p-3 mb-4">
+              <div className="text-sm font-medium text-stone-800">
+                {confirmAction.siloName}
+              </div>
+              <div className="text-xs text-stone-600 mt-1">
+                {confirmAction.action === 'fill' 
+                  ? 'El silo se llenará completamente'
+                  : 'El silo se vaciará por completo'
+                }
+              </div>
+            </div>
+            
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={cancelSiloAction}
+                className="px-4 py-2 text-sm bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmSiloAction}
+                className={`px-4 py-2 text-sm text-white rounded-lg transition-colors ${
+                  confirmAction.action === 'fill'
+                    ? 'bg-emerald-600 hover:bg-emerald-700'
+                    : 'bg-red-600 hover:bg-red-700'
+                }`}
+              >
+                {confirmAction.action === 'fill' ? 'Llenar Silo' : 'Vaciar Silo'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };

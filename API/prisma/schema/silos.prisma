@@ -8,4 +8,16 @@ model Silos {
   principalDe    Tolva[]  @relation("PrincipalSilo")
   secundarioDe   Tolva[]  @relation("SecundarioSilo")
   terciarioDe    Tolva[]  @relation("TerciarioSilo")
+
+  /* Relacion con los resets */
+  resets ResetSilos[]
+}
+
+model ResetSilos {
+  id        Int    @id @default(autoincrement())
+  siloId    Int
+  numBoleta Int
+  createdAt DateTime @default(now())
+
+  silo      Silos  @relation(fields: [siloId], references: [id])
 }

@@ -934,6 +934,270 @@ const getStatsForTolva = async(req, res) =>{
   }
 }
 
+const getInfoAllSilos = async (req, res) => {
+  try {
+    const { idSocio } = req.query; 
+    
+    // Validar idSocio si se proporciona
+    if (idSocio && (isNaN(parseInt(idSocio)) || parseInt(idSocio) <= 0)) {
+      return res.status(400).json({
+        success: false,
+        message: 'El parámetro idSocio debe ser un número válido mayor que 0'
+      });
+    }
+    
+    let result;
+    
+    if (idSocio) {
+      // Query con filtro por idSocio
+      result = await db.$queryRaw`
+        WITH SilosConPeso AS (
+            -- Silo Principal
+            SELECT 
+                b.numBoleta,
+                b.idSocio,
+                s.id as silo_id,
+                s.nombre as silo_nombre,
+                CASE 
+                    WHEN s3.id IS NOT NULL THEN b.pesoNeto/100.0/3  -- 3 silos: divide entre 3
+                    WHEN s2.id IS NOT NULL THEN b.pesoNeto/100.0/2  -- 2 silos: divide entre 2
+                    ELSE b.pesoNeto/100.0                           -- 1 silo: peso completo
+                END as peso_silo
+            FROM Boleta b
+            INNER JOIN tolva t ON b.id = t.idBoleta
+            INNER JOIN Silos s ON t.siloPrincipal = s.id
+            LEFT JOIN Silos s2 ON t.siloSecundario = s2.id
+            LEFT JOIN Silos s3 ON t.siloTerciario = s3.id
+            WHERE b.idSocio = ${parseInt(idSocio)}
+            
+            UNION ALL
+            
+            -- Silo Secundario (solo si existe)
+            SELECT 
+                b.numBoleta,
+                b.idSocio,
+                s2.id as silo_id,
+                s2.nombre as silo_nombre,
+                CASE 
+                    WHEN s3.id IS NOT NULL THEN b.pesoNeto/100.0/3
+                    ELSE b.pesoNeto/100.0/2
+                END as peso_silo
+            FROM Boleta b
+            INNER JOIN tolva t ON b.id = t.idBoleta
+            INNER JOIN Silos s2 ON t.siloSecundario = s2.id
+            LEFT JOIN Silos s3 ON t.siloTerciario = s3.id
+            WHERE b.idSocio = ${parseInt(idSocio)}
+            
+            UNION ALL
+            
+            -- Silo Terciario (solo si existe)
+            SELECT 
+                b.numBoleta,
+                b.idSocio,
+                s3.id as silo_id,
+                s3.nombre as silo_nombre,
+                b.pesoNeto/100.0/3 as peso_silo
+            FROM Boleta b
+            INNER JOIN tolva t ON b.id = t.idBoleta
+            INNER JOIN Silos s3 ON t.siloTerciario = s3.id
+            WHERE b.idSocio = ${parseInt(idSocio)}
+        ),
+        SilosFiltrados AS (
+            SELECT 
+                scp.silo_id,
+                scp.silo_nombre,
+                scp.peso_silo
+            FROM SilosConPeso scp
+            LEFT JOIN (
+                SELECT 
+                    SiloId,
+                    MAX(numBoleta) as ultimoReset
+                FROM ResetSilos
+                GROUP BY SiloId
+            ) rs ON scp.silo_id = rs.SiloId
+            WHERE (
+              rs.SiloId IS NULL
+              OR scp.numBoleta >= rs.ultimoReset
+            )
+        )
+        SELECT 
+            s.nombre as silo_nombre,
+            s.capacidad,
+            COALESCE(SUM(sf.peso_silo), 0) as peso_total,
+            CASE 
+                WHEN s.capacidad > 0 THEN 
+                    ROUND((COALESCE(SUM(sf.peso_silo), 0) / s.capacidad) * 100, 2)
+                ELSE NULL 
+            END as porcentaje_ocupacion
+        FROM Silos s
+        LEFT JOIN SilosFiltrados sf ON s.id = sf.silo_id
+        GROUP BY s.id, s.nombre, s.capacidad
+        ORDER BY s.nombre;
+      `;
+    } else {
+      // Query sin filtro por idSocio
+      result = await db.$queryRaw`
+        WITH SilosConPeso AS (
+            -- Silo Principal
+            SELECT 
+                b.numBoleta,
+                b.idSocio,
+                s.id as silo_id,
+                s.nombre as silo_nombre,
+                CASE 
+                    WHEN s3.id IS NOT NULL THEN b.pesoNeto/100.0/3
+                    WHEN s2.id IS NOT NULL THEN b.pesoNeto/100.0/2
+                    ELSE b.pesoNeto/100.0
+                END as peso_silo
+            FROM Boleta b
+            INNER JOIN tolva t ON b.id = t.idBoleta
+            INNER JOIN Silos s ON t.siloPrincipal = s.id
+            LEFT JOIN Silos s2 ON t.siloSecundario = s2.id
+            LEFT JOIN Silos s3 ON t.siloTerciario = s3.id
+            
+            UNION ALL
+            
+            -- Silo Secundario (solo si existe)
+            SELECT 
+                b.numBoleta,
+                b.idSocio,
+                s2.id as silo_id,
+                s2.nombre as silo_nombre,
+                CASE 
+                    WHEN s3.id IS NOT NULL THEN b.pesoNeto/100.0/3
+                    ELSE b.pesoNeto/100.0/2
+                END as peso_silo
+            FROM Boleta b
+            INNER JOIN tolva t ON b.id = t.idBoleta
+            INNER JOIN Silos s2 ON t.siloSecundario = s2.id
+            LEFT JOIN Silos s3 ON t.siloTerciario = s3.id
+            
+            UNION ALL
+            
+            -- Silo Terciario (solo si existe)
+            SELECT 
+                b.numBoleta,
+                b.idSocio,
+                s3.id as silo_id,
+                s3.nombre as silo_nombre,
+                b.pesoNeto/100.0/3 as peso_silo
+            FROM Boleta b
+            INNER JOIN tolva t ON b.id = t.idBoleta
+            INNER JOIN Silos s3 ON t.siloTerciario = s3.id
+        ),
+        SilosFiltrados AS (
+            SELECT 
+                scp.silo_id,
+                scp.silo_nombre,
+                scp.peso_silo
+            FROM SilosConPeso scp
+            LEFT JOIN (
+                SELECT 
+                    SiloId,
+                    MAX(numBoleta) as ultimoReset
+                FROM ResetSilos
+                GROUP BY SiloId
+            ) rs ON scp.silo_id = rs.SiloId
+            WHERE (
+              rs.SiloId IS NULL
+              OR scp.numBoleta >= rs.ultimoReset
+            )
+        )
+        SELECT 
+            s.nombre as silo_nombre,
+            s.capacidad,
+            COALESCE(SUM(sf.peso_silo), 0) as peso_total,
+            CASE 
+                WHEN s.capacidad > 0 THEN 
+                    ROUND((COALESCE(SUM(sf.peso_silo), 0) / s.capacidad) * 100, 2)
+                ELSE NULL 
+            END as porcentaje_ocupacion
+        FROM Silos s
+        LEFT JOIN SilosFiltrados sf ON s.id = sf.silo_id
+        GROUP BY s.id, s.nombre, s.capacidad
+        ORDER BY s.nombre;
+      `;
+    }
+
+    // Convertir los resultados a un formato más amigable para JavaScript
+    const formattedResult = result.map(row => ({
+      silo_nombre: row.silo_nombre,
+      capacidad: Number(row.capacidad),
+      peso_total: Number(row.peso_total),
+      porcentaje_ocupacion: row.porcentaje_ocupacion ? Number(row.porcentaje_ocupacion) : 0
+    }));
+
+    res.status(200).json({
+      success: true,
+      data: formattedResult,
+      total: formattedResult.length
+    });
+
+  } catch (error) {
+    console.error('Error en getInfoAllSilos:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor',
+      error: process.env.NODE_ENV === 'production' ? 'Error en la consulta' : error.message
+    });
+  }
+};
+
+const postResetSilo = async (req, res) => {
+  try{
+    const { silo } = req.body;
+  
+    const [ultimo, siloID] = await Promise.all([
+      db.boleta.findFirst({
+        orderBy: { numBoleta: 'desc' },
+        select: { numBoleta: true },
+      }), 
+      db.Silos.findFirst({
+        where: {
+          nombre: silo
+        },
+        select: {
+          id: true
+        }
+      })
+    ])
+
+    const newReset = await db.ResetSilos.create({
+      data: {
+        siloId: siloID.id,
+        numBoleta: ultimo.numBoleta
+      }
+    })
+  
+    return res.status(200).send({msg: `Se ha creado un nuevo reset - ${silo}`})  
+  }catch(err){
+    console.log(err)
+  }
+  
+}
+
+const getStatsBuquesAndAll = async (req, res) => {
+  try{
+    const buque = req.query.buque || null;
+    
+    /* Reparticion entre tolvas */
+    const cantidadBoletasPorTolva = await db.boleta.groupBy({
+      by: ['tolvaAsignada'],
+      _count: { tolvaAsignada: true },
+      where:{
+        tolvaAsignada: {
+          not: null
+        }, 
+        ...(buque ? {idSocio: parseInt(buque)} : {})
+      }
+    });
+
+    return res.status(200).send({cantidadBoletasPorTolva})
+  }catch(err) {
+    console.log(err)
+  }
+}
+
 module.exports = {
   analizadorQR, 
   getDataForSelectSilos, 
@@ -943,5 +1207,8 @@ module.exports = {
   buscarBoleSinQR, 
   getListUsersForTolva, 
   getTolvasDeDescargasOcupadas, 
-  updateFinalizarDescarga
+  updateFinalizarDescarga, 
+  getInfoAllSilos,
+  postResetSilo,
+  getStatsBuquesAndAll
 };
