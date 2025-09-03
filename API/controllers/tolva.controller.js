@@ -1177,23 +1177,187 @@ const postResetSilo = async (req, res) => {
 }
 
 const getStatsBuquesAndAll = async (req, res) => {
-  try{
+  try {
     const buque = req.query.buque || null;
-    
-    /* Reparticion entre tolvas */
+    const factura = req.query.factura || null
+
+    if (factura !== null && (isNaN(factura) || factura === '')) {
+      return res.status(400).json({ error: 'El parámetro factura debe ser un número válido.' });
+    }
+
+    if (buque !== null && (isNaN(buque) || buque === '')) {
+      return res.status(400).json({ error: 'El parámetro buque debe ser un número válido.' });
+    }
+
+    const buqueId = buque ? parseInt(buque) : null;
+
     const cantidadBoletasPorTolva = await db.boleta.groupBy({
       by: ['tolvaAsignada'],
       _count: { tolvaAsignada: true },
-      where:{
+      where: {
         tolvaAsignada: {
           not: null
-        }, 
-        ...(buque ? {idSocio: parseInt(buque)} : {})
+        },
+        ...(buqueId ? { idSocio: buqueId } : {}), 
+        ...(factura ? { factura: factura } : {})
       }
     });
 
-    return res.status(200).send({cantidadBoletasPorTolva})
-  }catch(err) {
+    const refactorData = cantidadBoletasPorTolva.map(item => ({
+      tolvaAsignada: item.tolvaAsignada,
+      cantidad: item._count.tolvaAsignada
+    }));
+
+    let resultado;
+    let tiempos;
+
+    if (buqueId) {
+      resultado = await db.$queryRaw`
+        SELECT 
+          t.usuarioTolva,
+          t.usuarioDeCierre,
+          COUNT(DISTINCT t.idBoleta) as totalUnicos
+        FROM Boleta b
+        INNER JOIN Tolva t ON b.id = t.idBoleta
+        WHERE b.idSocio = ${buqueId}
+        GROUP BY t.usuarioTolva, t.usuarioDeCierre
+      `;
+      tiempos = await db.$queryRaw`
+        SELECT 
+          CAST(AVG(DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida)) / 60 AS VARCHAR) 
+            + 'h ' + 
+          CAST(AVG(DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida)) % 60 AS VARCHAR) 
+            + 'm' AS PromedioTiempo, 
+          b.tolvaAsignada
+        FROM Boleta AS b
+        INNER JOIN Tolva AS t ON b.id = t.idBoleta
+        WHERE b.idSocio = ${buqueId}
+        GROUP BY b.tolvaAsignada
+      `;
+    } else {
+      resultado = await db.$queryRaw`
+        SELECT 
+          t.usuarioTolva,
+          t.usuarioDeCierre,
+          COUNT(DISTINCT t.idBoleta) as totalUnicos
+        FROM Boleta b
+        INNER JOIN Tolva t ON b.id = t.idBoleta
+        GROUP BY t.usuarioTolva, t.usuarioDeCierre
+      `;
+      tiempos = await db.$queryRaw`
+        SELECT 
+          CAST(AVG(DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida)) / 60 AS VARCHAR) 
+            + 'h ' + 
+          CAST(AVG(DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida)) % 60 AS VARCHAR) 
+            + 'm' AS PromedioTiempo, 
+          b.tolvaAsignada
+        FROM Boleta AS b
+        INNER JOIN Tolva AS t ON b.id = t.idBoleta
+        GROUP BY b.tolvaAsignada
+      `;
+    }
+
+    const totalDescargas = resultado.reduce((total, item) => total + Number(item.totalUnicos), 0);
+
+    const dataLimpia = resultado.map((item) => {
+      const cantidad = Number(item.totalUnicos);
+      const porcentaje = totalDescargas > 0 ? ((cantidad / totalDescargas) * 100).toFixed(2) : 0;
+      
+      return {
+        Usuario: item.usuarioTolva === item.usuarioDeCierre 
+          ? item.usuarioTolva 
+          : `${item.usuarioTolva} / ${item.usuarioDeCierre}`,
+        Cantidad: cantidad,
+        Porcentaje: `${porcentaje}%`
+      };
+    });    
+
+    return res.status(200).json({
+      asignadas: refactorData,
+      descargadas: dataLimpia, 
+      tiempos: tiempos
+    });
+
+  } catch (err) {
+    console.error('Error en getStatsBuquesAndAll:', err);
+    return res.status(500).json({ 
+      error: 'Error interno del servidor. Intente nuevamente.' 
+    });
+  }
+};
+
+const getViajesTotales = async(req, res) => {
+  try{
+    const buque = req.query.buque || null;
+    const factura = req.query.factura || null
+
+    if (factura !== null && (isNaN(factura) || factura === '')) {
+      return res.status(400).json({ error: 'El parámetro factura debe ser un número válido.' });
+    }
+
+    if (buque !== null && (isNaN(buque) || buque === '')) {
+      return res.status(400).json({ error: 'El parámetro buque debe ser un número válido.' });
+    }
+ 
+    const resultados = await db.boleta.findMany({
+      select: {
+        id: true,
+        numBoleta: true,
+        placa: true,
+        motorista: true,
+        tolvaAsignada: true,
+        tolva: {
+          select: {
+            idBoleta: true,
+            usuarioTolva: true,
+            usuarioDeCierre: true,
+            observacionTiempo: true,
+            fechaEntrada: true,
+            fechaSalida: true,
+          },
+          take: 1,
+          orderBy: {
+            fechaEntrada: 'asc'
+          }
+        }
+      },
+      where: {
+        tolva: {
+          some: {} 
+        }, 
+        ...(buque ? { idSocio: buque } : {}), 
+        ...(factura ? { factura: factura } : {})
+      }
+    });
+
+  const resultadosUnicos = resultados
+    .filter(boleta => boleta.tolva.length > 0)
+    .map(boleta => {
+      const tolvaData = boleta.tolva[0]; 
+      const fechaEntrada = new Date(tolvaData.fechaEntrada);
+      const fechaSalida = new Date(tolvaData.fechaSalida);
+      const diferenciaMinutos = Math.floor((fechaSalida - fechaEntrada) / (1000 * 60));
+      
+      const horas = Math.floor(diferenciaMinutos / 60);
+      const minutos = diferenciaMinutos % 60;
+      
+      // Lógica para tiempo excedido (si tolvaAsignada = 1 y > 45 minutos)
+      const tiempoExcedido = (tolvaData.observacionTiempo !== null) ? 1 : 0;
+      
+      return {
+        numBoleta: boleta.numBoleta,
+        placa: boleta.placa,
+        motorista: boleta.motorista,
+        usuarioInicial: tolvaData.usuarioTolva,
+        tolvaAsignada: boleta.tolvaAsignada,
+        usuarioDeCierre: tolvaData.usuarioDeCierre,
+        observacionTiempo: tolvaData.observacionTiempo,
+        Tiempo: `${horas}h ${minutos}m`,
+        tiempoExcedido: tiempoExcedido
+      };
+    });
+    return res.status(200).send(resultadosUnicos)
+  } catch(err){
     console.log(err)
   }
 }
@@ -1210,5 +1374,6 @@ module.exports = {
   updateFinalizarDescarga, 
   getInfoAllSilos,
   postResetSilo,
-  getStatsBuquesAndAll
+  getStatsBuquesAndAll, 
+  getViajesTotales,
 };

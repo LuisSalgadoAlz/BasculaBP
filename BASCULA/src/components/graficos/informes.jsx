@@ -709,13 +709,13 @@ export const BaprosaSiloChart = ({ data, onSiloAction }) => {
   return (
     <>
       <div className="bg-white rounded-lg border border-stone-200 shadow-sm overflow-hidden">
-        <div className="px-4 py-4 border-b border-stone-200 flex justify-between items-center">
+        <div className="px-4 py-4 border-b border-stone-200 flex justify-between max-sm:flex-col max-sm:justify-center">
           <h3 className="text-lg font-medium text-stone-700">
-            Análisis por Silo ({selectedSilos.length} silos) - TEST -
+            Análisis por Silo ({selectedSilos.length} silos)
           </h3>
           
           {/* Botones de configuración */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
             {/* Botón de gestión de silos */}
             <button
               onClick={() => {

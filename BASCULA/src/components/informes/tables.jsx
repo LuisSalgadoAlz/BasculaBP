@@ -1192,4 +1192,162 @@ export const SelectFormImportaciones = ({ data = {}, name, fun, stt = false, val
 };
 
 
+export const StatsCardTolvaReports = ({ value, loading, tiempos }) => {
+  if (value === undefined && !loading) return null
+
+  // Si está cargando, mostrar cards con spinners
+  if (loading) {
+    const loadingCards = Array.from({ length: 4 }, (_, index) => ({
+      title: `Tolva ${index + 1}`,
+      value: null, // null indica que debe mostrar spinner
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+      ),
+      bgColor: "bg-white",
+      iconColor: "text-[#725033]",
+      textColor: "text-[#725033]"
+    }))
+
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 mb-6 mt-6">
+        {loadingCards.map((card, index) => (
+          <StatsCard
+            key={index}
+            title={card.title}
+            value={card.value}
+            icon={card.icon}
+            bgColor={card.bgColor}
+            iconColor={card.iconColor}
+            textColor={card.textColor}
+          />
+        ))}
+      </div>
+    )
+  }
+
+  // Crear cards para las cantidades
+  const cantidadStats = value.map((el) => ({
+    title: `Camiones Tolva ${el?.tolvaAsignada}`,
+    value: `${el?.cantidad}`,
+    subtitle: "Cantidad",
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+      </svg>
+    ),
+    bgColor: "bg-white",
+    iconColor: "text-[#725033]",
+    textColor: "text-[#725033]"
+  }))
+
+  // Crear cards para los tiempos
+  const tiempoStats = value.map((el) => {
+    const tiempoData = tiempos.find((item) => item.tolvaAsignada === el.tolvaAsignada)
+    const promedioTiempo = tiempoData?.PromedioTiempo || "N/A"
+    
+    return {
+      title: `Promedio Tolva ${el?.tolvaAsignada}`,
+      value: promedioTiempo,
+      subtitle: "Tiempo Promedio",
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+      bgColor: "bg-white",
+      iconColor: "text-[#725033]",
+      textColor: "text-[#725033]"
+    }
+  })
+
+  // Combinar ambos arrays intercalados
+  const allStats = []
+  for (let i = 0; i < cantidadStats.length; i++) {
+    allStats.push(cantidadStats[i])
+    allStats.push(tiempoStats[i])
+  }
+
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 mb-6 mt-6">
+      {allStats.map((stat, index) => (
+        <StatsCard
+          key={index}
+          title={stat.title}
+          value={stat.value}
+          subtitle={stat.subtitle}
+          icon={stat.icon}
+          bgColor={stat.bgColor}
+          iconColor={stat.iconColor}
+          textColor={stat.textColor}
+        />
+      ))}
+    </div>
+  )
+}
+
+export const TableComponentDescargados = ({ datos = [{}], fun, total = [{}] }) => {
+  // Función para extraer el valor numérico del porcentaje
+  const getPercentageValue = (value) => {
+    if (typeof value === 'string' && value.includes('%')) {
+      return parseFloat(value.replace('%', ''));
+    }
+    return parseFloat(value) || 0;
+  };
+
+  // Obtener las claves de las columnas
+  const columnKeys = Object.keys(datos[0]);
+  const lastColumnIndex = columnKeys.length - 1;
+
+  return (
+    <>
+      <div className="relative overflow-x-auto rounded-sm">
+        <table className="w-full text-sm text-left rtl:text-right text-gray-700 dark:text-gray-400">
+          <thead className="text-xs uppercase bg-[#725033] rounded-2xl text-white">
+            <tr>
+              {columnKeys.map((el, keys) => (
+                <th key={keys} scope="col" className={`px-6 py-4 ${(keys > 1 && lastColumnIndex!==keys) && 'text-right'} ${lastColumnIndex===keys && 'text-center'}`}>
+                  {el}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {datos.map((fila, index) => (
+              <tr
+                key={index}
+                className={`${index % 2 === 0 && 'bg-gray-50'} border-b border-gray-200 hover:bg-[#FDF5D4] select-none`}
+                onDoubleClick={() => fun(fila)}
+              >
+                {Object.values(fila).map((el, key) => (
+                  <td key={key} className={`px-6 py-3 text-gray-700 text-sm font-mono ${key > 1 && 'text-right'}`}>
+                    {key === lastColumnIndex ? (
+                      // Renderizar progress bar para la última columna (porcentaje)
+                      <div className="flex items-center space-x-2">
+                        <div className="flex-1 bg-gray-200 rounded-full h-2.5 min-w-[20px] flex-col">
+                          <div
+                            className="bg-[#725033] h-2.5 rounded-full transition-all duration-300"
+                            style={{ width: `${Math.min(getPercentageValue(el), 100)}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-xs font-medium text-gray-600 min-w-[35px]">
+                          {el}
+                        </span>
+                      </div>
+                    ) : (
+                      // Renderizar texto normal para las demás columnas
+                      el
+                    )}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
+  );
+};
+
 export default TableSheet;
