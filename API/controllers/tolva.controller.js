@@ -1287,10 +1287,21 @@ const getStatsBuquesAndAll = async (req, res) => {
 };
 
 const getViajesTotales = async(req, res) => {
-  try{
+  try {
     const buque = req.query.buque || null;
-    const factura = req.query.factura || null
+    const factura = req.query.factura || null;
+    
+    const usuarioTolva = req.query.usuarioTolva || null;
+    const usuarioCierre = req.query.usuarioCierre || null;
+    const tiempoExcedido = req.query.tiempoExcedido || null; // 'true', 'false' o null (todos)
+    const searchPlaca = req.query.searchPlaca || null;
 
+    // Parámetros de paginación
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+
+    // Validaciones existentes
     if (factura !== null && (isNaN(factura) || factura === '')) {
       return res.status(400).json({ error: 'El parámetro factura debe ser un número válido.' });
     }
@@ -1298,7 +1309,43 @@ const getViajesTotales = async(req, res) => {
     if (buque !== null && (isNaN(buque) || buque === '')) {
       return res.status(400).json({ error: 'El parámetro buque debe ser un número válido.' });
     }
- 
+
+    // Nuevas validaciones
+    if (page < 1) {
+      return res.status(400).json({ error: 'El parámetro page debe ser mayor a 0.' });
+    }
+
+    if (limit < 1 || limit > 100) {
+      return res.status(400).json({ error: 'El parámetro limit debe estar entre 1 y 100.' });
+    }
+
+    if (tiempoExcedido !== null && !['true', 'false'].includes(tiempoExcedido)) {
+      return res.status(400).json({ error: 'El parámetro tiempoExcedido debe ser "true" o "false".' });
+    }
+
+    // Construir filtros para la consulta WHERE
+    const whereConditions = {
+      tolva: {
+        some: {
+          // Filtros anidados para tolva
+          ...(usuarioTolva ? { usuarioTolva: usuarioTolva } : {}),
+          ...(usuarioCierre ? { usuarioDeCierre: usuarioCierre } : {}),
+          // Filtro por tiempo excedido
+          ...(tiempoExcedido === 'true' ? { observacionTiempo: { not: null } } : {}),
+          ...(tiempoExcedido === 'false' ? { observacionTiempo: null } : {})
+        }
+      },
+      ...(buque ? { idSocio: parseInt(buque) } : {}),
+      ...(factura ? { factura: factura } : {}),
+      ...(searchPlaca ? { placa: { contains: searchPlaca } } : {})
+    };
+
+    // Obtener el total de registros para la paginación
+    const totalRecords = await db.boleta.count({
+      where: whereConditions
+    });
+
+    // Consulta principal con paginación
     const resultados = await db.boleta.findMany({
       select: {
         id: true,
@@ -1321,44 +1368,129 @@ const getViajesTotales = async(req, res) => {
           }
         }
       },
-      where: {
-        tolva: {
-          some: {} 
-        }, 
-        ...(buque ? { idSocio: buque } : {}), 
-        ...(factura ? { factura: factura } : {})
+      where: whereConditions,
+      skip: offset,
+      take: limit,
+      orderBy: {
+        numBoleta: 'desc' // Ordenar por número de boleta descendente
       }
     });
 
-  const resultadosUnicos = resultados
-    .filter(boleta => boleta.tolva.length > 0)
-    .map(boleta => {
-      const tolvaData = boleta.tolva[0]; 
-      const fechaEntrada = new Date(tolvaData.fechaEntrada);
-      const fechaSalida = new Date(tolvaData.fechaSalida);
-      const diferenciaMinutos = Math.floor((fechaSalida - fechaEntrada) / (1000 * 60));
-      
-      const horas = Math.floor(diferenciaMinutos / 60);
-      const minutos = diferenciaMinutos % 60;
-      
-      // Lógica para tiempo excedido (si tolvaAsignada = 1 y > 45 minutos)
-      const tiempoExcedido = (tolvaData.observacionTiempo !== null) ? 1 : 0;
-      
-      return {
-        numBoleta: boleta.numBoleta,
-        placa: boleta.placa,
-        motorista: boleta.motorista,
-        usuarioInicial: tolvaData.usuarioTolva,
-        tolvaAsignada: boleta.tolvaAsignada,
-        usuarioDeCierre: tolvaData.usuarioDeCierre,
-        observacionTiempo: tolvaData.observacionTiempo,
-        Tiempo: `${horas}h ${minutos}m`,
-        tiempoExcedido: tiempoExcedido
-      };
+    // Procesar resultados
+    const resultadosUnicos = resultados
+      .filter(boleta => boleta.tolva.length > 0)
+      .map(boleta => {
+        const tolvaData = boleta.tolva[0];
+        
+        const fechaEntrada = new Date(tolvaData.fechaEntrada);
+        const fechaSalida = new Date(tolvaData.fechaSalida);
+        const diferenciaMinutos = Math.floor((fechaSalida - fechaEntrada) / (1000 * 60));
+        
+        const horas = Math.floor(diferenciaMinutos / 60);
+        const minutos = diferenciaMinutos % 60;
+        
+        // Lógica para tiempo excedido
+        const tiempoExcedidoFlag = (tolvaData.observacionTiempo !== null) ? 1 : 0;
+        
+        return {
+          numBoleta: boleta.numBoleta,
+          placa: boleta.placa,
+          motorista: boleta.motorista,
+          usuarioInicial: tolvaData.usuarioTolva,
+          tolvaAsignada: boleta.tolvaAsignada,
+          usuarioDeCierre: tolvaData.usuarioDeCierre,
+          observacionTiempo: tolvaData.observacionTiempo,
+          Tiempo: `${horas}h ${minutos}m`,
+          tiempoExcedido: tiempoExcedidoFlag
+        };
+      });
+
+    // Calcular información de paginación
+    const totalPages = Math.ceil(totalRecords / limit);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
+
+    // Respuesta con paginación
+    return res.status(200).json({
+      data: resultadosUnicos,
+      pagination: {
+        currentPage: page,
+        totalPages: totalPages,
+        totalRecords: totalRecords,
+        recordsPerPage: limit,
+        hasNextPage: hasNextPage,
+        hasPrevPage: hasPrevPage,
+        nextPage: hasNextPage ? page + 1 : null,
+        prevPage: hasPrevPage ? page - 1 : null
+      }
     });
-    return res.status(200).send(resultadosUnicos)
-  } catch(err){
+
+  } catch(err) {
+    console.log(err);
+    return res.status(500).json({ 
+      error: 'Error interno del servidor',
+      message: err.message 
+    });
+  }
+}
+
+const getUserTolva = async(req, res) => {
+  try{
+    const usuarios = await db.usuarios.findMany({
+      where: {
+        tipo: "TOLVA",
+      },
+      select: {
+        id: true,
+        name: true
+      }
+    });
+
+    return res.status(200).send(usuarios)
+  }catch(err){
     console.log(err)
+    return res.status(500).send({err:'Intente denuevo'})
+  }
+}
+
+/* Este queda para desarrollo posterior */
+const getInfoForBuquesQQ = async(req, res) => {
+  try{
+    const buque = parseInt(req.query.buque) || null;
+    const factura = req.query.factura || null;
+    const LB_TO_QQ = 100;
+
+    if(!buque || !factura || isNaN(buque) || isNaN(factura)) return res.status(400).send({err: 'Intente denuevo'})
+
+    const data = await db.$queryRaw`
+      WITH BoletasUnicas AS (
+          SELECT 
+              b.id,
+              b.pesoNeto,
+              CASE 
+                  WHEN t.siloSecundario IS NULL THEN s1.nombre
+                  ELSE CONCAT(s1.nombre, ' - ', s2.nombre)
+              END AS nombre
+          FROM Boleta b
+          INNER JOIN Tolva t ON b.id = t.idBoleta
+          LEFT JOIN Silos s1 ON s1.id = t.siloPrincipal
+          LEFT JOIN Silos s2 ON s2.id = t.siloSecundario
+          WHERE b.idSocio = ${buque} and factura=${factura}
+          GROUP BY b.id, b.pesoNeto, s1.nombre, s2.nombre, t.siloSecundario
+      )
+      SELECT 
+          nombre,
+          COUNT(*) as camiones,
+          SUM(pesoNeto)/${LB_TO_QQ} as quintales
+      FROM BoletasUnicas
+      GROUP BY nombre
+      ORDER BY nombre asc
+    `
+
+    return res.status(200).send(data)
+  }catch(err){
+    console.log(err)
+    return res.s
   }
 }
 
@@ -1376,4 +1508,6 @@ module.exports = {
   postResetSilo,
   getStatsBuquesAndAll, 
   getViajesTotales,
+  getUserTolva,
+  getInfoForBuquesQQ,  
 };

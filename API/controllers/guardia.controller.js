@@ -162,8 +162,78 @@ const getStats = async(req, res) => {
     }
 }
 
+const getPorcentajeDeCumplimiento = async(req, res) => {
+    try{
+        const resultado = await db.$queryRaw`
+            SELECT 
+                fecha_local,
+                SUM([No Realizo]) as [No Realizo],
+                SUM([Efectuado]) as [Efectuado],
+                SUM([Total Registros]) as [Total Registros],
+                CASE 
+                    WHEN SUM([Total Registros]) > 0 THEN 
+                        CAST(SUM([Efectuado]) * 100.0 / SUM([Total Registros]) AS DECIMAL(5,2))
+                    ELSE 0 
+                END as [Porcentaje Cumplimiento]
+            FROM (
+                -- Procesos generales
+                SELECT 
+                    CAST(b.fechaFin AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time' AS DATE) as fecha_local,
+                    CASE WHEN pds.estado = 0 THEN 1 ELSE 0 END as [No Realizo],
+                    CASE WHEN pds.estado = 1 THEN 1 ELSE 0 END as [Efectuado],
+                    1 as [Total Registros]
+                FROM Boleta AS b
+                INNER JOIN PasesDeSalida AS pds ON pds.idBoleta = b.id
+                WHERE idMovimiento NOT IN (12, 11)
+                    AND b.fechaFin IS NOT NULL
+                
+                UNION ALL
+                
+                -- Servicio de báscula
+                SELECT 
+                    CASE 
+                        WHEN b.proceso = 0 THEN 
+                            CAST(b.fechaInicio AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time' AS DATE)
+                        WHEN b.proceso = 1 THEN 
+                            CAST(b.fechaFin AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time' AS DATE)
+                        ELSE 
+                            CAST(b.fechaInicio AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time' AS DATE)
+                    END AS fecha_local,
+                    CASE WHEN pds.estado = 0 THEN 1 ELSE 0 END as [No Realizo],
+                    CASE WHEN pds.estado = 1 THEN 1 ELSE 0 END as [Efectuado],
+                    1 as [Total Registros]
+                FROM Boleta AS b
+                INNER JOIN PasesDeSalida AS pds ON pds.idBoleta = b.id
+                WHERE idMovimiento = 11
+                    AND (
+                        (b.proceso = 0 AND b.fechaInicio IS NOT NULL) OR
+                        (b.proceso = 1 AND b.fechaFin IS NOT NULL) OR
+                        (b.proceso NOT IN (0,1) AND b.fechaInicio IS NOT NULL)
+                    )
+            ) AS DatosUnificados
+            GROUP BY fecha_local
+            ORDER BY fecha_local DESC;
+        `;
+        
+        const refactorData = resultado.map((item) => ({
+            fecha: item.fecha_local.toISOString().split('T')[0], 
+            noRealizo: item["No Realizo"],
+            efectuado: item["Efectuado"],
+            totalRegistros: item["Total Registros"],
+            porcentajeCumplimiento: item["Porcentaje Cumplimiento"],
+        }));
+
+        return res.status(200).send(refactorData);
+        
+    } catch(err){
+        console.log(err)
+        return res.status(500).send({err: 'Error Interno del API'})
+    }
+}
+
 module.exports = {
     getBuscarPlaca, 
     updatePaseDeSalida, 
     getStats,
+    getPorcentajeDeCumplimiento,
 }

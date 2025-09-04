@@ -74,6 +74,12 @@ const RUTAS_REPORTES = [
     name: "Casulla",
     icon: <BsClipboard2Data />,
   },
+  ,
+  {
+    path: "/reporteGuardia",
+    name: "Guardia",
+    icon: <BsClipboard2Data />,
+  },
   {
     path: "/reporteTolva",
     name: "Tolva",

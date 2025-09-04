@@ -8,6 +8,7 @@ import Cookies from 'js-cookie';
 import { BsArrowsAngleExpand } from "react-icons/bs";
 import {  AiOutlineUser, AiOutlineMail, AiOutlinePhone, AiOutlineEnvironment, AiOutlineCalendar } from 'react-icons/ai';
 import Select from "react-select";
+import { IoTimerOutline } from "react-icons/io5";
 
 export const TablaResumenBFH = ({datos=[]}) => {
   return (
@@ -1287,7 +1288,7 @@ export const StatsCardTolvaReports = ({ value, loading, tiempos }) => {
   )
 }
 
-export const TableComponentDescargados = ({ datos = [{}], fun, total = [{}] }) => {
+export const TableComponentDescargados = ({ datos = [{}], fun, type=false, loading }) => {
   // Función para extraer el valor numérico del porcentaje
   const getPercentageValue = (value) => {
     if (typeof value === 'string' && value.includes('%')) {
@@ -1300,44 +1301,49 @@ export const TableComponentDescargados = ({ datos = [{}], fun, total = [{}] }) =
   const columnKeys = Object.keys(datos[0]);
   const lastColumnIndex = columnKeys.length - 1;
 
-  return (
-    <>
+  // Componente Skeleton
+  const TableSkeleton = () => {
+    const skeletonRows = datos.length || 5; // Número de filas skeleton
+    const skeletonCols = columnKeys.length || 4; // Usar columnas reales o 4 por defecto
+    
+    return (
       <div className="relative overflow-x-auto rounded-sm">
-        <table className="w-full text-sm text-left rtl:text-right text-gray-700 dark:text-gray-400">
+        <table className="w-full text-sm text-left rtl:text-right">
           <thead className="text-xs uppercase bg-[#725033] rounded-2xl text-white">
             <tr>
-              {columnKeys.map((el, keys) => (
-                <th key={keys} scope="col" className={`px-6 py-4 ${(keys > 1 && lastColumnIndex!==keys) && 'text-right'} ${lastColumnIndex===keys && 'text-center'}`}>
-                  {el}
+              {Array.from({ length: skeletonCols }, (_, index) => (
+                <th key={index} scope="col" className="px-6 py-4">
+                  <div className="h-4 bg-white/20 rounded animate-pulse"></div>
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {datos.map((fila, index) => (
+            {Array.from({ length: skeletonRows }, (_, rowIndex) => (
               <tr
-                key={index}
-                className={`${index % 2 === 0 && 'bg-gray-50'} border-b border-gray-200 hover:bg-[#FDF5D4] select-none`}
-                onDoubleClick={() => fun(fila)}
+                key={rowIndex}
+                className={`${rowIndex % 2 === 0 && 'bg-gray-50'} border-b border-gray-200`}
               >
-                {Object.values(fila).map((el, key) => (
-                  <td key={key} className={`px-6 py-3 text-gray-700 text-sm font-mono ${key > 1 && 'text-right'}`}>
-                    {key === lastColumnIndex ? (
-                      // Renderizar progress bar para la última columna (porcentaje)
+                {Array.from({ length: skeletonCols }, (_, colIndex) => (
+                  <td key={colIndex} className="px-6 py-3">
+                    {colIndex === skeletonCols - 1 && type ? (
+                      // Skeleton para progress bar
                       <div className="flex items-center space-x-2">
-                        <div className="flex-1 bg-gray-200 rounded-full h-2.5 min-w-[20px] flex-col">
-                          <div
-                            className="bg-[#725033] h-2.5 rounded-full transition-all duration-300"
-                            style={{ width: `${Math.min(getPercentageValue(el), 100)}%` }}
-                          ></div>
+                        <div className="flex-1 bg-gray-200 rounded-full h-2.5 min-w-[20px]">
+                          <div className="bg-gray-300 h-2.5 rounded-full animate-pulse w-3/4"></div>
                         </div>
-                        <span className="text-xs font-medium text-gray-600 min-w-[35px]">
-                          {el}
-                        </span>
+                        <div className="h-3 bg-gray-300 rounded animate-pulse min-w-[35px]"></div>
+                      </div>
+                    ) : colIndex === skeletonCols - 1 && !type ? (
+                      // Skeleton para ícono
+                      <div className="flex items-center justify-center">
+                        <div className="w-5 h-5 bg-gray-300 rounded-full animate-pulse"></div>
                       </div>
                     ) : (
-                      // Renderizar texto normal para las demás columnas
-                      el
+                      // Skeleton para texto normal
+                      <div className={`h-4 bg-gray-300 rounded animate-pulse ${
+                        colIndex > 1 ? 'w-16 ml-auto' : colIndex === 0 ? 'w-24' : 'w-20'
+                      }`}></div>
                     )}
                   </td>
                 ))}
@@ -1346,6 +1352,62 @@ export const TableComponentDescargados = ({ datos = [{}], fun, total = [{}] }) =
           </tbody>
         </table>
       </div>
+    );
+  };
+
+  return (
+    <>
+      {loading ? (
+        <TableSkeleton />
+      ) : (
+        <div className="relative overflow-x-auto rounded-sm">
+          <table className="w-full text-sm text-left rtl:text-right text-gray-700 dark:text-gray-400">
+            <thead className="text-xs uppercase bg-[#725033] rounded-2xl text-white">
+              <tr>
+                {columnKeys.map((el, keys) => (
+                  <th key={keys} scope="col" className={`px-6 py-4 ${(keys > 1 && lastColumnIndex!==keys) && 'text-right'} ${lastColumnIndex===keys && 'text-center'}`}>
+                    {el}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {datos.map((fila, index) => (
+                <tr
+                  key={index}
+                  className={`${index % 2 === 0 && 'bg-gray-50'} border-b border-gray-200 hover:bg-[#FDF5D4]`}
+                  onDoubleClick={() => fun(fila)}
+                >
+                  {Object.values(fila).map((el, key) => (
+                    <td key={key} className={`px-6 py-3 text-gray-700 text-sm font-mono ${key > 1 && 'text-right'}`}>
+                      {key === lastColumnIndex && type ? (
+                        // Renderizar progress bar para la última columna (porcentaje)
+                        <div className="flex items-center space-x-2">
+                          <div className="flex-1 bg-gray-200 rounded-full h-2.5 min-w-[20px] flex-col">
+                            <div
+                              className="bg-[#725033] h-2.5 rounded-full transition-all duration-300"
+                              style={{ width: `${Math.min(getPercentageValue(el), 100)}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-xs font-medium text-gray-600 min-w-[35px]">
+                            {el}
+                          </span>
+                        </div>
+                      ) : (
+                        type || key !== lastColumnIndex ? (
+                          el
+                        ) : (
+                          <span className={`text-xl w-full flex items-center justify-center ${el===0 ? 'text-green-400' : 'text-red-400'}`}><IoTimerOutline /></span>
+                        )
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </>
   );
 };

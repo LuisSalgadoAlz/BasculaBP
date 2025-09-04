@@ -1,9 +1,10 @@
 import { useState, useCallback, useEffect } from "react";
 import { BaprosaSiloChart } from "../graficos/informes";
-import { getHistoricoViajes, getInfoSilos, getStatsSilosForBuques, postCreateNewReset } from "../../hooks/informes/tolva";
+import { getHistoricoViajes, getInfoSilos, getStatsSilosForBuques, getUsers, postCreateNewReset } from "../../hooks/informes/tolva";
 import { SelectFormImportaciones, StatsCardTolvaReports, TableComponentDescargados } from "./tables";
 import { getBuquesDetalles, getDataForSelect, getResumenBFH } from "../../hooks/informes/granza";
 import { RiResetRightFill } from "react-icons/ri";
+import { Pagination } from "../buttons";
 
 const TolvaReportes = () => {
   const [data, setData] = useState([]);
@@ -16,6 +17,10 @@ const TolvaReportes = () => {
   const [isLoadingBuques, setIsLoadingBuques] = useState(false)
   const [historico, setHistorico] = useState([])
   const [loadingHistorico, setLoadingHistorico] = useState(false)
+  const [pagination, setPagination] = useState(1)
+  const [filtersHistorico, setFiltersHistorico] = useState({userInit_historico: '', userEnd_historico: '', state_historico: '', search_historico: ''})
+  const [user, setUsers] = useState()
+  const [loadingUser, setLoadingUser] = useState(false)
 
   const fetchData = useCallback(() => {
     getInfoSilos(setData, setLoading);
@@ -76,6 +81,19 @@ const TolvaReportes = () => {
     });
   };
 
+  const handleFilterHistorico = (e) => {
+    const { name, value } = e.target;
+    setFiltersHistorico((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    setPagination(1)
+  }
+
+  /**
+   * ? Aqui termina la parte de los filtros
+   */
+
   const handleReset = () => {
     setBuqueSelected({ typeImp: 2, buque: '', facturasImp: '' })
     getStatsSilosForBuques(setStats,setLoadingStats, '', '')
@@ -83,7 +101,8 @@ const TolvaReportes = () => {
 
   const handleAplicarFiltro = () => {
     getStatsSilosForBuques(setStats,setLoadingStats, selected?.buque, selected?.facturasImp)
-    getHistoricoViajes(setHistorico, setLoadingHistorico, selected?.buque, selected?.facturasImp)
+    setPagination(1)
+    getHistoricoViajes(setHistorico, setLoadingHistorico, selected?.buque, selected?.facturasImp, pagination, filtersHistorico)
   }
 
   const fetchBuques = useCallback(()=>{
@@ -96,13 +115,31 @@ const TolvaReportes = () => {
 
 
   const fetchHistorico = useCallback(()=> {
-    getHistoricoViajes(setHistorico, setLoadingHistorico, selected?.buque, selected?.facturasImp)
+    getHistoricoViajes(setHistorico, setLoadingHistorico, selected?.buque, selected?.facturasImp, pagination, filtersHistorico)
+  }, [pagination, filtersHistorico])
+
+  const fetchUsers = useCallback(()=> {
+    getUsers(setUsers, setLoadingUser)
   }, [])
 
   useEffect(()=> {
-    fetchHistorico()
-  }, [])
+    fetchUsers()
+  }, [fetchUsers])
 
+
+  useEffect(()=> {
+    fetchHistorico()
+  }, [fetchHistorico])
+
+  /* Paginaciones */
+  const handlePagination = (item) => {
+    if (pagination>0) {
+      const newRender = pagination+item
+      if(newRender==0) return
+      if(newRender>historico.pagination.totalPages) return
+      setPagination(newRender) 
+    }
+  }
 
 
   return (
@@ -156,12 +193,55 @@ const TolvaReportes = () => {
 
       {/* Parte para colocar las estadisticas */}
       <StatsCardTolvaReports value={stats?.asignadas} loading={loadingStats} tiempos={stats?.tiempos}/>
-      <div className="bg-white rounded-sm p-1">
-        <TableComponentDescargados datos={stats?.descargadas}/>
+      
+      {/* Parte de descargadas */}
+      <div className="bg-white rounded-md p-4 mt-6 shadow-2xl">
+        <h2 className="text-xl font-bold text-gray-500 mb-4"> Camiones descargados por usuario </h2>
+        <TableComponentDescargados datos={stats?.descargadas} type={true}/>
       </div>
-      <div className="bg-white rounded-sm p-1 mt-6">
-        {historico && historico.length > 0 && (
-          <TableComponentDescargados datos={historico}/>
+
+      {/* Parte de historico */}
+      <div className="bg-white rounded-md p-4 mt-6 shadow-2xl">
+        <h2 className="text-xl font-bold text-gray-500 mb-2"> Historico {loadingHistorico ? 'Cargando...' : `${(historico?.pagination?.totalRecords || 0)} registros`} </h2>
+        <div className="flex justify-between items-center gap-2 max-sm:flex-col max-sm:gap-1">
+          <input name="search_historico" onChange={handleFilterHistorico} value={filtersHistorico.search_historico} type="text" placeholder="Buscar placa..." className="w-full appearance-none mb-4 bg-white text-gray-900 border border-gray-300 rounded-lg py-2 pl-4 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#955e37] focus:border-[#955e37] hover:border-gray-400 transition-colors duration-200"/>
+          <select name="userInit_historico" onChange={handleFilterHistorico} value={filtersHistorico.userInit_historico} className="w-full appearance-none mb-4 bg-white text-gray-900 border border-gray-300 rounded-lg py-2 pl-4 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#955e37] focus:border-[#955e37] hover:border-gray-400 transition-colors duration-200">
+            <option value="">Seleccione usuario inicial</option>
+            {loadingUser && <option disabled value={-1}>Cargando...</option>}
+            {(user && user.length > 0) ? (
+              user.map((item) => (
+                <option key={item.id} value={item.name}>{item.name}</option>
+              ))
+            ) : (
+              <option disabled value={-1}>Sin datos</option>
+            )}
+          </select>
+          <select name="userEnd_historico" onChange={handleFilterHistorico} value={filtersHistorico.userEnd_historico} className="w-full appearance-none mb-4 bg-white text-gray-900 border border-gray-300 rounded-lg py-2 pl-4 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#955e37] focus:border-[#955e37] hover:border-gray-400 transition-colors duration-200">
+            <option value="">Seleccione usuario final</option>
+            {loadingUser && <option disabled value={-1}>Cargando...</option>}
+            {(user && user.length > 0) ? (
+              user.map((item) => (
+                <option key={item.id} value={item.name}>{item.name}</option>
+              ))
+            ) : (
+              <option disabled value={-1}>Sin datos</option>
+            )}
+          </select>
+          <select name="state_historico" onChange={handleFilterHistorico} value={filtersHistorico.state_historico} className="w-full appearance-none mb-4 bg-white text-gray-900 border border-gray-300 rounded-lg py-2 pl-4 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#955e37] focus:border-[#955e37] hover:border-gray-400 transition-colors duration-200">
+            <option value="">Seleccione un estado</option>
+            <option value={true}>Fuera de tiempo</option>
+            <option value={false}>Tiempo Normal</option>
+          </select>
+        </div>
+        {historico && historico?.data?.length > 0 ? (
+          <>             
+            <TableComponentDescargados datos={historico?.data} loading={loadingHistorico}/>
+            <div className="bg-white mt-2 py-2">
+              {historico && historico.pagination.totalPages > 1 && <Pagination pg={pagination} sp={setPagination} hp={handlePagination} dt={historico}/>}
+            </div>
+          </>
+        ): (
+          <div className="w-full flex items-center justify-center text-gray-500 h-[400px]">No hay datos</div>
         )}
       </div>
     </>

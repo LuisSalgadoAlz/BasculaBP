@@ -708,9 +708,9 @@ export const BaprosaSiloChart = ({ data, onSiloAction }) => {
 
   return (
     <>
-      <div className="bg-white rounded-lg border border-stone-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-md p-4 mt-6 shadow-2xl border border-stone-200 overflow-hidden">
         <div className="px-4 py-4 border-b border-stone-200 flex justify-between max-sm:flex-col max-sm:justify-center">
-          <h3 className="text-lg font-medium text-stone-700">
+          <h3 className="text-xl font-bold text-gray-500 mb-2">
             Análisis por Silo ({selectedSilos.length} silos)
           </h3>
           
