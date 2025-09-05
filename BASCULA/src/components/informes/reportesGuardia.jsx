@@ -1,13 +1,45 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { getBoletasPorDia, getPorcentajeDeCumplimiento } from "../../hooks/informes/guardia";
+import TableSheet, { TableComponentCasulla } from "./tables";
 
 const ReportesGuardia = () => {
     const [filters, setfilters] = useState({dateIn: '', dateOut: ''})
-    
+    const [dataPorcentaje, setDataPorcentaje] = useState()
+    const [loadingPorcentaje, setLoadingPorcentaje] = useState(false)
+    const [openSheet, setOpenSheet] = useState(false)
+    const [tableData, setTableData] = useState()
+    const [loadingTableData, setIsLoadingTableData] = useState(false)
+
     const handleChangeFilters = (e) => {
         const { name, value } = e.target;
         setfilters({ ...filters, [name]: value });
     }
     
+    const fetchPorcentaje = useCallback(()=>{
+        getPorcentajeDeCumplimiento(setDataPorcentaje, setLoadingPorcentaje)
+    }, [])
+
+    const fetchGetForDay = useCallback(()=>{
+        getBoletasPorDia(setTableData, setIsLoadingTableData)
+    }, [])
+    
+    const handleOpenSheet = (data) => {
+        setOpenSheet(true)
+        getBoletasPorDia(setTableData, setIsLoadingTableData, data?.fecha)
+    }
+
+    useEffect(()=>{
+        fetchGetForDay()
+    }, [fetchGetForDay])
+
+    useEffect(()=>{
+        fetchPorcentaje()
+    }, [fetchPorcentaje])
+
+    const sheetProps = {
+        openSheet, setOpenSheet, tableData: tableData?.boletas
+    }
+
     return ( 
         <>
             <div className="flex justify-between w-full gap-5 max-sm:flex-col max-md:flex-col mb-4">
@@ -37,7 +69,16 @@ const ReportesGuardia = () => {
                     </div>
                 </div>
             </div>
-            
+            {loadingPorcentaje ? (
+                <>Cargando...</> 
+            ) : (
+                dataPorcentaje && dataPorcentaje.length > 0 ? (
+                    <TableComponentCasulla datos={dataPorcentaje} fun={handleOpenSheet} />
+                ) : (
+                    <>No hay datos</>
+                )
+            )}
+            <TableSheet {...sheetProps} />
         </>
     );
 }

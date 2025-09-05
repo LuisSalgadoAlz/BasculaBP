@@ -231,9 +231,87 @@ const getPorcentajeDeCumplimiento = async(req, res) => {
     }
 }
 
+const getBoletasPorFecha = async (req, res) => {
+    try {
+        const { fecha } = req.query; 
+
+        if (!fecha) {
+            return res.status(400).send({ error: 'La fecha es requerida' });
+        }
+
+        const [year, month, day] = fecha.split("-").map(Number);
+        fechaInicio = new Date(Date.UTC(year, month - 1, day, 6, 0, 0));
+        fechaFin = new Date(Date.UTC(year, month - 1, day + 1, 5, 59, 59, 999));
+
+        const boletas = await db.boleta.findMany({
+            where: {
+                OR: [
+                    // Procesos general -  fechaFin
+                    {
+                        idMovimiento: { notIn: [11, 12] },
+                        fechaFin: {
+                            gte: fechaInicio,
+                            lte: fechaFin
+                        }
+                    },
+                    // Traslado proceso 0 - usar fechaInicio  
+                    {
+                        idMovimiento: 11,
+                        proceso: 0,
+                        fechaInicio: {
+                            gte: fechaInicio,
+                            lte: fechaFin
+                        }
+                    },
+                    // Traslado proceso 1 - usar fechaFin
+                    {
+                        idMovimiento: 11,
+                        proceso: 1,
+                        fechaFin: {
+                            gte: fechaInicio,
+                            lte: fechaFin
+                        }
+                    },
+                ]
+            },
+            include: {
+                paseDeSalida: true
+            },
+            orderBy: {
+                fechaFin: 'desc'
+            }
+        });
+
+        // Crear array plano
+        const resultado = boletas.flatMap(boleta => 
+            boleta.paseDeSalida.map(pase => ({
+                boletaId: boleta.numBoleta,
+                fechaInicio: new Date(boleta.fechaInicio).toLocaleString(),
+                fechaFin: boleta.fechaFin ? new Date(boleta.fechaFin).toLocaleString() : 'No Registrada',
+                proceso: boleta.proceso == 0 ? 'Entrada' : 'Salida',
+                idMovimiento: boleta.movimiento,
+                paseSalida: pase.numPaseSalida,
+                fechaSalida: pase.fechaSalida ? new Date(pase.fechaSalida).toLocaleString() : 'No Registrada', 
+                estadoDescripcion: pase.estado == true ? 'Efectuado' : 'No Realizo'
+            }))
+        );
+
+        return res.status(200).send({
+            fecha,
+            total: resultado.length,
+            boletas: resultado
+        });
+
+    } catch (err) {
+        console.log(err);
+        return res.status(500).send({ error: 'Error Interno del API' });
+    }
+};
+
 module.exports = {
     getBuscarPlaca, 
     updatePaseDeSalida, 
     getStats,
     getPorcentajeDeCumplimiento,
+    getBoletasPorFecha,
 }
