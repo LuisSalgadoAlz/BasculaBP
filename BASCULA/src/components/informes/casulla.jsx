@@ -31,7 +31,11 @@ const Casulla = () => {
 
 
     const sheetProps = {
-        openSheet, setOpenSheet, tableData, 
+        openSheet, 
+        setOpenSheet, 
+        tableData,
+        title: 'Detalles Casulla', 
+        subtitle: `Visualización de los datos de Casulla: ${tableData[0]?.socio}`
     }
 
     return ( 

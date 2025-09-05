@@ -1,14 +1,15 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { 
   AiOutlineClose, 
   AiOutlineDownload,
+  AiOutlineEyeInvisible,
 } from 'react-icons/ai';
 import { formatNumber, URLHOST } from '../../constants/global';
 import Cookies from 'js-cookie';
 import { BsArrowsAngleExpand } from "react-icons/bs";
-import {  AiOutlineUser, AiOutlineMail, AiOutlinePhone, AiOutlineEnvironment, AiOutlineCalendar } from 'react-icons/ai';
 import Select from "react-select";
 import { IoTimerOutline } from "react-icons/io5";
+import { AiOutlineSetting, AiOutlineEye,   } from 'react-icons/ai';
 
 export const TablaResumenBFH = ({datos=[]}) => {
   return (
@@ -929,92 +930,261 @@ export const TableComponentCasulla = ({ datos = [{}], fun, total = [{}] }) => {
   );
 };
 
-const TableSheet = ({tableData = [{}], openSheet = true, setOpenSheet}) => {
+const TableSheet = ({
+  tableData = [{}], 
+  openSheet = true, 
+  setOpenSheet, 
+  title, 
+  subtitle, 
+  type = false,
+  fixedColumns = [], // Columnas que no se pueden ocultar/mover
+  storageKey = 'tablesheet-columns' // Clave personalizable para localStorage
+}) => {
+  const [visibleColumns, setVisibleColumns] = useState({});
+  const [showColumnSelector, setShowColumnSelector] = useState(false);
+  
+  const getStorageKey = () => {
+    return `${storageKey}-${title ? title.toLowerCase().replace(/\s+/g, '-') : 'default'}`;
+  };
+  
+  const loadColumnsConfig = () => {
+    try {
+      const savedConfig = localStorage.getItem(getStorageKey());
+      return savedConfig ? JSON.parse(savedConfig) : null;
+    } catch (error) {
+      console.warn('Error loading columns config from localStorage:', error);
+      return null;
+    }
+  };
+  
+  const saveColumnsConfig = (config) => {
+    try {
+      localStorage.setItem(getStorageKey(), JSON.stringify(config));
+    } catch (error) {
+      console.warn('Error saving columns config to localStorage:', error);
+    }
+  };
+
+  // Memoizar las columnas disponibles para evitar recálculos innecesarios
+  const availableColumns = useMemo(() => {
+    return tableData.length > 0 ? Object.keys(tableData[0]) : [];
+  }, [tableData.length > 0 ? Object.keys(tableData[0]).join(',') : '']);
+
+  // Inicializar columnas visibles cuando cambian las columnas disponibles o el título
+  useEffect(() => {
+    if (availableColumns.length > 0) {
+      const savedConfig = loadColumnsConfig();
+      const initialVisible = {};
+      
+      availableColumns.forEach(column => {
+        // Si hay configuración guardada, usar esa; sino, mostrar todas por defecto
+        initialVisible[column] = savedConfig && savedConfig.hasOwnProperty(column) 
+          ? savedConfig[column] 
+          : true;
+      });
+      
+      // Solo actualizar si la configuración es diferente
+      setVisibleColumns(prev => {
+        const isEqual = Object.keys(initialVisible).length === Object.keys(prev).length &&
+          Object.keys(initialVisible).every(key => initialVisible[key] === prev[key]);
+        
+        return isEqual ? prev : initialVisible;
+      });
+    }
+  }, [availableColumns.join(','), title]); // Usar join para comparar arrays
+  
+  // Obtener columnas visibles filtradas
+  const getVisibleColumns = () => {
+    return availableColumns.filter(column => visibleColumns[column]);
+  };
+  
+  // Toggle visibilidad de columna
+  const toggleColumnVisibility = (columnKey) => {
+    // No permitir ocultar columnas fijas
+    if (fixedColumns.includes(columnKey)) return;
+    
+    setVisibleColumns(prev => {
+      const newConfig = {
+        ...prev,
+        [columnKey]: !prev[columnKey]
+      };
+      
+      // Guardar inmediatamente en localStorage
+      saveColumnsConfig(newConfig);
+      
+      return newConfig;
+    });
+  };
+  
+  // Restablecer configuración de columnas
+  const resetColumnsConfig = () => {
+    const allColumns = Object.keys(tableData[0] || {});
+    const resetConfig = {};
+    
+    allColumns.forEach(column => {
+      resetConfig[column] = true;
+    });
+    
+    setVisibleColumns(resetConfig);
+    saveColumnsConfig(resetConfig);
+    setShowColumnSelector(false);
+  };
+  
+  // Formatear nombre de columna
+  const formatColumnName = (key) => {
+    return key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1');
+  };
+
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
       <div className="max-w-4xl mx-auto">
-        {/* Overlay */}
         {openSheet && (
           <div className="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300" />
         )}
-
-        {/* Sheet */}
         <div
-          className={`fixed top-0 right-0 h-full w-full max-w-4xl bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-50 ${
+          className={`fixed top-0 right-0 h-full w-full bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-50 flex flex-col ${
             openSheet ? 'translate-x-0' : 'translate-x-full'
           }`}
         >
-          {/* Header del Sheet */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-white sticky top-0 z-10">
-            <div>
-              <h2 className="text-2xl font-semibold text-gray-900">Detalles casulla</h2>
-              <p className="text-sm text-gray-500 mt-1">Visualización de los datos de Casulla: <span className='text-black font-bold'>{tableData[0].socio}</span></p>
+          {/* Header fijo */}
+          <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-white flex-shrink-0">
+            <div className="flex-1">
+              <h2 className="text-2xl font-semibold text-gray-900">{title}</h2>
+              <p className="text-sm text-gray-500 mt-1">{subtitle}</p>
             </div>
+            
+            {type && (
+              <div className="relative mr-4">
+                <button
+                  onClick={() => setShowColumnSelector(!showColumnSelector)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200 flex items-center space-x-2"
+                  title="Configurar columnas"
+                >
+                  <AiOutlineSetting className="w-5 h-5 text-gray-600" />
+                  <span className="text-sm text-gray-600">Columnas</span>
+                </button>
+                {/* Dropdown del selector de columnas */}
+                {showColumnSelector && (
+                  <div className="absolute top-full right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-20">
+                    <div className="p-3 border-b border-gray-200 flex items-center justify-between">
+                      <h3 className="font-medium text-gray-900">Configuración</h3>
+                      <button
+                        onClick={resetColumnsConfig}
+                        className="text-xs text-[#725033] hover:text-[#725033] underline"
+                        title="Restablecer configuración"
+                      >
+                        Restablecer
+                      </button>
+                    </div>
+                    <div className="max-h-60 overflow-y-auto">
+                      {availableColumns.map((column) => {
+                        const isFixed = fixedColumns.includes(column);
+                        const isVisible = visibleColumns[column];
+                        
+                        return (
+                          <div
+                            key={column}
+                            className={`flex items-center justify-between p-3 hover:bg-gray-50 ${
+                              isFixed ? 'opacity-60' : 'cursor-pointer'
+                            }`}
+                            onClick={() => !isFixed && toggleColumnVisibility(column)}
+                          >
+                            <div className="flex items-center space-x-2">
+                              {isVisible ? (
+                                <AiOutlineEye className="w-4 h-4 text-[#725033]" />
+                              ) : (
+                                <AiOutlineEyeInvisible className="w-4 h-4 text-gray-400" />
+                              )}
+                              <span className={`text-sm ${isFixed ? 'text-gray-500' : 'text-gray-900'}`}>
+                                {formatColumnName(column)}
+                                {isFixed && <span className="ml-1 text-xs">(fija)</span>}
+                              </span>
+                            </div>
+                            <input
+                              type="checkbox"
+                              checked={isVisible}
+                              onChange={() => !isFixed && toggleColumnVisibility(column)}
+                              disabled={isFixed}
+                              className="h-4 w-4 text-[#725033] rounded border-gray-300 focus:ring-[#725033] disabled:opacity-50"
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="p-3 border-t border-gray-200 bg-gray-50 flex space-x-2">
+                      <button
+                        onClick={() => setShowColumnSelector(false)}
+                        className="flex-1 px-3 py-2 text-sm bg-[#725033] text-white rounded-md hover:bg-[#725033] transition-colors"
+                      >
+                        Aplicar
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
             <button
               onClick={() => setOpenSheet(false)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200 flex-shrink-0"
             >
               <AiOutlineClose className="w-6 h-6 text-gray-500" />
             </button>
           </div>
-
-           {/* Contenido del Sheet con la tabla */}
-          {tableData.length == 0 || !tableData ? (
-            <>No data</>
-          ) : (
-            <div className="p-6 overflow-auto h-full pb-20">
-              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        {/* Generar encabezados dinámicamente */}
-                        {tableData.length > 0 && Object.keys(tableData[0]).map((key) => (
-                          <th key={key} className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            {key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {tableData.map((item, index) => (
-                        <tr key={item.id || index} className="hover:bg-gray-50 transition-colors duration-150">
-                          {/* Generar celdas dinámicamente */}
-                          {Object.entries(item).map(([key, value]) => (
-                            <td key={key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {typeof value === 'object' && value !== null ? 
-                                JSON.stringify(value) : 
-                                String(value)
-                              }
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+          {/* Contenido scrollable */}
+          <div className="flex-1 overflow-hidden flex flex-col">
+            {tableData.length === 0 || !tableData ? (
+              <div className="p-6 text-center text-gray-500 flex-1 flex items-center justify-center">
+                No data
               </div>
-
-              {/* Estadísticas dinámicas */}
-              <div className="mt-6 grid grid-cols-1 gap-4">
-                <div className="bg-white p-4 rounded-lg border border-gray-200">
-                  <div className="flex items-center">
-                    <AiOutlineUser className="w-8 h-8 text-gray-600" />
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-600">Total Registros</p>
-                      <p className="text-2xl font-semibold text-gray-900">{tableData.length}</p>
+            ) : (
+              <>
+                {/* Tabla scrollable */}
+                <div className="flex-1 overflow-auto p-6">
+                  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead className="bg-gray-50 sticky top-0 z-10">
+                          <tr>
+                            {getVisibleColumns().map((key) => (
+                              <th key={key} className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
+                                {formatColumnName(key)}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {tableData.map((item, index) => (
+                            <tr key={item.id || index} className="hover:bg-gray-50 transition-colors duration-150">
+                              {getVisibleColumns().map((key) => (
+                                <td key={key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                  {typeof item[key] === 'object' && item[key] !== null ? 
+                                    JSON.stringify(item[key]) : 
+                                    String(item[key])
+                                  }
+                                </td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          )}
+                
+                {/* Footer fijo */}
+                <div className="p-6 border-t border-gray-200 bg-gray-50 flex-shrink-0">
+                  <div className="text-sm text-gray-600">
+                    BAPROSA - Mostrando {tableData.length} registros
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
 };
-
 
 export const StatsCard = ({ title, value, icon, bgColor = "bg-blue-50", iconColor = "text-blue-600", textColor = "text-blue-800" }) => {
   return (

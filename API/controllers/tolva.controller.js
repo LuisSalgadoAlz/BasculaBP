@@ -946,178 +946,87 @@ const getInfoAllSilos = async (req, res) => {
       });
     }
     
-    let result;
-    
-    if (idSocio) {
-      // Query con filtro por idSocio
-      result = await db.$queryRaw`
-        WITH SilosConPeso AS (
-            -- Silo Principal
-            SELECT 
-                b.numBoleta,
-                b.idSocio,
-                s.id as silo_id,
-                s.nombre as silo_nombre,
-                CASE 
-                    WHEN s3.id IS NOT NULL THEN b.pesoNeto/100.0/3  -- 3 silos: divide entre 3
-                    WHEN s2.id IS NOT NULL THEN b.pesoNeto/100.0/2  -- 2 silos: divide entre 2
-                    ELSE b.pesoNeto/100.0                           -- 1 silo: peso completo
-                END as peso_silo
-            FROM Boleta b
-            INNER JOIN tolva t ON b.id = t.idBoleta
-            INNER JOIN Silos s ON t.siloPrincipal = s.id
-            LEFT JOIN Silos s2 ON t.siloSecundario = s2.id
-            LEFT JOIN Silos s3 ON t.siloTerciario = s3.id
-            WHERE b.idSocio = ${parseInt(idSocio)}
+    result = await db.$queryRaw`
+      WITH SilosConPeso AS (
+           -- Silo Principal
+          SELECT 
+              b.numBoleta,
+              b.idSocio,
+              s.id as silo_id,
+              s.nombre as silo_nombre,
+              CASE 
+                  WHEN s3.id IS NOT NULL THEN b.pesoNeto/100.0/3
+                  WHEN s2.id IS NOT NULL THEN b.pesoNeto/100.0/2
+                  ELSE b.pesoNeto/100.0
+              END as peso_silo
+          FROM Boleta b
+          INNER JOIN tolva t ON b.id = t.idBoleta
+          INNER JOIN Silos s ON t.siloPrincipal = s.id
+          LEFT JOIN Silos s2 ON t.siloSecundario = s2.id
+          LEFT JOIN Silos s3 ON t.siloTerciario = s3.id
             
-            UNION ALL
+          UNION ALL
             
-            -- Silo Secundario (solo si existe)
-            SELECT 
-                b.numBoleta,
-                b.idSocio,
-                s2.id as silo_id,
-                s2.nombre as silo_nombre,
-                CASE 
-                    WHEN s3.id IS NOT NULL THEN b.pesoNeto/100.0/3
-                    ELSE b.pesoNeto/100.0/2
-                END as peso_silo
-            FROM Boleta b
-            INNER JOIN tolva t ON b.id = t.idBoleta
-            INNER JOIN Silos s2 ON t.siloSecundario = s2.id
-            LEFT JOIN Silos s3 ON t.siloTerciario = s3.id
-            WHERE b.idSocio = ${parseInt(idSocio)}
+          -- Silo Secundario (solo si existe)
+          SELECT 
+              b.numBoleta,
+              b.idSocio,
+              s2.id as silo_id,
+              s2.nombre as silo_nombre,
+              CASE 
+                  WHEN s3.id IS NOT NULL THEN b.pesoNeto/100.0/3
+                  ELSE b.pesoNeto/100.0/2
+              END as peso_silo
+          FROM Boleta b
+          INNER JOIN tolva t ON b.id = t.idBoleta
+          INNER JOIN Silos s2 ON t.siloSecundario = s2.id
+          LEFT JOIN Silos s3 ON t.siloTerciario = s3.id
             
-            UNION ALL
+          UNION ALL
             
-            -- Silo Terciario (solo si existe)
-            SELECT 
-                b.numBoleta,
-                b.idSocio,
-                s3.id as silo_id,
-                s3.nombre as silo_nombre,
-                b.pesoNeto/100.0/3 as peso_silo
-            FROM Boleta b
-            INNER JOIN tolva t ON b.id = t.idBoleta
-            INNER JOIN Silos s3 ON t.siloTerciario = s3.id
-            WHERE b.idSocio = ${parseInt(idSocio)}
-        ),
-        SilosFiltrados AS (
-            SELECT 
-                scp.silo_id,
-                scp.silo_nombre,
-                scp.peso_silo
-            FROM SilosConPeso scp
-            LEFT JOIN (
-                SELECT 
-                    SiloId,
-                    MAX(numBoleta) as ultimoReset
-                FROM ResetSilos
-                GROUP BY SiloId
+          -- Silo Terciario (solo si existe)
+          SELECT 
+              b.numBoleta,
+              b.idSocio,
+              s3.id as silo_id,
+              s3.nombre as silo_nombre,
+              b.pesoNeto/100.0/3 as peso_silo
+          FROM Boleta b
+          INNER JOIN tolva t ON b.id = t.idBoleta
+          INNER JOIN Silos s3 ON t.siloTerciario = s3.id
+      ),
+      SilosFiltrados AS (
+          SELECT 
+              scp.silo_id,
+              scp.silo_nombre,
+              scp.peso_silo
+          FROM SilosConPeso scp
+          LEFT JOIN (
+              SELECT 
+                  SiloId,
+                  MAX(numBoleta) as ultimoReset
+              FROM ResetSilos
+            GROUP BY SiloId
             ) rs ON scp.silo_id = rs.SiloId
-            WHERE (
-              rs.SiloId IS NULL
-              OR scp.numBoleta >= rs.ultimoReset
-            )
-        )
-        SELECT 
-            s.nombre as silo_nombre,
-            s.capacidad,
-            COALESCE(SUM(sf.peso_silo), 0) as peso_total,
-            CASE 
-                WHEN s.capacidad > 0 THEN 
-                    ROUND((COALESCE(SUM(sf.peso_silo), 0) / s.capacidad) * 100, 2)
-                ELSE NULL 
-            END as porcentaje_ocupacion
-        FROM Silos s
-        LEFT JOIN SilosFiltrados sf ON s.id = sf.silo_id
-        GROUP BY s.id, s.nombre, s.capacidad
-        ORDER BY s.nombre;
-      `;
-    } else {
-      // Query sin filtro por idSocio
-      result = await db.$queryRaw`
-        WITH SilosConPeso AS (
-            -- Silo Principal
-            SELECT 
-                b.numBoleta,
-                b.idSocio,
-                s.id as silo_id,
-                s.nombre as silo_nombre,
-                CASE 
-                    WHEN s3.id IS NOT NULL THEN b.pesoNeto/100.0/3
-                    WHEN s2.id IS NOT NULL THEN b.pesoNeto/100.0/2
-                    ELSE b.pesoNeto/100.0
-                END as peso_silo
-            FROM Boleta b
-            INNER JOIN tolva t ON b.id = t.idBoleta
-            INNER JOIN Silos s ON t.siloPrincipal = s.id
-            LEFT JOIN Silos s2 ON t.siloSecundario = s2.id
-            LEFT JOIN Silos s3 ON t.siloTerciario = s3.id
-            
-            UNION ALL
-            
-            -- Silo Secundario (solo si existe)
-            SELECT 
-                b.numBoleta,
-                b.idSocio,
-                s2.id as silo_id,
-                s2.nombre as silo_nombre,
-                CASE 
-                    WHEN s3.id IS NOT NULL THEN b.pesoNeto/100.0/3
-                    ELSE b.pesoNeto/100.0/2
-                END as peso_silo
-            FROM Boleta b
-            INNER JOIN tolva t ON b.id = t.idBoleta
-            INNER JOIN Silos s2 ON t.siloSecundario = s2.id
-            LEFT JOIN Silos s3 ON t.siloTerciario = s3.id
-            
-            UNION ALL
-            
-            -- Silo Terciario (solo si existe)
-            SELECT 
-                b.numBoleta,
-                b.idSocio,
-                s3.id as silo_id,
-                s3.nombre as silo_nombre,
-                b.pesoNeto/100.0/3 as peso_silo
-            FROM Boleta b
-            INNER JOIN tolva t ON b.id = t.idBoleta
-            INNER JOIN Silos s3 ON t.siloTerciario = s3.id
-        ),
-        SilosFiltrados AS (
-            SELECT 
-                scp.silo_id,
-                scp.silo_nombre,
-                scp.peso_silo
-            FROM SilosConPeso scp
-            LEFT JOIN (
-                SELECT 
-                    SiloId,
-                    MAX(numBoleta) as ultimoReset
-                FROM ResetSilos
-                GROUP BY SiloId
-            ) rs ON scp.silo_id = rs.SiloId
-            WHERE (
-              rs.SiloId IS NULL
-              OR scp.numBoleta >= rs.ultimoReset
-            )
-        )
-        SELECT 
-            s.nombre as silo_nombre,
-            s.capacidad,
-            COALESCE(SUM(sf.peso_silo), 0) as peso_total,
-            CASE 
-                WHEN s.capacidad > 0 THEN 
-                    ROUND((COALESCE(SUM(sf.peso_silo), 0) / s.capacidad) * 100, 2)
-                ELSE NULL 
-            END as porcentaje_ocupacion
-        FROM Silos s
-        LEFT JOIN SilosFiltrados sf ON s.id = sf.silo_id
-        GROUP BY s.id, s.nombre, s.capacidad
-        ORDER BY s.nombre;
-      `;
-    }
+          WHERE (
+            rs.SiloId IS NULL
+            OR scp.numBoleta >= rs.ultimoReset
+          )
+      )
+      SELECT 
+          s.nombre as silo_nombre,
+          s.capacidad,
+          COALESCE(SUM(sf.peso_silo), 0) as peso_total,
+          CASE 
+              WHEN s.capacidad > 0 THEN 
+                  ROUND((COALESCE(SUM(sf.peso_silo), 0) / s.capacidad) * 100, 2)
+              ELSE NULL 
+          END as porcentaje_ocupacion
+      FROM Silos s
+      LEFT JOIN SilosFiltrados sf ON s.id = sf.silo_id
+      GROUP BY s.id, s.nombre, s.capacidad
+      ORDER BY s.nombre;
+    `;
 
     // Convertir los resultados a un formato más amigable para JavaScript
     const formattedResult = result.map(row => ({

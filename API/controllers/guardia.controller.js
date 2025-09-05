@@ -216,11 +216,11 @@ const getPorcentajeDeCumplimiento = async(req, res) => {
         `;
         
         const refactorData = resultado.map((item) => ({
-            fecha: item.fecha_local.toISOString().split('T')[0], 
-            noRealizo: item["No Realizo"],
-            efectuado: item["Efectuado"],
-            totalRegistros: item["Total Registros"],
-            porcentajeCumplimiento: item["Porcentaje Cumplimiento"],
+            fecha: item.fecha_local.toISOString().split('T')[0],
+            'Registros': item["Total Registros"], 
+            'Sin Registrar': item["No Realizo"],
+            'Registrados': item["Efectuado"],
+            'Porcentaje de cumplimiento': item["Porcentaje Cumplimiento"],
         }));
 
         return res.status(200).send(refactorData);
@@ -235,7 +235,7 @@ const getBoletasPorFecha = async (req, res) => {
     try {
         const { fecha } = req.query; 
 
-        if (!fecha) {
+        if (!fecha || fecha=='undefined') {
             return res.status(400).send({ error: 'La fecha es requerida' });
         }
 
@@ -285,14 +285,18 @@ const getBoletasPorFecha = async (req, res) => {
         // Crear array plano
         const resultado = boletas.flatMap(boleta => 
             boleta.paseDeSalida.map(pase => ({
-                boletaId: boleta.numBoleta,
-                fechaInicio: new Date(boleta.fechaInicio).toLocaleString(),
-                fechaFin: boleta.fechaFin ? new Date(boleta.fechaFin).toLocaleString() : 'No Registrada',
+                'Boleta': boleta.numBoleta,
+                'Pase de Salida': pase.numPaseSalida,
+                Placa: boleta.placa,
+                Transporte: boleta.empresa,
+                'Inicio Báscula': new Date(boleta.fechaInicio).toLocaleString(),
+                'Finalizo Báscula': boleta.fechaFin ? new Date(boleta.fechaFin).toLocaleString() : 'No Registrada',
                 proceso: boleta.proceso == 0 ? 'Entrada' : 'Salida',
-                idMovimiento: boleta.movimiento,
-                paseSalida: pase.numPaseSalida,
-                fechaSalida: pase.fechaSalida ? new Date(pase.fechaSalida).toLocaleString() : 'No Registrada', 
-                estadoDescripcion: pase.estado == true ? 'Efectuado' : 'No Realizo'
+                movimiento: boleta.movimiento,
+                Producto: boleta.producto, 
+                'Salio De Baprosa': pase.fechaSalida ? new Date(pase.fechaSalida).toLocaleString() : 'No Registrada',
+                Comentarios: pase.observaciones || 'N/A', 
+                Guardia: pase.estado == true ? 'Registrado' : 'Sin Registrar'
             }))
         );
 

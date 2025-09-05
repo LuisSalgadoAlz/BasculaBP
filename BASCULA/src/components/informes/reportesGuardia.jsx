@@ -9,6 +9,7 @@ const ReportesGuardia = () => {
     const [openSheet, setOpenSheet] = useState(false)
     const [tableData, setTableData] = useState()
     const [loadingTableData, setIsLoadingTableData] = useState(false)
+    const [selectedDate, setSelectedDate] = useState('Sin seleccionar')
 
     const handleChangeFilters = (e) => {
         const { name, value } = e.target;
@@ -25,6 +26,7 @@ const ReportesGuardia = () => {
     
     const handleOpenSheet = (data) => {
         setOpenSheet(true)
+        setSelectedDate(data?.fecha)
         getBoletasPorDia(setTableData, setIsLoadingTableData, data?.fecha)
     }
 
@@ -37,7 +39,13 @@ const ReportesGuardia = () => {
     }, [fetchPorcentaje])
 
     const sheetProps = {
-        openSheet, setOpenSheet, tableData: tableData?.boletas
+        openSheet, 
+        setOpenSheet, 
+        tableData: tableData?.boletas, 
+        title: 'Detalles Pases De Salida', 
+        subtitle: `Visualización de pases de salida del día: ${selectedDate}`, 
+        type: true,
+        fixedColumns: ['Boleta', 'Pase de Salida', 'Placa', 'Transporte'] 
     }
 
     return ( 

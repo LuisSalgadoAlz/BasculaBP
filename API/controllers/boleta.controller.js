@@ -1746,7 +1746,7 @@ const getBoletasMes = async (req, res) => {
   `;
 
     const makeCalendar = result.map((item) => ({
-      title: `Boletas creadas: ${item.cantidad}`,
+      title: `Boletas: ${item.cantidad}`,
       start: item.fecha.toISOString().split("T")[0],
       allDay: true,
       display: "auto",
