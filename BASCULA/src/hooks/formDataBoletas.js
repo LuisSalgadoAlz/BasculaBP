@@ -618,10 +618,10 @@ export const verificarDataNewPlaca = (funError, data, setMsg, marchamos, dataSel
     );
   }
 
-  if (parseFloat(pesoInicial) <= 0) {
+/*   if (parseFloat(pesoInicial) <= 0) {
     return mostrarError('Por favor, el peso inicial no debe de ser menor o igual a 0');
   }
-
+ */
   if (idMovimiento === 2 && marchamos.length < 3) {
     return mostrarError('Las importaciones a granel deben de llevar al menos 3 marchamo.');
   }
@@ -683,7 +683,7 @@ export const verificarDataCompleto = (funError, data, setMsg, pesoIn) => {
 
   if ((idMovimiento!=11 && idMovimiento!=10) && (idOrigen == idDestino)) return mostrarError('Origen y destino deben de ser diferentes')
   
-  if (parseFloat(pesoFinal) <= 0) return mostrarError('El peso final debe ser mayor que 0.')
+  /* if (parseFloat(pesoFinal) <= 0) return mostrarError('El peso final debe ser mayor que 0.')
 
   if(proceso == 0 && parseFloat(pesoIn)<=parseFloat(pesoFinal)){
     if (idMovimiento!=10 && idMovimiento!=11 && idMovimiento!=12) {
@@ -695,7 +695,7 @@ export const verificarDataCompleto = (funError, data, setMsg, pesoIn) => {
     if (idMovimiento!=13 && idMovimiento!=12) {
       return mostrarError('Peso final debe ser mayor al peso de inicio')
     }
-  }
+  } */
 
   if(proceso==0 && !ordenDeCompra && (idMovimiento!=11 && idMovimiento!=10)) return mostrarError('Por favor, ingresar todos los datos segundo nivel: orden de compra.')
 

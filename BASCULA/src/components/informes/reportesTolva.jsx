@@ -42,12 +42,6 @@ const TolvaReportes = () => {
 
   useEffect(() => {
     fetchData();
-
-    const interval = setInterval(() => {
-      fetchData();
-    }, 30000); // cada 30 segundos
-
-    return () => clearInterval(interval); // limpiar cuando se desmonte
   }, [fetchData]);
 
   /**
@@ -188,7 +182,7 @@ const TolvaReportes = () => {
       {loading && <div>Cargando...</div>}
       {console.log(data )}
       {data &&(
-        <BaprosaSiloChart data={data?.data} onSiloAction={handleResetSilo} />
+        <BaprosaSiloChart data={data?.data} onSiloAction={handleResetSilo} isLoading={loading}/>
       )}  
 
       {/* Parte para colocar las estadisticas */}

@@ -575,7 +575,7 @@ export const ReportesBascula = () => {
 };
 
 
-export const BaprosaSiloChart = ({ data, onSiloAction }) => {
+export const BaprosaSiloChart = ({ data, onSiloAction, isLoading }) => {
   const [selectedSilos, setSelectedSilos] = useState([]);
   const [showConfig, setShowConfig] = useState(false);
   const [showSiloManagement, setShowSiloManagement] = useState(false);
@@ -587,9 +587,64 @@ export const BaprosaSiloChart = ({ data, onSiloAction }) => {
   // Filtrar silos válidos
   const allSilos = data ? data.filter(item => item.peso_total >= 0) : [];
 
+  // Componente Skeleton para el gráfico
+  const ChartSkeleton = () => (
+    <div className="h-[600px] p-4 relative">
+      {/* Skeleton bars de fondo */}
+      <div className="flex justify-between items-end h-full space-x-2 opacity-30">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div key={i} className="flex-1 flex flex-col justify-end space-y-2">
+            <div 
+              className="bg-gray-200 rounded-t animate-pulse"
+              style={{ 
+                height: `${Math.random() * 60 + 20}%`,
+                animationDelay: `${i * 0.1}s`
+              }}
+            />
+            <div className="bg-gray-200 h-8 rounded animate-pulse" />
+          </div>
+        ))}
+      </div>
+      
+      {/* Spinner centrado */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-blue-500"></div>
+          <p className="text-sm text-gray-500 font-medium">Cargando datos...</p>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Componente Skeleton para la lista de silos
+  const SiloListSkeleton = () => (
+    <div className="space-y-3">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <div key={i} className="flex items-center justify-between p-4 bg-stone-50 rounded-lg border border-stone-200 animate-pulse">
+          <div className="flex-1 min-w-0">
+            <div className="bg-gray-200 h-4 w-3/4 rounded mb-2" />
+            <div className="bg-gray-200 h-3 w-1/2 rounded mb-1" />
+            <div className="bg-gray-200 h-3 w-2/3 rounded" />
+          </div>
+          <div className="ml-4">
+            <div className="bg-gray-200 h-8 w-20 rounded-lg" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  // Componente Spinner para acciones
+  const Spinner = ({ size = 16 }) => (
+    <div 
+      className="animate-spin rounded-full border-2 border-current border-t-transparent"
+      style={{ width: size, height: size }}
+    />
+  );
+
   // Cargar configuración desde localStorage o usar valores por defecto
   useEffect(() => {
-    if (allSilos.length > 0) {
+    if (allSilos.length > 0 && !isLoading) {
       try {
         const savedSilos = localStorage.getItem(STORAGE_KEY);
         
@@ -621,7 +676,7 @@ export const BaprosaSiloChart = ({ data, onSiloAction }) => {
         setSelectedSilos(defaultSilos);
       }
     }
-  }, [allSilos.length]);
+  }, [allSilos.length, isLoading]);
 
   // Función para guardar en localStorage
   const saveToLocalStorage = (silos) => {
@@ -650,10 +705,16 @@ export const BaprosaSiloChart = ({ data, onSiloAction }) => {
 
   // Restablecer a los primeros 6 silos
   const resetToDefault = () => {
-    const defaultSilos = allSilos.slice(0, 6).map(silo => silo.silo_nombre);
+    const defaultSilos = allSilos.slice(0, 31).map(silo => silo.silo_nombre);
     setSelectedSilos(defaultSilos);
     saveToLocalStorage(defaultSilos);
   };
+
+  const selectAllSilos = () => {
+    const defaultSilos = allSilos.slice(0, allSilos.length).map(silo => silo.silo_nombre);
+    setSelectedSilos(defaultSilos);
+    saveToLocalStorage(defaultSilos);
+  }
 
   // Función para limpiar configuración guardada
   const clearSavedConfig = () => {
@@ -695,6 +756,29 @@ export const BaprosaSiloChart = ({ data, onSiloAction }) => {
       pesoColorEnd: item.porcentaje_ocupacion >= 90 ? '#b91c1c' : '#047857'
     }));
 
+  // Loading state principal
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-md p-4 mt-6 shadow-2xl border border-stone-200 overflow-hidden">
+        <div className="px-4 py-4 border-b border-stone-200 flex justify-between max-sm:flex-col max-sm:justify-center">
+          <div className="flex items-center gap-3">
+            <div className="animate-pulse bg-gray-200 h-6 w-48 rounded" />
+            <Spinner size={20} />
+          </div>
+          
+          <div className="flex gap-2 items-center">
+            <div className="animate-pulse bg-gray-200 h-8 w-20 rounded-md" />
+            <div className="animate-pulse bg-gray-200 h-8 w-24 rounded-md" />
+          </div>
+        </div>
+
+        <div className="p-0">
+          <ChartSkeleton />
+        </div>
+      </div>
+    );
+  }
+
   // Si no hay datos suficientes
   if (allSilos.length === 0) {
     return (
@@ -722,9 +806,16 @@ export const BaprosaSiloChart = ({ data, onSiloAction }) => {
                 setShowSiloManagement(true);
                 setShowConfig(false);
               }}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm bg-amber-100 hover:bg-amber-200 rounded-md transition-colors"
+              disabled={isLoading}
+              className={`
+                flex items-center gap-1.5 px-2.5 py-1.5 text-sm rounded-md transition-colors
+                ${isLoading 
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                  : 'bg-amber-100 hover:bg-amber-200'
+                }
+              `}
             >
-              <Database size={14} />
+              {isLoading ? <Spinner size={14} /> : <Database size={14} />}
               Gestionar
             </button>
 
@@ -734,9 +825,16 @@ export const BaprosaSiloChart = ({ data, onSiloAction }) => {
                 setShowConfig(true);
                 setShowSiloManagement(false);
               }}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm bg-stone-100 hover:bg-stone-200 rounded-md transition-colors"
+              disabled={isLoading}
+              className={`
+                flex items-center gap-1.5 px-2.5 py-1.5 text-sm rounded-md transition-colors
+                ${isLoading 
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                  : 'bg-stone-100 hover:bg-stone-200'
+                }
+              `}
             >
-              <Settings size={14} />
+              {isLoading ? <Spinner size={14} /> : <Settings size={14} />}
               Configurar
             </button>
           </div>
@@ -863,12 +961,7 @@ export const BaprosaSiloChart = ({ data, onSiloAction }) => {
               </ResponsiveContainer>
             </div>
           ) : (
-            <div className="h-48 flex items-center justify-center text-stone-600">
-              <div className="text-center">
-                <div className="text-lg mb-2">📊</div>
-                <div>Selecciona al menos 3 silos para ver el gráfico</div>
-              </div>
-            </div>
+            <>Cargando...</>
           )}
         </div>
       </div>
@@ -883,6 +976,7 @@ export const BaprosaSiloChart = ({ data, onSiloAction }) => {
                 <h4 className="text-lg font-medium text-stone-700">
                   Gestión de Silos
                 </h4>
+                {isLoading && <Spinner size={16} />}
               </div>
               <button
                 onClick={() => setShowSiloManagement(false)}
@@ -894,37 +988,48 @@ export const BaprosaSiloChart = ({ data, onSiloAction }) => {
             
             <div className="p-4">
               <div className="max-h-96 overflow-y-auto">
-                <div className="space-y-3">
-                  {allSilos.map(silo => (
-                    <div
-                      key={silo.silo_nombre}
-                      className="flex items-center justify-between p-4 bg-stone-50 rounded-lg border border-stone-200 hover:bg-stone-100 transition-colors"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-sm text-stone-800 truncate">
-                          {silo.silo_nombre}
+                {isLoading ? (
+                  <SiloListSkeleton />
+                ) : (
+                  <div className="space-y-3">
+                    {allSilos.map(silo => (
+                      <div
+                        key={silo.silo_nombre}
+                        className="flex items-center justify-between p-4 bg-stone-50 rounded-lg border border-stone-200 hover:bg-stone-100 transition-colors"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm text-stone-800 truncate">
+                            {silo.silo_nombre}
+                          </div>
+                          <div className="text-xs text-stone-600 mt-1">
+                            {Number(silo.peso_total).toLocaleString()} qq ({silo.porcentaje_ocupacion.toFixed(1)}% ocupado)
+                          </div>
+                          <div className="text-xs text-stone-500">
+                            Capacidad: {Number(silo.capacidad).toLocaleString()} qq
+                          </div>
                         </div>
-                        <div className="text-xs text-stone-600 mt-1">
-                          {Number(silo.peso_total).toLocaleString()} qq ({silo.porcentaje_ocupacion.toFixed(1)}% ocupado)
-                        </div>
-                        <div className="text-xs text-stone-500">
-                          Capacidad: {Number(silo.capacidad).toLocaleString()} qq
+                        
+                        <div className="ml-4">
+                          <button
+                            onClick={() => handleSiloAction(silo.silo_nombre)}
+                            disabled={isLoading}
+                            className={`
+                              flex items-center gap-1.5 px-3 py-2 text-xs rounded-lg transition-colors font-medium
+                              ${isLoading 
+                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                                : 'bg-red-100 hover:bg-red-200 text-red-800'
+                              }
+                            `}
+                            title="Vaciar silo completamente"
+                          >
+                            {isLoading ? <Spinner size={14} /> : <ArrowDown size={14} />}
+                            Vaciar Silo
+                          </button>
                         </div>
                       </div>
-                      
-                      <div className="ml-4">
-                        <button
-                          onClick={() => handleSiloAction(silo.silo_nombre)}
-                          className="flex items-center gap-1.5 px-3 py-2 text-xs bg-red-100 hover:bg-red-200 text-red-800 rounded-lg transition-colors font-medium"
-                          title="Vaciar silo completamente"
-                        >
-                          <ArrowDown size={14} />
-                          Vaciar Silo
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
               
               <div className="mt-4 pt-3 border-t border-stone-200">
@@ -948,6 +1053,7 @@ export const BaprosaSiloChart = ({ data, onSiloAction }) => {
                 <h4 className="text-lg font-medium text-stone-700">
                   Configurar Silos
                 </h4>
+                {isLoading && <Spinner size={16} />}
               </div>
               <button
                 onClick={() => setShowConfig(false)}
@@ -965,18 +1071,32 @@ export const BaprosaSiloChart = ({ data, onSiloAction }) => {
                 <div className="flex gap-2">
                   <button
                     onClick={clearSavedConfig}
-                    className="flex items-center gap-1 px-2 py-1 text-xs bg-red-100 hover:bg-red-200 rounded text-red-600 transition-colors"
+                    disabled={isLoading}
+                    className={`
+                      flex items-center gap-1 px-2 py-1 text-xs rounded transition-colors
+                      ${isLoading 
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                        : 'bg-red-100 hover:bg-red-200 text-red-600'
+                      }
+                    `}
                     title="Limpiar configuración guardada"
                   >
-                    <Trash2 size={11} />
+                    {isLoading ? <Spinner size={11} /> : <Trash2 size={11} />}
                     Limpiar
                   </button>
                   <button
-                    onClick={resetToDefault}
-                    className="flex items-center gap-1 px-2 py-1 text-xs bg-stone-100 hover:bg-stone-200 rounded text-stone-600 transition-colors"
+                    onClick={selectAllSilos}
+                    disabled={isLoading}
+                    className={`
+                      flex items-center gap-1 px-2 py-1 text-xs rounded transition-colors
+                      ${isLoading 
+                        ? 'bg-green-100 text-green-400 cursor-not-allowed' 
+                        : 'bg-green-100 hover:bg-green-200 text-stone-600'
+                      }
+                    `}
                   >
-                    <RotateCcw size={11} />
-                    Reset
+                    {isLoading ? <Spinner size={11} /> : <RotateCcw size={11} />}
+                    Todos
                   </button>
                 </div>
               </div>
@@ -992,19 +1112,25 @@ export const BaprosaSiloChart = ({ data, onSiloAction }) => {
                       <button
                         key={silo.silo_nombre}
                         onClick={() => toggleSilo(silo.silo_nombre)}
-                        disabled={isSelected && !canDeselect}
+                        disabled={(isSelected && !canDeselect) || isLoading}
                         className={`
                           flex items-center gap-2 p-3 text-sm rounded border transition-colors text-left w-full
                           ${isSelected 
                             ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
                             : 'bg-white border-stone-200 text-stone-600 hover:bg-stone-50'
                           }
-                          ${isSelected && !canDeselect ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}
+                          ${(isSelected && !canDeselect) || isLoading ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}
                         `}
                         title={`${silo.silo_nombre} - ${silo.porcentaje_ocupacion.toFixed(1)}%`}
                       >
                         <div className="flex-shrink-0">
-                          {isSelected ? <Eye size={16} className="text-emerald-600" /> : <EyeOff size={16} className="text-stone-400" />}
+                          {isLoading ? (
+                            <Spinner size={16} />
+                          ) : isSelected ? (
+                            <Eye size={16} className="text-emerald-600" />
+                          ) : (
+                            <EyeOff size={16} className="text-stone-400" />
+                          )}
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="font-medium truncate">
@@ -1033,7 +1159,7 @@ export const BaprosaSiloChart = ({ data, onSiloAction }) => {
                 <div className="text-sm text-stone-600 flex items-center justify-between">
                   <span>{selectedSilos.length} de {allSilos.length} silos seleccionados</span>
                   <div className="flex items-center gap-1 text-xs text-stone-500">
-                    <Save size={12} />
+                    {isLoading ? <Spinner size={12} /> : <Save size={12} />}
                     <span>Auto-guardado</span>
                   </div>
                 </div>
@@ -1083,18 +1209,31 @@ export const BaprosaSiloChart = ({ data, onSiloAction }) => {
             <div className="flex gap-3 justify-end">
               <button
                 onClick={cancelSiloAction}
-                className="px-4 py-2 text-sm bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg transition-colors"
+                disabled={isLoading}
+                className={`
+                  px-4 py-2 text-sm rounded-lg transition-colors
+                  ${isLoading 
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                    : 'bg-stone-100 hover:bg-stone-200 text-stone-700'
+                  }
+                `}
               >
                 Cancelar
               </button>
               <button
                 onClick={confirmSiloAction}
-                className={`px-4 py-2 text-sm text-white rounded-lg transition-colors ${
-                  confirmAction.action === 'fill'
-                    ? 'bg-emerald-600 hover:bg-emerald-700'
-                    : 'bg-red-600 hover:bg-red-700'
-                }`}
+                disabled={isLoading}
+                className={`
+                  flex items-center gap-2 px-4 py-2 text-sm text-white rounded-lg transition-colors
+                  ${isLoading 
+                    ? 'bg-gray-400 cursor-not-allowed' 
+                    : confirmAction.action === 'fill'
+                      ? 'bg-emerald-600 hover:bg-emerald-700'
+                      : 'bg-red-600 hover:bg-red-700'
+                  }
+                `}
               >
+                {isLoading && <Spinner size={16} />}
                 {confirmAction.action === 'fill' ? 'Llenar Silo' : 'Vaciar Silo'}
               </button>
             </div>
