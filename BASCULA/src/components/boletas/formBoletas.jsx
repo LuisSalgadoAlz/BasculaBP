@@ -533,7 +533,7 @@ export const ModalOut = (props) => {
                           />
                         )
                       ) : (
-                        <SelectFormBoletas key={field} classCss={classFormSelct} name={field} val={boletas?.[field]} data={fillData[field]} fun={hdlChange} stt={true}/>
+                        <SelectFormBoletas key={field} classCss={classFormSelct} name={field} val={boletas?.[field]} data={fillData[field]} fun={hdlChange} stt={field!=='Motoristas' ? true : boletas.Socios===1 ? false : true}/>
                       )                  
                   ) : (
                     field !== 'Furgon' && (

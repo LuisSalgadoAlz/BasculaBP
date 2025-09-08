@@ -312,10 +312,224 @@ const getBoletasPorFecha = async (req, res) => {
     }
 };
 
+const getPorcentajeMes = async(req, res) => {
+    try{
+        const start = req.query.start || "";
+        const end = req.query.end || "";
+        
+        const resultado = await db.$queryRaw`
+            SELECT 
+                fecha_local,
+                SUM([No Realizo]) as [No Realizo],
+                SUM([Efectuado]) as [Efectuado],
+                SUM([Total Registros]) as [Total Registros],
+                CASE 
+                    WHEN SUM([Total Registros]) > 0 THEN 
+                        CAST(SUM([Efectuado]) * 100.0 / SUM([Total Registros]) AS DECIMAL(5,2))
+                    ELSE 0 
+                END as [Porcentaje Cumplimiento]
+            FROM (
+                -- Procesos generales
+                SELECT 
+                    CASE 
+                        WHEN pds.aplicaAlerta = 0 THEN 
+                            CASE 
+                                WHEN DATENAME(weekday, b.fechaFin AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') = 'Saturday' THEN
+                                    CAST(DATEADD(day, 2, b.fechaFin AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') AS DATE)
+                                ELSE
+                                    CAST(DATEADD(day, 1, b.fechaFin AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') AS DATE)
+                            END
+                        ELSE 
+                            CAST(b.fechaFin AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time' AS DATE)
+                    END as fecha_local,
+                    CASE WHEN pds.estado = 0 THEN 1 ELSE 0 END as [No Realizo],
+                    CASE WHEN pds.estado = 1 THEN 1 ELSE 0 END as [Efectuado],
+                    1 as [Total Registros]
+                FROM Boleta AS b
+                INNER JOIN PasesDeSalida AS pds ON pds.idBoleta = b.id
+                WHERE idMovimiento NOT IN (12, 11)
+                    AND b.fechaFin IS NOT NULL
+                    AND b.fechaFin >= ${start} AND b.fechaFin <= ${end}
+                
+                UNION ALL
+                
+                -- Servicio de báscula
+                SELECT 
+                    CASE 
+                        WHEN pds.aplicaAlerta = 0 THEN
+                            CASE 
+                                WHEN b.proceso = 0 THEN 
+                                    CASE 
+                                        WHEN DATENAME(weekday, b.fechaInicio AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') = 'Saturday' THEN
+                                            CAST(DATEADD(day, 2, b.fechaInicio AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') AS DATE)
+                                        ELSE
+                                            CAST(DATEADD(day, 1, b.fechaInicio AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') AS DATE)
+                                    END
+                                WHEN b.proceso = 1 THEN 
+                                    CASE 
+                                        WHEN DATENAME(weekday, b.fechaFin AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') = 'Saturday' THEN
+                                            CAST(DATEADD(day, 2, b.fechaFin AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') AS DATE)
+                                        ELSE
+                                            CAST(DATEADD(day, 1, b.fechaFin AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') AS DATE)
+                                    END
+                                ELSE 
+                                    CASE 
+                                        WHEN DATENAME(weekday, b.fechaInicio AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') = 'Saturday' THEN
+                                            CAST(DATEADD(day, 2, b.fechaInicio AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') AS DATE)
+                                        ELSE
+                                            CAST(DATEADD(day, 1, b.fechaInicio AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') AS DATE)
+                                    END
+                            END
+                        ELSE
+                            CASE 
+                                WHEN b.proceso = 0 THEN 
+                                    CAST(b.fechaInicio AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time' AS DATE)
+                                WHEN b.proceso = 1 THEN 
+                                    CAST(b.fechaFin AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time' AS DATE)
+                                ELSE 
+                                    CAST(b.fechaInicio AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time' AS DATE)
+                            END
+                    END AS fecha_local,
+                    CASE WHEN pds.estado = 0 THEN 1 ELSE 0 END as [No Realizo],
+                    CASE WHEN pds.estado = 1 THEN 1 ELSE 0 END as [Efectuado],
+                    1 as [Total Registros]
+                FROM Boleta AS b
+                INNER JOIN PasesDeSalida AS pds ON pds.idBoleta = b.id
+                WHERE idMovimiento = 11
+                    AND (
+                        (b.proceso = 0 AND b.fechaInicio IS NOT NULL) OR
+                        (b.proceso = 1 AND b.fechaFin IS NOT NULL) OR
+                        (b.proceso NOT IN (0,1) AND b.fechaInicio IS NOT NULL)
+                    )
+                    AND (
+                        (b.proceso = 0 AND b.fechaInicio >= ${start} AND b.fechaInicio <= ${end}) OR
+                        (b.proceso = 1 AND b.fechaFin >= ${start} AND b.fechaFin <= ${end}) OR
+                        (b.proceso NOT IN (0,1) AND b.fechaInicio >= ${start} AND b.fechaInicio <= ${end})
+                    )
+            ) AS DatosUnificados
+            GROUP BY fecha_local
+            ORDER BY fecha_local DESC;
+        `;
+        
+        const refactorData = resultado.map((item) => ({
+            fecha: item.fecha_local.toISOString().split('T')[0],
+            'Registros': item["Total Registros"], 
+            'Sin Registrar': item["No Realizo"],
+            'Registrados': item["Efectuado"],
+            'Porcentaje de cumplimiento': item["Porcentaje Cumplimiento"],
+        }));
+
+        const makeCalendar = refactorData.map((item) => ({
+            title: `Pases: ${item['Registrados']}/${item['Registros']} - ${item['Porcentaje de cumplimiento']}%`,
+            start: item.fecha,
+            allDay: true,
+            display: "auto",
+            textColor: "black",
+            backgroundColor: "transparent",
+            borderColor: "transparent", // Cambiado a transparente
+        }));
+
+        return res.status(200).send(makeCalendar);
+        
+    } catch(err){
+        console.log(err)
+        return res.status(500).send({err: 'Error Interno del API'})
+    }
+}
+
+const getBoletasPorFechaCalendario = async (req, res) => {
+    try {
+        const fecha = req.query.fecha || "";
+        const convertDate = fecha && new Date(fecha).toISOString();
+
+        if (!convertDate || convertDate === "undefined") {
+            return res.status(400).send({ error: "La fecha es requerida" });
+        }
+
+        // Solo la fecha en formato 2025-09-05
+        const formatted = convertDate.split("T")[0];
+        console.log(formatted);
+
+        const [year, month, day] = formatted.split("-").map(Number);
+        const fechaConsultada = new Date(Date.UTC(year, month - 1, day, 6, 0, 0));
+        const fechaConsultadaFin = new Date(Date.UTC(year, month - 1, day + 1, 5, 59, 59, 999));
+
+        const boletas = await db.boleta.findMany({
+            where: {
+                OR: [
+                    // Procesos general -  fechaFin
+                    {
+                        idMovimiento: { notIn: [11, 12] },
+                        fechaFin: {
+                            gte: fechaInicio,
+                            lte: fechaFin
+                        }
+                    },
+                    // Traslado proceso 0 - usar fechaInicio  
+                    {
+                        idMovimiento: 11,
+                        proceso: 0,
+                        fechaInicio: {
+                            gte: fechaInicio,
+                            lte: fechaFin
+                        }
+                    },
+                    // Traslado proceso 1 - usar fechaFin
+                    {
+                        idMovimiento: 11,
+                        proceso: 1,
+                        fechaFin: {
+                            gte: fechaInicio,
+                            lte: fechaFin
+                        }
+                    },
+                ]
+            },
+            include: {
+                paseDeSalida: true
+            },
+            orderBy: {
+                fechaFin: 'desc'
+            }
+        });
+
+        // Crear array plano
+        const resultado = boletas.flatMap(boleta => 
+            boleta.paseDeSalida.map(pase => ({
+                'Boleta': boleta.numBoleta,
+                'Pase de Salida': pase.numPaseSalida,
+                Placa: boleta.placa,
+                Transporte: boleta.empresa,
+                'Inicio Báscula': new Date(boleta.fechaInicio).toLocaleString(),
+                'Finalizo Báscula': boleta.fechaFin ? new Date(boleta.fechaFin).toLocaleString() : 'No Registrada',
+                proceso: boleta.proceso == 0 ? 'Entrada' : 'Salida',
+                movimiento: boleta.movimiento,
+                Producto: boleta.producto, 
+                'Salio De Baprosa': pase.fechaSalida ? new Date(pase.fechaSalida).toLocaleString() : 'No Registrada',
+                Comentarios: pase.observaciones || 'N/A', 
+                Guardia: pase.estado == true ? 'Registrado' : 'Sin Registrar'
+            }))
+        );
+
+        return res.status(200).send({
+            fecha,
+            total: resultado.length,
+            boletas: resultado
+        });
+
+    } catch (err) {
+        console.log(err);
+        return res.status(500).send({ error: 'Error Interno del API' });
+    }
+};
+
+
 module.exports = {
     getBuscarPlaca, 
     updatePaseDeSalida, 
     getStats,
     getPorcentajeDeCumplimiento,
     getBoletasPorFecha,
+    getPorcentajeMes,
+    getBoletasPorFechaCalendario, 
 }

@@ -1,9 +1,15 @@
-import { useCallback, useEffect, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import { getBoletasPorDia, getPorcentajeDeCumplimiento } from "../../hooks/informes/guardia";
 import TableSheet, { TableComponentCasulla } from "./tables";
+import { BigSpinner } from "../alerts";
+
+const CalendarioPases = lazy(() =>
+  import("../calendario/calendarioPases").then((module) => ({
+    default: module.CalendarioPases, // <-- aquí se indica cuál export nombrado usar
+  }))
+);
 
 const ReportesGuardia = () => {
-    const [filters, setfilters] = useState({dateIn: '', dateOut: ''})
     const [dataPorcentaje, setDataPorcentaje] = useState()
     const [loadingPorcentaje, setLoadingPorcentaje] = useState(false)
     const [openSheet, setOpenSheet] = useState(false)
@@ -11,11 +17,6 @@ const ReportesGuardia = () => {
     const [loadingTableData, setIsLoadingTableData] = useState(false)
     const [selectedDate, setSelectedDate] = useState('Sin seleccionar')
 
-    const handleChangeFilters = (e) => {
-        const { name, value } = e.target;
-        setfilters({ ...filters, [name]: value });
-    }
-    
     const fetchPorcentaje = useCallback(()=>{
         getPorcentajeDeCumplimiento(setDataPorcentaje, setLoadingPorcentaje)
     }, [])
@@ -58,25 +59,13 @@ const ReportesGuardia = () => {
                         Análisis detallado de salidas de vehiculos
                     </h1>
                 </div>
-                <div className="parte-der flex items-center justify-center gap-3 max-sm:text-sm max-sm:flex-col">
-                    <div className="flex gap-4 items-end">
-                        <div className="flex-1">
-                            <div className="relative">
-                                <div className="flex gap-2 max-sm:flex-col">
-                                    <div className="flex flex-col">
-                                        <label htmlFor="dateIn" className="text-gray-700">Inicio</label>
-                                        <input name="dateIn" onChange={handleChangeFilters} value={filters?.dateIn} type="date" className=" w-48 bg-white text-gray-900 border border-gray-300 rounded-lg py-2.5 pl-4 pr-10 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#955e37] focus:border-[#955e37 ] hover:border-gray-400 transition-colors duration-200" />
-                                    </div>
-                                    <div className="flex flex-col">
-                                        <label htmlFor="dateOut" className="text-gray-700">Fin</label>
-                                        <input name="dateOut" onChange={handleChangeFilters} value={filters?.dateOut} type="date" className=" w-48 bg-white text-gray-900 border border-gray-300 rounded-lg py-2.5 pl-4 pr-10 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#955e37] focus:border-[#955e37 ] hover:border-gray-400 transition-colors duration-200" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
+            <div className="mt-6 bg-white shadow rounded-lg px-6 py-7 border border-gray-300 max-h-[700px] overflow-auto body-components calendario">
+                <Suspense fallback={<BigSpinner />}>
+                    <CalendarioPases />
+                </Suspense>
+            </div>
+
             {loadingPorcentaje ? (
                 <>Cargando...</> 
             ) : (
