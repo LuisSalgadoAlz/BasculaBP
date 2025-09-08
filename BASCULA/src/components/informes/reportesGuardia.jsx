@@ -81,7 +81,9 @@ const ReportesGuardia = () => {
                 <>Cargando...</> 
             ) : (
                 dataPorcentaje && dataPorcentaje.length > 0 ? (
-                    <TableComponentCasulla datos={dataPorcentaje} fun={handleOpenSheet} />
+                    <div className="p-3 rounded-sm shadow-sm bg-white">
+                        <TableComponentCasulla datos={dataPorcentaje} fun={handleOpenSheet} />
+                    </div>
                 ) : (
                     <>No hay datos</>
                 )

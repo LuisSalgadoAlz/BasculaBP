@@ -373,7 +373,7 @@ export const BuqueDetalles = ({ datos = [], typeImp }) => {
   }, [columnasDisponibles]);
 
   return (
-    <div className="mt-10 mb-4">
+    <div className="">
       <div className="mx-auto">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-gray-500">Detalles</h2>
@@ -424,7 +424,7 @@ export const BuqueDetalles = ({ datos = [], typeImp }) => {
 
         {/* Tabla */}
         {columnasSeleccionadas.length > 0 ? (
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full table-auto">
                 <thead className="bg-[#725033] text-white">
@@ -1036,7 +1036,7 @@ const TableSheet = ({
   };
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
+    <div className="p-8">
       <div className="max-w-4xl mx-auto">
         {openSheet && (
           <div className="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300" />

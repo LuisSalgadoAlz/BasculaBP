@@ -192,7 +192,7 @@ const Informes = () => {
     data: data?.graphProcesos,
     title: "Distribución de Procesos",
     subtitle:
-      "Distribución por porcentaje de entradas y salidas de material.",
+      "Distribución por porcentaje de entradas y salidas de material. (No incluye las canceladas)",
   };
   const propsGraficosTipoDeBoleta = {
     data: data?.graphEstados,

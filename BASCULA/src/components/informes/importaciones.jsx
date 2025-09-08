@@ -308,7 +308,9 @@ const Importaciones = () => {
         ):(
           <div className="max-h-[700px]">
             <BuqueDetalles datos={buquesDetails?.data}  />
-            {buquesDetails && buquesDetails?.pagination?.totalPages > 1 && <Pagination pg={pagination} sp={setPagination} hp={handlePagination} dt={buquesDetails}/>}
+            <div className="bg-white p-4 rounded-b-sm">
+              {buquesDetails && buquesDetails?.pagination?.totalPages > 1 && <Pagination pg={pagination} sp={setPagination} hp={handlePagination} dt={buquesDetails}/>}
+            </div>
           </div>
         )}
       </div>

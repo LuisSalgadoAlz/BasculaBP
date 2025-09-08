@@ -68,7 +68,7 @@ const Casulla = () => {
                 </div>
             </div>
             <CasullaStatsCards total={casulla?.total} />
-            <div className="p-2 bg-white rounded-md">
+            <div className="p-3 bg-white rounded-md shadow-sm">
                 {!casulla || casulla?.data?.length === 0 ? (
                     <NoData />
                 ) : (
