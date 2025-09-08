@@ -1522,6 +1522,7 @@ const getBoletasHistorial = async (req, res) => {
           ...(fechasValidas ? { fechaFin: { gte: startOfDay, lte: endOfDay } } : {}),
           ...(movimiento ? { movimiento: movimiento } : {}),
           ...(producto ? { producto: producto } : {}),
+          ...searchConditions,
         },
       }),
       db.boleta.count({
@@ -1535,6 +1536,7 @@ const getBoletasHistorial = async (req, res) => {
           ...(fechasValidas ? { fechaFin: { gte: startOfDay, lte: endOfDay } } : {}),
           ...(movimiento ? { movimiento: movimiento } : {}),
           ...(producto ? { producto: producto } : {}),
+          ...searchConditions,
         },
       }),
       db.boleta.count({
@@ -1544,24 +1546,40 @@ const getBoletasHistorial = async (req, res) => {
           ...(fechasValidas ? { fechaFin: { gte: startOfDay, lte: endOfDay } } : {}),
           ...(movimiento ? { movimiento: movimiento } : {}),
           ...(producto ? { producto: producto } : {}),
+          ...searchConditions,
         },
       }),
       db.boleta.count({
         where: {
-          AND: [{ estado: { not: "Pendiente" } }, { estado: "Completado" }],
+          AND: [
+            { estado: { not: "Pendiente" } },
+            { estado: "Completado" },
+            { desviacion: { gte: -200, lte: 200 } }, // 👈 dentro del rango
+          ],
           ...(socios ? { socio: socios } : {}),
           ...(fechasValidas ? { fechaFin: { gte: startOfDay, lte: endOfDay } } : {}),
           ...(movimiento ? { movimiento: movimiento } : {}),
           ...(producto ? { producto: producto } : {}),
+          ...searchConditions,
         },
       }),
       db.boleta.count({
         where: {
-          AND: [{ estado: { not: "Pendiente" } }, { estado: "Completo(Fuera de tolerancia)" }],
+          AND: [
+            { estado: { not: "Pendiente" } },
+            {
+              OR: [
+                { estado: "Completo(Fuera de tolerancia)" },
+                { desviacion: { gt: 200 } },
+                { desviacion: { lt: -200 } },
+              ],
+            },
+          ],
           ...(socios ? { socio: socios } : {}),
           ...(fechasValidas ? { fechaFin: { gte: startOfDay, lte: endOfDay } } : {}),
           ...(movimiento ? { movimiento: movimiento } : {}),
           ...(producto ? { producto: producto } : {}),
+          ...searchConditions,
         },
       }),
       // Contar total de registros que coinciden con la búsqueda
