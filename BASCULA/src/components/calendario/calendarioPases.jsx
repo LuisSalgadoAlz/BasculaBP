@@ -13,8 +13,8 @@ import 'react-calendar-timeline/style.css';
 import moment from 'moment';
 import 'moment/locale/es';
 import { VisualizarBoletas } from "../boletas/formBoletas";
-import { getPorcentajeMes, getPorcentajeMesPorDia } from "../../hooks/informes/guardia";
-import TableSheet from "../informes/tables";
+import { getBoletasPorDia, getPorcentajeMes, getPorcentajeMesPorDia } from "../../hooks/informes/guardia";
+import TableSheet, { ConfigurableTable, TableComponentCasulla } from "../informes/tables";
 
 moment.locale('es'); // Establecer idioma a español
 
@@ -39,6 +39,7 @@ export const CalendarioPases = () => {
   const [isLoadData, setIsLoadData] = useState(false)
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [openSheet, setOpenSheet] = useState(false)
+  const [dateSelected, setDateSelected] = useState(new Date())
 
   /**
    * Clicks en el dia
@@ -46,12 +47,14 @@ export const CalendarioPases = () => {
    */
   const handleDayClick = async(info) => {
     const {date, view:{type}} = info
+    const directFormat = new Date(date).toISOString().split('T')[0]
     if (type === 'dayGridMonth') {
       setExpandedDate(date);
       setCurrentView('timeGridDay');
       setDetailsSelect({groups:[], items:[]})
-      await getPorcentajeMesPorDia(setDetailsSelect, date, setIsloading)
-
+      setOpenSheet(true)
+      setDateSelected(date)
+      await getBoletasPorDia(setDetailsSelect, setIsloading, dateBolCalendar.find(items=>items.start === directFormat).boletas)
     }
   };
 
@@ -60,12 +63,14 @@ export const CalendarioPases = () => {
   * @param {*} info 
   */
   const handleEventClick = async(info) => {
-    const {event: {start}, view:{type}} = info
+    const {event: {start}, view:{type}, event:{extendedProps} } = info
     if (type === 'dayGridMonth') {
       setExpandedDate(start);
       setCurrentView('timeGridDay');
       setDetailsSelect({groups:[], items:[]})
-      await getPorcentajeMesPorDia(setDetailsSelect, start, setIsloading)
+      setOpenSheet(true)
+      setDateSelected(start)
+      await getBoletasPorDia(setDetailsSelect, setIsloading, extendedProps.boletas)
     }
   };
 
@@ -87,17 +92,16 @@ export const CalendarioPases = () => {
   const handleCloseExpanded = () => {
     setCurrentView('dayGridMonth');
     setExpandedDate(null);
+    setOpenSheet(false)
   };
 
   const sheetProps = {
-        openSheet, 
-        setOpenSheet, 
-        tableData: detailsDaySeletect?.boletas || [{}], 
-        title: 'Detalles Pases De Salida', 
-        subtitle: `Visualización de pases de salida del día: ${selectedDate}`, 
-        type: true,
-        fixedColumns: ['Boleta', 'Pase de Salida', 'Placa', 'Transporte'] 
-    }
+    tableData: detailsDaySeletect?.data, 
+    title: 'Detalles Pases De Salida', 
+    subtitle: `Visualización de pases de salida del día: ${new Date(dateSelected).toLocaleDateString('es-ES')}`, 
+    type: true,
+    fixedColumns: ['Boleta', 'Pase', 'Placa', 'Transporte', 'Motorista'] 
+  }
 
   return (
     <div className="p-6 relative min-h-[600px]">
@@ -130,7 +134,11 @@ export const CalendarioPases = () => {
               datesSet={handleEventButtons}
               viewDidMount={handleViewChange}
               height="550px"
-              dayCellClassNames={() => ['custom-day-cell']}
+              dayCellClassNames={(arg) => {
+                const date = arg.date.toISOString().split('T')[0]
+                const found = dateBolCalendar?.find(items=>items.start === date)?.onlyColor
+                return found==100 ? ['custom-day-cell'] : found ? ['custom-day-nocomplete'] : ['custom-day-cell']
+              }}
               eventContent={(arg) => (
                 <div style={{ textAlign: 'center',}}>
                   {arg.event.title}
@@ -145,11 +153,11 @@ export const CalendarioPases = () => {
             animate="visible"
             exit="exit"
             variants={expandedVariants}
-            className="fixed inset-0 z-50 bg-white p-6 overflow-auto"
+            className="fixed inset-0 z-50 bg-white p-6"
           >
             <motion.button 
               onClick={handleCloseExpanded}
-              className="mb-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              className="mb-1 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -163,13 +171,13 @@ export const CalendarioPases = () => {
             >
                 {isLoading ? (
                   <BigSpinner />
-                ) : !detailsDaySeletect || detailsDaySeletect.groups.length === 0 ? (
+                ) : !detailsDaySeletect || detailsDaySeletect?.data?.length === 0 || detailsDaySeletect.data === undefined || detailsDaySeletect.data ==='undefined' ? (
                   <div className="min-h-[80vh] flex items-center justify-center">
                     <NoData />
                   </div>
                 ) : (
-                  <div className="max-h-[89vh] overflow-y-auto rounded-2xl [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-100  [&::-webkit-scrollbar-thumb]:bg-gray-300">
-                    <TableSheet {...sheetProps} />
+                  <div className=" overflow-y-auto rounded-2xl">
+                    <ConfigurableTable {...sheetProps} />
                   </div>
                 )}
             </motion.div>

@@ -1582,4 +1582,241 @@ export const TableComponentDescargados = ({ datos = [{}], fun, type=false, loadi
   );
 };
 
+export const ConfigurableTable = ({
+  tableData = [{}], 
+  title, 
+  subtitle, 
+  showColumnConfig = true,
+  fixedColumns = [], // Columnas que no se pueden ocultar/mover
+  storageKey = 'table-columns' // Clave personalizable para localStorage
+}) => {
+  const [visibleColumns, setVisibleColumns] = useState({});
+  const [showColumnSelector, setShowColumnSelector] = useState(false);
+  
+  const getStorageKey = () => {
+    return `${storageKey}-${title ? title.toLowerCase().replace(/\s+/g, '-') : 'default'}`;
+  };
+  
+  const loadColumnsConfig = () => {
+    try {
+      const savedConfig = localStorage.getItem(getStorageKey());
+      return savedConfig ? JSON.parse(savedConfig) : null;
+    } catch (error) {
+      console.warn('Error', error);
+      return null;
+    }
+  };
+  
+  const saveColumnsConfig = (config) => {
+    try {
+      localStorage.setItem(getStorageKey(), JSON.stringify(config));
+    } catch (error) {
+      console.warn('Error', error);
+    }
+  };
+
+  // Memoizar las columnas disponibles para evitar recálculos innecesarios
+  const availableColumns = useMemo(() => {
+    return tableData.length > 0 ? Object.keys(tableData[0]) : [];
+  }, [tableData.length > 0 ? Object.keys(tableData[0]).join(',') : '']);
+
+  // Inicializar columnas visibles cuando cambian las columnas disponibles o el título
+  useEffect(() => {
+    if (availableColumns.length > 0) {
+      const savedConfig = loadColumnsConfig();
+      const initialVisible = {};
+      
+      availableColumns.forEach(column => {
+        // Si hay configuración guardada, usar esa; sino, mostrar todas por defecto
+        initialVisible[column] = savedConfig && savedConfig.hasOwnProperty(column) 
+          ? savedConfig[column] 
+          : true;
+      });
+      
+      // Solo actualizar si la configuración es diferente
+      setVisibleColumns(prev => {
+        const isEqual = Object.keys(initialVisible).length === Object.keys(prev).length &&
+          Object.keys(initialVisible).every(key => initialVisible[key] === prev[key]);
+        
+        return isEqual ? prev : initialVisible;
+      });
+    }
+  }, [availableColumns.join(','), title]);
+  
+  // Obtener columnas visibles filtradas
+  const getVisibleColumns = () => {
+    return availableColumns.filter(column => visibleColumns[column]);
+  };
+  
+  // Toggle visibilidad de columna
+  const toggleColumnVisibility = (columnKey) => {
+    // No permitir ocultar columnas fijas
+    if (fixedColumns.includes(columnKey)) return;
+    
+    setVisibleColumns(prev => {
+      const newConfig = {
+        ...prev,
+        [columnKey]: !prev[columnKey]
+      };
+      
+      // Guardar inmediatamente en localStorage
+      saveColumnsConfig(newConfig);
+      
+      return newConfig;
+    });
+  };
+  
+  // Restablecer configuración de columnas
+  const resetColumnsConfig = () => {
+    const allColumns = Object.keys(tableData[0] || {});
+    const resetConfig = {};
+    
+    allColumns.forEach(column => {
+      resetConfig[column] = true;
+    });
+    
+    setVisibleColumns(resetConfig);
+    saveColumnsConfig(resetConfig);
+    setShowColumnSelector(false);
+  };
+  
+  // Formatear nombre de columna
+  const formatColumnName = (key) => {
+    return key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1');
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col p-1">
+      {/* Header Sticky */}
+      <div className="sticky top-0 bg-white z-30 border-b border-gray-200">
+        <div className="flex items-center justify-between py-4 px-2">
+          <div className="flex-1">
+            {title && (
+              <h2 className="text-2xl font-semibold text-gray-900">{title}</h2>
+            )}
+            {subtitle && (
+              <p className="text-sm text-gray-500 mt-1">{subtitle} - Mostrando {tableData.length} registros</p>
+            )}
+          </div>
+          
+          {showColumnConfig && (
+            <div className="relative">
+              <button
+                onClick={() => setShowColumnSelector(!showColumnSelector)}
+                className="p-2 hover:bg-gray-100 rounded-lg flex items-center space-x-2 testing"
+                title="Configurar columnas"
+              >
+                <AiOutlineSetting className="w-5 h-5 text-gray-600" />
+                <span className="text-sm text-gray-600">Columnas</span>
+              </button>
+              
+              {/* Dropdown del selector de columnas */}
+              {showColumnSelector && (
+                <div className="absolute top-full right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-40">
+                  <div className="p-3 border-b border-gray-200 flex items-center justify-between">
+                    <h3 className="font-medium text-gray-900">Configuración</h3>
+                    <button
+                      onClick={resetColumnsConfig}
+                      className="text-xs text-[#725033] hover:text-[#725033] underline testing"
+                      title="Restablecer configuración"
+                    >
+                      Restablecer
+                    </button>
+                  </div>
+                  <div className="max-h-60 overflow-y-auto">
+                    {availableColumns.map((column) => {
+                      const isFixed = fixedColumns.includes(column);
+                      const isVisible = visibleColumns[column];
+                      
+                      return (
+                        <div
+                          key={column}
+                          className={`flex items-center justify-between p-3 hover:bg-gray-50 ${
+                            isFixed ? 'opacity-60' : 'cursor-pointer'
+                          }`}
+                          onClick={() => !isFixed && toggleColumnVisibility(column)}
+                        >
+                          <div className="flex items-center space-x-2">
+                            {isVisible ? (
+                              <AiOutlineEye className="w-4 h-4 text-[#725033]" />
+                            ) : (
+                              <AiOutlineEyeInvisible className="w-4 h-4 text-gray-400" />
+                            )}
+                            <span className={`text-sm ${isFixed ? 'text-gray-500' : 'text-gray-900'}`}>
+                              {formatColumnName(column)}
+                              {isFixed && <span className="ml-1 text-xs">(fija)</span>}
+                            </span>
+                          </div>
+                          <input
+                            type="checkbox"
+                            checked={isVisible}
+                            onChange={() => !isFixed && toggleColumnVisibility(column)}
+                            disabled={isFixed}
+                            className="h-4 w-4 text-[#725033] rounded border-gray-300 focus:ring-[#725033] disabled:opacity-50"
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="p-3 border-t border-gray-200 bg-gray-50">
+                    <button
+                      onClick={() => setShowColumnSelector(false)}
+                      className="w-full px-3 py-2 text-sm bg-[#725033] text-white rounded-md hover:bg-[#6a4a2f] testing"
+                    >
+                      Aplicar
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Contenido de la tabla */}
+      <div className="flex-1 p-1">
+        <div className="mt-2">
+          {tableData.length === 0 || !tableData ? (
+            <div className="p-12 text-center text-gray-500 border border-gray-200 rounded-lg">
+              No hay datos disponibles
+            </div>
+          ) : (
+            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              {/* Contenedor con altura máxima y scroll para el cuerpo de la tabla */}
+              <div className="max-h-[75vh] overflow-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-100  [&::-webkit-scrollbar-thumb]:bg-gray-300">
+                <table className="w-full">
+                  {/* Header de tabla fijo */}
+                  <thead className="bg-gray-50 sticky top-0 z-10">
+                    <tr>
+                      {getVisibleColumns().map((key) => (
+                        <th key={key} className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
+                          {formatColumnName(key)}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {tableData.map((item, index) => (
+                      <tr key={item.id || index} className="hover:bg-gray-50">
+                        {getVisibleColumns().map((key) => (
+                          <td key={key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {typeof item[key] === 'object' && item[key] !== null ? 
+                              JSON.stringify(item[key]) : 
+                              String(item[key])
+                            }
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default TableSheet;

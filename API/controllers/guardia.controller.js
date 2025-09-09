@@ -327,10 +327,12 @@ const getPorcentajeMes = async(req, res) => {
                     WHEN SUM([Total Registros]) > 0 THEN 
                         CAST(SUM([Efectuado]) * 100.0 / SUM([Total Registros]) AS DECIMAL(5,2))
                     ELSE 0 
-                END as [Porcentaje Cumplimiento]
+                END as [Porcentaje Cumplimiento],
+                STRING_AGG(CAST(id_boleta AS VARCHAR), ', ') as [IDs_Boletas]
             FROM (
-                -- Procesos generales
+                -- Procesos generales (excluyendo idMovimiento 12 y 11)
                 SELECT 
+                    b.id as id_boleta,
                     CASE 
                         WHEN pds.aplicaAlerta = 0 THEN 
                             CASE 
@@ -353,8 +355,9 @@ const getPorcentajeMes = async(req, res) => {
                 
                 UNION ALL
                 
-                -- Servicio de báscula
+                -- idMovimiento = 11 (manejo especial por proceso)
                 SELECT 
+                    b.id as id_boleta,
                     CASE 
                         WHEN pds.aplicaAlerta = 0 THEN
                             CASE 
@@ -406,6 +409,79 @@ const getPorcentajeMes = async(req, res) => {
                         (b.proceso = 1 AND b.fechaFin >= ${start} AND b.fechaFin <= ${end}) OR
                         (b.proceso NOT IN (0,1) AND b.fechaInicio >= ${start} AND b.fechaInicio <= ${end})
                     )
+
+                UNION ALL
+                
+                -- idMovimiento = 12 (manejo especial - puede tener doble pase de salida cuando proceso = 0)
+                SELECT 
+                    b.id as id_boleta,
+                    CASE 
+                        WHEN pds.aplicaAlerta = 0 THEN
+                            CASE 
+                                WHEN b.proceso = 1 THEN 
+                                    -- Para proceso = 1, usar fechaFin
+                                    CASE 
+                                        WHEN DATENAME(weekday, b.fechaFin AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') = 'Saturday' THEN
+                                            CAST(DATEADD(day, 2, b.fechaFin AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') AS DATE)
+                                        ELSE
+                                            CAST(DATEADD(day, 1, b.fechaFin AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') AS DATE)
+                                    END
+                                ELSE 
+                                    -- Para proceso = 0, determinar si usar fechaInicio o fechaFin
+                                    CASE 
+                                        WHEN b.fechaFin IS NOT NULL THEN
+                                            -- Si tiene fechaFin, usar fechaFin (pase de cierre)
+                                            CASE 
+                                                WHEN DATENAME(weekday, b.fechaFin AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') = 'Saturday' THEN
+                                                    CAST(DATEADD(day, 2, b.fechaFin AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') AS DATE)
+                                                ELSE
+                                                    CAST(DATEADD(day, 1, b.fechaFin AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') AS DATE)
+                                            END
+                                        ELSE
+                                            -- Si no tiene fechaFin, usar fechaInicio (pase de creación)
+                                            CASE 
+                                                WHEN DATENAME(weekday, b.fechaInicio AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') = 'Saturday' THEN
+                                                    CAST(DATEADD(day, 2, b.fechaInicio AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') AS DATE)
+                                                ELSE
+                                                    CAST(DATEADD(day, 1, b.fechaInicio AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') AS DATE)
+                                            END
+                                    END
+                            END
+                        ELSE
+                            CASE 
+                                WHEN b.proceso = 1 THEN 
+                                    -- Para proceso = 1, usar fechaFin
+                                    CAST(b.fechaFin AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time' AS DATE)
+                                ELSE 
+                                    -- Para proceso = 0, determinar si usar fechaInicio o fechaFin
+                                    CASE 
+                                        WHEN b.fechaFin IS NOT NULL THEN
+                                            -- Si tiene fechaFin, usar fechaFin (pase de cierre)
+                                            CAST(b.fechaFin AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time' AS DATE)
+                                        ELSE
+                                            -- Si no tiene fechaFin, usar fechaInicio (pase de creación)
+                                            CAST(b.fechaInicio AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time' AS DATE)
+                                    END
+                            END
+                    END AS fecha_local,
+                    CASE WHEN pds.estado = 0 THEN 1 ELSE 0 END as [No Realizo],
+                    CASE WHEN pds.estado = 1 THEN 1 ELSE 0 END as [Efectuado],
+                    1 as [Total Registros]
+                FROM Boleta AS b
+                INNER JOIN PasesDeSalida AS pds ON pds.idBoleta = b.id
+                WHERE idMovimiento = 12
+                    AND (
+                        (b.proceso = 1 AND b.fechaFin IS NOT NULL) OR
+                        (b.proceso = 0 AND b.fechaInicio IS NOT NULL) OR
+                        (b.proceso NOT IN (0,1) AND b.fechaInicio IS NOT NULL)
+                    )
+                    AND (
+                        (b.proceso = 1 AND b.fechaFin >= ${start} AND b.fechaFin <= ${end}) OR
+                        (b.proceso = 0 AND b.fechaFin IS NOT NULL AND b.fechaFin >= ${start} AND b.fechaFin <= ${end}) OR
+                        (b.proceso = 0 AND b.fechaFin IS NULL AND b.fechaInicio >= ${start} AND b.fechaInicio <= ${end}) OR
+                        (b.proceso NOT IN (0,1) AND b.fechaInicio >= ${start} AND b.fechaInicio <= ${end})
+                    )
+
             ) AS DatosUnificados
             GROUP BY fecha_local
             ORDER BY fecha_local DESC;
@@ -417,20 +493,22 @@ const getPorcentajeMes = async(req, res) => {
             'Sin Registrar': item["No Realizo"],
             'Registrados': item["Efectuado"],
             'Porcentaje de cumplimiento': item["Porcentaje Cumplimiento"],
+            boletas: item["IDs_Boletas"].split(', ').map(id => parseInt(id))
         }));
 
-        const makeCalendar = refactorData.map((item) => ({
-            title: `Pases: ${item['Registrados']}/${item['Registros']} - ${item['Porcentaje de cumplimiento']}%`,
+        const makeCalendar = refactorData.map((item, index) => ({
+            title: `Pases: ${item['Registrados']}/${item['Registros']}`,
             start: item.fecha,
             allDay: true,
             display: "auto",
             textColor: "black",
             backgroundColor: "transparent",
             borderColor: "transparent", // Cambiado a transparente
+            boletas: item.boletas,
+            onlyColor: item['Porcentaje de cumplimiento'],
         }));
 
         return res.status(200).send(makeCalendar);
-        
     } catch(err){
         console.log(err)
         return res.status(500).send({err: 'Error Interno del API'})
@@ -439,89 +517,69 @@ const getPorcentajeMes = async(req, res) => {
 
 const getBoletasPorFechaCalendario = async (req, res) => {
     try {
-        const fecha = req.query.fecha || "";
-        const convertDate = fecha && new Date(fecha).toISOString();
+        const { boleta } = req.body;
 
-        if (!convertDate || convertDate === "undefined") {
-            return res.status(400).send({ error: "La fecha es requerida" });
-        }
-
-        // Solo la fecha en formato 2025-09-05
-        const formatted = convertDate.split("T")[0];
-        console.log(formatted);
-
-        const [year, month, day] = formatted.split("-").map(Number);
-        const fechaConsultada = new Date(Date.UTC(year, month - 1, day, 6, 0, 0));
-        const fechaConsultadaFin = new Date(Date.UTC(year, month - 1, day + 1, 5, 59, 59, 999));
-
-        const boletas = await db.boleta.findMany({
+        const boletasDetails = await db.boleta.findMany({
+            select: {
+                numBoleta: true,
+                proceso: true,
+                placa: true,
+                motorista: true, 
+                producto: true,
+                empresa: true,
+                origen: true,
+                destino: true, 
+                furgon: true,
+                fechaInicio: true,
+                movimiento: true, 
+                fechaFin: true,
+                paseDeSalida: {
+                    select: { // aquí hay que usar select, no solo propiedades
+                        numPaseSalida: true,
+                        fechaSalida: true,
+                        observaciones: true,
+                        estado: true,
+                    }
+                },
+                observaciones: true,
+            },
             where: {
-                OR: [
-                    // Procesos general -  fechaFin
-                    {
-                        idMovimiento: { notIn: [11, 12] },
-                        fechaFin: {
-                            gte: fechaInicio,
-                            lte: fechaFin
-                        }
-                    },
-                    // Traslado proceso 0 - usar fechaInicio  
-                    {
-                        idMovimiento: 11,
-                        proceso: 0,
-                        fechaInicio: {
-                            gte: fechaInicio,
-                            lte: fechaFin
-                        }
-                    },
-                    // Traslado proceso 1 - usar fechaFin
-                    {
-                        idMovimiento: 11,
-                        proceso: 1,
-                        fechaFin: {
-                            gte: fechaInicio,
-                            lte: fechaFin
-                        }
-                    },
-                ]
-            },
-            include: {
-                paseDeSalida: true
-            },
-            orderBy: {
-                fechaFin: 'desc'
+                id: {
+                    in: boleta
+                }
             }
         });
 
-        // Crear array plano
-        const resultado = boletas.flatMap(boleta => 
-            boleta.paseDeSalida.map(pase => ({
+        const refactor = boletasDetails.flatMap(boleta => {
+            const boletaBase = {
                 'Boleta': boleta.numBoleta,
-                'Pase de Salida': pase.numPaseSalida,
-                Placa: boleta.placa,
-                Transporte: boleta.empresa,
-                'Inicio Báscula': new Date(boleta.fechaInicio).toLocaleString(),
-                'Finalizo Báscula': boleta.fechaFin ? new Date(boleta.fechaFin).toLocaleString() : 'No Registrada',
-                proceso: boleta.proceso == 0 ? 'Entrada' : 'Salida',
-                movimiento: boleta.movimiento,
-                Producto: boleta.producto, 
-                'Salio De Baprosa': pase.fechaSalida ? new Date(pase.fechaSalida).toLocaleString() : 'No Registrada',
-                Comentarios: pase.observaciones || 'N/A', 
-                Guardia: pase.estado == true ? 'Registrado' : 'Sin Registrar'
-            }))
-        );
+                'Placa': boleta.placa,
+                'Furgón': boleta.furgon || 'N/A',
+                'Motorista': boleta.motorista,
+                'Transporte': boleta.empresa,
+                'Movimiento': boleta.movimiento, 
+                'Origen': boleta.origen,
+                'Destino': boleta.destino,
+                'Observación Báscula': boleta.observaciones || 'N/A',
+                'Inicio Báscula': boleta.fechaInicio ? new Date(boleta.fechaInicio).toLocaleString() : 'No Registrada',
+                'Finalizo Báscua': boleta.fechaFin ? new Date(boleta.fechaFin).toLocaleString() : 'No Registrada',
+            };
 
-        return res.status(200).send({
-            fecha,
-            total: resultado.length,
-            boletas: resultado
+            return boleta.paseDeSalida.map(pase => ({
+                Pase: pase.numPaseSalida,
+                ...boletaBase,
+                'Salio De Baprosa': pase.fechaSalida ? new Date(pase.fechaSalida).toLocaleString() : 'No Registrada',
+                'Observación Guardia': pase.observaciones || 'N/A',
+            }));
         });
 
+        return res.status(200).send({ data: refactor });
     } catch (err) {
         console.log(err);
-        return res.status(500).send({ error: 'Error Interno del API' });
+        return res.status(500).send({ err: 'Error Interno del API' });
     }
 };
+
 
 
 module.exports = {

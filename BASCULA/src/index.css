@@ -164,6 +164,23 @@ a.active {
   cursor: pointer;
 }
 
+.custom-day-nocomplete {
+  background-color: rgba(255, 0, 0, 0.427);
+  border-radius: 5px;
+  color: #333;
+  padding: 0;
+  cursor: pointer;
+}
+
+.custom-day-nocomplete:hover {
+  background-color: hsl(var(--sidebar));
+  color: white !important;
+}
+
+.custom-day-nocomplete:hover div{
+  color: white !important;
+}
+
 .custom-day-cell:hover {
   background-color: hsl(var(--sidebar));
   color: white !important;
@@ -172,12 +189,11 @@ a.active {
 .custom-day-cell:hover div {
   color: white !important;
 }
-.calendario button:not(.noCalendar) {
+.calendario button:not(.noCalendar):not(.testing) {
   background-color: hsl(var(--sidebar)) !important;
   border-radius: 2px !important;
   border: none !important;
 }
-
 
 .calendario button:focus,
 .calendario button:active {

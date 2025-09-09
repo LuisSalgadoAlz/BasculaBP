@@ -73,12 +73,14 @@ export const getPorcentajeMesPorDia = async (fun, start, setIsLoading) => {
 
 
 
-export const getBoletasPorDia = async (fun, setIsLoading, fecha) => {
+export const getBoletasPorDia = async (fun, setIsLoading, boleta) => {
   try {
     setIsLoading(true)
-    const response = await fetch(`${URLHOST}guardia/boletas/dias?fecha=${fecha}`, {
-      method: "GET",
+    const response = await fetch(`${URLHOST}guardia/calendario/dia`, {
+      method: "POST",
+      body: JSON.stringify({boleta}),
       headers: {
+        "Content-Type": "application/json",
         Authorization: Cookies.get('token'),
       },
     });
