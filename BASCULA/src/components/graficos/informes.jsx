@@ -862,6 +862,10 @@ export const BaprosaSiloChart = ({ data, onSiloAction, isLoading }) => {
                       <stop offset="0%" stopColor="#f5f5f4" />
                       <stop offset="100%" stopColor="#e7e5e4" />
                     </linearGradient>
+                    <linearGradient id="pesoGradWarnig" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#FFD700" />
+                      <stop offset="100%" stopColor="#FFE135" />
+                    </linearGradient>
                   </defs>
 
                   <CartesianGrid
@@ -940,8 +944,8 @@ export const BaprosaSiloChart = ({ data, onSiloAction, isLoading }) => {
                     {chartData.map((entry, index) => (
                       <Cell 
                         key={`cell-peso-${index}`} 
-                        fill={entry.porcentaje_ocupacion >= 90 ? "url(#pesoGradAlerta)" : "url(#pesoGradNormal)"}
-                        stroke={entry.porcentaje_ocupacion >= 90 ? "#b91c1c" : "#047857"}
+                        fill={entry.porcentaje_ocupacion >= 85 ? "url(#pesoGradAlerta)" : entry.porcentaje_ocupacion >= 60 ?  "url(#pesoGradWarnig)" : "url(#pesoGradNormal)"}
+                        stroke={entry.porcentaje_ocupacion >= 90 ? "#b91c1c" : entry.porcentaje_ocupacion >= 60 ? "#FFE135" : "#059669"}
                         strokeWidth={0.5}
                       />
                     ))}
