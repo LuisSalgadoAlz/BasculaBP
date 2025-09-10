@@ -476,7 +476,7 @@ const buscarBoleSinQR = async(req, res) => {
 
     if (!boleta) return res.status(200).send({err: 'Boleta no encontrada'})
     if (boleta.estado !='Pendiente') return res.status(200).send({err: 'Boleta ya finalizada, no puede asignarla.'})
-    if (boleta.idMovimiento!==2) return res.status(200).send({err: 'Favor, ingresar boletas proporcionadas por su ticket'})
+    if (boleta.idMovimiento!==2 && (boleta.idMovimiento!==14 && boleta.idProducto!==17)) return res.status(200).send({err: 'Favor, ingresar boletas proporcionadas por su ticket'})
 
     if (boleta.tolvaAsignada!=usuario.UsuariosPorTolva.tolva) return res.status(200).send({err: 'Boleta, no esta asignada a su tolva, favor enviar a la tolva correcta'})
     if (tolva!=0) return res.status(200).send({err: 'Boleta ya ha sido asignada'})
@@ -614,7 +614,7 @@ const postSiloInBoletas = async(req, res) => {
 
     const arrTolva = [sello1, sello2, sello3, sello4, sello5, sello6].filter(Boolean); 
     /* Autorizado por Javier y Salomon dia: 18/9/2025 a las 3PM */
-    if (arrTolva.length < 3) return res.status(200).send({ err: 'Minimo de marchamos 3.' });
+    if ((arrTolva.length < 3 && boleta.idMovimiento===2)) return res.status(200).send({ err: 'Minimo de marchamos 3.' });
     const arrBoleta = [boleta.sello1, boleta.sello2, boleta.sello3, boleta.sello4, boleta.sello5, boleta.sello6].filter(Boolean);
 
     const arraysIguales = (a, b) => {

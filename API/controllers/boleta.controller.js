@@ -605,6 +605,12 @@ const postClientePlacaMoto = async (req, res) => {
         });
       }
 
+      if (idProducto === 17 && idMovimiento===14) {
+        Object.assign(baseData, {
+          tolvaAsignada: 2,
+        })
+      }
+
       // Datos específicos para movimiento 2
       if (idMovimiento == 2 || idMovimiento ==15) {
         Object.assign(baseData, {
@@ -631,7 +637,7 @@ const postClientePlacaMoto = async (req, res) => {
       }
     });
 
-    const debeImprimirQR = (idMovimiento === 2) /* Se mantienen unicamente a importaciones a granel || (idProducto === 17 && idMovimiento === 14)   */
+    const debeImprimirQR = (idMovimiento === 2 || (idProducto === 17 && idMovimiento===14))
     const ocupaAlerta = idMovimiento ? listaInicialAlertas.includes(idMovimiento) : false
     const debeCrearPase = idMovimiento ? list_pase_inicial.includes(idMovimiento) : false
     if (debeCrearPase) {

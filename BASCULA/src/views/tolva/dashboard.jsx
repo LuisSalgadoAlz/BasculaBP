@@ -190,10 +190,10 @@ const DashboardTolva = () => {
   const hdlSubmit = async () => {
     if(isLoadAsingar) return
     const { silo, silo2, silo3, sello1, sello2, sello3, sello4, sello5, sello6 } = formData || {};
-
-    if(!sello1 && !sello2 && !sello3 && !sello4 && !sello5 && !sello6){
+    console.log(data)
+    if((!sello1 && !sello2 && !sello3 && !sello4 && !sello5 && !sello6) && (data.idProducto!==17 && data.idMovimiento!==14)){
       toast.error('Debe digitar al menos un marchamo.', {style:{background:'#ff4d4f'}})
-      retur
+      return
     }
 
     if((sello1 && sello1.length !==6) || (sello2 && sello2.length !==6) || (sello3 && sello3.length !==6) || (sello4 && sello4.length !==6) || (sello5 && sello5.length !==6) || (sello6 && sello6.length !==6)) {
