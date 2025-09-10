@@ -28,10 +28,10 @@ export const TablaResumenBFH = ({datos=[]}) => {
                     CANTIDAD VIAJES
                   </th>
                   <th className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider">
-                    QQ T.E.H
+                    TM T.E.H
                   </th>
                   <th className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider">
-                    PESO NETO QQ
+                    PESO NETO TM
                   </th>
                   <th className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider">
                     DIF. EN PESOS
@@ -98,10 +98,10 @@ export const TablaResumenBFHLoader = () => {
                     # VIAJE TEH
                   </th>
                   <th className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider">
-                    QQ T.E.H
+                    TM T.E.H
                   </th>
                   <th className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider">
-                    PESO NETO QQ
+                    PESO NETO TM
                   </th>
                   <th className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider">
                     DIF. EN PESOS
