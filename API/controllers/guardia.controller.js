@@ -562,7 +562,7 @@ const getBoletasPorFechaCalendario = async (req, res) => {
                 'Destino': boleta.destino,
                 'Observación Báscula': boleta.observaciones || 'N/A',
                 'Inicio Báscula': boleta.fechaInicio ? new Date(boleta.fechaInicio).toLocaleString() : 'No Registrada',
-                'Finalizo Báscua': boleta.fechaFin ? new Date(boleta.fechaFin).toLocaleString() : 'No Registrada',
+                'Finalizo Báscula': boleta.fechaFin ? new Date(boleta.fechaFin).toLocaleString() : 'No Registrada',
             };
 
             return boleta.paseDeSalida.map(pase => ({

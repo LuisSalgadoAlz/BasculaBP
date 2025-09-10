@@ -22,6 +22,7 @@ export const Modals = (props) => {
 
   const marchamos = [data?.sello1, data?.sello2, data?.sello3, data?.sello4, data?.sello5, data?.sello6]
   const marchamosValidos = marchamos.filter(item => item && item.trim() !== '');
+  const aplicanMarchamos = data?.idMovimiento === 14 && data?.idProducto === 17
 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black bg-opa-50 sm:p-4">
@@ -128,9 +129,10 @@ export const Modals = (props) => {
                   </div>
                 </div>
               </div>
-
+              {console.log(data)}
               {/* Verificación de Marchamos - Expandible */}
-              <div className="bg-gray-50 rounded-lg border border-gray-200">
+              {!aplicanMarchamos && (
+                <div className="bg-gray-50 rounded-lg border border-gray-200">
                 <button
                   onClick={() => setIsMarchamosExpanded(!isMarchamosExpanded)}
                   className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-100 transition-colors rounded-lg"
@@ -190,6 +192,7 @@ export const Modals = (props) => {
                   </div>
                 )}
               </div>
+              )}
 
               {/* Selección de Destinos */}
               <div className="space-y-3">

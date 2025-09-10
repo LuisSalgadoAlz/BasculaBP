@@ -420,7 +420,7 @@ const analizadorQR = async (req, res) => {
         return res.status(200).json({err: 'Boleta ya finalizada, no puede asignarla.'});
       }
           
-      if (boleta.idMovimiento!==2) return res.status(200).send({err: 'Favor, ingresar boletas proporcionadas por su ticket'})
+      if (boleta.idMovimiento!==2 && (boleta.idMovimiento!==14 && boleta.idProducto!==17)) return res.status(200).send({err: 'Favor, ingresar boletas proporcionadas por su ticket'})
       if (boleta.tolvaAsignada!=usuario.UsuariosPorTolva.tolva) return res.status(200).send({err: 'Boleta, no esta asignada a su tolva, favor enviar a la tolva correcta'})
       if (tolva!=0) return res.status(200).send({err: 'Boleta ya ha sido asignada'})
       
