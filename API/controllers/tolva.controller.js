@@ -1011,7 +1011,7 @@ const getInfoAllSilos = async (req, res) => {
           WHERE rs.SiloId IS NULL OR silo_data.numBoleta >= rs.ultimoReset
       ) peso_calculado ON s.id = peso_calculado.silo_id
       GROUP BY s.id, s.nombre, s.capacidad
-      ORDER BY s.nombre;
+      ORDER BY s.id;
     `;
 
     // Convertir los resultados a un formato más amigable para JavaScript
@@ -1022,9 +1022,19 @@ const getInfoAllSilos = async (req, res) => {
       porcentaje_ocupacion: row.porcentaje_ocupacion ? Number(row.porcentaje_ocupacion) : 0
     }));
 
+    const formattedResultBar2 = result.map(row => ({
+      silo_nombre: row.silo_nombre,
+      capacidad: 100,
+      capacidadNeta: row.capacidad,
+      peso_total: row.porcentaje_ocupacion ? Number(row.porcentaje_ocupacion) > 100 ? 100 : Number(row.porcentaje_ocupacion) : 0,
+      peso_total_neto: Number(row.peso_total),
+      porcentaje_ocupacion: row.porcentaje_ocupacion ? Number(row.porcentaje_ocupacion) : 0
+    }));
+
     res.status(200).json({
       success: true,
       data: formattedResult,
+      data2: formattedResultBar2,
       total: formattedResult.length
     });
 

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { BaprosaSiloChart } from "../graficos/informes";
+import { BaprosaSiloChart, BaprosaSiloChart2 } from "../graficos/informes";
 import { getHistoricoViajes, getInfoSilos, getStatsSilosForBuques, getUsers, postCreateNewReset } from "../../hooks/informes/tolva";
 import { SelectFormImportaciones, StatsCardTolvaReports, TableComponentDescargados } from "./tables";
 import { getBuquesDetalles, getDataForSelect, getResumenBFH } from "../../hooks/informes/granza";
@@ -140,7 +140,7 @@ const TolvaReportes = () => {
     <>
       <div className="flex justify-between w-full gap-5 max-lg:flex-col mb-4">
         <div className="parte-izq">
-          <h1 className="text-3xl font-bold titulo">Reportes: tolva</h1>
+          <h1 className="text-3xl font-bold titulo">Reportes: Silos</h1>
           <h1 className="text-gray-600 max-sm:text-sm">
             {" "}
             Análisis detallado de importaciones y gestión de silos
@@ -179,12 +179,6 @@ const TolvaReportes = () => {
           </div>
         </div>
       </div>
-      {loading && <div>Cargando...</div>}
-      {console.log(data )}
-      {data &&(
-        <BaprosaSiloChart data={data?.data} onSiloAction={handleResetSilo} isLoading={loading}/>
-      )}  
-
       {/* Parte para colocar las estadisticas */}
       <StatsCardTolvaReports value={stats?.asignadas} loading={loadingStats} tiempos={stats?.tiempos}/>
       

@@ -56,12 +56,17 @@ const RUTAS_ADMIN = [
 const RUTAS_REPORTES = [
   {
     path: "/calendario",
-    name: "Calendario",
+    name: "Historico Boletas",
+    icon: <BsCalendarWeek />,
+  },
+  {
+    path: "/reporteGuardia",
+    name: "Pases de Salida",
     icon: <BsCalendarWeek />,
   },
   {
     path: "/informes",
-    name: "Informes",
+    name: "Constructor",
     icon: <BsClipboard2Data  />,
   },
   {
@@ -76,8 +81,8 @@ const RUTAS_REPORTES = [
   },
   ,
   {
-    path: "/reporteGuardia",
-    name: "Guardia",
+    path: "/reporteSilos",
+    name: "Estado Silos",
     icon: <BsClipboard2Data />,
   },
   {

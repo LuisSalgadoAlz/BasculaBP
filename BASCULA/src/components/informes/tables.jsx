@@ -1804,7 +1804,7 @@ export const ConfigurableTable = ({
                             {typeof item[key] === 'object' && item[key] !== null ? 
                               JSON.stringify(item[key]) : 
                               item[key] == false ? (
-                              <div className='flex items-center justify-left gap-2 text-red-600'>
+                              <div className='flex items-center justify-left gap-2 text-red-600 font-bold'>
                                 <IoWarningOutline />
                                 No registrada.
                               </div>) 
