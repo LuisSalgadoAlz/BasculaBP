@@ -1135,7 +1135,7 @@ const TableSheet = ({
           <div className="flex-1 overflow-hidden flex flex-col">
             {tableData.length === 0 || !tableData ? (
               <div className="p-6 text-center text-gray-500 flex-1 flex items-center justify-center">
-                No data
+                No hay datos.
               </div>
             ) : (
               <>

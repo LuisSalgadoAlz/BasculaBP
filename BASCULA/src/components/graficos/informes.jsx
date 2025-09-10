@@ -575,11 +575,11 @@ export const ReportesBascula = () => {
 };
 
 
-export const BaprosaSiloChart2 = ({ data, onSiloAction, isLoading }) => {
+export const BaprosaSiloChart2 = ({ data, onSiloAction, isLoading, handleClickBar }) => {
   const [selectedSilos, setSelectedSilos] = useState([]);
   const [showConfig, setShowConfig] = useState(false);
   const [showSiloManagement, setShowSiloManagement] = useState(false);
-  const [confirmAction, setConfirmAction] = useState(null);
+  const [confirmAction, setConfirmAction] = useState(null);  
   
   // Clave para localStorage
   const STORAGE_KEY = 'baprosa_selected_silos2';
@@ -848,6 +848,7 @@ export const BaprosaSiloChart2 = ({ data, onSiloAction, isLoading }) => {
                   data={chartData}
                   margin={{ top: 20, right: 30, left: 20, bottom: 80 }}
                   barGap={8}
+                  onClick={handleClickBar}
                 >
                   <defs>
                     <linearGradient id="pesoGradNormal" x1="0" y1="0" x2="0" y2="1">
@@ -908,6 +909,7 @@ export const BaprosaSiloChart2 = ({ data, onSiloAction, isLoading }) => {
 
                   <Tooltip
                     contentStyle={{
+                      userSelect: 'none',
                       backgroundColor: "white",
                       border: "1px solid #d6d3d1",
                       borderRadius: "8px",
@@ -1251,7 +1253,7 @@ export const BaprosaSiloChart2 = ({ data, onSiloAction, isLoading }) => {
   );
 };
 
-export const BaprosaSiloChart = ({ data, onSiloAction, isLoading }) => {
+export const BaprosaSiloChart = ({ data, onSiloAction, isLoading, handleBarClick }) => {
   const [selectedSilos, setSelectedSilos] = useState([]);
   const [showConfig, setShowConfig] = useState(false);
   const [showSiloManagement, setShowSiloManagement] = useState(false);
@@ -1524,6 +1526,7 @@ export const BaprosaSiloChart = ({ data, onSiloAction, isLoading }) => {
                   data={chartData}
                   margin={{ top: 20, right: 30, left: 20, bottom: 80 }}
                   barGap={8}
+                  onClick={handleBarClick}
                 >
                   <defs>
                     <linearGradient id="pesoGradNormal" x1="0" y1="0" x2="0" y2="1">
@@ -1584,6 +1587,7 @@ export const BaprosaSiloChart = ({ data, onSiloAction, isLoading }) => {
 
                   <Tooltip
                     contentStyle={{
+                      userSelect: 'none',
                       backgroundColor: "white",
                       border: "1px solid #d6d3d1",
                       borderRadius: "8px",

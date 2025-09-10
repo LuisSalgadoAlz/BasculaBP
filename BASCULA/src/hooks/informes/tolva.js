@@ -25,6 +25,31 @@ export const getInfoSilos = async (fun, setIsLoading) => {
 };
 
 
+export const getInfoSilosDetails = async (fun, setIsLoading, boletas) => {
+  try {
+    setIsLoading(true)
+    const response = await fetch(`${URLHOST}tolva/info/silos/details`, {
+      method: "POST",
+      body: JSON.stringify({boletas}),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: Cookies.get('token'),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API");
+    }
+
+    const data = await response.json();
+    fun(data);
+  } catch (error) {
+    console.error("Error al obtener los clientes:", error);
+  } finally{
+    setIsLoading(false)
+  }
+};
+
 export const postCreateNewReset = async (siloInfo, setIsLoading) => {
   try {
     setIsLoading(true)

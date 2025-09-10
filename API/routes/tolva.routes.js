@@ -1,5 +1,5 @@
 const tolva = require('express').Router();
-const { analizadorQR, getDataForSelectSilos, getAsignForDay, getStatsForTolva, buscarBoleSinQR, getListUsersForTolva, postSiloInBoletas, getTolvasDeDescargasOcupadas, updateFinalizarDescarga, getInfoAllSilos, postResetSilo, getStatsBuquesAndAll, getViajesTotales, getUserTolva, getInfoForBuquesQQ } = require('../controllers/tolva.controller.js');
+const { analizadorQR, getDataForSelectSilos, getAsignForDay, getStatsForTolva, buscarBoleSinQR, getListUsersForTolva, postSiloInBoletas, getTolvasDeDescargasOcupadas, updateFinalizarDescarga, getInfoAllSilos, postResetSilo, getStatsBuquesAndAll, getViajesTotales, getUserTolva, getInfoForBuquesQQ, postGetallInfoDetailsSilos } = require('../controllers/tolva.controller.js');
 const verificarToken = require('../middlewares/authJWT.js')
 const upload = require('../middlewares/upload.js');
 
@@ -16,6 +16,7 @@ tolva.get("/info/users", getUserTolva)
 tolva.get("/info/silosDestino", getInfoForBuquesQQ)
 tolva.post("/analizar-qr", upload.single('image'), analizadorQR);
 tolva.post("/newReset", postResetSilo);
+tolva.post("/info/silos/details", postGetallInfoDetailsSilos)
 tolva.put("/add/silo/:id", postSiloInBoletas)
 tolva.put("/upd/silo/:id", updateFinalizarDescarga)
 

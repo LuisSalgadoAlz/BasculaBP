@@ -2,12 +2,17 @@ import { useState } from "react";
 import { BaprosaSiloChart, BaprosaSiloChart2 } from "../graficos/informes";
 import { useCallback } from "react";
 import { useEffect } from "react";
-import { getInfoSilos, postCreateNewReset } from "../../hooks/informes/tolva";
+import { getInfoSilos, getInfoSilosDetails, postCreateNewReset } from "../../hooks/informes/tolva";
+import TableSheet from "./tables";
 
 const ReportesSilos = () => {
   const [data, setData] = useState();
   const [loading, setLoading] = useState(false);
   const [loadingReset, setLoadingReset] = useState(false);
+  const [details, setDetails] = useState()
+  const [loadingDetails, setLoadingDetails] = useState(false)
+  const [openSheet, setOpenSheet] = useState(false)
+  const [selectedSilos, setSelectedSilos] = useState([])
 
   const fetchData = useCallback(() => {
     getInfoSilos(setData, setLoading);
@@ -19,9 +24,28 @@ const ReportesSilos = () => {
     fetchData();
   };
 
+  const handleClickBar = (data) => {
+    const siloData = data.activePayload[0].payload;
+    console.log(siloData)
+    getInfoSilosDetails(setDetails, setLoadingDetails, siloData.boletas)
+    setSelectedSilos(siloData?.silo_nombre)
+    setOpenSheet(true)
+  }
+
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  const sheetProps = {
+    openSheet, 
+    setOpenSheet, 
+    tableData: details?.data,
+    title: 'Detalles Silo', 
+    subtitle: `Visualización de boletas ingresadas al silo: ${selectedSilos}`, 
+    type: true,
+    fixedColumns: ['#', 'numBoleta', 'placa', 'pesoNeto', 'pesoAcumulado', 'socio'], 
+    storageKey: 'tolva-details'
+  }
 
   return (
     <>
@@ -41,14 +65,17 @@ const ReportesSilos = () => {
             data={data?.data2}
             onSiloAction={handleResetSilo}
             isLoading={loading}
+            handleClickBar={handleClickBar}
           />
           <BaprosaSiloChart
             data={data?.data}
             onSiloAction={handleResetSilo}
             isLoading={loading}
+            handleBarClick={handleClickBar}
           />
         </>
       )}
+      <TableSheet {...sheetProps} />
     </>
   );
 };
