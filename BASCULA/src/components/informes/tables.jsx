@@ -10,6 +10,7 @@ import { BsArrowsAngleExpand } from "react-icons/bs";
 import Select from "react-select";
 import { IoTimerOutline } from "react-icons/io5";
 import { AiOutlineSetting, AiOutlineEye,   } from 'react-icons/ai';
+import { IoWarningOutline } from "react-icons/io5";
 
 export const TablaResumenBFH = ({datos=[]}) => {
   return (
@@ -1802,7 +1803,12 @@ export const ConfigurableTable = ({
                           <td key={key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {typeof item[key] === 'object' && item[key] !== null ? 
                               JSON.stringify(item[key]) : 
-                              String(item[key])
+                              item[key] == false ? (
+                              <div className='flex items-center justify-left gap-2 text-red-600'>
+                                <IoWarningOutline />
+                                No registrada.
+                              </div>) 
+                              : String(item[key])
                             }
                           </td>
                         ))}

@@ -561,14 +561,14 @@ const getBoletasPorFechaCalendario = async (req, res) => {
                 'Origen': boleta.origen,
                 'Destino': boleta.destino,
                 'Observación Báscula': boleta.observaciones || 'N/A',
-                'Inicio Báscula': boleta.fechaInicio ? new Date(boleta.fechaInicio).toLocaleString() : 'No Registrada',
-                'Finalizo Báscula': boleta.fechaFin ? new Date(boleta.fechaFin).toLocaleString() : 'No Registrada',
+                'Inicio Báscula': boleta.fechaInicio ? new Date(boleta.fechaInicio).toLocaleString() : false,
+                'Finalizo Báscula': boleta.fechaFin ? new Date(boleta.fechaFin).toLocaleString() : false,
             };
 
             return boleta.paseDeSalida.map(pase => ({
                 Pase: pase.numPaseSalida,
                 ...boletaBase,
-                'Salio De Baprosa': pase.fechaSalida ? new Date(pase.fechaSalida).toLocaleString() : 'No Registrada',
+                'Salio De Baprosa': pase.fechaSalida ? new Date(pase.fechaSalida).toLocaleString() : false,
                 'Observación Guardia': pase.observaciones || 'N/A',
             }));
         });
