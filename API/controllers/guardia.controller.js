@@ -552,7 +552,7 @@ const getBoletasPorFechaCalendario = async (req, res) => {
 
         const refactor = boletasDetails.flatMap(boleta => {
             const boletaBase = {
-                'Boleta': boleta.numBoleta,
+                'Boleta': boleta.numBoleta || 'N/A',
                 'Placa': boleta.placa,
                 'Furgón': boleta.furgon || 'N/A',
                 'Motorista': boleta.motorista,
