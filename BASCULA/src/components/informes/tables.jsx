@@ -855,7 +855,7 @@ export const ModalReportes=({reports, hdlClose, buque = 1058, factura='110016055
   )
 }
 
-export const TableComponentCasulla = ({ datos = [{}], fun, total = [{}] }) => {
+export const TableComponentCasulla = ({ datos = [{}], fun, total = [{}], type = true }) => {
   // Función para extraer el valor numérico del porcentaje
   const getPercentageValue = (value) => {
     if (typeof value === 'string' && value.includes('%')) {
@@ -875,13 +875,15 @@ export const TableComponentCasulla = ({ datos = [{}], fun, total = [{}] }) => {
           <thead className="text-xs uppercase bg-[#725033] rounded-2xl text-white">
             <tr>
               {columnKeys.map((el, keys) => (
-                <th key={keys} scope="col" className={`px-6 py-4 ${(keys > 1 && lastColumnIndex!==keys) && 'text-right'} ${lastColumnIndex===keys && 'text-center'}`}>
+                <th key={keys} scope="col" className={`px-6 py-4 ${(keys > 1 && lastColumnIndex!==keys && type) && 'text-right'} ${(lastColumnIndex===keys && type) && 'text-center'}`}>
                   {el}
                 </th>
               ))}
-              <th scope="col" className="px-6 py-3 text-center">
-                Detalles
-              </th>
+              {type && (
+                <th scope="col" className="px-6 py-3 text-center">
+                  Detalles
+                </th>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -892,8 +894,8 @@ export const TableComponentCasulla = ({ datos = [{}], fun, total = [{}] }) => {
                 onDoubleClick={() => fun(fila)}
               >
                 {Object.values(fila).map((el, key) => (
-                  <td key={key} className={`px-6 py-3 text-gray-700 text-sm font-mono ${key > 1 && 'text-right'}`}>
-                    {key === lastColumnIndex ? (
+                  <td key={key} className={`px-6 py-3 text-gray-700 text-sm font-mono ${(key > 1 && type) && 'text-right'}`}>
+                    {(key === lastColumnIndex && type) ? (
                       // Renderizar progress bar para la última columna (porcentaje)
                       <div className="flex items-center space-x-2">
                         <div className="flex-1 bg-gray-200 rounded-full h-2.5 min-w-[20px] flex-col">
@@ -912,16 +914,18 @@ export const TableComponentCasulla = ({ datos = [{}], fun, total = [{}] }) => {
                     )}
                   </td>
                 ))}
-                <td className="py-3 text-center">
-                  <button
-                    className="font-medium text-gray-800 hover:underline text-center"
-                    onClick={() => fun(fila)}
-                  >
-                    <span className="text-center">
-                      <BsArrowsAngleExpand className="text-xl" />
-                    </span>
-                  </button>
-                </td>
+                {type && (
+                  <td className="py-3 text-center">
+                    <button
+                      className="font-medium text-gray-800 hover:underline text-center"
+                      onClick={() => fun(fila)}
+                    >
+                      <span className="text-center">
+                        <BsArrowsAngleExpand className="text-xl" />
+                      </span>
+                    </button>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
@@ -1458,6 +1462,61 @@ export const StatsCardTolvaReports = ({ value, loading, tiempos }) => {
     </div>
   )
 }
+
+export const StatsCardServicioBascula = ({ data, icons }) => {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Total de Servicios */}
+      <StatsCard
+        title="Total Servicios"
+        value={formatNumber(data?.totalServicios)}
+        icon= {
+          (
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          )
+        }
+        bgColor="bg-white"
+        iconColor="text-[#725033]"
+        textColor="text-[#725033]"
+      />
+
+      {data?.productoDetalle.map((item) => (
+        <StatsCard
+          key={item.producto}
+          title={item.producto === 24 ? 'SERVICIO BASCULA: DOBLE' : 'SERVICIO BASCULA: SENCILLO'}
+          value={`${formatNumber(item.totalLempiras)} Lps`}
+          icon= {
+            (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            )
+          }
+          bgColor="bg-white"
+          iconColor="text-[#725033]"
+          textColor="text-[#725033]"
+        /> 
+      ))}
+
+      <StatsCard
+        title="Total Servicios"
+        value={`${formatNumber(data?.totalGeneralLempiras)} Lps`}
+        icon= {
+          (
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          )
+        }
+        bgColor="bg-white"
+        iconColor="text-[#725033]"
+        textColor="text-[#725033]"
+      />
+    </div>
+  );
+};
 
 export const TableComponentDescargados = ({ datos = [{}], fun, type=false, loading }) => {
   // Función para extraer el valor numérico del porcentaje

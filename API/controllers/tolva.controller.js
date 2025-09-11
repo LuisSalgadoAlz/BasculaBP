@@ -1201,9 +1201,11 @@ const getStatsBuquesAndAll = async (req, res) => {
 
     const buqueId = buque ? parseInt(buque) : null;
 
+    // Agregando suma de peso neto por tolva
     const cantidadBoletasPorTolva = await db.boleta.groupBy({
       by: ['tolvaAsignada'],
       _count: { tolvaAsignada: true },
+      _sum: { pesoNeto: true }, // Agregando suma del peso neto
       where: {
         tolvaAsignada: {
           not: null
@@ -1215,7 +1217,8 @@ const getStatsBuquesAndAll = async (req, res) => {
 
     const refactorData = cantidadBoletasPorTolva.map(item => ({
       tolvaAsignada: item.tolvaAsignada,
-      cantidad: item._count.tolvaAsignada
+      cantidad: item._count.tolvaAsignada,
+      pesoNeto: item._sum.pesoNeto || 0 // Agregando peso neto total
     }));
 
     let resultado;
@@ -1226,7 +1229,8 @@ const getStatsBuquesAndAll = async (req, res) => {
         SELECT 
           t.usuarioTolva,
           t.usuarioDeCierre,
-          COUNT(DISTINCT t.idBoleta) as totalUnicos
+          COUNT(DISTINCT t.idBoleta) as totalUnicos,
+          SUM(b.pesoNeto) as pesoNetoTotal
         FROM Boleta b
         INNER JOIN Tolva t ON b.id = t.idBoleta
         WHERE b.idSocio = ${buqueId}
@@ -1238,7 +1242,8 @@ const getStatsBuquesAndAll = async (req, res) => {
             + 'h ' + 
           CAST(AVG(DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida)) % 60 AS VARCHAR) 
             + 'm' AS PromedioTiempo, 
-          b.tolvaAsignada
+          b.tolvaAsignada,
+          SUM(b.pesoNeto) as pesoNetoTotal
         FROM Boleta AS b
         INNER JOIN Tolva AS t ON b.id = t.idBoleta
         WHERE b.idSocio = ${buqueId}
@@ -1249,7 +1254,8 @@ const getStatsBuquesAndAll = async (req, res) => {
         SELECT 
           t.usuarioTolva,
           t.usuarioDeCierre,
-          COUNT(DISTINCT t.idBoleta) as totalUnicos
+          COUNT(DISTINCT t.idBoleta) as totalUnicos,
+          SUM(b.pesoNeto) as pesoNetoTotal
         FROM Boleta b
         INNER JOIN Tolva t ON b.id = t.idBoleta
         GROUP BY t.usuarioTolva, t.usuarioDeCierre
@@ -1260,7 +1266,8 @@ const getStatsBuquesAndAll = async (req, res) => {
             + 'h ' + 
           CAST(AVG(DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida)) % 60 AS VARCHAR) 
             + 'm' AS PromedioTiempo, 
-          b.tolvaAsignada
+          b.tolvaAsignada,
+          SUM(b.pesoNeto) as pesoNetoTotal
         FROM Boleta AS b
         INNER JOIN Tolva AS t ON b.id = t.idBoleta
         GROUP BY b.tolvaAsignada
@@ -1268,24 +1275,33 @@ const getStatsBuquesAndAll = async (req, res) => {
     }
 
     const totalDescargas = resultado.reduce((total, item) => total + Number(item.totalUnicos), 0);
+    const totalPesoNeto = resultado.reduce((total, item) => total + Number(item.pesoNetoTotal || 0), 0);
 
     const dataLimpia = resultado.map((item) => {
       const cantidad = Number(item.totalUnicos);
+      const pesoNeto = Number(item.pesoNetoTotal || 0);
       const porcentaje = totalDescargas > 0 ? ((cantidad / totalDescargas) * 100).toFixed(2) : 0;
+      const porcentajePeso = totalPesoNeto > 0 ? ((pesoNeto / totalPesoNeto) * 100).toFixed(2) : 0;
       
       return {
         Usuario: item.usuarioTolva === item.usuarioDeCierre 
           ? item.usuarioTolva 
           : `${item.usuarioTolva} ${item.usuarioDeCierre ? `/ ${item.usuarioDeCierre}` : ''}`,
         Cantidad: cantidad,
-        Porcentaje: `${porcentaje}%`
+        Porcentaje: `${porcentaje}%`,
+        'Descargado': `${pesoNeto.toFixed(2)/100} QQ`,
+        PorcentajePeso: `${porcentajePeso}%`
       };
     });    
 
     return res.status(200).json({
       asignadas: refactorData,
       descargadas: dataLimpia, 
-      tiempos: tiempos
+      tiempos: tiempos,
+      totales: {
+        totalDescargas,
+        totalPesoNeto
+      }
     });
 
   } catch (err) {

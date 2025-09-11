@@ -580,7 +580,154 @@ const getBoletasPorFechaCalendario = async (req, res) => {
     }
 };
 
+const getServicioDeBasculaStats = async (req, res) => {
+  try {
+    const dateIn = req.query.dateIn || null;
+    const dateOut = req.query.dateOut || null;
 
+    const fechasValidas = dateIn && dateOut && 
+                        dateIn !== "undefined" && dateOut !== "undefined" && 
+                        dateIn !== "null" && dateOut !== "null" && 
+                        dateIn.trim() !== "" && dateOut.trim() !== "";
+                            
+    if (fechasValidas) {
+        const [y1, m1, d1] = dateIn.split("-").map(Number);
+        startOfDay = new Date(Date.UTC(y1, m1 - 1, d1, 6, 0, 0));
+        const [y2, m2, d2] = dateOut.split("-").map(Number);
+        endOfDay = new Date(Date.UTC(y2, m2 - 1, d2 + 1, 6, 0, 0));
+    }
+
+    const totalServicioBascula = await db.boleta.count({
+      where: {
+        idMovimiento: 12, 
+        idProducto: { in: [24, 25] }, // Solo contar productos 24 y 25
+        ...(fechasValidas ? { fechaFin: { gte: startOfDay, lte: endOfDay } } : {}),
+      }
+    });
+
+    const serviciosPorProducto = await db.boleta.groupBy({
+      by: ['idProducto'],
+      where: {
+        idMovimiento: 12, 
+        idProducto: { in: [24, 25] }, // Solo agrupar productos 24 y 25
+        ...(fechasValidas ? { fechaFin: { gte: startOfDay, lte: endOfDay } } : {}),
+      },
+      _count: {
+        _all: true
+      }
+    });
+
+    // Crear un objeto para mapear los resultados
+    const resultadosPorProducto = {
+      24: { cantidad: 0, valorPorUnidad: 400 },
+      25: { cantidad: 0, valorPorUnidad: 300 }
+    };
+
+    // Llenar con los datos obtenidos
+    serviciosPorProducto.forEach(item => {
+      if (resultadosPorProducto[item.idProducto]) {
+        resultadosPorProducto[item.idProducto].cantidad = item._count._all;
+      }
+    });
+
+    // Construir el array de productos siempre con 24 y 25
+    const valoresPorProducto = [
+      {
+        producto: 24,
+        cantidad: resultadosPorProducto[24].cantidad,
+        totalLempiras: resultadosPorProducto[24].cantidad * resultadosPorProducto[24].valorPorUnidad
+      },
+      {
+        producto: 25,
+        cantidad: resultadosPorProducto[25].cantidad,
+        totalLempiras: resultadosPorProducto[25].cantidad * resultadosPorProducto[25].valorPorUnidad
+      }
+    ];
+
+    const totalGeneral = valoresPorProducto.reduce((total, item) => {
+      return total + item.totalLempiras;
+    }, 0);
+
+    const response = {
+      success: true,
+      data: {
+        totalServicios: totalServicioBascula,
+        productoDetalle: valoresPorProducto,
+        totalGeneralLempiras: totalGeneral
+      }
+    };
+
+    res.status(200).json(response);
+
+  } catch (error) {
+    console.error('Error al obtener estadísticas de báscula:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor',
+      error: error.message
+    });
+  }
+};
+
+const getServicioDeBascula = async(req, res) => {
+    try {
+        const dateIn = req.query.dateIn || null;
+        const dateOut = req.query.dateOut || null;
+
+        const fechasValidas = dateIn && dateOut && 
+                            dateIn !== "undefined" && dateOut !== "undefined" && 
+                            dateIn !== "null" && dateOut !== "null" && 
+                            dateIn.trim() !== "" && dateOut.trim() !== "";
+                            
+        if (fechasValidas) {
+            const [y1, m1, d1] = dateIn.split("-").map(Number);
+            startOfDay = new Date(Date.UTC(y1, m1 - 1, d1, 6, 0, 0));
+            const [y2, m2, d2] = dateOut.split("-").map(Number);
+            endOfDay = new Date(Date.UTC(y2, m2 - 1, d2 + 1, 6, 0, 0));
+        }
+
+        const boletas = await db.boleta.findMany({
+            where: {
+                idMovimiento: 12,
+                ...(fechasValidas ? { fechaFin: { gte: startOfDay, lte: endOfDay } } : {}),
+            },
+            include: {
+                paseDeSalida: {
+                    orderBy: {
+                        id: 'desc'  // Ordenar por ID descendente para obtener el más alto primero
+                    }
+                }
+            },
+            orderBy: {
+                fechaFin: 'desc'
+            }
+        });
+
+        const refactor = boletas.map((item) => {
+            // Obtener el pase de salida con el ID más alto
+            const paseConIdMasAlto = item.paseDeSalida[0]; // Ya viene ordenado por ID desc
+            
+            return {
+                'Boleta': item.numBoleta || 'En proceso...',
+                'Placa': item.placa,
+                'Motorista': item.motorista,
+                'Transporte': item.empresa,
+                'Tipo': item.producto,
+                'Pase': paseConIdMasAlto?.numPaseSalida || 'Sin pase',
+                'Inicio Báscula': new Date(item.fechaInicio).toLocaleString(),
+                'Finalizo Báscula': item.fechaFin ? new Date(item.fechaFin).toLocaleString() : 'No Registrada',
+                'Salio BAPROSA': paseConIdMasAlto?.fechaSalida ? new Date(paseConIdMasAlto.fechaSalida).toLocaleString() : item.estado==='Cancelada' ? 'CANCELADA' : 'N/A',
+                'Origen': item.origen ? item.origen : item.estado==='Cancelada' ? 'CANCELADA' : 'N/A',
+                'Destino': item.destino ? item.destino : item.estado==='Cancelada' ? 'CANCELADA' : 'N/A',
+            }
+        });
+
+        return res.status(200).send({data: refactor}); // Cambiado de 'boletas' a 'refactor'
+    } catch(err) {
+        console.log(err);
+        return res.status(500).send({err: 'Error Interno del API'});
+    }
+}
 
 module.exports = {
     getBuscarPlaca, 
@@ -589,5 +736,7 @@ module.exports = {
     getPorcentajeDeCumplimiento,
     getBoletasPorFecha,
     getPorcentajeMes,
-    getBoletasPorFechaCalendario, 
+    getBoletasPorFechaCalendario,
+    getServicioDeBasculaStats,
+    getServicioDeBascula, 
 }

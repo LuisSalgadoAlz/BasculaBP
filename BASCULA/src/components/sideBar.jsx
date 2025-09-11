@@ -79,7 +79,11 @@ const RUTAS_REPORTES = [
     name: "Casulla",
     icon: <BsClipboard2Data />,
   },
-  ,
+  {
+    path: "/servicioBascula",
+    name: "Servicio Báscula",
+    icon: <BsClipboard2Data />,
+  },
   {
     path: "/reporteSilos",
     name: "Estado Silos",
