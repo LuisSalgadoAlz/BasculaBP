@@ -159,7 +159,7 @@ export const SidebarHeader = ({ isExtendido, title, subtitle }) => {
           </div>
         )}
       </div>
-      <hr className="h-px my-1 bg-gray-200 border-0 dark:bg-gray-700" />
+      <hr className="h-px my-1 bg-gray-700 border-0 dark:bg-gray-700" />
       {/* Esto se compenta para cuando este en operativo y ya estne todos los reportes y el buscar sea mas facil. */}
       {/* {isExtendido && (
         <div className="px-2 py-2">
@@ -239,7 +239,7 @@ export const NavigationRoutes = ({ routes, isExtendido, sectionTitle, userRole, 
               </div>
             )}
           </div>
-          <hr className="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700" />
+          <hr className="h-px my-4 bg-gray-700 border-0 dark:bg-gray-700" />
         </div>
       );
     }
@@ -281,7 +281,7 @@ export const NavigationRoutes = ({ routes, isExtendido, sectionTitle, userRole, 
             </div>
           )}
         </div>
-        <hr className="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700" />
+        <hr className="h-px my-4 bg-gray-700 border-0 dark:bg-gray-700" />
       </div>
     );
   }
@@ -313,7 +313,7 @@ export const NavigationRoutes = ({ routes, isExtendido, sectionTitle, userRole, 
           </div>
         ))}
       </ul>
-      <hr className="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700" />
+      <hr className="h-px my-4 bg-gray-700 border-0 dark:bg-gray-700" />
     </div>
   );
 };
@@ -352,7 +352,7 @@ export const SupportSection = ({ isExtendido, onShowModal }) => {
           </div>
         )}
       </ul>
-      <hr className="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700" />
+      <hr className="h-px my-4 bg-gray-700 border-0 dark:bg-gray-700" />
     </div>
   );
 };
@@ -391,7 +391,7 @@ export const LogsSection = ({ isExtendido }) => {
           </div>
         )}
       </ul>
-      <hr className="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700" />
+      <hr className="h-px my-4 bg-gray-700 border-0 dark:bg-gray-700" />
     </div>
   );
 };
