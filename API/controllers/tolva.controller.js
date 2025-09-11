@@ -961,15 +961,15 @@ const getInfoAllSilos = async (req, res) => {
       FROM Silos s
       LEFT JOIN (
           -- Subconsulta que combina todos los silos en una sola pasada
-          SELECT 
+          SELECT DISTINCT  -- Agregar DISTINCT aquí
               silo_data.silo_id,
               silo_data.peso_silo,
-              silo_data.id_boleta  -- Agregar la ID de boleta
+              silo_data.id_boleta
           FROM (
               -- Silo Principal
-              SELECT 
+              SELECT DISTINCT  -- Agregar DISTINCT aquí también
                   b.numBoleta,
-                  b.id as id_boleta,  -- Agregar ID de boleta
+                  b.id as id_boleta,
                   s1.id as silo_id,
                   CASE 
                       WHEN t.siloTerciario IS NOT NULL THEN b.pesoNeto/300.0
@@ -983,9 +983,9 @@ const getInfoAllSilos = async (req, res) => {
               UNION ALL
               
               -- Silo Secundario
-              SELECT 
+              SELECT DISTINCT  -- Agregar DISTINCT aquí también
                   b.numBoleta,
-                  b.id as id_boleta,  -- Agregar ID de boleta
+                  b.id as id_boleta,
                   s2.id as silo_id,
                   CASE 
                       WHEN t.siloTerciario IS NOT NULL THEN b.pesoNeto/300.0
@@ -998,9 +998,9 @@ const getInfoAllSilos = async (req, res) => {
               UNION ALL
               
               -- Silo Terciario
-              SELECT 
+              SELECT DISTINCT  -- Agregar DISTINCT aquí también
                   b.numBoleta,
-                  b.id as id_boleta,  -- Agregar ID de boleta
+                  b.id as id_boleta,
                   s3.id as silo_id,
                   b.pesoNeto/300.0 as peso_silo
               FROM Boleta b
@@ -1014,7 +1014,7 @@ const getInfoAllSilos = async (req, res) => {
               FROM ResetSilos
               GROUP BY SiloId
           ) rs ON silo_data.silo_id = rs.SiloId
-          WHERE rs.SiloId IS NULL OR silo_data.numBoleta >= rs.ultimoReset
+          WHERE rs.SiloId IS NULL OR silo_data.numBoleta > rs.ultimoReset
       ) peso_calculado ON s.id = peso_calculado.silo_id
       GROUP BY s.id, s.nombre, s.capacidad
       ORDER BY s.id;
@@ -1085,8 +1085,8 @@ const postGetallInfoDetailsSilos = async(req, res) => {
           in: boletas         
         }       
       }     
-    });      
-
+    });
+    
     let accPeso = 0;     
     const refactor = getBoletas.map((item, index) => {       
       // Calcular duración de tolva       
@@ -1175,7 +1175,7 @@ const postResetSilo = async (req, res) => {
     const newReset = await db.ResetSilos.create({
       data: {
         siloId: siloID.id,
-        numBoleta: ultimo.numBoleta+1, 
+        numBoleta: ultimo.numBoleta, 
       }
     })
   
