@@ -59,23 +59,18 @@ const ReportesSilos = () => {
           </h1>
         </div>
       </div>
-      {loading && <div>Cargando...</div>}
-      {data && (
-        <>
-          <BaprosaSiloChart2
-            data={data?.data2}
-            onSiloAction={handleResetSilo}
-            isLoading={loading}
-            handleClickBar={handleClickBar}
-          />
-          <BaprosaSiloChart
-            data={data?.data}
-            onSiloAction={handleResetSilo}
-            isLoading={loading}
-            handleBarClick={handleClickBar}
-          />
-        </>
-      )}
+      <BaprosaSiloChart2
+        data={data?.data2}
+        onSiloAction={handleResetSilo}
+        isLoading={loading}
+        handleClickBar={handleClickBar}
+      />
+      <BaprosaSiloChart
+        data={data?.data}
+        onSiloAction={handleResetSilo}
+        isLoading={loading}
+        handleBarClick={handleClickBar}
+      />
       <TableSheet {...sheetProps} />
     </>
   );
