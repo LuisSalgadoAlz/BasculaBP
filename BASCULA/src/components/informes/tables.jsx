@@ -869,69 +869,116 @@ export const TableComponentCasulla = ({ datos = [{}], fun, total = [{}], type = 
   const lastColumnIndex = columnKeys.length - 1;
 
   return (
-    <>
-      <div className="relative overflow-x-auto rounded-sm">
-        <table className="w-full text-sm text-left rtl:text-right text-gray-700 dark:text-gray-400">
-          <thead className="text-xs uppercase bg-[#725033] rounded-2xl text-white">
+    <div className="w-full">
+      {/* Contenedor principal con altura fija y scroll */}
+      <div className="relative overflow-x-hidden overflow-y-auto rounded-lg h-[500px] border border-gray-200 bg-white">
+        <table className="w-full text-sm text-left text-gray-700 dark:text-gray-400 min-w-[600px]">
+          {/* Header fijo */}
+          <thead className="text-xs uppercase bg-[#725033] text-white sticky top-0 z-10 shadow-sm">
             <tr>
               {columnKeys.map((el, keys) => (
-                <th key={keys} scope="col" className={`px-6 py-4 ${(keys > 1 && lastColumnIndex!==keys && type) && 'text-right'} ${(lastColumnIndex===keys && type) && 'text-center'}`}>
-                  {el}
+                <th 
+                  key={keys} 
+                  scope="col" 
+                  className={`
+                    px-3 py-4 font-semibold whitespace-nowrap
+                    sm:px-4 md:px-6
+                    ${(keys > 1 && lastColumnIndex !== keys && type) ? 'text-right' : ''}
+                    ${(lastColumnIndex === keys && type) ? 'text-center' : ''}
+                  `}
+                >
+                  <div className="truncate" title={el}>
+                    {el}
+                  </div>
                 </th>
               ))}
               {type && (
-                <th scope="col" className="px-6 py-3 text-center">
+                <th scope="col" className="px-3 py-4 text-center font-semibold whitespace-nowrap sm:px-4 md:px-6">
                   Detalles
                 </th>
               )}
             </tr>
           </thead>
-          <tbody>
+          
+          {/* Cuerpo de la tabla con scroll */}
+          <tbody className="divide-y divide-gray-200">
             {datos.map((fila, index) => (
               <tr
                 key={index}
-                className={`${index % 2 === 0 && 'bg-gray-50'} border-b border-gray-200 hover:bg-[#FDF5D4] select-none`}
+                className={`
+                  transition-colors duration-200 hover:bg-[#FDF5D4] cursor-pointer select-none
+                  ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}
+                `}
                 onDoubleClick={() => fun(fila)}
               >
                 {Object.values(fila).map((el, key) => (
-                  <td key={key} className={`px-6 py-3 text-gray-700 text-sm font-mono ${(key > 1 && type) && 'text-right'}`}>
+                  <td 
+                    key={key} 
+                    className={`
+                      px-3 py-3 text-gray-700 text-sm font-mono
+                      sm:px-4 md:px-6
+                      ${(key > 1 && type) ? 'text-right' : ''}
+                    `}
+                  >
                     {(key === lastColumnIndex && type) ? (
-                      // Renderizar progress bar para la última columna (porcentaje)
-                      <div className="flex items-center space-x-2">
-                        <div className="flex-1 bg-gray-200 rounded-full h-2.5 min-w-[20px] flex-col">
+                      // Progress bar responsive para la última columna
+                      <div className="flex items-center space-x-2 min-w-0">
+                        <div className="flex-1 bg-gray-200 rounded-full h-2 min-w-[40px] max-w-[120px]">
                           <div
-                            className="bg-[#725033] h-2.5 rounded-full transition-all duration-300"
+                            className="bg-[#725033] h-2 rounded-full transition-all duration-300 ease-in-out"
                             style={{ width: `${Math.min(getPercentageValue(el), 100)}%` }}
-                          ></div>
+                          />
                         </div>
-                        <span className="text-xs font-medium text-gray-600 min-w-[35px]">
+                        <span className="text-xs font-medium text-gray-600 whitespace-nowrap min-w-[40px] flex-shrink-0">
                           {el}
                         </span>
                       </div>
                     ) : (
-                      // Renderizar texto normal para las demás columnas
-                      el
+                      // Texto normal con truncate para contenido largo
+                      <div 
+                        className="truncate max-w-[150px] sm:max-w-[200px] md:max-w-none" 
+                        title={el?.toString()}
+                      >
+                        {el}
+                      </div>
                     )}
                   </td>
                 ))}
+                
                 {type && (
-                  <td className="py-3 text-center">
+                  <td className="px-3 py-3 text-center sm:px-4 md:px-6">
                     <button
-                      className="font-medium text-gray-800 hover:underline text-center"
+                      className="inline-flex items-center justify-center p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#725033] focus:ring-opacity-50"
                       onClick={() => fun(fila)}
+                      title="Ver detalles"
                     >
-                      <span className="text-center">
-                        <BsArrowsAngleExpand className="text-xl" />
-                      </span>
+                      <BsArrowsAngleExpand className="w-4 h-4" />
                     </button>
                   </td>
                 )}
               </tr>
             ))}
+            
+            {/* Fila de relleno si hay pocos datos */}
+            {datos.length === 0 && (
+              <tr>
+                <td 
+                  colSpan={columnKeys.length + (type ? 1 : 0)} 
+                  className="px-6 py-8 text-center text-gray-500 text-sm"
+                >
+                  No hay datos disponibles
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
-    </>
+      
+      {/* Indicador de scroll para móviles */}
+      <div className="mt-2 text-xs text-gray-500 text-center sm:hidden">
+        ← Desliza horizontalmente para ver más →
+      </div>
+    </div>
   );
 };
 
