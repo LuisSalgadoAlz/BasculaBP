@@ -35,7 +35,8 @@ const Casulla = () => {
         setOpenSheet, 
         tableData,
         title: 'Detalles Casulla', 
-        subtitle: `Visualización de los datos de Casulla: ${tableData[0]?.socio}`
+        subtitle: `Visualización de los datos de Casulla: ${isLoadingTableData? 'Cargando...' : tableData[0]?.socio}`,
+        isLoading:isLoadingTableData, 
     }
 
     return ( 

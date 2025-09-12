@@ -1205,7 +1205,7 @@ const getStatsBuquesAndAll = async (req, res) => {
     const cantidadBoletasPorTolva = await db.boleta.groupBy({
       by: ['tolvaAsignada'],
       _count: { tolvaAsignada: true },
-      _sum: { pesoNeto: true }, // Agregando suma del peso neto
+      _sum: { pesoNeto: true },
       where: {
         tolvaAsignada: {
           not: null
@@ -1215,11 +1215,24 @@ const getStatsBuquesAndAll = async (req, res) => {
       }
     });
 
-    const refactorData = cantidadBoletasPorTolva.map(item => ({
-      tolvaAsignada: item.tolvaAsignada,
-      cantidad: item._count.tolvaAsignada,
-      pesoNeto: item._sum.pesoNeto || 0 // Agregando peso neto total
-    }));
+    // Crear estructura base para tolvas 1 y 2
+    const tolvasBase = [
+      { tolvaAsignada: 1, cantidad: 0, pesoNeto: 0 },
+      { tolvaAsignada: 2, cantidad: 0, pesoNeto: 0 }
+    ];
+
+    // Mapear los datos existentes y combinar con la estructura base
+    const refactorData = tolvasBase.map(tolvaBase => {
+      const dataExistente = cantidadBoletasPorTolva.find(
+        item => item.tolvaAsignada === tolvaBase.tolvaAsignada
+      );
+      
+      return {
+        tolvaAsignada: tolvaBase.tolvaAsignada,
+        cantidad: dataExistente ? dataExistente._count.tolvaAsignada : 0,
+        pesoNeto: dataExistente ? (dataExistente._sum.pesoNeto || 0) : 0
+      };
+    });
 
     let resultado;
     let tiempos;
@@ -1236,7 +1249,8 @@ const getStatsBuquesAndAll = async (req, res) => {
         WHERE b.idSocio = ${buqueId}
         GROUP BY t.usuarioTolva, t.usuarioDeCierre
       `;
-      tiempos = await db.$queryRaw`
+      
+      const tiemposRaw = await db.$queryRaw`
         SELECT 
           CAST(AVG(DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida)) / 60 AS VARCHAR) 
             + 'h ' + 
@@ -1249,6 +1263,21 @@ const getStatsBuquesAndAll = async (req, res) => {
         WHERE b.idSocio = ${buqueId}
         GROUP BY b.tolvaAsignada
       `;
+      
+      // Asegurar que siempre tengamos tolvas 1 y 2 en tiempos
+      const tiemposBase = [
+        { PromedioTiempo: "0h 0m", tolvaAsignada: 1, pesoNetoTotal: 0 },
+        { PromedioTiempo: "0h 0m", tolvaAsignada: 2, pesoNetoTotal: 0 }
+      ];
+      
+      tiempos = tiemposBase.map(tiempoBase => {
+        const tiempoExistente = tiemposRaw.find(
+          item => item.tolvaAsignada === tiempoBase.tolvaAsignada
+        );
+        
+        return tiempoExistente || tiempoBase;
+      });
+      
     } else {
       resultado = await db.$queryRaw`
         SELECT 
@@ -1260,7 +1289,8 @@ const getStatsBuquesAndAll = async (req, res) => {
         INNER JOIN Tolva t ON b.id = t.idBoleta
         GROUP BY t.usuarioTolva, t.usuarioDeCierre
       `;
-      tiempos = await db.$queryRaw`
+      
+      const tiemposRaw = await db.$queryRaw`
         SELECT 
           CAST(AVG(DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida)) / 60 AS VARCHAR) 
             + 'h ' + 
@@ -1272,6 +1302,20 @@ const getStatsBuquesAndAll = async (req, res) => {
         INNER JOIN Tolva AS t ON b.id = t.idBoleta
         GROUP BY b.tolvaAsignada
       `;
+      
+      // Asegurar que siempre tengamos tolvas 1 y 2 en tiempos
+      const tiemposBase = [
+        { PromedioTiempo: "0h 0m", tolvaAsignada: 1, pesoNetoTotal: 0 },
+        { PromedioTiempo: "0h 0m", tolvaAsignada: 2, pesoNetoTotal: 0 }
+      ];
+      
+      tiempos = tiemposBase.map(tiempoBase => {
+        const tiempoExistente = tiemposRaw.find(
+          item => item.tolvaAsignada === tiempoBase.tolvaAsignada
+        );
+        
+        return tiempoExistente || tiempoBase;
+      });
     }
 
     const totalDescargas = resultado.reduce((total, item) => total + Number(item.totalUnicos), 0);

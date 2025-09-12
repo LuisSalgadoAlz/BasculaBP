@@ -943,7 +943,8 @@ const TableSheet = ({
   subtitle, 
   type = false,
   fixedColumns = [], // Columnas que no se pueden ocultar/mover
-  storageKey = 'tablesheet-columns' // Clave personalizable para localStorage
+  storageKey = 'tablesheet-columns', // Clave personalizable para localStorage
+  isLoading = true
 }) => {
   const [visibleColumns, setVisibleColumns] = useState({});
   const [showColumnSelector, setShowColumnSelector] = useState(false);
@@ -1040,6 +1041,19 @@ const TableSheet = ({
     return key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1');
   };
 
+  // Componente Spinner
+  const LoadingSpinner = () => (
+    <div className="flex-1 flex items-center justify-center">
+      <div className="flex flex-col items-center space-y-4">
+        <div className="relative">
+          <div className="w-12 h-12 border-4 border-gray-200 rounded-full animate-spin"></div>
+          <div className="w-12 h-12 border-4 border-[#725033] border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
+        </div>
+        <p className="text-gray-500 text-sm">Cargando datos...</p>
+      </div>
+    </div>
+  );
+
   return (
     <div className="p-8">
       <div className="max-w-4xl mx-auto">
@@ -1058,7 +1072,7 @@ const TableSheet = ({
               <p className="text-sm text-gray-500 mt-1">{subtitle}</p>
             </div>
             
-            {type && (
+            {type && !isLoading && (
               <div className="relative mr-4">
                 <button
                   onClick={() => setShowColumnSelector(!showColumnSelector)}
@@ -1135,9 +1149,12 @@ const TableSheet = ({
               <AiOutlineClose className="w-6 h-6 text-gray-500" />
             </button>
           </div>
+          
           {/* Contenido scrollable */}
           <div className="flex-1 overflow-hidden flex flex-col">
-            {tableData.length === 0 || !tableData ? (
+            {isLoading ? (
+              <LoadingSpinner />
+            ) : tableData.length === 0 || !tableData ? (
               <div className="p-6 text-center text-gray-500 flex-1 flex items-center justify-center">
                 No hay datos.
               </div>

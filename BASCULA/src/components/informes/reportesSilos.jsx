@@ -41,10 +41,11 @@ const ReportesSilos = () => {
     setOpenSheet, 
     tableData: details?.data,
     title: 'Detalles Silo', 
-    subtitle: `Visualización de boletas ingresadas al silo: ${selectedSilos}`, 
+    subtitle: `Visualización de boletas ingresadas al silo: ${loadingDetails? 'Cargando...' : selectedSilos}`, 
     type: true,
     fixedColumns: ['#', 'numBoleta', 'placa', 'pesoNeto', 'pesoAcumulado', 'socio'], 
-    storageKey: 'tolva-details'
+    storageKey: 'tolva-details', 
+    isLoading: loadingDetails
   }
 
   return (
