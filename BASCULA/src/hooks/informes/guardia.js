@@ -118,10 +118,10 @@ export const getStatsServicioBascula = async (fun, setIsLoading, filters) => {
   }
 };
 
-export const getBoletasServicioBascula = async (fun, setIsLoading, filters) => {
+export const getBoletasServicioBascula = async (fun, setIsLoading, filters, page) => {
   try {
     setIsLoading(true)
-    const response = await fetch(`${URLHOST}guardia/servicioBascula/boletas?dateIn=${filters.dateIn}&dateOut=${filters.dateOut}`, {
+    const response = await fetch(`${URLHOST}guardia/servicioBascula/boletas?dateIn=${filters.dateIn}&dateOut=${filters.dateOut}&page=${page}`, {
       method: "GET",
       headers: {
         Authorization: Cookies.get('token'),

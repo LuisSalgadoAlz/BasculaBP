@@ -1,6 +1,8 @@
 const db = require('../lib/prisma')
 const dotenv = require("dotenv");
 const { setLogger } = require('../utils/logger');
+const { CONFIGPAGE, styles, COLORS } = require('../lib/configExcel');
+const ExcelJS = require('exceljs');
 
 const getBuscarPlaca = async (req, res) => {
     try {
@@ -673,6 +675,11 @@ const getServicioDeBascula = async(req, res) => {
     try {
         const dateIn = req.query.dateIn || null;
         const dateOut = req.query.dateOut || null;
+        
+        // Parámetros de paginación
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
 
         const fechasValidas = dateIn && dateOut && 
                             dateIn !== "undefined" && dateOut !== "undefined" && 
@@ -686,11 +693,20 @@ const getServicioDeBascula = async(req, res) => {
             endOfDay = new Date(Date.UTC(y2, m2 - 1, d2 + 1, 6, 0, 0));
         }
 
+        // Condiciones de búsqueda
+        const whereConditions = {
+            idMovimiento: 12,
+            ...(fechasValidas ? { fechaFin: { gte: startOfDay, lte: endOfDay } } : {}),
+        };
+
+        // Obtener el total de registros para calcular la paginación
+        const totalRecords = await db.boleta.count({
+            where: whereConditions
+        });
+
+        // Obtener los registros paginados
         const boletas = await db.boleta.findMany({
-            where: {
-                idMovimiento: 12,
-                ...(fechasValidas ? { fechaFin: { gte: startOfDay, lte: endOfDay } } : {}),
-            },
+            where: whereConditions,
             include: {
                 paseDeSalida: {
                     orderBy: {
@@ -700,7 +716,9 @@ const getServicioDeBascula = async(req, res) => {
             },
             orderBy: {
                 fechaFin: 'desc'
-            }
+            },
+            skip: skip,
+            take: limit
         });
 
         const refactor = boletas.map((item) => {
@@ -722,12 +740,257 @@ const getServicioDeBascula = async(req, res) => {
             }
         });
 
-        return res.status(200).send({data: refactor}); // Cambiado de 'boletas' a 'refactor'
+        // Calcular información de paginación
+        const totalPages = Math.ceil(totalRecords / limit);
+        const hasNextPage = page < totalPages;
+        const hasPreviousPage = page > 1;
+
+        return res.status(200).send({
+            data: refactor,
+            pagination: {
+                currentPage: page,
+                totalPages: totalPages,
+                totalRecords: totalRecords,
+                recordsPerPage: limit,
+                hasNextPage: hasNextPage,
+                hasPreviousPage: hasPreviousPage,
+                recordsOnCurrentPage: refactor.length
+            }
+        });
     } catch(err) {
         console.log(err);
         return res.status(500).send({err: 'Error Interno del API'});
     }
 }
+
+const exportServicioBasculaToExcel = async (req, res) => {
+    try {
+        const dateIn = req.query.dateIn || null;
+        const dateOut = req.query.dateOut || null;
+        
+        const fechasValidas = dateIn && dateOut && 
+                            dateIn !== "undefined" && dateOut !== "undefined" && 
+                            dateIn !== "null" && dateOut !== "null" && 
+                            dateIn.trim() !== "" && dateOut.trim() !== "";
+                            
+        let startOfDay, endOfDay;
+        if (fechasValidas) {
+            const [y1, m1, d1] = dateIn.split("-").map(Number);
+            startOfDay = new Date(Date.UTC(y1, m1 - 1, d1, 6, 0, 0));
+            const [y2, m2, d2] = dateOut.split("-").map(Number);
+            endOfDay = new Date(Date.UTC(y2, m2 - 1, d2 + 1, 6, 0, 0));
+        }
+
+        // Condiciones de búsqueda (sin paginación para exportar todo)
+        const whereConditions = {
+            idMovimiento: 12,
+            ...(fechasValidas ? { fechaFin: { gte: startOfDay, lte: endOfDay } } : {}),
+        };
+
+        // Obtener TODOS los registros (sin paginación para export)
+        const boletas = await db.boleta.findMany({
+            where: whereConditions,
+            include: {
+                paseDeSalida: {
+                    orderBy: {
+                        id: 'desc'
+                    }
+                }
+            },
+            orderBy: {
+                fechaFin: 'desc'
+            }
+        });
+
+        // Transformar los datos
+        const dataForExcel = boletas.map((item) => {
+            const paseConIdMasAlto = item.paseDeSalida[0];
+            
+            return {
+                Boleta: item.numBoleta || 'En proceso...',
+                Placa: item.placa,
+                Motorista: item.motorista,
+                Transporte: item.empresa,
+                Tipo: item.producto,
+                Pase: paseConIdMasAlto?.numPaseSalida || 'Sin pase',
+                InicioBascula: new Date(item.fechaInicio).toLocaleString(),
+                FinalizoBascula: item.fechaFin ? new Date(item.fechaFin).toLocaleString() : 'No Registrada',
+                SalioBAPROSA: paseConIdMasAlto?.fechaSalida ? new Date(paseConIdMasAlto.fechaSalida).toLocaleString() : item.estado==='Cancelada' ? 'CANCELADA' : 'N/A',
+                Origen: item.origen ? item.origen : item.estado==='Cancelada' ? 'CANCELADA' : 'N/A',
+                Destino: item.destino ? item.destino : item.estado==='Cancelada' ? 'CANCELADA' : 'N/A',
+            };
+        });
+
+        // Crear el libro de trabajo Excel
+        const workbook = new ExcelJS.Workbook();
+        workbook.creator = 'BAPROSA';
+        workbook.lastModifiedBy = 'Sistema de Básculas';
+        workbook.created = new Date();
+        workbook.modified = new Date();
+
+        // ===== HOJA PRINCIPAL: SERVICIO DE BÁSCULA =====
+        const sheet = workbook.addWorksheet("Servicio de Báscula", CONFIGPAGE);
+
+        // Logo o placeholder
+        try {
+            const logoId = workbook.addImage({
+                filename: "logo.png",
+                extension: "png",
+            });
+            sheet.addImage(logoId, {
+                tl: { col: 8, row: 1 },
+                br: { col: 11, row: 5 },
+                editAs: 'oneCell'
+            });
+        } catch (error) {
+            sheet.mergeCells("A1:A3");
+            const placeholderCell = sheet.getCell("A1");
+            placeholderCell.value = "BAPROSA";
+            placeholderCell.style = {
+                font: { name: 'Arial', bold: true, size: 18, color: { argb: COLORS.primary } },
+                alignment: { horizontal: 'center', vertical: 'middle' },
+                border: { outline: { style: 'medium', color: { argb: COLORS.primary } } }
+            };
+        }
+
+        // Encabezado del reporte
+        sheet.mergeCells("A1:K1");
+        const titleCell = sheet.getCell("A1");
+        titleCell.value = "BENEFICIO DE ARROZ PROGRESO, S.A. DE C.V.";
+        Object.assign(titleCell.style, styles.title);
+        
+        sheet.mergeCells("A2:K2");
+        const subtitleCell = sheet.getCell("A2");
+        subtitleCell.value = `REPORTE DE SERVICIO DE BÁSCULA`;
+        Object.assign(subtitleCell.style, styles.subtitle);
+
+        // Información del período
+        if (fechasValidas) {
+            sheet.mergeCells("A3:K3");
+            const periodCell = sheet.getCell("A3");
+            periodCell.value = `Período: ${new Date(startOfDay).toLocaleDateString()} - ${new Date(endOfDay).toLocaleDateString()}`;
+            Object.assign(periodCell.style, styles.dateInfo);
+        }
+        
+        const now = new Date();
+        sheet.mergeCells("A4:K4");
+        const dateCell = sheet.getCell("A4");
+        dateCell.value = `Generado el: ${now.toLocaleDateString('es-ES', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        })}`;
+        Object.assign(dateCell.style, styles.dateInfo);
+
+        sheet.mergeCells("A5:K5");
+        const totalCell = sheet.getCell("A5");
+        totalCell.value = `Total de registros: ${dataForExcel.length}`;
+        Object.assign(totalCell.style, styles.dateInfo);
+
+        sheet.addRow([]);
+
+        // ===== DETALLE DE REGISTROS =====
+        const detalleRow = sheet.addRow([]);
+        sheet.mergeCells(`A${sheet.rowCount}:K${sheet.rowCount}`);
+        const detalleTitle = sheet.getCell(`A${sheet.rowCount}`);
+        detalleTitle.value = "DETALLE DE REGISTROS";
+        Object.assign(detalleTitle.style, styles.sectionTitle);
+        
+        sheet.addRow([]);
+
+        // Encabezados principales
+        const mainHeaders = [
+            'Boleta', 'Placa', 'Motorista', 'Transporte', 'Tipo', 
+            'Pase', 'Inicio Báscula', 'Finalizó Báscula', 'Salió BAPROSA', 
+            'Origen', 'Destino'
+        ];
+
+        const headerRow = sheet.addRow(mainHeaders);
+        headerRow.height = 25;
+        
+        mainHeaders.forEach((header, index) => {
+            const cell = sheet.getCell(sheet.rowCount, index + 1);
+            Object.assign(cell.style, styles.header);
+        });
+
+        // Datos
+        dataForExcel.forEach((registro, i) => {
+            const dataRow = sheet.addRow([
+                registro.Boleta,
+                registro.Placa,
+                registro.Motorista,
+                registro.Transporte,
+                registro.Tipo,
+                registro.Pase,
+                registro.InicioBascula,
+                registro.FinalizoBascula,
+                registro.SalioBAPROSA,
+                registro.Origen,
+                registro.Destino
+            ]);
+            dataRow.height = 20;
+            
+            // Aplicar estilos alternados
+            dataRow.eachCell((cell, colIndex) => {
+                if (i % 2 !== 0) {
+                    cell.style = {...styles.data, ...styles.alternateRow};
+                } else {
+                    Object.assign(cell.style, styles.data);
+                }
+                
+                // Centrar fechas y horas
+                if (colIndex >= 7 && colIndex <= 9) { // Columnas de fecha/hora
+                    cell.alignment = { horizontal: 'center', vertical: 'middle' };
+                }
+            });
+        });
+
+        // Configurar anchos de columna
+        const columnWidths = [15, 12, 25, 20, 15, 15, 20, 20, 20, 15, 15];
+        columnWidths.forEach((width, i) => {
+            sheet.getColumn(i + 1).width = width;
+        });
+
+        // Pie de página
+        sheet.addRow([]);
+        sheet.addRow([]);
+        const footerRowNum = sheet.rowCount + 1;
+        sheet.mergeCells(`A${footerRowNum}:K${footerRowNum}`);
+        const footerCell = sheet.getCell(`A${footerRowNum}`);
+        footerCell.value = 'BENEFICIO DE ARROZ PROGRESO, S.A. DE C.V. © ' + new Date().getFullYear();
+        Object.assign(footerCell.style, styles.footer);
+
+        /* Proteger Hoja */
+        sheet.protect('baprosa', { formatCells: false, formatColumns: false });
+
+        // Configurar la respuesta para descargar el archivo Excel
+        const fechaActual = new Date().toISOString().split('T')[0];
+        const filename = `servicio_bascula_${fechaActual}.xlsx`;
+        
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        
+        // Log si tienes la función setLogger disponible
+        // setLogger('REPORTES', `CREO REPORTE DE SERVICIO DE BÁSCULA`, req, null, 1, null);
+
+        // Escribir el archivo Excel a la respuesta
+        await workbook.xlsx.write(res);
+        res.end();
+
+    } catch (error) {
+        console.error('Error en exportServicioBasculaToExcel:', error);
+        // setLogger('REPORTES', 'ERROR EN GENERAR REPORTE DE SERVICIO DE BÁSCULA', req, null, 3);
+
+        return res.status(500).json({
+            success: false,
+            error: 'Error interno del servidor',
+            message: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};
 
 module.exports = {
     getBuscarPlaca, 
@@ -738,5 +1001,6 @@ module.exports = {
     getPorcentajeMes,
     getBoletasPorFechaCalendario,
     getServicioDeBasculaStats,
-    getServicioDeBascula, 
+    getServicioDeBascula,
+    exportServicioBasculaToExcel 
 }
