@@ -1533,7 +1533,7 @@ export const StatsCardServicioBascula = ({ data, icons }) => {
       {/* Total de Servicios */}
       <StatsCard
         title="Total Servicios"
-        value={formatNumber(data?.totalServicios) || '0'}
+        value={data?.totalServicios || '0'}
         icon= {
           (
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1550,8 +1550,8 @@ export const StatsCardServicioBascula = ({ data, icons }) => {
       {!data && (
         <>
           <StatsCard
-            title="SERVICIO BASCULA: DOBLE"
-            value="0 Lps"
+            title="SERVICIO BASCULA DOBLE: 0"
+            value="L 0"
             icon={
               (
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1564,8 +1564,8 @@ export const StatsCardServicioBascula = ({ data, icons }) => {
             textColor="text-[#725033]"
           />
           <StatsCard
-            title="SERVICIO BASCULA: SENCILLO"
-            value="0 Lps"
+            title="SERVICIO BASCULA SENCILLO: 0"
+            value="L 0"
             icon={
               (
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1583,8 +1583,8 @@ export const StatsCardServicioBascula = ({ data, icons }) => {
       {data?.productoDetalle.map((item) => (
         <StatsCard
           key={item.producto}
-          title={item.producto === 24 ? 'SERVICIO BASCULA: DOBLE' : 'SERVICIO BASCULA: SENCILLO'}
-          value={`${formatNumber(item.totalLempiras)} Lps`}
+          title={item.producto === 24 ? `SERVICIO BASCULA DOBLE: ${item.cantidad || '0'}` : `SERVICIO BASCULA SENCILLO: ${item.cantidad || '0'}`}
+          value={`L ${formatNumber(item.totalLempiras)}`}
           icon= {
             (
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1600,7 +1600,7 @@ export const StatsCardServicioBascula = ({ data, icons }) => {
 
       <StatsCard
         title="Total Servicios"
-        value={`${formatNumber(data?.totalGeneralLempiras) || '0'} Lps`}
+        value={`L ${formatNumber(data?.totalGeneralLempiras) || '0'}`}
         icon= {
           (
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
