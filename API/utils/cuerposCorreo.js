@@ -430,4 +430,116 @@ const alertaMarchamosDiferentes = (nuevaBoleta, despachador, enviarCorreo, arrBo
   }
 };
 
-module.exports = {alertaCancelacion, alertaDesviacion, alertaSoporte, alertaMarchamosDiferentes};
+const alertaSiloLleno = (silosAlerta, enviarCorreo) => {
+  // Validar que los parámetros requeridos existan
+  if (!silosAlerta || !Array.isArray(silosAlerta) || silosAlerta.length === 0 || !enviarCorreo) {
+    console.error('Error: Faltan parámetros requeridos o silosAlerta no es un array válido');
+    return { exito: false, mensaje: 'Faltan parámetros requeridos o datos de silos inválidos' };
+  }
+  
+  // Fecha y hora actual formateada
+  const fechaHora = new Date().toLocaleString('es-GT', {
+    dateStyle: 'medium',
+    timeStyle: 'medium'
+  });
+  
+  // Definir el color para la alerta de silo lleno (rojo para crítico >90%, naranja para advertencia >85%)
+  const tieneAlertaCritica = silosAlerta.some(silo => silo.porcentaje_ocupacion > 90);
+  const colorAlerta = tieneAlertaCritica ? '#f44336' : '#ff9800';
+  const tipoAlerta = tieneAlertaCritica ? 'CRÍTICA' : 'ADVERTENCIA';
+  const iconoAlerta = tieneAlertaCritica ? '🚨' : '⚠️';
+  
+  // Crear la tabla de silos con alerta
+  const filaSilos = silosAlerta.map(silo => {
+    const colorPorcentaje = silo.porcentaje_ocupacion > 90 ? '#f44336' : '#ff9800';
+    return `
+      <tr>
+        <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${silo.nombre}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center; color: ${colorPorcentaje}; font-weight: bold;">
+          ${silo.porcentaje_ocupacion}%
+        </td>
+        <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${silo.capacidad} QQ</td>
+      </tr>
+    `;
+  }).join('');
+  
+  // Construir el cuerpo del correo con estilos mejorados
+  const cuerpoMail = `
+    <div style="font-family: Arial, sans-serif; border: 1px solid #ccc; border-radius: 8px; padding: 20px; max-width: 600px; margin: 0 auto;">
+      <div style="background-color: ${colorAlerta}; color: white; padding: 12px; border-radius: 4px; margin-bottom: 16px;">
+        <h2 style="margin: 0;">${iconoAlerta} Alerta ${tipoAlerta} </h2>
+      </div>
+      
+      <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; padding: 12px; margin-bottom: 16px;">
+        <p style="margin: 0; color: #856404;">
+          <strong>Atención:</strong> Se ha detectado ${silosAlerta.length} silo${silosAlerta.length > 1 ? 's' : ''} 
+          con porcentaje de ocupación superior al 85%.
+        </p>
+      </div>
+      
+      <h3 style="color: #333; margin-bottom: 12px;">Detalles de Silos en Alerta:</h3>
+      
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px;">
+        <thead>
+          <tr style="background-color: #f8f9fa;">
+            <th style="padding: 10px; border: 1px solid #dee2e6; text-align: center; font-weight: bold;">Silo</th>
+            <th style="padding: 10px; border: 1px solid #dee2e6; text-align: center; font-weight: bold;">% Ocupación</th>
+            <th style="padding: 10px; border: 1px solid #dee2e6; text-align: center; font-weight: bold;">Capacidad</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${filaSilos}
+        </tbody>
+      </table>
+      
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px;">
+        <tr>
+          <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Fecha y Hora:</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee;">${fechaHora}</td>
+        </tr>
+      </table>
+      
+      <p style="font-size: 14px; color: #555; margin-top: 16px;">
+        Esta es una notificación automática generada por el sistema de control de báscula.
+        Por favor, no responda a este correo.
+      </p>
+
+      <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;"/>
+      <div style="text-align: center;">  
+        ${typeof footerImgage !== 'undefined' ? footerImgage : ''}
+        <p style="font-size: 12px; color: #888;">
+          SISTEMA DE BÁSCULA · <strong>BAPROSA</strong><br/>
+          ©2025 BAPROSA. Todos los derechos reservados.
+        </p>
+      </div>
+    </div>
+  `;
+  
+  // Generar el asunto del correo
+  const listasilos = silosAlerta.map(silo => `${silo.nombre} (${silo.porcentaje_ocupacion}%)`).join(', ');
+  const asunto = `Alerta ${tipoAlerta} - Nivel de silos elevado`;
+  
+  try {
+    // Enviar el correo de notificación
+    enviarCorreo(process.env.END_MAILS, asunto, cuerpoMail);
+        
+    return {
+      exito: true,
+      mensaje: `Alerta de silos llenos enviada correctamente - ${silosAlerta.length} silo(s) afectado(s)`,
+      destinatario: process.env.END_MAILS || 'practicas@baprosa.com',
+      silosAfectados: silosAlerta.length,
+      tipoAlerta: tipoAlerta,
+      fecha: new Date()
+    };
+    
+  } catch (error) {
+    console.error('Error al enviar alerta de silos llenos:', error);
+    return {
+      exito: false,
+      mensaje: `Error al enviar alerta: ${error.message}`,
+      error: error
+    };
+  }
+};
+
+module.exports = {alertaCancelacion, alertaDesviacion, alertaSoporte, alertaMarchamosDiferentes, alertaSiloLleno};

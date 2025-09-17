@@ -626,9 +626,7 @@ const postSiloInBoletas = async(req, res) => {
     };
 
     const enviarAlerta = !arraysIguales(arrTolva, arrBoleta);
-
-    console.log(`Se envio alerta de marchamos: ${enviarAlerta ? 'Si' : 'No'}`);
-
+    
     if(enviarAlerta) {
         setLogger('TOLVA', 'MARCHAMOS NO COINCIDEN CON BÁSCULA', req, null, 3);
         alertaMarchamosDiferentes(boleta, usuario, enviarCorreo, arrBoleta, arrTolva, tolvaDescarga);

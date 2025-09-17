@@ -3,7 +3,7 @@ const dotenv = require("dotenv");
 const jwt = require("jsonwebtoken");
 const { imprimirQRTolva, comprobanteDeCarga, imprimirWorkForce, getReimprimirWorkForce, generarPaseDeSalidaTemporal, ImprimirTicketEmpresaContratada } = require("./impresiones.controller");
 const enviarCorreo = require("../utils/enviarCorreo");
-const {alertaDesviacion, alertaCancelacion} = require("../utils/cuerposCorreo");
+const {alertaDesviacion, alertaCancelacion, alertaSiloLleno} = require("../utils/cuerposCorreo");
 const {setLogger} = require('../utils/logger');
 const { list_pase_inicial, list_parte_final, listaInicialAlertas } = require("../utils/listPaseSalida");
 const { list } = require("pdfkit");
@@ -637,7 +637,7 @@ const postClientePlacaMoto = async (req, res) => {
       }
     });
 
-    const debeImprimirQR = (idMovimiento === 2 || (idProducto === 17 && idMovimiento===14))
+    const debeImprimirQR = false /* (idMovimiento === 2 || (idProducto === 17 && idMovimiento===14)) */
     const ocupaAlerta = idMovimiento ? listaInicialAlertas.includes(idMovimiento) : false
     const debeCrearPase = idMovimiento ? list_pase_inicial.includes(idMovimiento) : false
     if (debeCrearPase) {
@@ -1243,6 +1243,7 @@ const updateBoletaOut = async (req, res) => {
 
     // Generar comprobante para producto específico
     if (idProducto === 18 && idMovimiento === 2) {
+      enviarAlertaSiloLleno(nuevaBoleta);
       comprobanteDeCarga(nuevaBoleta, despachador['name']);
     }
 
@@ -1915,13 +1916,22 @@ const getConfigTolerancia = async(req, res) => {
   }
 }
 
-const enviarAlertaSiloLleno = async(req, res) => {  
+const enviarAlertaSiloLleno = async(boleta) => {  
   try{
-    const silos = [1, 8, 16];
+    const excludeSilos = [31]
+    
+    const tolvaSilso = await db.tolva.findFirst({
+      where: {
+        idBoleta: parseInt(boleta.id)
+      }
+    })
+    
+    const silos = [tolvaSilso.siloPrincipal, tolvaSilso.siloSecundario, tolvaSilso.SiloTerciario];
 
-    result = await db.$queryRaw`
+    const result = await db.$queryRaw`
       SELECT 
           s.id as siloId,
+          s.nombre, 
           s.capacidad,
           CASE 
               WHEN s.capacidad > 0 THEN 
@@ -1931,13 +1941,13 @@ const enviarAlertaSiloLleno = async(req, res) => {
       FROM Silos s
       LEFT JOIN (
           -- Subconsulta que combina todos los silos en una sola pasada
-          SELECT DISTINCT  -- Agregar DISTINCT aquí
+          SELECT DISTINCT
               silo_data.silo_id,
               silo_data.peso_silo,
               silo_data.id_boleta
           FROM (
               -- Silo Principal
-              SELECT DISTINCT  -- Agregar DISTINCT aquí también
+              SELECT DISTINCT
                   b.numBoleta,
                   b.id as id_boleta,
                   s1.id as silo_id,
@@ -1954,7 +1964,7 @@ const enviarAlertaSiloLleno = async(req, res) => {
               UNION ALL
                 
             -- Silo Secundario
-              SELECT DISTINCT  -- Agregar DISTINCT aquí también
+              SELECT DISTINCT
                   b.numBoleta,
                   b.id as id_boleta,
                   s2.id as silo_id,
@@ -1970,7 +1980,7 @@ const enviarAlertaSiloLleno = async(req, res) => {
               UNION ALL
                 
               -- Silo Terciario
-              SELECT DISTINCT  -- Agregar DISTINCT aquí también
+              SELECT DISTINCT
                   b.numBoleta,
                   b.id as id_boleta,
                   s3.id as silo_id,
@@ -1990,16 +2000,19 @@ const enviarAlertaSiloLleno = async(req, res) => {
           WHERE rs.SiloId IS NULL OR silo_data.numBoleta > rs.ultimoReset
       ) peso_calculado ON s.id = peso_calculado.silo_id
       WHERE s.id IN (${silos[0] || 0}, ${silos[1] || 0}, ${silos[2] || 0})
-      GROUP BY s.id, s.capacidad
+      GROUP BY s.id, s.nombre, s.capacidad
       ORDER BY s.id;
     `;
 
-    const response = result.filter((item)=> item.porcentaje_ocupacion > 85)
+    const response = result.filter((item)=> item.porcentaje_ocupacion > 85 && excludeSilos.includes(item.siloId) === false)
+    
+    if(response.length === 0 ) return false
+    
+    alertaSiloLleno(response, enviarCorreo)
 
-    if(response.length === 0) return res.send({success: false})
-      
-    return res.send(response);
+    return true
   } catch(err){
+    console.log(err)
     return res.send({err: err})
   }
 }
