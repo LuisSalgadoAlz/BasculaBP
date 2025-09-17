@@ -16,6 +16,7 @@ const {
   getMovimientosYProductos,
   getConfigTolerancia,
   getReimprimirTicket,
+  enviarAlertaSiloLleno,
 } = require("../controllers/boleta.controller");
 const { exportToExcel } = require("../controllers/exportaciones.controller.js");
 const { imprimirPDF, imprimirWorkForce, reimprimirComprobante } = require("../controllers/impresiones.controller.js");
@@ -37,6 +38,7 @@ boletas.get("/reimprimir/comprobante/:id", reimprimirComprobante)
 boletas.post("/print/workforce/", imprimirWorkForce)
 boletas.get("/informes/", getMovimientosYProductos)
 boletas.get("/config/tolerancia", getConfigTolerancia)
+boletas.get("/verNivelSilos", enviarAlertaSiloLleno);
 boletas.post("/", postBoletasNormal);
 boletas.post("/newPlaca", postBoleta);
 boletas.put("/:id", updateBoleta);

@@ -1915,6 +1915,95 @@ const getConfigTolerancia = async(req, res) => {
   }
 }
 
+const enviarAlertaSiloLleno = async(req, res) => {  
+  try{
+    const silos = [1, 8, 16];
+
+    result = await db.$queryRaw`
+      SELECT 
+          s.id as siloId,
+          s.capacidad,
+          CASE 
+              WHEN s.capacidad > 0 THEN 
+                    ROUND((COALESCE(SUM(peso_calculado.peso_silo), 0) / s.capacidad) * 100, 2)
+              ELSE NULL 
+          END as porcentaje_ocupacion
+      FROM Silos s
+      LEFT JOIN (
+          -- Subconsulta que combina todos los silos en una sola pasada
+          SELECT DISTINCT  -- Agregar DISTINCT aquí
+              silo_data.silo_id,
+              silo_data.peso_silo,
+              silo_data.id_boleta
+          FROM (
+              -- Silo Principal
+              SELECT DISTINCT  -- Agregar DISTINCT aquí también
+                  b.numBoleta,
+                  b.id as id_boleta,
+                  s1.id as silo_id,
+                  CASE 
+                      WHEN t.siloTerciario IS NOT NULL THEN b.pesoNeto/300.0
+                      WHEN t.siloSecundario IS NOT NULL THEN b.pesoNeto/200.0
+                      ELSE b.pesoNeto/100.0
+                  END as peso_silo
+              FROM Boleta b
+              INNER JOIN tolva t ON b.id = t.idBoleta
+              INNER JOIN Silos s1 ON t.siloPrincipal = s1.id
+              WHERE s1.id IN (${silos[0] || 0}, ${silos[1] || 0}, ${silos[2] || 0})
+                
+              UNION ALL
+                
+            -- Silo Secundario
+              SELECT DISTINCT  -- Agregar DISTINCT aquí también
+                  b.numBoleta,
+                  b.id as id_boleta,
+                  s2.id as silo_id,
+                  CASE 
+                      WHEN t.siloTerciario IS NOT NULL THEN b.pesoNeto/300.0
+                      ELSE b.pesoNeto/200.0
+                  END as peso_silo
+              FROM Boleta b
+              INNER JOIN tolva t ON b.id = t.idBoleta
+              INNER JOIN Silos s2 ON t.siloSecundario = s2.id
+              WHERE s2.id IN (${silos[0] || 0}, ${silos[1] || 0}, ${silos[2] || 0})
+                
+              UNION ALL
+                
+              -- Silo Terciario
+              SELECT DISTINCT  -- Agregar DISTINCT aquí también
+                  b.numBoleta,
+                  b.id as id_boleta,
+                  s3.id as silo_id,
+                  b.pesoNeto/300.0 as peso_silo
+              FROM Boleta b
+              INNER JOIN tolva t ON b.id = t.idBoleta
+              INNER JOIN Silos s3 ON t.siloTerciario = s3.id
+              WHERE s3.id IN (${silos[0] || 0}, ${silos[1] || 0}, ${silos[2] || 0})
+          ) silo_data
+          LEFT JOIN (
+              SELECT 
+                  SiloId,
+                  MAX(numBoleta) as ultimoReset
+              FROM ResetSilos
+              GROUP BY SiloId
+          ) rs ON silo_data.silo_id = rs.SiloId
+          WHERE rs.SiloId IS NULL OR silo_data.numBoleta > rs.ultimoReset
+      ) peso_calculado ON s.id = peso_calculado.silo_id
+      WHERE s.id IN (${silos[0] || 0}, ${silos[1] || 0}, ${silos[2] || 0})
+      GROUP BY s.id, s.capacidad
+      ORDER BY s.id;
+    `;
+
+    const response = result.filter((item)=> item.porcentaje_ocupacion > 85)
+
+    if(response.length === 0) return res.send({success: false})
+      
+    return res.send(response);
+  } catch(err){
+    return res.send({err: err})
+  }
+}
+
 module.exports = {
   getAllData,
   postBoletasNormal,
@@ -1931,5 +2020,6 @@ module.exports = {
   updateCancelBoletas,
   getMovimientosYProductos,
   getConfigTolerancia, 
-  getReimprimirTicket
+  getReimprimirTicket,
+  enviarAlertaSiloLleno
 };
