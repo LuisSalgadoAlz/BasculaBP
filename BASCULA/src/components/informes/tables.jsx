@@ -991,7 +991,8 @@ const TableSheet = ({
   type = false,
   fixedColumns = [], // Columnas que no se pueden ocultar/mover
   storageKey = 'tablesheet-columns', // Clave personalizable para localStorage
-  isLoading = true
+  isLoading = true, 
+  labelActive= true, 
 }) => {
   const [visibleColumns, setVisibleColumns] = useState({});
   const [showColumnSelector, setShowColumnSelector] = useState(false);
@@ -1243,7 +1244,7 @@ const TableSheet = ({
                 {/* Footer fijo */}
                 <div className="p-6 border-t border-gray-200 bg-gray-50 flex-shrink-0">
                   <div className="text-sm text-gray-600">
-                    BAPROSA - Mostrando {tableData.length} registros
+                    BAPROSA - Mostrando {tableData.length} {labelActive? 'registros' : 'camiones descargados'}
                   </div>
                 </div>
               </>
@@ -1432,13 +1433,13 @@ export const SelectFormImportaciones = ({ data = {}, name, fun, stt = false, val
 };
 
 
-export const StatsCardTolvaReports = ({ value, loading, tiempos }) => {
+export const StatsCardTolvaReports = ({ value, loading, tiempos, tiempoPerdidoTotal }) => {
   if (value === undefined && !loading) return null
 
-  // Si está cargando, mostrar cards con spinners
+  // Si está cargando, mostrar cards con spinners (ahora 6 cards en total)
   if (loading) {
-    const loadingCards = Array.from({ length: 4 }, (_, index) => ({
-      title: `Tolva ${index + 1}`,
+    const loadingCards = Array.from({ length: 6 }, (_, index) => ({
+      title: `Tolva ${Math.floor(index / 3) + 1}`,
       value: null, // null indica que debe mostrar spinner
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1451,7 +1452,7 @@ export const StatsCardTolvaReports = ({ value, loading, tiempos }) => {
     }))
 
     return (
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 mb-6 mt-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6 mt-6">
         {loadingCards.map((card, index) => (
           <StatsCard
             key={index}
@@ -1482,7 +1483,7 @@ export const StatsCardTolvaReports = ({ value, loading, tiempos }) => {
     textColor: "text-[#725033]"
   }))
 
-  // Crear cards para los tiempos
+  // Crear cards para los tiempos promedio
   const tiempoStats = value.map((el) => {
     const tiempoData = tiempos.find((item) => item.tolvaAsignada === el.tolvaAsignada)
     const promedioTiempo = tiempoData?.PromedioTiempo || "N/A"
@@ -1502,15 +1503,36 @@ export const StatsCardTolvaReports = ({ value, loading, tiempos }) => {
     }
   })
 
-  // Combinar ambos arrays intercalados
+  // Crear cards para el tiempo perdido total
+  const tiempoPerdidoStats = value.map((el) => {
+    const tiempoPerdidoData = tiempoPerdidoTotal?.find((item) => item.tolvaAsignada === el.tolvaAsignada)
+    const tiempoPerdido = tiempoPerdidoData?.tiempo_perdido_total || "0 h 0 m"
+    
+    return {
+      title: `Tiempo Perdido T${el?.tolvaAsignada}`,
+      value: tiempoPerdido,
+      subtitle: "Tiempo Perdido Total",
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+      bgColor: "bg-red-50",
+      iconColor: "text-red-600",
+      textColor: "text-red-600"
+    }
+  })
+
+  // Combinar todos los arrays: cantidad, tiempo promedio y tiempo perdido por cada tolva
   const allStats = []
   for (let i = 0; i < cantidadStats.length; i++) {
-    allStats.push(cantidadStats[i])
-    allStats.push(tiempoStats[i])
+    allStats.push(cantidadStats[i])      // Cantidad Tolva X
+    allStats.push(tiempoStats[i])        // Tiempo Promedio Tolva X
+    allStats.push(tiempoPerdidoStats[i]) // Tiempo Perdido Tolva X
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 mb-6 mt-6">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6 mt-6">
       {allStats.map((stat, index) => (
         <StatsCard
           key={index}
@@ -1693,7 +1715,7 @@ export const TableComponentDescargados = ({ datos = [{}], fun, type=false, loadi
             <thead className="text-xs uppercase bg-[#725033] rounded-2xl text-white">
               <tr>
                 {columnKeys.map((el, keys) => (
-                  <th key={keys} scope="col" className={`px-6 py-4 ${(keys > 1 && lastColumnIndex!==keys) && 'text-right'} ${lastColumnIndex===keys && 'text-center'}`}>
+                  <th key={keys} scope="col" className={`px-6 py-4 ${keys > 1 && 'text-center'}`}>
                     {el}
                   </th>
                 ))}
@@ -1707,7 +1729,7 @@ export const TableComponentDescargados = ({ datos = [{}], fun, type=false, loadi
                   onDoubleClick={() => fun(fila)}
                 >
                   {Object.values(fila).map((el, key) => (
-                    <td key={key} className={`px-6 py-3 text-gray-700 text-sm font-mono ${key > 1 && 'text-right'}`}>
+                    <td key={key} className={`px-6 py-3 text-gray-700 text-sm font-mono ${key > 1 && 'text-center'}`}>
                       {key === lastColumnIndex && type ? (
                         // Renderizar progress bar para la última columna (porcentaje)
                         <div className="flex items-center space-x-2">
@@ -1723,7 +1745,7 @@ export const TableComponentDescargados = ({ datos = [{}], fun, type=false, loadi
                         </div>
                       ) : (
                         type || key !== lastColumnIndex ? (
-                          el
+                          el || '- Sin comentarios -'
                         ) : (
                           <span className={`text-xl w-full flex items-center justify-center ${el===0 ? 'text-green-400' : 'text-red-400'}`}><IoTimerOutline /></span>
                         )

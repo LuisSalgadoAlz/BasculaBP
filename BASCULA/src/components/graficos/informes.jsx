@@ -840,13 +840,13 @@ export const BaprosaSiloChart2 = ({ data, onSiloAction, isLoading, handleClickBa
           </div>
         </div>
 
-        <div className="p-0">
+        <div className="p-0 border-b border-stone-200">
           {selectedSilos.length >= 3 ? (
-            <div className="h-[600px] overflow-hidden">
+            <div className="h-[550px] overflow-hidden">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={chartData}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 80 }}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
                   barGap={8}
                   onClick={handleClickBar}
                 >
@@ -856,9 +856,45 @@ export const BaprosaSiloChart2 = ({ data, onSiloAction, isLoading, handleClickBa
                       <stop offset="100%" stopColor="#047857" />
                     </linearGradient>
                     <linearGradient id="pesoGradAlerta" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#f97316" />
+                      <stop offset="100%" stopColor="#ea580c" />
+                    </linearGradient>
+                    <linearGradient id="pesoGradAlertaPulse" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="#dc2626" />
                       <stop offset="100%" stopColor="#b91c1c" />
                     </linearGradient>
+                    {/* <linearGradient id="pesoGradAlertaPulse" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#dc2626" />
+                      <stop offset="6.6%" stopColor="#dc2626" />
+                      <stop offset="6.7%" stopColor="#f5f5f4" />
+                      <stop offset="13.3%" stopColor="#f5f5f4" />
+                      <stop offset="13.4%" stopColor="#dc2626" />
+                      <stop offset="19.9%" stopColor="#dc2626" />
+                      <stop offset="20%" stopColor="#f5f5f4" />
+                      <stop offset="26.6%" stopColor="#f5f5f4" />
+                      <stop offset="26.7%" stopColor="#dc2626" />
+                      <stop offset="33.3%" stopColor="#dc2626" />
+                      <stop offset="33.4%" stopColor="#f5f5f4" />
+                      <stop offset="39.9%" stopColor="#f5f5f4" />
+                      <stop offset="40%" stopColor="#dc2626" />
+                      <stop offset="46.6%" stopColor="#dc2626" />
+                      <stop offset="46.7%" stopColor="#f5f5f4" />
+                      <stop offset="53.3%" stopColor="#f5f5f4" />
+                      <stop offset="53.4%" stopColor="#dc2626" />
+                      <stop offset="59.9%" stopColor="#dc2626" />
+                      <stop offset="60%" stopColor="#f5f5f4" />
+                      <stop offset="66.6%" stopColor="#f5f5f4" />
+                      <stop offset="66.7%" stopColor="#dc2626" />
+                      <stop offset="73.3%" stopColor="#dc2626" />
+                      <stop offset="73.4%" stopColor="#f5f5f4" />
+                      <stop offset="79.9%" stopColor="#f5f5f4" />
+                      <stop offset="80%" stopColor="#dc2626" />
+                      <stop offset="86.6%" stopColor="#dc2626" />
+                      <stop offset="86.7%" stopColor="#f5f5f4" />
+                      <stop offset="93.3%" stopColor="#f5f5f4" />
+                      <stop offset="93.4%" stopColor="#dc2626" />
+                      <stop offset="100%" stopColor="#dc2626" />
+                    </linearGradient>  */}
                     <linearGradient id="disponibleGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="#f5f5f4" />
                       <stop offset="100%" stopColor="#e7e5e4" />
@@ -949,9 +985,15 @@ export const BaprosaSiloChart2 = ({ data, onSiloAction, isLoading, handleClickBa
                     {chartData.map((entry, index) => (
                       <Cell 
                         key={`cell-peso-${index}`} 
-                        fill={entry.porcentaje_ocupacion >= 85 ? "url(#pesoGradAlerta)" : entry.porcentaje_ocupacion >= 60 ?  "url(#pesoGradWarnig)" : "url(#pesoGradNormal)"}
-                        stroke={entry.porcentaje_ocupacion >= 90 ? "#b91c1c" : entry.porcentaje_ocupacion >= 60 ? "#FFE135" : "#059669"}
-                        strokeWidth={0.5}
+                        fill={
+                          entry.porcentaje_ocupacion > 100 
+                            ? "url(#pesoGradAlertaPulse)" 
+                            : entry.porcentaje_ocupacion >= 85 
+                              ? "url(#pesoGradAlerta)" 
+                              : entry.porcentaje_ocupacion >= 60 
+                                ? "url(#pesoGradWarnig)" 
+                                : "url(#pesoGradNormal)"
+                        }
                       />
                     ))}
                   </Bar>
@@ -972,6 +1014,32 @@ export const BaprosaSiloChart2 = ({ data, onSiloAction, isLoading, handleClickBa
           ) : (
             <>Cargando...</>
           )}
+        </div>
+
+        <div className="flex items-center space-x-4 mt-2 p-2">
+            <span className="text-sm font-semibold text-gray-800 mr-2">Simbología</span>
+            <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-1">
+                    <div className="w-4 h-4 bg-stone-100 border border-stone-300 rounded"></div>
+                    <span className="text-xs text-gray-600">Disponible (0%)</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                    <div className="w-4 h-4 bg-emerald-600 rounded"></div>
+                    <span className="text-xs text-gray-600">Normal (1% a 60%)</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                    <div className="w-4 h-4 bg-yellow-400 rounded"></div>
+                    <span className="text-xs text-gray-600">Advertencia (61% a 85%)</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                    <div className="w-4 h-4 bg-[#ea580c] rounded"></div>
+                    <span className="text-xs text-gray-600">Alerta (86% a 99%)</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                    <div className="w-4 h-4 bg-red-600 rounded"></div>
+                    <span className="text-xs text-gray-600">Crítico (superior a 100%)</span>
+                </div>
+            </div>
         </div>
       </div>
 
@@ -1518,13 +1586,13 @@ export const BaprosaSiloChart = ({ data, onSiloAction, isLoading, handleBarClick
           </div>
         </div>
 
-        <div className="p-0">
+        <div className="p-0 border-b border-stone-200">
           {selectedSilos.length >= 3 ? (
             <div className="h-[600px] overflow-hidden">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={chartData}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 80 }}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
                   barGap={8}
                   onClick={handleBarClick}
                 >
@@ -1534,9 +1602,45 @@ export const BaprosaSiloChart = ({ data, onSiloAction, isLoading, handleBarClick
                       <stop offset="100%" stopColor="#047857" />
                     </linearGradient>
                     <linearGradient id="pesoGradAlerta" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#f97316" />
+                      <stop offset="100%" stopColor="#ea580c" />
+                    </linearGradient>
+                    <linearGradient id="pesoGradAlertaPulse" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="#dc2626" />
                       <stop offset="100%" stopColor="#b91c1c" />
                     </linearGradient>
+                    {/* <linearGradient id="pesoGradAlertaPulse" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#dc2626" />
+                      <stop offset="6.6%" stopColor="#dc2626" />
+                      <stop offset="6.7%" stopColor="#f5f5f4" />
+                      <stop offset="13.3%" stopColor="#f5f5f4" />
+                      <stop offset="13.4%" stopColor="#dc2626" />
+                      <stop offset="19.9%" stopColor="#dc2626" />
+                      <stop offset="20%" stopColor="#f5f5f4" />
+                      <stop offset="26.6%" stopColor="#f5f5f4" />
+                      <stop offset="26.7%" stopColor="#dc2626" />
+                      <stop offset="33.3%" stopColor="#dc2626" />
+                      <stop offset="33.4%" stopColor="#f5f5f4" />
+                      <stop offset="39.9%" stopColor="#f5f5f4" />
+                      <stop offset="40%" stopColor="#dc2626" />
+                      <stop offset="46.6%" stopColor="#dc2626" />
+                      <stop offset="46.7%" stopColor="#f5f5f4" />
+                      <stop offset="53.3%" stopColor="#f5f5f4" />
+                      <stop offset="53.4%" stopColor="#dc2626" />
+                      <stop offset="59.9%" stopColor="#dc2626" />
+                      <stop offset="60%" stopColor="#f5f5f4" />
+                      <stop offset="66.6%" stopColor="#f5f5f4" />
+                      <stop offset="66.7%" stopColor="#dc2626" />
+                      <stop offset="73.3%" stopColor="#dc2626" />
+                      <stop offset="73.4%" stopColor="#f5f5f4" />
+                      <stop offset="79.9%" stopColor="#f5f5f4" />
+                      <stop offset="80%" stopColor="#dc2626" />
+                      <stop offset="86.6%" stopColor="#dc2626" />
+                      <stop offset="86.7%" stopColor="#f5f5f4" />
+                      <stop offset="93.3%" stopColor="#f5f5f4" />
+                      <stop offset="93.4%" stopColor="#dc2626" />
+                      <stop offset="100%" stopColor="#dc2626" />
+                    </linearGradient>  */}
                     <linearGradient id="disponibleGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="#f5f5f4" />
                       <stop offset="100%" stopColor="#e7e5e4" />
@@ -1624,9 +1728,15 @@ export const BaprosaSiloChart = ({ data, onSiloAction, isLoading, handleBarClick
                     {chartData.map((entry, index) => (
                       <Cell 
                         key={`cell-peso-${index}`} 
-                        fill={entry.porcentaje_ocupacion >= 85 ? "url(#pesoGradAlerta)" : entry.porcentaje_ocupacion >= 60 ?  "url(#pesoGradWarnig)" : "url(#pesoGradNormal)"}
-                        stroke={entry.porcentaje_ocupacion >= 90 ? "#b91c1c" : entry.porcentaje_ocupacion >= 60 ? "#FFE135" : "#059669"}
-                        strokeWidth={0.5}
+                        fill={
+                          entry.porcentaje_ocupacion > 100 
+                            ? "url(#pesoGradAlertaPulse)" 
+                            : entry.porcentaje_ocupacion > 85 
+                              ? "url(#pesoGradAlerta)" 
+                              : entry.porcentaje_ocupacion > 60 
+                                ? "url(#pesoGradWarnig)" 
+                                : "url(#pesoGradNormal)"
+                        }
                       />
                     ))}
                   </Bar>
@@ -1647,6 +1757,32 @@ export const BaprosaSiloChart = ({ data, onSiloAction, isLoading, handleBarClick
           ) : (
             <>Cargando...</>
           )}
+        </div>
+
+        <div className="flex items-center space-x-4 mt-2 p-2">
+            <span className="text-sm font-semibold text-gray-800 mr-2">Simbología</span>
+            <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-1">
+                    <div className="w-4 h-4 bg-stone-100 border border-stone-300 rounded"></div>
+                    <span className="text-xs text-gray-600">Disponible (0%)</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                    <div className="w-4 h-4 bg-emerald-600 rounded"></div>
+                    <span className="text-xs text-gray-600">Normal (1% a 60%)</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                    <div className="w-4 h-4 bg-yellow-400 rounded"></div>
+                    <span className="text-xs text-gray-600">Advertencia (61% a 85%)</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                    <div className="w-4 h-4 bg-[#ea580c] rounded"></div>
+                    <span className="text-xs text-gray-600">Alerta (86% a 99%)</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                    <div className="w-4 h-4 bg-red-600 rounded"></div>
+                    <span className="text-xs text-gray-600">Crítico (superior a 100%)</span>
+                </div>
+            </div>
         </div>
       </div>
 

@@ -7,6 +7,7 @@ const sharp = require('sharp');
 const jwt = require("jsonwebtoken");
 const enviarCorreo = require("../utils/enviarCorreo");
 const { alertaMarchamosDiferentes } = require('../utils/cuerposCorreo');
+const { formatNumber } = require('../lib/formatNumber');
 
 const TYPES_OF_STATES = ['PENDIENTE', 'COMPLETO', 'CANCELADO', 'FUERA DE TIEMPO']
 
@@ -1189,7 +1190,7 @@ const postResetSilo = async (req, res) => {
 const getStatsBuquesAndAll = async (req, res) => {
   try {
     const buque = req.query.buque || null;
-    const factura = req.query.factura || null
+    const factura = req.query.factura || null;
 
     if (factura !== null && (isNaN(factura) || factura === '')) {
       return res.status(400).json({ error: 'El parámetro factura debe ser un número válido.' });
@@ -1201,19 +1202,160 @@ const getStatsBuquesAndAll = async (req, res) => {
 
     const buqueId = buque ? parseInt(buque) : null;
 
-    // Agregando suma de peso neto por tolva
-    const cantidadBoletasPorTolva = await db.boleta.groupBy({
-      by: ['tolvaAsignada'],
-      _count: { tolvaAsignada: true },
-      _sum: { pesoNeto: true },
-      where: {
-        tolvaAsignada: {
-          not: null
-        },
-        ...(buqueId ? { idSocio: buqueId } : {}), 
-        ...(factura ? { factura: factura } : {})
-      }
-    });
+    const [cantidadBoletasPorTolva, resultado, tiemposRaw, tiempoPerdidoTotal] = await Promise.all([
+      // Consulta 1: Cantidad de boletas por tolva
+      db.boleta.groupBy({
+        by: ['tolvaAsignada'],
+        _count: { tolvaAsignada: true },
+        _sum: { pesoNeto: true },
+        where: {
+          tolvaAsignada: {
+            not: null
+          },
+          ...(buqueId ? { idSocio: buqueId } : {}), 
+          ...(factura ? { factura: factura } : {})
+        }
+      }),
+
+      // Consulta 2: Resultado principal por usuario
+      buqueId && factura 
+        ? db.$queryRaw`
+            SELECT 
+              t.usuarioTolva,
+              COUNT(DISTINCT t.idBoleta) as totalUnicos,
+              SUM(b.pesoNeto) as pesoNetoTotal,
+              CONCAT(
+                  CAST(AVG(DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida)) / 60 AS VARCHAR), ' horas, ',
+                  CAST(AVG(DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida)) % 60 AS VARCHAR), ' minutos'
+              ) as tiempoPromedio
+            FROM Boleta b
+            INNER JOIN Tolva t ON b.id = t.idBoleta
+            WHERE b.idSocio = ${buqueId} and b.factura = ${factura} and b.estado not in ('Cancelada', 'Pendiente')
+            GROUP BY t.usuarioTolva
+          `
+        : db.$queryRaw`
+            SELECT 
+                t.usuarioTolva,
+                COUNT(DISTINCT t.idBoleta) as totalUnicos,
+                SUM(b.pesoNeto) as pesoNetoTotal,
+                CONCAT(
+                    CAST(AVG(DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida)) / 60 AS VARCHAR), ' horas, ',
+                    CAST(AVG(DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida)) % 60 AS VARCHAR), ' minutos'
+                ) as tiempoPromedio
+            FROM Boleta b
+            INNER JOIN Tolva t ON b.id = t.idBoleta
+            WHERE b.estado NOT IN ('Cancelada', 'Pendiente')
+            GROUP BY t.usuarioTolva
+          `,
+
+      // Consulta 3: Tiempos por tolva
+      buqueId && factura
+        ? db.$queryRaw`
+            SELECT 
+              CAST(AVG(DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida)) / 60 AS VARCHAR) 
+                + 'h ' + 
+              CAST(AVG(DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida)) % 60 AS VARCHAR) 
+                + 'm' AS PromedioTiempo, 
+              b.tolvaAsignada,
+              SUM(b.pesoNeto) as pesoNetoTotal
+            FROM Boleta AS b
+            INNER JOIN Tolva AS t ON b.id = t.idBoleta
+            WHERE b.idSocio = ${buqueId} and b.factura = ${factura} and b.estado not in ('Cancelada', 'Pendiente')
+            GROUP BY b.tolvaAsignada
+          `
+        : db.$queryRaw`
+            SELECT 
+              CAST(AVG(DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida)) / 60 AS VARCHAR) 
+                + 'h ' + 
+              CAST(AVG(DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida)) % 60 AS VARCHAR) 
+                + 'm' AS PromedioTiempo, 
+              b.tolvaAsignada,
+              SUM(b.pesoNeto) as pesoNetoTotal
+            FROM Boleta AS b
+            INNER JOIN Tolva AS t ON b.id = t.idBoleta
+            WHERE b.estado not in ('Cancelada', 'Pendiente')
+            GROUP BY b.tolvaAsignada
+          `,
+
+      // Consulta 4: Tiempo perdido total por tolva
+      buqueId && factura
+        ? db.$queryRaw`
+            SELECT 
+              b.tolvaAsignada, 
+              CAST(SUM(CASE 
+                           WHEN (DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida) - 
+                                 CASE 
+                                     WHEN b.tolvaAsignada = 1 THEN 50
+                                     WHEN b.tolvaAsignada = 2 THEN 40
+                                     ELSE 0
+                                 END) < 0 THEN 0
+                           ELSE (DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida) - 
+                                 CASE 
+                                     WHEN b.tolvaAsignada = 1 THEN 50
+                                     WHEN b.tolvaAsignada = 2 THEN 40
+                                     ELSE 0
+                                 END)
+                       END) / 60 AS VARCHAR)
+              + ' h ' + 
+              CAST(SUM(CASE 
+                           WHEN (DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida) - 
+                                 CASE 
+                                     WHEN b.tolvaAsignada = 1 THEN 50
+                                     WHEN b.tolvaAsignada = 2 THEN 40
+                                     ELSE 0
+                                 END) < 0 THEN 0
+                           ELSE (DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida) - 
+                                 CASE 
+                                     WHEN b.tolvaAsignada = 1 THEN 50
+                                     WHEN b.tolvaAsignada = 2 THEN 40
+                                     ELSE 0
+                                 END)
+                       END) % 60 AS VARCHAR)
+              + ' m' AS tiempo_perdido_total
+            FROM Boleta b 
+            INNER JOIN Tolva t ON b.id = t.idBoleta
+            WHERE b.idSocio = ${buqueId} and b.factura = ${factura} and b.estado not in ('Cancelada', 'Pendiente')
+            GROUP BY b.tolvaAsignada
+          `
+        : db.$queryRaw`
+            SELECT 
+              b.tolvaAsignada, 
+              CAST(SUM(CASE 
+                           WHEN (DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida) - 
+                                 CASE 
+                                     WHEN b.tolvaAsignada = 1 THEN 50
+                                     WHEN b.tolvaAsignada = 2 THEN 40
+                                     ELSE 0
+                                 END) < 0 THEN 0
+                           ELSE (DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida) - 
+                                 CASE 
+                                     WHEN b.tolvaAsignada = 1 THEN 50
+                                     WHEN b.tolvaAsignada = 2 THEN 40
+                                     ELSE 0
+                                 END)
+                       END) / 60 AS VARCHAR)
+              + ' h ' + 
+              CAST(SUM(CASE 
+                           WHEN (DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida) - 
+                                 CASE 
+                                     WHEN b.tolvaAsignada = 1 THEN 50
+                                     WHEN b.tolvaAsignada = 2 THEN 40
+                                     ELSE 0
+                                 END) < 0 THEN 0
+                           ELSE (DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida) - 
+                                 CASE 
+                                     WHEN b.tolvaAsignada = 1 THEN 50
+                                     WHEN b.tolvaAsignada = 2 THEN 40
+                                     ELSE 0
+                                 END)
+                       END) % 60 AS VARCHAR)
+              + ' m' AS tiempo_perdido_total
+            FROM Boleta b 
+            INNER JOIN Tolva t ON b.id = t.idBoleta
+            WHERE b.estado not in ('Cancelada', 'Pendiente')
+            GROUP BY b.tolvaAsignada
+          `
+    ]);
 
     // Crear estructura base para tolvas 1 y 2
     const tolvasBase = [
@@ -1234,89 +1376,33 @@ const getStatsBuquesAndAll = async (req, res) => {
       };
     });
 
-    let resultado;
-    let tiempos;
+    // Asegurar que siempre tengamos tolvas 1 y 2 en tiempos
+    const tiemposBase = [
+      { PromedioTiempo: "0h 0m", tolvaAsignada: 1, pesoNetoTotal: 0 },
+      { PromedioTiempo: "0h 0m", tolvaAsignada: 2, pesoNetoTotal: 0 }
+    ];
+    
+    const tiempos = tiemposBase.map(tiempoBase => {
+      const tiempoExistente = tiemposRaw.find(
+        item => item.tolvaAsignada === tiempoBase.tolvaAsignada
+      );
+      
+      return tiempoExistente || tiempoBase;
+    });
 
-    if (buqueId) {
-      resultado = await db.$queryRaw`
-        SELECT 
-          t.usuarioTolva,
-          t.usuarioDeCierre,
-          COUNT(DISTINCT t.idBoleta) as totalUnicos,
-          SUM(b.pesoNeto) as pesoNetoTotal
-        FROM Boleta b
-        INNER JOIN Tolva t ON b.id = t.idBoleta
-        WHERE b.idSocio = ${buqueId}
-        GROUP BY t.usuarioTolva, t.usuarioDeCierre
-      `;
+    // Asegurar que siempre tengamos tolvas 1 y 2 en tiempo perdido total
+    const tiempoPerdidoBase = [
+      { tolvaAsignada: 1, tiempo_perdido_total: "0 h 0 m" },
+      { tolvaAsignada: 2, tiempo_perdido_total: "0 h 0 m" }
+    ];
+    
+    const tiempoPerdidoFormateado = tiempoPerdidoBase.map(tiempoBase => {
+      const tiempoPerdidoExistente = tiempoPerdidoTotal.find(
+        item => item.tolvaAsignada === tiempoBase.tolvaAsignada
+      );
       
-      const tiemposRaw = await db.$queryRaw`
-        SELECT 
-          CAST(AVG(DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida)) / 60 AS VARCHAR) 
-            + 'h ' + 
-          CAST(AVG(DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida)) % 60 AS VARCHAR) 
-            + 'm' AS PromedioTiempo, 
-          b.tolvaAsignada,
-          SUM(b.pesoNeto) as pesoNetoTotal
-        FROM Boleta AS b
-        INNER JOIN Tolva AS t ON b.id = t.idBoleta
-        WHERE b.idSocio = ${buqueId}
-        GROUP BY b.tolvaAsignada
-      `;
-      
-      // Asegurar que siempre tengamos tolvas 1 y 2 en tiempos
-      const tiemposBase = [
-        { PromedioTiempo: "0h 0m", tolvaAsignada: 1, pesoNetoTotal: 0 },
-        { PromedioTiempo: "0h 0m", tolvaAsignada: 2, pesoNetoTotal: 0 }
-      ];
-      
-      tiempos = tiemposBase.map(tiempoBase => {
-        const tiempoExistente = tiemposRaw.find(
-          item => item.tolvaAsignada === tiempoBase.tolvaAsignada
-        );
-        
-        return tiempoExistente || tiempoBase;
-      });
-      
-    } else {
-      resultado = await db.$queryRaw`
-        SELECT 
-          t.usuarioTolva,
-          t.usuarioDeCierre,
-          COUNT(DISTINCT t.idBoleta) as totalUnicos,
-          SUM(b.pesoNeto) as pesoNetoTotal
-        FROM Boleta b
-        INNER JOIN Tolva t ON b.id = t.idBoleta
-        GROUP BY t.usuarioTolva, t.usuarioDeCierre
-      `;
-      
-      const tiemposRaw = await db.$queryRaw`
-        SELECT 
-          CAST(AVG(DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida)) / 60 AS VARCHAR) 
-            + 'h ' + 
-          CAST(AVG(DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida)) % 60 AS VARCHAR) 
-            + 'm' AS PromedioTiempo, 
-          b.tolvaAsignada,
-          SUM(b.pesoNeto) as pesoNetoTotal
-        FROM Boleta AS b
-        INNER JOIN Tolva AS t ON b.id = t.idBoleta
-        GROUP BY b.tolvaAsignada
-      `;
-      
-      // Asegurar que siempre tengamos tolvas 1 y 2 en tiempos
-      const tiemposBase = [
-        { PromedioTiempo: "0h 0m", tolvaAsignada: 1, pesoNetoTotal: 0 },
-        { PromedioTiempo: "0h 0m", tolvaAsignada: 2, pesoNetoTotal: 0 }
-      ];
-      
-      tiempos = tiemposBase.map(tiempoBase => {
-        const tiempoExistente = tiemposRaw.find(
-          item => item.tolvaAsignada === tiempoBase.tolvaAsignada
-        );
-        
-        return tiempoExistente || tiempoBase;
-      });
-    }
+      return tiempoPerdidoExistente || tiempoBase;
+    });
 
     const totalDescargas = resultado.reduce((total, item) => total + Number(item.totalUnicos), 0);
     const totalPesoNeto = resultado.reduce((total, item) => total + Number(item.pesoNetoTotal || 0), 0);
@@ -1328,13 +1414,12 @@ const getStatsBuquesAndAll = async (req, res) => {
       const porcentajePeso = totalPesoNeto > 0 ? ((pesoNeto / totalPesoNeto) * 100).toFixed(2) : 0;
       
       return {
-        Usuario: item.usuarioTolva === item.usuarioDeCierre 
-          ? item.usuarioTolva 
-          : `${item.usuarioTolva} ${item.usuarioDeCierre ? `/ ${item.usuarioDeCierre}` : ''}`,
+        Usuario: item.usuarioTolva,
+        'Tiempo Promedio': item.tiempoPromedio || 'N/A',
         Cantidad: cantidad,
-        Porcentaje: `${porcentaje}%`,
-        'Descargado': `${pesoNeto.toFixed(2)/100} QQ`,
-        PorcentajePeso: `${porcentajePeso}%`
+        'Porcentaje según Cantidad': `${porcentaje} %`,
+        'Descargado (qq)': `${formatNumber(pesoNeto.toFixed(2)/100)}`,
+        'Porcentaje según Peso': `${porcentajePeso}%`,
       };
     });    
 
@@ -1342,6 +1427,7 @@ const getStatsBuquesAndAll = async (req, res) => {
       asignadas: refactorData,
       descargadas: dataLimpia, 
       tiempos: tiempos,
+      tiempoPerdidoTotal: tiempoPerdidoFormateado,
       totales: {
         totalDescargas,
         totalPesoNeto
@@ -1410,43 +1496,50 @@ const getViajesTotales = async(req, res) => {
       ...(searchPlaca ? { placa: { contains: searchPlaca } } : {})
     };
 
-    // Obtener el total de registros para la paginación
-    const totalRecords = await db.boleta.count({
-      where: whereConditions
-    });
-
-    // Consulta principal con paginación
-    const resultados = await db.boleta.findMany({
-      select: {
-        id: true,
-        numBoleta: true,
-        placa: true,
-        motorista: true,
-        tolvaAsignada: true,
-        tolva: {
-          select: {
-            idBoleta: true,
-            usuarioTolva: true,
-            usuarioDeCierre: true,
-            observacionTiempo: true,
-            fechaEntrada: true,
-            fechaSalida: true,
-          },
-          take: 1,
-          orderBy: {
-            fechaEntrada: 'asc'
-          }
+    const [totalRecords, totalSinFiltros, resultados] = await Promise.all([
+      // Consulta 1: Obtener el total de registros para la paginación
+      db.boleta.count({
+        where: whereConditions
+      }),
+      // Consulta 2: Obtener el total de registros para la paginación
+      (factura && buque) ? db.boleta.count({
+        where:{
+          ...(buque ? { idSocio: parseInt(buque) } : {}),
+          ...(factura ? { factura: factura } : {}),
         }
-      },
-      where: whereConditions,
-      skip: offset,
-      take: limit,
-      orderBy: {
-        numBoleta: 'desc' // Ordenar por número de boleta descendente
-      }
-    });
+      }) : 0,
+      // Consulta 3: Consulta principal con paginación
+      db.boleta.findMany({
+        select: {
+          id: true,
+          numBoleta: true,
+          placa: true,
+          motorista: true,
+          tolvaAsignada: true,
+          tolva: {
+            select: {
+              idBoleta: true,
+              usuarioTolva: true,
+              usuarioDeCierre: true,
+              observacionTiempo: true,
+              fechaEntrada: true,
+              fechaSalida: true,
+            },
+            take: 1,
+            orderBy: {
+              fechaEntrada: 'asc'
+            }
+          }
+        },
+        where: whereConditions,
+        skip: offset,
+        take: limit,
+        orderBy: {
+          numBoleta: 'desc'
+        }
+      })
+    ]);
 
-    // Procesar resultados
     const resultadosUnicos = resultados
       .filter(boleta => boleta.tolva.length > 0)
       .map(boleta => {
@@ -1459,19 +1552,40 @@ const getViajesTotales = async(req, res) => {
         const horas = Math.floor(diferenciaMinutos / 60);
         const minutos = diferenciaMinutos % 60;
         
-        // Lógica para tiempo excedido
+        // Lógica para tiempo excedido con resta según tolva asignada
         const tiempoExcedidoFlag = (tolvaData.observacionTiempo !== null) ? 1 : 0;
+        let tiempoAjustadoMinutos = diferenciaMinutos;
+        
+        // Si hay tiempo excedido, aplicar la resta según la tolva asignada
+        if (tiempoExcedidoFlag === 1) {
+          let minutosARestar = 0;
+          
+          // Determinar cuántos minutos restar según la tolva asignada
+          if (boleta.tolvaAsignada === '1' || boleta.tolvaAsignada === 1) {
+            minutosARestar = 50;
+          } else if (boleta.tolvaAsignada === '2' || boleta.tolvaAsignada === 2) {
+            minutosARestar = 40;
+          }
+          
+          // Restar los minutos correspondientes, pero nunca menos de 0
+          tiempoAjustadoMinutos = Math.max(0, diferenciaMinutos - minutosARestar);
+        }
+        
+        // Calcular horas y minutos para el tiempo ajustado
+        const horasAjustadas = Math.floor(tiempoAjustadoMinutos / 60);
+        const minutosAjustados = tiempoAjustadoMinutos % 60;
         
         return {
-          numBoleta: boleta.numBoleta,
+          'Boleta': boleta.numBoleta,
           placa: boleta.placa,
           motorista: boleta.motorista,
           usuarioInicial: tolvaData.usuarioTolva,
-          tolvaAsignada: boleta.tolvaAsignada,
+          tolvaAsignada: `Tolva ${boleta.tolvaAsignada}`,
           usuarioDeCierre: tolvaData.usuarioDeCierre || '',
           observacionTiempo: tolvaData.observacionTiempo,
-          Tiempo: `${horas}h ${minutos}m`,
-          tiempoExcedido: tiempoExcedidoFlag
+          TiempoTotal: `${horas}h ${minutos}m`, 
+          TiempoPerdido: tiempoExcedidoFlag ? `${horasAjustadas}h ${minutosAjustados}m` : '0h 0m',
+          tiempoExcedido: tiempoExcedidoFlag,
         };
       });
 
@@ -1487,6 +1601,7 @@ const getViajesTotales = async(req, res) => {
         currentPage: page,
         totalPages: totalPages,
         totalRecords: totalRecords,
+        totalAllData: totalSinFiltros,
         recordsPerPage: limit,
         hasNextPage: hasNextPage,
         hasPrevPage: hasPrevPage,
