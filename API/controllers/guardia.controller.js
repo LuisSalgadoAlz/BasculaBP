@@ -357,43 +357,16 @@ const getPorcentajeMes = async(req, res) => {
                 
                 UNION ALL
                 
-                -- idMovimiento = 11 (manejo especial por proceso)
+                -- idMovimiento = 11 (NO aplica regla de aplicaAlerta - siempre usa la fecha exacta)
                 SELECT 
                     b.id as id_boleta,
                     CASE 
-                        WHEN pds.aplicaAlerta = 0 THEN
-                            CASE 
-                                WHEN b.proceso = 0 THEN 
-                                    CASE 
-                                        WHEN DATENAME(weekday, b.fechaInicio AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') = 'Saturday' THEN
-                                            CAST(DATEADD(day, 2, b.fechaInicio AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') AS DATE)
-                                        ELSE
-                                            CAST(DATEADD(day, 1, b.fechaInicio AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') AS DATE)
-                                    END
-                                WHEN b.proceso = 1 THEN 
-                                    CASE 
-                                        WHEN DATENAME(weekday, b.fechaFin AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') = 'Saturday' THEN
-                                            CAST(DATEADD(day, 2, b.fechaFin AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') AS DATE)
-                                        ELSE
-                                            CAST(DATEADD(day, 1, b.fechaFin AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') AS DATE)
-                                    END
-                                ELSE 
-                                    CASE 
-                                        WHEN DATENAME(weekday, b.fechaInicio AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') = 'Saturday' THEN
-                                            CAST(DATEADD(day, 2, b.fechaInicio AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') AS DATE)
-                                        ELSE
-                                            CAST(DATEADD(day, 1, b.fechaInicio AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') AS DATE)
-                                    END
-                            END
-                        ELSE
-                            CASE 
-                                WHEN b.proceso = 0 THEN 
-                                    CAST(b.fechaInicio AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time' AS DATE)
-                                WHEN b.proceso = 1 THEN 
-                                    CAST(b.fechaFin AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time' AS DATE)
-                                ELSE 
-                                    CAST(b.fechaInicio AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time' AS DATE)
-                            END
+                        WHEN b.proceso = 0 THEN 
+                            CAST(b.fechaInicio AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time' AS DATE)
+                        WHEN b.proceso = 1 THEN 
+                            CAST(b.fechaFin AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time' AS DATE)
+                        ELSE 
+                            CAST(b.fechaInicio AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time' AS DATE)
                     END AS fecha_local,
                     CASE WHEN pds.estado = 0 THEN 1 ELSE 0 END as [No Realizo],
                     CASE WHEN pds.estado = 1 THEN 1 ELSE 0 END as [Efectuado],
