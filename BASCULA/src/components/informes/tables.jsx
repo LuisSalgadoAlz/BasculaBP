@@ -3,6 +3,7 @@ import {
   AiOutlineClose, 
   AiOutlineDownload,
   AiOutlineEyeInvisible,
+  AiOutlineFilter,
 } from 'react-icons/ai';
 import { formatNumber, URLHOST } from '../../constants/global';
 import Cookies from 'js-cookie';
@@ -1768,10 +1769,13 @@ export const ConfigurableTable = ({
   subtitle, 
   showColumnConfig = true,
   fixedColumns = [], // Columnas que no se pueden ocultar/mover
+  filterableColumns = [], // Columnas que tendrán filtros - si está vacío, no muestra filtros
   storageKey = 'table-columns' // Clave personalizable para localStorage
 }) => {
   const [visibleColumns, setVisibleColumns] = useState({});
   const [showColumnSelector, setShowColumnSelector] = useState(false);
+  const [filters, setFilters] = useState({});
+  const [showFilters, setShowFilters] = useState(false);
   
   const getStorageKey = () => {
     return `${storageKey}-${title ? title.toLowerCase().replace(/\s+/g, '-') : 'default'}`;
@@ -1859,12 +1863,72 @@ export const ConfigurableTable = ({
     saveColumnsConfig(resetConfig);
     setShowColumnSelector(false);
   };
+
+  // Filtrar datos basado en los filtros aplicados
+  const filteredData = useMemo(() => {
+    if (Object.keys(filters).length === 0) {
+      return tableData;
+    }
+
+    return tableData.filter(item => {
+      return Object.entries(filters).every(([column, filterValue]) => {
+        if (!filterValue || filterValue.trim() === '') return true;
+        
+        const itemValue = item[column];
+        
+        // Manejo especial para booleanos
+        if (typeof itemValue === 'boolean') {
+          const filterLower = filterValue.toLowerCase();
+          if (filterLower === 'true' || filterLower === 'verdadero' || filterLower === 'sí' || filterLower === 'si') {
+            return itemValue === true;
+          }
+          if (filterLower === 'false' || filterLower === 'falso' || filterLower === 'no') {
+            return itemValue === false;
+          }
+          return true;
+        }
+        
+        // Para otros tipos, convertir a string y buscar coincidencia
+        const searchValue = String(itemValue || '').toLowerCase();
+        const filterLower = filterValue.toLowerCase();
+        
+        return searchValue.includes(filterLower);
+      });
+    });
+  }, [tableData, filters]);
+
+  // Manejar cambio en filtros
+  const handleFilterChange = (column, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [column]: value
+    }));
+  };
+
+  // Limpiar filtros
+  const clearFilters = () => {
+    setFilters({});
+  };
+
+  // Obtener valores únicos para una columna (para sugerencias)
+  const getUniqueValues = (column) => {
+    const values = tableData.map(item => item[column])
+      .filter(value => value !== null && value !== undefined)
+      .map(value => String(value));
+    return [...new Set(values)].sort().slice(0, 10); // Limitar a 10 sugerencias
+  };
   
   // Formatear nombre de columna
   const formatColumnName = (key) => {
     return key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1');
   };
 
+  const visibleColumnsArray = getVisibleColumns();
+  const filterableVisibleColumns = visibleColumnsArray.filter(column => 
+    filterableColumns.includes(column)
+  );
+  const hasActiveFilters = Object.values(filters).some(filter => filter && filter.trim() !== '');
+  const showFilterButton = filterableColumns.length > 0;
   return (
     <div className="min-h-screen flex flex-col p-1">
       {/* Header Sticky */}
@@ -1875,90 +1939,168 @@ export const ConfigurableTable = ({
               <h2 className="text-2xl font-semibold text-gray-900">{title}</h2>
             )}
             {subtitle && (
-              <p className="text-sm text-gray-500 mt-1">{subtitle} - Mostrando {tableData.length} registros</p>
+              <p className="text-sm text-gray-500 mt-1">
+                {subtitle} - Mostrando {filteredData.length} de {tableData.length} registros
+                {hasActiveFilters && <span className="ml-2 text-[#725033]">(filtrado)</span>}
+              </p>
             )}
           </div>
           
-          {showColumnConfig && (
-            <div className="relative">
+          <div className="flex items-center space-x-2">
+            {/* Botón de filtros - solo mostrar si hay columnas filtrables */}
+            {showFilterButton && (
               <button
-                onClick={() => setShowColumnSelector(!showColumnSelector)}
-                className="p-2 hover:bg-gray-100 rounded-lg flex items-center space-x-2 testing"
-                title="Configurar columnas"
+                onClick={() => setShowFilters(!showFilters)}
+                className={`p-2 hover:bg-gray-100 rounded-lg flex items-center testing space-x-2 ${
+                  hasActiveFilters ? 'bg-blue-50 text-[#5a3f27]' : 'text-gray-600'
+                }`}
+                title="Filtrar datos"
               >
-                <AiOutlineSetting className="w-5 h-5 text-gray-600" />
-                <span className="text-sm text-gray-600">Columnas</span>
+                <AiOutlineFilter className="w-5 h-5" />
+                <span className="text-sm">Filtros</span>
+                {hasActiveFilters && (
+                  <span className="bg-[#5a3f27] text-white text-xs rounded-full px-2 py-0.5 ml-1">
+                    {Object.values(filters).filter(f => f && f.trim() !== '').length}
+                  </span>
+                )}
               </button>
-              
-              {/* Dropdown del selector de columnas */}
-              {showColumnSelector && (
-                <div className="absolute top-full right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-40">
-                  <div className="p-3 border-b border-gray-200 flex items-center justify-between">
-                    <h3 className="font-medium text-gray-900">Configuración</h3>
-                    <button
-                      onClick={resetColumnsConfig}
-                      className="text-xs text-[#725033] hover:text-[#725033] underline testing"
-                      title="Restablecer configuración"
-                    >
-                      Restablecer
-                    </button>
-                  </div>
-                  <div className="max-h-60 overflow-y-auto">
-                    {availableColumns.map((column) => {
-                      const isFixed = fixedColumns.includes(column);
-                      const isVisible = visibleColumns[column];
-                      
-                      return (
-                        <div
-                          key={column}
-                          className={`flex items-center justify-between p-3 hover:bg-gray-50 ${
-                            isFixed ? 'opacity-60' : 'cursor-pointer'
-                          }`}
-                          onClick={() => !isFixed && toggleColumnVisibility(column)}
-                        >
-                          <div className="flex items-center space-x-2">
-                            {isVisible ? (
-                              <AiOutlineEye className="w-4 h-4 text-[#725033]" />
-                            ) : (
-                              <AiOutlineEyeInvisible className="w-4 h-4 text-gray-400" />
-                            )}
-                            <span className={`text-sm ${isFixed ? 'text-gray-500' : 'text-gray-900'}`}>
-                              {formatColumnName(column)}
-                              {isFixed && <span className="ml-1 text-xs">(fija)</span>}
-                            </span>
+            )}
+
+            {showColumnConfig && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowColumnSelector(!showColumnSelector)}
+                  className="p-2 hover:bg-gray-100 rounded-lg flex items-center space-x-2 testing"
+                  title="Configurar columnas"
+                >
+                  <AiOutlineSetting className="w-5 h-5 text-gray-600" />
+                  <span className="text-sm text-gray-600">Columnas</span>
+                </button>
+                
+                {/* Dropdown del selector de columnas */}
+                {showColumnSelector && (
+                  <div className="absolute top-full right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-40">
+                    <div className="p-3 border-b border-gray-200 flex items-center justify-between">
+                      <h3 className="font-medium text-gray-900">Configuración</h3>
+                      <button
+                        onClick={resetColumnsConfig}
+                        className="text-xs text-[#725033] hover:text-[#725033] underline testing"
+                        title="Restablecer configuración"
+                      >
+                        Restablecer
+                      </button>
+                    </div>
+                    <div className="max-h-60 overflow-y-auto">
+                      {availableColumns.map((column) => {
+                        const isFixed = fixedColumns.includes(column);
+                        const isVisible = visibleColumns[column];
+                        
+                        return (
+                          <div
+                            key={column}
+                            className={`flex items-center justify-between p-3 hover:bg-gray-50 ${
+                              isFixed ? 'opacity-60' : 'cursor-pointer'
+                            }`}
+                            onClick={() => !isFixed && toggleColumnVisibility(column)}
+                          >
+                            <div className="flex items-center space-x-2">
+                              {isVisible ? (
+                                <AiOutlineEye className="w-4 h-4 text-[#725033]" />
+                              ) : (
+                                <AiOutlineEyeInvisible className="w-4 h-4 text-gray-400" />
+                              )}
+                              <span className={`text-sm ${isFixed ? 'text-gray-500' : 'text-gray-900'}`}>
+                                {formatColumnName(column)}
+                                {isFixed && <span className="ml-1 text-xs">(fija)</span>}
+                              </span>
+                            </div>
+                            <input
+                              type="checkbox"
+                              checked={isVisible}
+                              onChange={() => !isFixed && toggleColumnVisibility(column)}
+                              disabled={isFixed}
+                              className="h-4 w-4 text-[#725033] rounded border-gray-300 focus:ring-[#725033] disabled:opacity-50"
+                            />
                           </div>
-                          <input
-                            type="checkbox"
-                            checked={isVisible}
-                            onChange={() => !isFixed && toggleColumnVisibility(column)}
-                            disabled={isFixed}
-                            className="h-4 w-4 text-[#725033] rounded border-gray-300 focus:ring-[#725033] disabled:opacity-50"
-                          />
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
+                    <div className="p-3 border-t border-gray-200 bg-gray-50">
+                      <button
+                        onClick={() => setShowColumnSelector(false)}
+                        className="w-full px-3 py-2 text-sm bg-[#725033] text-white rounded-md hover:bg-[#6a4a2f] testing"
+                      >
+                        Aplicar
+                      </button>
+                    </div>
                   </div>
-                  <div className="p-3 border-t border-gray-200 bg-gray-50">
-                    <button
-                      onClick={() => setShowColumnSelector(false)}
-                      className="w-full px-3 py-2 text-sm bg-[#725033] text-white rounded-md hover:bg-[#6a4a2f] testing"
-                    >
-                      Aplicar
-                    </button>
-                  </div>
-                </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Panel de filtros - solo mostrar si hay columnas filtrables */}
+        {showFilters && showFilterButton && (
+          <div className="border border-gray-200 bg-gray-50 p-2">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-medium text-gray-900">Filtros aplicables.</h3>
+              {hasActiveFilters && (
+                <button
+                  onClick={clearFilters}
+                  className="text-xs text-[#5a3f27] hover:text-[#5a3f27] underline testing"
+                >
+                  Limpiar filtros
+                </button>
               )}
             </div>
-          )}
-        </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {filterableVisibleColumns.map((column) => (
+                <div key={column} className="flex flex-col">
+                  <label className="text-xs font-medium text-gray-700 mb-1">
+                    {formatColumnName(column)}
+                  </label>
+                  <input
+                    type="text"
+                    placeholder={`Filtrar ${formatColumnName(column).toLowerCase()}...`}
+                    value={filters[column] || ''}
+                    onChange={(e) => handleFilterChange(column, e.target.value)}
+                    className="text-sm border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-[#725033] focus:border-[#725033] bg-white"
+                  />
+                  {/* Mostrar algunos valores únicos como sugerencias */}
+                  {filters[column] && filters[column].length > 0 && (
+                    <div className="mt-1">
+                      {getUniqueValues(column)
+                        .filter(value => value.toLowerCase().includes(filters[column].toLowerCase()))
+                        .slice(0, 3)
+                        .map((value, index) => (
+                          <button
+                            key={index}
+                            onClick={() => handleFilterChange(column, value)}
+                            className="text-xs text-[#5a3f27] bg-transparent testing mr-2 underline"
+                          >
+                            {value}
+                          </button>
+                        ))
+                      }
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Contenido de la tabla */}
       <div className="flex-1 p-1">
         <div className="mt-2">
-          {tableData.length === 0 || !tableData ? (
+          {filteredData.length === 0 ? (
             <div className="p-12 text-center text-gray-500 border border-gray-200 rounded-lg">
-              No hay datos disponibles
+              {tableData.length === 0 ? 
+                'No hay datos disponibles' : 
+                'Sin datos según filtros'
+              }
             </div>
           ) : (
             <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
@@ -1968,17 +2110,24 @@ export const ConfigurableTable = ({
                   {/* Header de tabla fijo */}
                   <thead className="bg-gray-50 sticky top-0 z-10">
                     <tr>
-                      {getVisibleColumns().map((key) => (
+                      {visibleColumnsArray.map((key) => (
                         <th key={key} className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
-                          {formatColumnName(key)}
+                          <div className="flex items-center space-x-2">
+                            <span>{formatColumnName(key)}</span>
+                            {filters[key] && filterableColumns.includes(key) && (
+                              <span className="bg-blue-100 text-[#5a3f27] text-xs px-2 py-0.5 rounded-full">
+                                filtrado
+                              </span>
+                            )}
+                          </div>
                         </th>
                       ))}
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {tableData.map((item, index) => (
+                    {filteredData.map((item, index) => (
                       <tr key={item.id || index} className="hover:bg-gray-50">
-                        {getVisibleColumns().map((key) => (
+                        {visibleColumnsArray.map((key) => (
                           <td key={key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {typeof item[key] === 'object' && item[key] !== null ? 
                               JSON.stringify(item[key]) : 
@@ -2003,5 +2152,4 @@ export const ConfigurableTable = ({
     </div>
   );
 };
-
 export default TableSheet;

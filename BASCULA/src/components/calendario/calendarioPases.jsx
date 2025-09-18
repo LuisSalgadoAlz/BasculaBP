@@ -100,7 +100,8 @@ export const CalendarioPases = () => {
     title: 'Detalles Pases De Salida', 
     subtitle: `Visualización de pases de salida del día: ${new Date(dateSelected).toLocaleDateString('es-ES')}`, 
     type: true,
-    fixedColumns: ['Boleta', 'Pase', 'Placa', 'Transporte', 'Motorista'] 
+    fixedColumns: ['Boleta', 'Pase', 'Placa', 'Transporte', 'Motorista'],
+    filterableColumns: ['Pase', 'Placa', 'Motorista', 'Transporte']
   }
 
   return (
