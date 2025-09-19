@@ -1,57 +1,35 @@
-import { useState } from "react";
 import { BaprosaSiloChart, BaprosaSiloChart2 } from "../graficos/informes";
-import { useCallback } from "react";
-import { useEffect } from "react";
-import { getInfoSilos, getInfoSilosDetails, postCreateNewReset } from "../../hooks/informes/tolva";
 import TableSheet from "./tables";
+import { useActionBarView, useDetailsSilos, useNivelSilos, useResetSilos } from "../../hooks/informes/hooks";
+import { buttonNormal, buttonsInformesLeft, buttonsInformesRight } from "../../constants/boletas";
 
 const ReportesSilos = () => {
-  const [data, setData] = useState();
-  const [loading, setLoading] = useState(false);
-  const [loadingReset, setLoadingReset] = useState(false);
-  const [details, setDetails] = useState()
-  const [loadingDetails, setLoadingDetails] = useState(false)
-  const [openSheet, setOpenSheet] = useState(false)
-  const [selectedSilos, setSelectedSilos] = useState([])
-  const [barView, setBarView] = useState(true)
 
-  const fetchData = useCallback(() => {
-    getInfoSilos(setData, setLoading);
-  }, []);
+  /**
+   * ? Hooks personalizados
+   */
 
-  const handleResetSilo = async (name, action) => {
-    const cuerpoSilo = { silo: name };
-    const response = await postCreateNewReset(cuerpoSilo, setLoadingReset);
-    fetchData();
-  };
+  const { barView, viewBar1, viewBar2 } = useActionBarView()
+  const { nivelSilos, loadingNivelSilos, fetchNivelSilos, handleUpdateBar} = useNivelSilos();
+  const { handleClickBar, sheetProps } = useDetailsSilos()
+  const { handleResetSilo, loadingReset } = useResetSilos(fetchNivelSilos)
+ 
+  /**
+   * ? Props de los gráficos de barras
+   */
 
-  const handleClickBar = (data) => {
-    const siloData = data.activePayload[0].payload;
-    console.log(siloData)
-    getInfoSilosDetails(setDetails, setLoadingDetails, siloData.boletas)
-    setSelectedSilos(siloData?.silo_nombre)
-    setOpenSheet(true)
+  const propsBarView1 = {
+    data: nivelSilos?.data2,
+    onSiloAction: handleResetSilo,
+    isLoading: loadingNivelSilos || loadingReset,
+    handleClickBar: handleClickBar
   }
 
-  const handleUpdateBar = () => {
-    fetchData()
-  }
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  const sheetProps = {
-    openSheet, 
-    setOpenSheet, 
-    tableData: details?.data,
-    title: 'Detalles Silo', 
-    subtitle: `Visualización de boletas ingresadas al silo: ${loadingDetails? 'Cargando...' : selectedSilos}`, 
-    type: true,
-    fixedColumns: ['#', 'numBoleta', 'placa', 'pesoNeto', 'pesoAcumulado', 'socio'], 
-    storageKey: 'tolva-details', 
-    isLoading: loadingDetails, 
-    labelActive: false,
+  const propsBarView2 = {
+    data: nivelSilos?.data,
+    onSiloAction: handleResetSilo,
+    isLoading: loadingNivelSilos || loadingReset,
+    handleBarClick: handleClickBar
   }
 
   return (
@@ -67,32 +45,14 @@ const ReportesSilos = () => {
          <div className="parte-der flex items-center justify-center gap-3 max-sm:text-sm max-sm:flex-col">
           <div className="flex items-end flex-col sm:flex-row gap-2">
             <div className="flex w-full sm:w-auto">
-              <button 
-                onClick={()=>setBarView(true)}
-                className="px-5 py-3 bg-gradient-to-r from-[#955e37] to-[#804e2b] text-white 
-                          font-medium rounded-l-lg shadow-sm hover:shadow-md focus:outline-none focus:ring-2 
-                          focus:ring-amber-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-[1.02] 
-                          active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none 
-                          flex-1 sm:flex-none sm:min-w-fit">
+              <button onClick={viewBar1} className={buttonsInformesLeft}>
                 %%
               </button>
-              <button 
-                onClick={()=>setBarView(false)}
-                className="px-5 py-3 bg-gradient-to-r from-[#955e37] to-[#804e2b] text-white 
-                          font-medium rounded-r-lg shadow-sm hover:shadow-md focus:outline-none focus:ring-2 
-                          focus:ring-amber-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-[1.02] 
-                          active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none 
-                          flex-1 sm:flex-none sm:min-w-fit -ml-px border-l border-[#7a4528]">
+              <button onClick={viewBar2} className={buttonsInformesRight}>
                 QQ
               </button>
             </div>
-            <button 
-              onClick={handleUpdateBar}
-              className="px-5 py-3 bg-gradient-to-r from-[#955e37] to-[#804e2b] text-white 
-                        font-medium rounded-lg shadow-sm hover:shadow-md focus:outline-none focus:ring-2 
-                        focus:ring-amber-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-[1.02] 
-                        active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none w-full 
-                        sm:w-auto min-w-fit">
+            <button onClick={handleUpdateBar} className={buttonNormal}>
               Actualizar
             </button>
           </div>
@@ -100,19 +60,9 @@ const ReportesSilos = () => {
       </div>
 
       {barView ? (
-        <BaprosaSiloChart2
-          data={data?.data2}
-          onSiloAction={handleResetSilo}
-          isLoading={loading}
-          handleClickBar={handleClickBar}
-        />
+        <BaprosaSiloChart2 {...propsBarView1} />
       ) : (
-        <BaprosaSiloChart
-          data={data?.data}
-          onSiloAction={handleResetSilo}
-          isLoading={loading}
-          handleBarClick={handleClickBar}
-        />
+        <BaprosaSiloChart {...propsBarView2} />
       )}
       <TableSheet {...sheetProps} />
     </>

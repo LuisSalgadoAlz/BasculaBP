@@ -993,7 +993,13 @@ const TableSheet = ({
   fixedColumns = [], // Columnas que no se pueden ocultar/mover
   storageKey = 'tablesheet-columns', // Clave personalizable para localStorage
   isLoading = true, 
-  labelActive= true, 
+  labelActive= true,
+  detailsSilo= false,
+  diferencia=0,
+  // Nuevos props para el progress bar
+  inventarioInicial = 0,
+  boletas = 0,
+  parteVacia = 0
 }) => {
   const [visibleColumns, setVisibleColumns] = useState({});
   const [showColumnSelector, setShowColumnSelector] = useState(false);
@@ -1089,6 +1095,116 @@ const TableSheet = ({
   const formatColumnName = (key) => {
     return key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1');
   };
+
+  // Calcular porcentajes para el progress bar
+  const calculateProgressBarData = () => {
+    const total = inventarioInicial + boletas + parteVacia;
+    if (total === 0) return { inventarioInicial: 0, boletas: 0, parteVacia: 0 };
+    
+    return {
+      inventarioInicial: (inventarioInicial / total) * 100,
+      boletas: (boletas / total) * 100,
+      parteVacia: (parteVacia / total) * 100
+    };
+  };
+
+  const progressData = calculateProgressBarData();
+
+  // Componente Progress Bar Vertical
+  const VerticalProgressBar = () => (
+    <div className="flex flex-col items-center space-y-4 p-4">
+      <h3 className="text-lg font-medium text-gray-900 mb-2">Estado del Silo</h3>
+      
+      <div className="relative w-16 h-80 bg-gray-200 rounded-lg overflow-hidden border-2 border-gray-300">
+        {/* Parte vacía (arriba) */}
+        <div 
+          className="absolute top-0 left-0 w-full bg-gray-100 border-b border-gray-300"
+          style={{ height: `${progressData.parteVacia}%` }}
+        >
+          {progressData.parteVacia > 15 && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-xs text-gray-600 transform rotate-90 whitespace-nowrap">Vacío</span>
+            </div>
+          )}
+        </div>
+        
+        {/* Boletas (medio) */}
+        <div 
+          className="absolute w-full bg-blue-400"
+          style={{ 
+            top: `${progressData.parteVacia}%`,
+            height: `${progressData.boletas}%` 
+          }}
+        >
+          {progressData.boletas > 15 && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-xs text-white transform rotate-90 whitespace-nowrap">Boletas</span>
+            </div>
+          )}
+        </div>
+        
+        {/* Inventario inicial (abajo) */}
+        <div 
+          className="absolute bottom-0 left-0 w-full bg-green-500"
+          style={{ height: `${progressData.inventarioInicial}%` }}
+        >
+          {progressData.inventarioInicial > 15 && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-xs text-white transform rotate-90 whitespace-nowrap">Inventario</span>
+            </div>
+          )}
+        </div>
+      </div>
+      
+      {/* Leyenda */}
+      <div className="space-y-2 text-sm">
+        <div className="flex items-center space-x-2">
+          <div className="w-3 h-3 bg-gray-100 rounded border"></div>
+          <span className="text-gray-600">Parte Vacía: {parteVacia.toLocaleString()}</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <div className="w-3 h-3 bg-blue-400 rounded"></div>
+          <span className="text-gray-600">Boletas: {boletas.toLocaleString()}</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <div className="w-3 h-3 bg-green-500 rounded"></div>
+          <span className="text-gray-600">Inventario Inicial: {inventarioInicial.toLocaleString()}</span>
+        </div>
+        <div className="pt-2 border-t border-gray-200">
+          <span className="font-medium text-gray-900">
+            Total: {(inventarioInicial + boletas + parteVacia).toLocaleString()}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Componente de mensaje de error
+  const ErrorMessage = () => (
+    <div className="flex flex-col items-center justify-center p-8 space-y-4">
+      <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
+        <div className="flex items-center space-x-3 mb-4">
+          <div className="flex-shrink-0">
+            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium text-red-800">Diferencia Negativa Detectada</h3>
+        </div>
+        <p className="text-red-700 mb-4">
+          Se ha detectado una diferencia negativa en el inventario. Es necesario reiniciar el silo.
+        </p>
+        <p className="text-red-600 text-sm">
+          <strong>Acción requerida:</strong> Contactar con el equipo de IT para restablecer el inventario del silo.
+        </p>
+        <div className="mt-4 p-3 bg-red-100 rounded border border-red-200">
+          <span className="text-sm font-medium text-red-800">
+            Diferencia: {diferencia.toLocaleString()}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
 
   // Componente Spinner
   const LoadingSpinner = () => (
@@ -1200,54 +1316,70 @@ const TableSheet = ({
           </div>
           
           {/* Contenido scrollable */}
-          <div className="flex-1 overflow-hidden flex flex-col">
+          <div className="flex-1 overflow-hidden flex">
             {isLoading ? (
-              <LoadingSpinner />
+              <div className="flex-1">
+                <LoadingSpinner />
+              </div>
             ) : tableData.length === 0 || !tableData ? (
               <div className="p-6 text-center text-gray-500 flex-1 flex items-center justify-center">
                 No hay datos.
               </div>
             ) : (
               <>
-                {/* Tabla scrollable */}
-                <div className="flex-1 overflow-auto p-6">
-                  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead className="bg-gray-50 sticky top-0 z-10">
-                          <tr>
-                            {getVisibleColumns().map((key) => (
-                              <th key={key} className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
-                                {formatColumnName(key)}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                          {tableData.map((item, index) => (
-                            <tr key={item.id || index} className="hover:bg-gray-50 transition-colors duration-150">
+                {/* Contenido principal de la tabla */}
+                <div className="flex-1 overflow-auto flex flex-col">
+                  {/* Tabla scrollable */}
+                  <div className="flex-1 overflow-auto p-6">
+                    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead className="bg-gray-50 sticky top-0 z-10">
+                            <tr>
                               {getVisibleColumns().map((key) => (
-                                <td key={key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                  {typeof item[key] === 'object' && item[key] !== null ? 
-                                    JSON.stringify(item[key]) : 
-                                    String(item[key])
-                                  }
-                                </td>
+                                <th key={key} className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
+                                  {formatColumnName(key)}
+                                </th>
                               ))}
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            {tableData.map((item, index) => (
+                              <tr key={item.id || index} className="hover:bg-gray-50 transition-colors duration-150">
+                                {getVisibleColumns().map((key) => (
+                                  <td key={key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {typeof item[key] === 'object' && item[key] !== null ? 
+                                      JSON.stringify(item[key]) : 
+                                      String(item[key])
+                                    }
+                                  </td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Footer fijo */}
+                  <div className="p-6 border-t border-gray-200 bg-gray-50 flex-shrink-0">
+                    <div className="text-sm text-gray-600">
+                      BAPROSA - Mostrando {tableData.length} {labelActive? 'registros' : 'camiones descargados'}
                     </div>
                   </div>
                 </div>
                 
-                {/* Footer fijo */}
-                <div className="p-6 border-t border-gray-200 bg-gray-50 flex-shrink-0">
-                  <div className="text-sm text-gray-600">
-                    BAPROSA - Mostrando {tableData.length} {labelActive? 'registros' : 'camiones descargados'}
+                {/* Panel lateral condicional */}
+                {detailsSilo && (
+                  <div className="w-80 border-l border-gray-200 bg-gray-50 flex-shrink-0">
+                    {diferencia < 0 ? (
+                      <ErrorMessage />
+                    ) : (
+                      <VerticalProgressBar />
+                    )}
                   </div>
-                </div>
+                )}
               </>
             )}
           </div>

@@ -13,7 +13,7 @@ import 'react-calendar-timeline/style.css';
 import moment from 'moment';
 import 'moment/locale/es';
 import { VisualizarBoletas } from "../boletas/formBoletas";
-import { getBoletasPorDia, getPorcentajeMes, getPorcentajeMesPorDia } from "../../hooks/informes/guardia";
+import { getBoletasPorDia, getPorcentajeMes } from "../../hooks/informes/guardia";
 import TableSheet, { ConfigurableTable, TableComponentCasulla } from "../informes/tables";
 
 moment.locale('es'); // Establecer idioma a español

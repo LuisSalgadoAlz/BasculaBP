@@ -1916,106 +1916,83 @@ const getConfigTolerancia = async(req, res) => {
   }
 }
 
-const enviarAlertaSiloLleno = async(boleta) => {  
-  try{
-    const excludeSilos = [31]
-    
-    const tolvaSilso = await db.tolva.findFirst({
-      where: {
-        idBoleta: parseInt(boleta.id)
+const enviarAlertaSiloLleno = async (boleta) => {  
+  try {
+    const EXCLUDE_SILOS = new Set([31]);
+    const ALERT_THRESHOLD = 85;
+    const NIVEL_DIVISOR = 100;
+
+    const tolvaSilo = await db.tolva.findFirst({ 
+      where: { idBoleta: parseInt(boleta.id) },
+      select: {
+        siloPrincipal: true,
+        siloSecundario: true,
+        SiloTerciario: true
       }
-    })
-    
-    const silos = [tolvaSilso.siloPrincipal, tolvaSilso.siloSecundario, tolvaSilso.SiloTerciario];
+    });
 
-    const result = await db.$queryRaw`
-      SELECT 
-          s.id as siloId,
-          s.nombre, 
-          s.capacidad,
-          CASE 
-              WHEN s.capacidad > 0 THEN 
-                    ROUND((COALESCE(SUM(peso_calculado.peso_silo), 0) / s.capacidad) * 100, 2)
-              ELSE NULL 
-          END as porcentaje_ocupacion
-      FROM Silos s
-      LEFT JOIN (
-          -- Subconsulta que combina todos los silos en una sola pasada
-          SELECT DISTINCT
-              silo_data.silo_id,
-              silo_data.peso_silo,
-              silo_data.id_boleta
-          FROM (
-              -- Silo Principal
-              SELECT DISTINCT
-                  b.numBoleta,
-                  b.id as id_boleta,
-                  s1.id as silo_id,
-                  CASE 
-                      WHEN t.siloTerciario IS NOT NULL THEN b.pesoNeto/300.0
-                      WHEN t.siloSecundario IS NOT NULL THEN b.pesoNeto/200.0
-                      ELSE b.pesoNeto/100.0
-                  END as peso_silo
-              FROM Boleta b
-              INNER JOIN tolva t ON b.id = t.idBoleta
-              INNER JOIN Silos s1 ON t.siloPrincipal = s1.id
-              WHERE s1.id IN (${silos[0] || 0}, ${silos[1] || 0}, ${silos[2] || 0})
-                
-              UNION ALL
-                
-            -- Silo Secundario
-              SELECT DISTINCT
-                  b.numBoleta,
-                  b.id as id_boleta,
-                  s2.id as silo_id,
-                  CASE 
-                      WHEN t.siloTerciario IS NOT NULL THEN b.pesoNeto/300.0
-                      ELSE b.pesoNeto/200.0
-                  END as peso_silo
-              FROM Boleta b
-              INNER JOIN tolva t ON b.id = t.idBoleta
-              INNER JOIN Silos s2 ON t.siloSecundario = s2.id
-              WHERE s2.id IN (${silos[0] || 0}, ${silos[1] || 0}, ${silos[2] || 0})
-                
-              UNION ALL
-                
-              -- Silo Terciario
-              SELECT DISTINCT
-                  b.numBoleta,
-                  b.id as id_boleta,
-                  s3.id as silo_id,
-                  b.pesoNeto/300.0 as peso_silo
-              FROM Boleta b
-              INNER JOIN tolva t ON b.id = t.idBoleta
-              INNER JOIN Silos s3 ON t.siloTerciario = s3.id
-              WHERE s3.id IN (${silos[0] || 0}, ${silos[1] || 0}, ${silos[2] || 0})
-          ) silo_data
-          LEFT JOIN (
-              SELECT 
-                  SiloId,
-                  MAX(numBoleta) as ultimoReset
-              FROM ResetSilos
-              GROUP BY SiloId
-          ) rs ON silo_data.silo_id = rs.SiloId
-          WHERE rs.SiloId IS NULL OR silo_data.numBoleta > rs.ultimoReset
-      ) peso_calculado ON s.id = peso_calculado.silo_id
-      WHERE s.id IN (${silos[0] || 0}, ${silos[1] || 0}, ${silos[2] || 0})
-      GROUP BY s.id, s.nombre, s.capacidad
-      ORDER BY s.id;
-    `;
+    if (!tolvaSilo) {
+      console.warn(`No se encontró tolva para boleta ${boleta.id}`);
+      return false;
+    }
 
-    const response = result.filter((item)=> item.porcentaje_ocupacion > 85 && excludeSilos.includes(item.siloId) === false)
+    const silos = [
+      tolvaSilo.siloPrincipal, 
+      tolvaSilo.siloSecundario, 
+      tolvaSilo.SiloTerciario
+    ].filter(Boolean);
     
-    if(response.length === 0 ) return false
-    
-    alertaSiloLleno(response, enviarCorreo)
+    if (silos.length === 0) {
+      console.warn(`No hay silos válidos para boleta ${boleta.id}`);
+      return false;
+    }
 
-    return true
-  } catch(err){
-    console.log(err)
-    return res.send({err: err})
+    const incremento = boleta.pesoNeto / (silos.length * NIVEL_DIVISOR);
+
+    const [, silosActualizados] = await db.$transaction([
+      // Actualizar niveles
+      db.silos.updateMany({
+        where: { id: { in: silos } }, 
+        data: {
+          nivelTolva: { increment: incremento }
+        }
+      }),
+      db.silos.findMany({
+        where: { id: { in: silos } },
+        select: {
+          id: true,
+          nombre: true,
+          nivelTolva: true,
+          capacidad: true
+        }
+      })
+    ]);
+
+    // Filtrar silos que necesitan alerta
+    const silosConAlerta = silosActualizados.filter(silo => {
+      const porcentajeCapacidad = (silo.nivelTolva / silo.capacidad) * 100;
+      return porcentajeCapacidad > ALERT_THRESHOLD && 
+             !EXCLUDE_SILOS.has(silo.siloId);
+    });
+
+    if (silosConAlerta.length > 0) {
+      await alertaSiloLleno(silosConAlerta, enviarCorreo);
+      return true;
+    }
+
+    return false;
+
+  } catch (error) {
+    console.error('Error en enviarAlertaSiloLleno:', {
+      boletaId: boleta?.id,
+      error: error.message,
+      stack: error.stack
+    });
+    
+    // No retornar response en una función que no recibe res
+    throw error; // Re-lanzar para que el caller lo maneje
   }
-}
+};
 
 module.exports = {
   getAllData,
@@ -2034,5 +2011,4 @@ module.exports = {
   getMovimientosYProductos,
   getConfigTolerancia, 
   getReimprimirTicket,
-  enviarAlertaSiloLleno
 };

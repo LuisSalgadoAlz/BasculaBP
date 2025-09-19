@@ -16,7 +16,6 @@ const Casulla = () => {
     }
 
     const handleOpenSheetData = (data) => {
-        console.log(data)
         getDataCasullaDetalles(setTableData, setIsLoadingTableData,filters, data?.Socio, data?.Destino)
         setOpenSheet(true)
     }

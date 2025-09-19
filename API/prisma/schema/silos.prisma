@@ -3,6 +3,7 @@ model Silos {
   nombre         String
   capacidad      Float?
   estado         Boolean?
+  nivelTolva     Float?
   nivelTolvaPermitida Int? /* 1 Solo tolva, 2 solo tolva 2, 3 todos */
   // Inverse relations
   principalDe    Tolva[]  @relation("PrincipalSilo")

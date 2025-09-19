@@ -456,7 +456,7 @@ const alertaSiloLleno = (silosAlerta, enviarCorreo) => {
       <tr>
         <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${silo.nombre}</td>
         <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center; color: ${colorPorcentaje}; font-weight: bold;">
-          ${silo.porcentaje_ocupacion}%
+          ${(silo.nivelTolva / silo.capacidad * 100).toFixed(2)}%
         </td>
         <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${silo.capacidad} QQ</td>
       </tr>

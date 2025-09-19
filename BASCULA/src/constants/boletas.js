@@ -184,6 +184,11 @@ export const isSelectedView = "p-2.5 text-sm font-medium text-white rounded-s-lg
 
 export const noSelectectView = "p-2.5 text-sm font-medium text-gray-400 rounded-e-lg border border-gray-200 mt-2 bg-[#FDF5D4] transition-transform duration-300 ease-in-out hover:scale-[1.02]"
 
+export const buttonsInformesLeft = "px-5 py-3 bg-gradient-to-r from-[#955e37] to-[#804e2b] text-white font-medium rounded-l-lg shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex-1 sm:flex-none sm:min-w-fit"
+
+export const buttonsInformesRight = "px-5 py-3 bg-gradient-to-r from-[#955e37] to-[#804e2b] text-white font-medium rounded-r-lg shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex-1 sm:flex-none sm:min-w-fit -ml-px border-l bo"
+
+export const buttonNormal =  "px-5 py-3 bg-gradient-to-r from-[#955e37] to-[#804e2b] text-white font-medium rounded-lg shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none w-full sm:w-auto min-w-fit"
 
 
 /* Animaciones fullCalendar */

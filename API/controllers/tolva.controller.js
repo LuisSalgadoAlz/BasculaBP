@@ -1677,6 +1677,194 @@ const getInfoForBuquesQQ = async(req, res) => {
   }
 }
 
+const getNewInfoNivelSilos = async (req, res) => {
+  try {
+    const dataSilos = await db.silos.findMany();
+
+    const formattedResult = dataSilos.map(row => ({
+      siloID: row.id,
+      silo_nombre: row.nombre,
+      capacidad: Number(row.capacidad),
+      peso_total: Number(row.nivelTolva),
+      porcentaje_ocupacion: parseFloat(((row.nivelTolva / row.capacidad) * 100).toFixed(2)),
+    }));
+
+    // Corrección: usar 'capacidad' en lugar de 'cantidad' para consistencia
+    const formattedResultBar2 = dataSilos.map(row => {
+      const porcentajeReal = (row.nivelTolva / row.capacidad) * 100;
+      const porcentajeLimitado = Math.min(porcentajeReal, 100); // Limitar a máximo 100%
+      
+      return {
+        siloID: row.id,
+        silo_nombre: row.nombre,
+        capacidad: 100, // Capacidad normalizada para la barra
+        capacidadNeta: Number(row.capacidad),
+        peso_total: parseFloat(porcentajeLimitado.toFixed(2)),
+        peso_total_neto: Number(row.nivelTolva),
+        porcentaje_ocupacion: parseFloat(porcentajeReal.toFixed(2)),
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: formattedResult,
+      data2: formattedResultBar2,
+      total: formattedResult.length
+    });
+
+  } catch (err) {
+    console.error('Error en getNewInfoNivelSilos:', err);
+    return res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor. Inténtelo de nuevo.',
+      error: process.env.NODE_ENV === 'development' ? err.message : 'Error interno'
+    });
+  }
+};
+
+const getNewInfoNivelDetails = async (req, res) => {
+  try {
+    const siloId = parseInt(req.params.siloId);
+    
+    if (!siloId || isNaN(siloId)) {
+      return res.status(400).send({ err: 'siloId inválido' });
+    }
+
+    const ResetSilos = await db.ResetSilos.findFirst({
+      where: {
+        siloId: siloId
+      }, 
+      orderBy:{
+        id: 'desc'
+      },
+      select: {
+        numBoleta: true
+      }
+    })
+
+    const [siloData, boletas] = await Promise.all([
+      db.silos.findUnique({
+        where: {
+          id: siloId
+        },
+        select:{
+          nivelTolva: true,
+        }
+      }), 
+      db.boleta.findMany({
+        where: {
+          ...(ResetSilos ? { numBoleta: { gt: ResetSilos.numBoleta } } : {}),
+          estado: {
+            notIn: ['Cancelada', 'Pendiente']
+          },
+          tolva: {
+            some: {
+              OR: [
+                { siloPrincipal: siloId },
+                { siloSecundario: siloId },
+                { SiloTerciario: siloId }
+              ]
+            }
+          }
+        },
+        select: {
+          numBoleta: true,         
+          placa: true,         
+          socio: true,          
+          empresa: true,          
+          pesoNeto: true,         
+          tolvaAsignada: true,         
+          producto: true,          
+          factura: true,
+          tolva: {
+            select: {
+              siloPrincipal: true,
+              siloSecundario: true,
+              SiloTerciario: true
+            }
+          }
+        }
+      })
+    ])
+
+    const boletasConPesoCalculado = boletas.map(boleta => {
+      let pesoCalculado = 0;
+      let pesoDividido = '';
+
+      // Iteramos sobre las tolvas para encontrar la que contiene nuestro siloId
+      boleta.tolva.forEach(tolva => {
+        // Verificamos si esta tolva contiene nuestro silo
+        const tieneSilo = tolva.siloPrincipal === siloId || 
+                        tolva.siloSecundario === siloId || 
+                        tolva.SiloTerciario === siloId;
+        
+        if (tieneSilo) {
+          // Contamos cuántos silos tiene esta tolva (que no sean null)
+          let cantidadSilos = 0;
+          
+          if (tolva.siloPrincipal !== null) cantidadSilos++;
+          if (tolva.siloSecundario !== null) cantidadSilos++;
+          if (tolva.SiloTerciario !== null) cantidadSilos++;
+          
+          // El peso se divide equitativamente entre todos los silos presentes
+          // Convertimos de libras a quintales (dividir por 100) y luego dividimos entre silos
+          pesoCalculado = (boleta.pesoNeto / 100) / cantidadSilos;
+          
+          // Indicamos entre cuántos silos se dividió
+          pesoDividido = ` ${(100/cantidadSilos).toFixed(2)} %`;
+        }
+      });
+
+      return {
+        boleta: boleta.numBoleta,
+        socio: `${boleta.socio} ${boleta.factura ? `- ${boleta.factura}` : '- Sin Factura'}`,
+        placa: boleta.placa,
+        producto: boleta.producto, 
+        transporte: boleta.empresa,
+        tolva: boleta.tolvaAsignada,
+        producto: boleta.producto,
+        pesoNeto: Math.round(pesoCalculado * 100) / 100, // En quintales con 2 decimales
+        pesoCalculado: pesoCalculado, // Ya está en quintales
+        pesoDividido
+      };
+    });
+
+    // Calculamos el total sumando todos los pesos calculados
+    const totalPesoCalculado = boletasConPesoCalculado.reduce((total, boleta) => {
+      return total + boleta.pesoCalculado;
+    }, 0);
+
+    const refactorView = boletasConPesoCalculado.map((item, index) => {
+      return {
+        '#': index+1,
+        boleta: item.boleta,
+        socio: item.socio,
+        placa: item.placa,
+        transporte: item.transporte,
+        Descargada: `Tolva ${item.tolva}`,
+        producto: item.producto,
+        pesoNeto: item.pesoCalculado.toFixed(2),
+        pesoDividido: item.pesoDividido
+      }
+    })
+
+    return res.status(200).json({
+      success: true,
+      data: refactorView,
+      count: boletasConPesoCalculado.length,
+      diff: (siloData?.nivelTolva || 0) - totalPesoCalculado, // Agregada validación para null
+      total: totalPesoCalculado.toFixed(2) // CORREGIDO: no dividir por 100
+    });
+
+  } catch (err) {
+    console.error('Error en getNewInfoNivelDetails:', err);
+    return res.status(500).send({ 
+      err: 'Error interno del servidor', 
+      msg: err.message 
+    });
+  }
+}; 
+
 module.exports = {
   analizadorQR, 
   getDataForSelectSilos, 
@@ -1693,5 +1881,7 @@ module.exports = {
   getViajesTotales,
   getUserTolva,
   getInfoForBuquesQQ,
-  postGetallInfoDetailsSilos,  
+  postGetallInfoDetailsSilos,
+  getNewInfoNivelSilos,
+  getNewInfoNivelDetails,  
 };
