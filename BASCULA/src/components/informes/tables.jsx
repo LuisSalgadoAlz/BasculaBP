@@ -999,7 +999,8 @@ const TableSheet = ({
   // Nuevos props para el progress bar
   inventarioInicial = 0,
   boletas = 0,
-  parteVacia = 0
+  parteVacia = 0,
+  capacidad=0
 }) => {
   const [visibleColumns, setVisibleColumns] = useState({});
   const [showColumnSelector, setShowColumnSelector] = useState(false);
@@ -1098,7 +1099,7 @@ const TableSheet = ({
 
   // Calcular porcentajes para el progress bar
   const calculateProgressBarData = () => {
-    const total = inventarioInicial + boletas + parteVacia;
+    const total = capacidad;
     if (total === 0) return { inventarioInicial: 0, boletas: 0, parteVacia: 0 };
     
     return {
@@ -1172,7 +1173,11 @@ const TableSheet = ({
         </div>
         <div className="pt-2 border-t border-gray-200">
           <span className="font-medium text-gray-900">
-            Total: {(inventarioInicial + boletas + parteVacia).toLocaleString()}
+            Total: {(
+              Number(capacidad) -
+              Number(inventarioInicial) -
+              Number(boletas)
+            ).toFixed(2)}
           </span>
         </div>
       </div>
@@ -1215,6 +1220,21 @@ const TableSheet = ({
           <div className="w-12 h-12 border-4 border-[#725033] border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
         </div>
         <p className="text-gray-500 text-sm">Cargando datos...</p>
+      </div>
+    </div>
+  );
+
+  // Componente para mostrar cuando no hay datos
+  const NoDataMessage = () => (
+    <div className="flex-1 p-6 text-center text-gray-500 flex items-center justify-center">
+      <div className="flex flex-col items-center space-y-4">
+        <svg className="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No hay datos disponibles</h3>
+          <p className="text-gray-500">Los datos se mostrarán aquí cuando estén disponibles.</p>
+        </div>
       </div>
     </div>
   );
@@ -1321,56 +1341,58 @@ const TableSheet = ({
               <div className="flex-1">
                 <LoadingSpinner />
               </div>
-            ) : tableData.length === 0 || !tableData ? (
-              <div className="p-6 text-center text-gray-500 flex-1 flex items-center justify-center">
-                No hay datos.
-              </div>
             ) : (
               <>
-                {/* Contenido principal de la tabla */}
+                {/* Contenido principal de la tabla o mensaje sin datos */}
                 <div className="flex-1 overflow-auto flex flex-col">
-                  {/* Tabla scrollable */}
-                  <div className="flex-1 overflow-auto p-6">
-                    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                      <div className="overflow-x-auto">
-                        <table className="w-full">
-                          <thead className="bg-gray-50 sticky top-0 z-10">
-                            <tr>
-                              {getVisibleColumns().map((key) => (
-                                <th key={key} className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
-                                  {formatColumnName(key)}
-                                </th>
-                              ))}
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {tableData.map((item, index) => (
-                              <tr key={item.id || index} className="hover:bg-gray-50 transition-colors duration-150">
+                  {/* Tabla scrollable o mensaje sin datos */}
+                  {tableData.length === 0 || !tableData ? (
+                    <NoDataMessage />
+                  ) : (
+                    <div className="flex-1 overflow-auto p-6">
+                      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                        <div className="overflow-x-auto">
+                          <table className="w-full">
+                            <thead className="bg-gray-50 sticky top-0 z-10">
+                              <tr>
                                 {getVisibleColumns().map((key) => (
-                                  <td key={key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    {typeof item[key] === 'object' && item[key] !== null ? 
-                                      JSON.stringify(item[key]) : 
-                                      String(item[key])
-                                    }
-                                  </td>
+                                  <th key={key} className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
+                                    {formatColumnName(key)}
+                                  </th>
                                 ))}
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                              {tableData.map((item, index) => (
+                                <tr key={item.id || index} className="hover:bg-gray-50 transition-colors duration-150">
+                                  {getVisibleColumns().map((key) => (
+                                    <td key={key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                      {typeof item[key] === 'object' && item[key] !== null ? 
+                                        JSON.stringify(item[key]) : 
+                                        String(item[key])
+                                      }
+                                    </td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
                   
-                  {/* Footer fijo */}
-                  <div className="p-6 border-t border-gray-200 bg-gray-50 flex-shrink-0">
-                    <div className="text-sm text-gray-600">
-                      BAPROSA - Mostrando {tableData.length} {labelActive? 'registros' : 'camiones descargados'}
+                  {/* Footer fijo - Solo mostrar si hay datos */}
+                  {tableData.length > 0 && (
+                    <div className="p-6 border-t border-gray-200 bg-gray-50 flex-shrink-0">
+                      <div className="text-sm text-gray-600">
+                        BAPROSA - Mostrando {tableData.length} {labelActive? 'registros' : 'camiones descargados'}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
                 
-                {/* Panel lateral condicional */}
+                {/* Panel lateral condicional - Ahora se muestra siempre que detailsSilo sea true */}
                 {detailsSilo && (
                   <div className="w-80 border-l border-gray-200 bg-gray-50 flex-shrink-0">
                     {diferencia < 0 ? (

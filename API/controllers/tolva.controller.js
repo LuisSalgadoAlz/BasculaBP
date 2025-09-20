@@ -1171,12 +1171,22 @@ const postResetSilo = async (req, res) => {
       })
     ])
 
-    const newReset = await db.ResetSilos.create({
-      data: {
-        siloId: siloID.id,
-        numBoleta: ultimo.numBoleta, 
-      }
-    })
+    const [newReset, resetSilo] = await Promise.all([
+      db.ResetSilos.create({
+        data: {
+          siloId: siloID.id,
+          numBoleta: ultimo.numBoleta, 
+        }
+      }),
+      db.Silos.update({
+        where: {
+          id: siloID.id
+        },
+        data: {
+          nivelTolva: 0
+        }
+      })
+    ])
   
     return res.status(200).send({msg: `Se ha creado un nuevo reset - ${silo}`})  
   }catch(err){
@@ -1749,6 +1759,7 @@ const getNewInfoNivelDetails = async (req, res) => {
         },
         select:{
           nivelTolva: true,
+          capacidad: true, 
         }
       }), 
       db.boleta.findMany({
@@ -1853,7 +1864,8 @@ const getNewInfoNivelDetails = async (req, res) => {
       data: refactorView,
       count: boletasConPesoCalculado.length,
       diff: (siloData?.nivelTolva || 0) - totalPesoCalculado, // Agregada validación para null
-      total: totalPesoCalculado.toFixed(2) // CORREGIDO: no dividir por 100
+      total: totalPesoCalculado.toFixed(2), // CORREGIDO: no dividir por 100
+      capacidad: siloData?.capacidad,
     });
 
   } catch (err) {

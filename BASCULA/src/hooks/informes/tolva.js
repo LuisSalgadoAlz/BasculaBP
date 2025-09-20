@@ -1,7 +1,7 @@
 import { apiRequest } from "../../lib/apiClient";
 
 export const postCreateNewReset = async (siloInfo, setIsLoading) => {
-  apiRequest(null, `tolva/newReset`, setIsLoading, {
+  return apiRequest(null, `tolva/newReset`, setIsLoading, {
     method: "POST",
     body: siloInfo
   })
@@ -9,7 +9,7 @@ export const postCreateNewReset = async (siloInfo, setIsLoading) => {
 
 export const getStatsSilosForBuques = async (fun, setIsLoading, buque='', factura='') => {
   const params = new URLSearchParams({ buque, factura, }).toString();
-  apiRequest(fun, `tolva/info/statsTolvas?${params}`, setIsLoading)
+  return apiRequest(fun, `tolva/info/statsTolvas?${params}`, setIsLoading)
 };
 
 export const getHistoricoViajes = async (fun, setIsLoading, buque='', factura='', paginacion=1, filters) => {
@@ -23,17 +23,17 @@ export const getHistoricoViajes = async (fun, setIsLoading, buque='', factura=''
     searchPlaca: filters?.search_historico,
   }).toString();
 
-  apiRequest(fun, `tolva/info/historicoViajes?${params}`, setIsLoading)
+  return apiRequest(fun, `tolva/info/historicoViajes?${params}`, setIsLoading)
 };
 
 export const getUsers = async (fun, setIsLoading) => {
-  apiRequest(fun, `tolva/info/users`, setIsLoading)
+  return apiRequest(fun, `tolva/info/users`, setIsLoading)
 };
 
 export const getInfoSilosV2 = async (fun, setIsLoading) => {
-  apiRequest(fun, `tolva/info/nivelSilos`, setIsLoading)
+  return apiRequest(fun, `tolva/info/nivelSilos`, setIsLoading)
 };
 
 export const getInfoSilosDetailsV2 = async (fun, setIsLoading, siloID) => {
-  apiRequest(fun, `tolva/info/nivelSilos/details/${siloID}`, setIsLoading)
+  return apiRequest(fun, `tolva/info/nivelSilos/details/${siloID}`, setIsLoading)
 };

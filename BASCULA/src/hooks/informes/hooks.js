@@ -138,7 +138,6 @@ export const useDetailsSilos = () => {
 
   const handleClickBar = (data) => {
     const siloData = data.activePayload[0].payload;
-    console.log(siloData)
     getInfoSilosDetailsV2(setDetails, setLoadingDetails, siloData.siloID)
     setSelectedSilos(siloData?.silo_nombre)
     setOpenSheet(true) 
@@ -159,7 +158,8 @@ export const useDetailsSilos = () => {
     diferencia: details?.diff,
     inventarioInicial : details?.diff,
     boletas : details?.total,
-    parteVacia: 8000,
+    parteVacia: (details?.capacidad - details?.total - details?.diff) > 0 ? (details?.capacidad - details?.total - details?.diff) : 0,
+    capacidad: details?.capacidad,
   }
 
   return {
@@ -194,8 +194,8 @@ export const useResetSilos = (fetchNivelSilos) => {
   
   const handleResetSilo = async (name) => {
     const cuerpoSilo = { silo: name };
-    const response = await postCreateNewReset(cuerpoSilo, setLoadingReset);
-    fetchNivelSilos();
+    await postCreateNewReset(cuerpoSilo, setLoadingReset);
+    await fetchNivelSilos();
   };
 
   return { handleResetSilo, loadingReset }
