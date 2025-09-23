@@ -234,7 +234,7 @@ export const NavigationRoutes = ({ routes, isExtendido, sectionTitle, userRole, 
 
             {/* Tooltip del botón principal cuando no está abierto */}
             {!isDropdownOpen && (
-              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-6 hidden group-hover:block bg-gray-800 text-white text-xs px-2 py-1 rounded shadow-lg z-50 whitespace-nowrap">
+              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-6 hidden group-hover:block bg-gray-800 text-white text-xs px-2 py-1 rounded shadow-lg z-[9999] whitespace-nowrap">
                 {sectionTitle || 'Administración'}
               </div>
             )}
@@ -306,7 +306,7 @@ export const NavigationRoutes = ({ routes, isExtendido, sectionTitle, userRole, 
             </NavLink>
 
             {!isExtendido && (
-              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-6 hidden group-hover:block sidebar text-white text-xs px-8 py-2 rounded shadow-lg z-10 whitespace-nowrap">
+              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-6 hidden group-hover:block sidebar text-white text-xs px-8 py-2 rounded shadow-lg z-[9999] whitespace-nowrap">
                 {data.name}
               </div>
             )}
