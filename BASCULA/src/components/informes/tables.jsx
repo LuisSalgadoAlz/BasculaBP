@@ -1146,7 +1146,7 @@ const TableSheet = ({
         
         {/* Inventario inicial (abajo) */}
         <div 
-          className="absolute bottom-0 left-0 w-full bg-green-500"
+          className="absolute bottom-0 left-0 w-full bg-[#5a3f27]"
           style={{ height: `${progressData.inventarioInicial}%` }}
         >
           {progressData.inventarioInicial > 15 && (
@@ -1168,14 +1168,13 @@ const TableSheet = ({
           <span className="text-gray-600">Boletas: {boletas.toLocaleString()}</span>
         </div>
         <div className="flex items-center space-x-2">
-          <div className="w-3 h-3 bg-green-500 rounded"></div>
+          <div className="w-3 h-3 bg-[#5a3f27] rounded"></div>
           <span className="text-gray-600">Inventario Inicial: {inventarioInicial.toLocaleString()}</span>
         </div>
         <div className="pt-2 border-t border-gray-200">
           <span className="font-medium text-gray-900">
             Total: {(
-              Number(capacidad) -
-              Number(inventarioInicial) -
+              Number(inventarioInicial) +
               Number(boletas)
             ).toFixed(2)}
           </span>
