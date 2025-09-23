@@ -35,7 +35,8 @@ export const Calendario = () => {
   const [detailsDaySeletect, setDetailsSelect] = useState({groups:[], items:[]});
   const [isLoading, setIsloading]= useState(false)
   const [isLoadData, setIsLoadData] = useState(false)
-  
+  const [selectedDate, setSelectedDate] = useState(new Date())
+
   /**
    * Clicks en el dia
    * @param {} info 
@@ -69,6 +70,7 @@ export const Calendario = () => {
     const { currentStart, currentEnd, type } = info.view;
     if (type === 'dayGridMonth') {
       getBoletasMes(setDateBolCalendar, new Date(currentStart).toISOString(), new Date(currentEnd).toISOString(), setIsLoadData);
+      setSelectedDate(currentStart)
     }
   };
 
@@ -101,6 +103,7 @@ export const Calendario = () => {
             <FullCalendar
               plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
               initialView={currentView}
+              initialDate={selectedDate}
               locale={esLocale}
               timeZone="local"
               headerToolbar={{

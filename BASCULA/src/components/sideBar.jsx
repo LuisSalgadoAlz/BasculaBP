@@ -56,12 +56,17 @@ const RUTAS_ADMIN = [
 const RUTAS_REPORTES = [
   {
     path: "/calendario",
-    name: "Calendario",
+    name: "Historico Boletas",
+    icon: <BsCalendarWeek />,
+  },
+  {
+    path: "/reporteGuardia",
+    name: "Pases de Salida",
     icon: <BsCalendarWeek />,
   },
   {
     path: "/informes",
-    name: "Informes",
+    name: "Constructor",
     icon: <BsClipboard2Data  />,
   },
   {
@@ -72,6 +77,21 @@ const RUTAS_REPORTES = [
   {
     path: "/casulla",
     name: "Casulla",
+    icon: <BsClipboard2Data />,
+  },
+  {
+    path: "/servicioBascula",
+    name: "Servicio Báscula",
+    icon: <BsClipboard2Data />,
+  },
+  /* {
+    path: "/reporteSilos",
+    name: "Estado Silos",
+    icon: <BsClipboard2Data />,
+  }, */
+  {
+    path: "/reporteTolva",
+    name: "Tolva",
     icon: <BsClipboard2Data />,
   }
 ];

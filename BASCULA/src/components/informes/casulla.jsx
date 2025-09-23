@@ -16,7 +16,6 @@ const Casulla = () => {
     }
 
     const handleOpenSheetData = (data) => {
-        console.log(data)
         getDataCasullaDetalles(setTableData, setIsLoadingTableData,filters, data?.Socio, data?.Destino)
         setOpenSheet(true)
     }
@@ -31,7 +30,12 @@ const Casulla = () => {
 
 
     const sheetProps = {
-        openSheet, setOpenSheet, tableData, 
+        openSheet, 
+        setOpenSheet, 
+        tableData,
+        title: 'Detalles Casulla', 
+        subtitle: `Visualización de los datos de Casulla: ${isLoadingTableData? 'Cargando...' : tableData[0]?.socio}`,
+        isLoading:isLoadingTableData, 
     }
 
     return ( 
@@ -48,7 +52,7 @@ const Casulla = () => {
                     <div className="flex gap-4 items-end">
                         <div className="flex-1">
                             <div className="relative">
-                                <div className="flex gap-2">
+                                <div className="flex gap-2 max-sm:flex-col">
                                     <div className="flex flex-col">
                                         <label htmlFor="dateIn" className="text-gray-700">Inicio</label>
                                         <input name="dateIn" onChange={handleChangeFilters} value={filters?.dateIn} type="date" className=" w-48 bg-white text-gray-900 border border-gray-300 rounded-lg py-2.5 pl-4 pr-10 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#955e37] focus:border-[#955e37 ] hover:border-gray-400 transition-colors duration-200" />
@@ -64,7 +68,7 @@ const Casulla = () => {
                 </div>
             </div>
             <CasullaStatsCards total={casulla?.total} />
-            <div className="p-2 bg-white rounded-md">
+            <div className="p-3 bg-white rounded-md shadow-sm">
                 {!casulla || casulla?.data?.length === 0 ? (
                     <NoData />
                 ) : (

@@ -7,6 +7,7 @@ const sharp = require('sharp');
 const jwt = require("jsonwebtoken");
 const enviarCorreo = require("../utils/enviarCorreo");
 const { alertaMarchamosDiferentes } = require('../utils/cuerposCorreo');
+const { formatNumber } = require('../lib/formatNumber');
 
 const TYPES_OF_STATES = ['PENDIENTE', 'COMPLETO', 'CANCELADO', 'FUERA DE TIEMPO']
 
@@ -420,7 +421,7 @@ const analizadorQR = async (req, res) => {
         return res.status(200).json({err: 'Boleta ya finalizada, no puede asignarla.'});
       }
           
-      if (boleta.idMovimiento!==2) return res.status(200).send({err: 'Favor, ingresar boletas proporcionadas por su ticket'})
+      if (boleta.idMovimiento!==2 && (boleta.idMovimiento!==14 && boleta.idProducto!==17)) return res.status(200).send({err: 'Favor, ingresar boletas proporcionadas por su ticket'})
       if (boleta.tolvaAsignada!=usuario.UsuariosPorTolva.tolva) return res.status(200).send({err: 'Boleta, no esta asignada a su tolva, favor enviar a la tolva correcta'})
       if (tolva!=0) return res.status(200).send({err: 'Boleta ya ha sido asignada'})
       
@@ -476,7 +477,7 @@ const buscarBoleSinQR = async(req, res) => {
 
     if (!boleta) return res.status(200).send({err: 'Boleta no encontrada'})
     if (boleta.estado !='Pendiente') return res.status(200).send({err: 'Boleta ya finalizada, no puede asignarla.'})
-    if (boleta.idMovimiento!==2) return res.status(200).send({err: 'Favor, ingresar boletas proporcionadas por su ticket'})
+    if (boleta.idMovimiento!==2 && (boleta.idMovimiento!==14 && boleta.idProducto!==17)) return res.status(200).send({err: 'Favor, ingresar boletas proporcionadas por su ticket'})
 
     if (boleta.tolvaAsignada!=usuario.UsuariosPorTolva.tolva) return res.status(200).send({err: 'Boleta, no esta asignada a su tolva, favor enviar a la tolva correcta'})
     if (tolva!=0) return res.status(200).send({err: 'Boleta ya ha sido asignada'})
@@ -614,7 +615,7 @@ const postSiloInBoletas = async(req, res) => {
 
     const arrTolva = [sello1, sello2, sello3, sello4, sello5, sello6].filter(Boolean); 
     /* Autorizado por Javier y Salomon dia: 18/9/2025 a las 3PM */
-    if (arrTolva.length < 3) return res.status(200).send({ err: 'Minimo de marchamos 3.' });
+    if ((arrTolva.length < 3 && boleta.idMovimiento===2)) return res.status(200).send({ err: 'Minimo de marchamos 3.' });
     const arrBoleta = [boleta.sello1, boleta.sello2, boleta.sello3, boleta.sello4, boleta.sello5, boleta.sello6].filter(Boolean);
 
     const arraysIguales = (a, b) => {
@@ -625,9 +626,7 @@ const postSiloInBoletas = async(req, res) => {
     };
 
     const enviarAlerta = !arraysIguales(arrTolva, arrBoleta);
-
-    console.log(`Se envio alerta de marchamos: ${enviarAlerta ? 'Si' : 'No'}`);
-
+    
     if(enviarAlerta) {
         setLogger('TOLVA', 'MARCHAMOS NO COINCIDEN CON BÁSCULA', req, null, 3);
         alertaMarchamosDiferentes(boleta, usuario, enviarCorreo, arrBoleta, arrTolva, tolvaDescarga);
@@ -934,6 +933,950 @@ const getStatsForTolva = async(req, res) =>{
   }
 }
 
+const getInfoAllSilos = async (req, res) => {
+  try {
+    const { idSocio } = req.query; 
+    
+    // Validar idSocio si se proporciona
+    if (idSocio && (isNaN(parseInt(idSocio)) || parseInt(idSocio) <= 0)) {
+      return res.status(400).json({
+        success: false,
+        message: 'El parámetro idSocio debe ser un número válido mayor que 0'
+      });
+    }
+    
+    result = await db.$queryRaw`
+      SELECT 
+          s.nombre as silo_nombre,
+          s.capacidad,
+          COALESCE(SUM(peso_calculado.peso_silo), 0) as peso_total,
+          CASE 
+              WHEN s.capacidad > 0 THEN 
+                  ROUND((COALESCE(SUM(peso_calculado.peso_silo), 0) / s.capacidad) * 100, 2)
+              ELSE NULL 
+          END as porcentaje_ocupacion,
+          -- Agregar las IDs de boleta concatenadas
+          STRING_AGG(CAST(peso_calculado.id_boleta AS VARCHAR), ', ') as [IDs_Boletas]
+      FROM Silos s
+      LEFT JOIN (
+          -- Subconsulta que combina todos los silos en una sola pasada
+          SELECT DISTINCT  -- Agregar DISTINCT aquí
+              silo_data.silo_id,
+              silo_data.peso_silo,
+              silo_data.id_boleta
+          FROM (
+              -- Silo Principal
+              SELECT DISTINCT  -- Agregar DISTINCT aquí también
+                  b.numBoleta,
+                  b.id as id_boleta,
+                  s1.id as silo_id,
+                  CASE 
+                      WHEN t.siloTerciario IS NOT NULL THEN b.pesoNeto/300.0
+                      WHEN t.siloSecundario IS NOT NULL THEN b.pesoNeto/200.0
+                      ELSE b.pesoNeto/100.0
+                  END as peso_silo
+              FROM Boleta b
+              INNER JOIN tolva t ON b.id = t.idBoleta
+              INNER JOIN Silos s1 ON t.siloPrincipal = s1.id
+              
+              UNION ALL
+              
+              -- Silo Secundario
+              SELECT DISTINCT  -- Agregar DISTINCT aquí también
+                  b.numBoleta,
+                  b.id as id_boleta,
+                  s2.id as silo_id,
+                  CASE 
+                      WHEN t.siloTerciario IS NOT NULL THEN b.pesoNeto/300.0
+                      ELSE b.pesoNeto/200.0
+                  END as peso_silo
+              FROM Boleta b
+              INNER JOIN tolva t ON b.id = t.idBoleta
+              INNER JOIN Silos s2 ON t.siloSecundario = s2.id
+              
+              UNION ALL
+              
+              -- Silo Terciario
+              SELECT DISTINCT  -- Agregar DISTINCT aquí también
+                  b.numBoleta,
+                  b.id as id_boleta,
+                  s3.id as silo_id,
+                  b.pesoNeto/300.0 as peso_silo
+              FROM Boleta b
+              INNER JOIN tolva t ON b.id = t.idBoleta
+              INNER JOIN Silos s3 ON t.siloTerciario = s3.id
+          ) silo_data
+          LEFT JOIN (
+              SELECT 
+                  SiloId,
+                  MAX(numBoleta) as ultimoReset
+              FROM ResetSilos
+              GROUP BY SiloId
+          ) rs ON silo_data.silo_id = rs.SiloId
+          WHERE rs.SiloId IS NULL OR silo_data.numBoleta > rs.ultimoReset
+      ) peso_calculado ON s.id = peso_calculado.silo_id
+      GROUP BY s.id, s.nombre, s.capacidad
+      ORDER BY s.id;
+    `;
+
+    // Convertir los resultados a un formato más amigable para JavaScript
+    const formattedResult = result.map(row => ({
+      silo_nombre: row.silo_nombre,
+      capacidad: Number(row.capacidad),
+      peso_total: Number(row.peso_total),
+      porcentaje_ocupacion: row.porcentaje_ocupacion ? Number(row.porcentaje_ocupacion) : 0,
+      boletas: row.IDs_Boletas ? row.IDs_Boletas.split(', ').map(id => parseInt(id)) : []
+    }));
+
+    const formattedResultBar2 = result.map(row => ({
+      silo_nombre: row.silo_nombre,
+      capacidad: 100,
+      capacidadNeta: row.capacidad,
+      peso_total: row.porcentaje_ocupacion ? Number(row.porcentaje_ocupacion) > 100 ? 100 : Number(row.porcentaje_ocupacion) : 0,
+      peso_total_neto: Number(row.peso_total),
+      porcentaje_ocupacion: row.porcentaje_ocupacion ? Number(row.porcentaje_ocupacion) : 0, 
+      boletas: row.IDs_Boletas ? row.IDs_Boletas.split(', ').map(id => parseInt(id)) : []
+    }));
+
+    res.status(200).json({
+      success: true,
+      data: formattedResult,
+      data2: formattedResultBar2,
+      total: formattedResult.length
+    });
+
+  } catch (error) {
+    console.error('Error en getInfoAllSilos:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor',
+      error: process.env.NODE_ENV === 'production' ? 'Error en la consulta' : error.message
+    });
+  }
+};
+
+const postGetallInfoDetailsSilos = async(req, res) => {   
+  try {     
+    const { boletas } = req.body;      
+
+    const getBoletas = await db.boleta.findMany({       
+      select: {         
+        numBoleta: true,         
+        placa: true,         
+        socio: true,          
+        empresa: true,          
+        pesoNeto: true,         
+        tolvaAsignada: true,         
+        producto: true,          
+        factura: true,           
+        tolva: {           
+          select: {             
+            fechaEntrada: true,              
+            fechaSalida: true,             
+            siloPrincipal: true,              
+            siloSecundario: true,              
+            SiloTerciario: true,              
+          }         
+        }         
+      },       
+      where: {         
+        id: {           
+          in: boletas         
+        }       
+      }     
+    });
+    
+    let accPeso = 0;     
+    const refactor = getBoletas.map((item, index) => {       
+      // Calcular duración de tolva       
+      let duracionTolva = 'En proceso...';              
+      
+      if (item.tolva[0]?.fechaEntrada && item.tolva[0]?.fechaSalida) {         
+        const entrada = new Date(item.tolva[0].fechaEntrada);         
+        const salida = new Date(item.tolva[0].fechaSalida);         
+        const diferencia = salida - entrada;                  
+        
+        // Convertir a horas y minutos         
+        const horas = Math.floor(diferencia / (1000 * 60 * 60));         
+        const minutos = Math.floor((diferencia % (1000 * 60 * 60)) / (1000 * 60));                  
+        
+        duracionTolva = `${horas}h ${minutos}m`;       
+      }        
+
+      // Verificar si hay peso neto
+      let pesoDistribuido = 0;
+      
+      if (item.pesoNeto) {
+        // Verificar qué silos existen (el principal siempre debe existir)
+        const tienePrincipal = item.tolva[0]?.siloPrincipal;
+        const tieneSecundario = item.tolva[0]?.siloSecundario;
+        const tieneTerciario = item.tolva[0]?.SiloTerciario;
+        
+        // Lógica de división según los silos disponibles
+        if (tienePrincipal && tieneSecundario && tieneTerciario) {
+          // Los 3 silos: dividir entre 300
+          pesoDistribuido = (item.pesoNeto / 300).toFixed(2);
+        } else if (tienePrincipal && tieneSecundario) {
+          // Solo principal y secundario: dividir entre 200
+          pesoDistribuido = (item.pesoNeto / 200).toFixed(2);
+        } else if (tienePrincipal) {
+          // Solo principal: dividir entre 100
+          pesoDistribuido = (item.pesoNeto / 100).toFixed(2);
+        } else {
+          // No hay silos (caso extraño): peso 0
+          pesoDistribuido = 0;
+        }
+      }
+      
+      accPeso += parseFloat(pesoDistribuido);                             
+
+      return {         
+        '#': index+1, 
+        numBoleta: item.numBoleta || 'En proceso...',         
+        placa: item.placa,         
+        socio: `${item.socio} ${item.factura ? `- ${item.factura}` : '- Sin Factura'}`,
+        fechaIngresoTolva: new Date(item.tolva[0]?.fechaEntrada).toLocaleString(),          
+        empresa: item.empresa,         
+        producto: item.producto,         
+        tolva: item.tolvaAsignada,         
+        pesoNeto: `${pesoDistribuido} QQ`,         
+        pesoAcumulado: `${accPeso.toFixed(2)} QQ`,         
+        duracion: duracionTolva       
+      };     
+    });      
+
+    return res.status(200).send({ data: refactor });   
+  } catch (err) {     
+    console.log(err);     
+    return res.status(500).send({ error: 'Error interno del servidor' });   
+  } 
+};
+
+const postResetSilo = async (req, res) => {
+  try{
+    const { silo } = req.body;
+  
+    const [ultimo, siloID] = await Promise.all([
+      db.boleta.findFirst({
+        orderBy: { numBoleta: 'desc' },
+        select: { numBoleta: true },
+      }), 
+      db.Silos.findFirst({
+        where: {
+          nombre: silo
+        },
+        select: {
+          id: true
+        }
+      })
+    ])
+
+    const [newReset, resetSilo] = await Promise.all([
+      db.ResetSilos.create({
+        data: {
+          siloId: siloID.id,
+          numBoleta: ultimo.numBoleta, 
+        }
+      }),
+      db.Silos.update({
+        where: {
+          id: siloID.id
+        },
+        data: {
+          nivelTolva: 0
+        }
+      })
+    ])
+  
+    return res.status(200).send({msg: `Se ha creado un nuevo reset - ${silo}`})  
+  }catch(err){
+    console.log(err)
+  }
+  
+}
+
+const getStatsBuquesAndAll = async (req, res) => {
+  try {
+    const buque = req.query.buque || null;
+    const factura = req.query.factura || null;
+
+    if (factura !== null && (isNaN(factura) || factura === '')) {
+      return res.status(400).json({ error: 'El parámetro factura debe ser un número válido.' });
+    }
+
+    if (buque !== null && (isNaN(buque) || buque === '')) {
+      return res.status(400).json({ error: 'El parámetro buque debe ser un número válido.' });
+    }
+
+    const buqueId = buque ? parseInt(buque) : null;
+
+    const [cantidadBoletasPorTolva, resultado, tiemposRaw, tiempoPerdidoTotal] = await Promise.all([
+      // Consulta 1: Cantidad de boletas por tolva
+      db.boleta.groupBy({
+        by: ['tolvaAsignada'],
+        _count: { tolvaAsignada: true },
+        _sum: { pesoNeto: true },
+        where: {
+          tolvaAsignada: {
+            not: null
+          },
+          ...(buqueId ? { idSocio: buqueId } : {}), 
+          ...(factura ? { factura: factura } : {})
+        }
+      }),
+
+      // Consulta 2: Resultado principal por usuario
+      buqueId && factura 
+        ? db.$queryRaw`
+            SELECT 
+              t.usuarioTolva,
+              COUNT(DISTINCT t.idBoleta) as totalUnicos,
+              SUM(b.pesoNeto) as pesoNetoTotal,
+              CONCAT(
+                  CAST(AVG(DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida)) / 60 AS VARCHAR), ' horas, ',
+                  CAST(AVG(DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida)) % 60 AS VARCHAR), ' minutos'
+              ) as tiempoPromedio
+            FROM Boleta b
+            INNER JOIN Tolva t ON b.id = t.idBoleta
+            WHERE b.idSocio = ${buqueId} and b.factura = ${factura} and b.estado not in ('Cancelada', 'Pendiente')
+            GROUP BY t.usuarioTolva
+          `
+        : db.$queryRaw`
+            SELECT 
+                t.usuarioTolva,
+                COUNT(DISTINCT t.idBoleta) as totalUnicos,
+                SUM(b.pesoNeto) as pesoNetoTotal,
+                CONCAT(
+                    CAST(AVG(DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida)) / 60 AS VARCHAR), ' horas, ',
+                    CAST(AVG(DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida)) % 60 AS VARCHAR), ' minutos'
+                ) as tiempoPromedio
+            FROM Boleta b
+            INNER JOIN Tolva t ON b.id = t.idBoleta
+            WHERE b.estado NOT IN ('Cancelada', 'Pendiente')
+            GROUP BY t.usuarioTolva
+          `,
+
+      // Consulta 3: Tiempos por tolva
+      buqueId && factura
+        ? db.$queryRaw`
+            SELECT 
+              CAST(AVG(DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida)) / 60 AS VARCHAR) 
+                + 'h ' + 
+              CAST(AVG(DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida)) % 60 AS VARCHAR) 
+                + 'm' AS PromedioTiempo, 
+              b.tolvaAsignada,
+              SUM(b.pesoNeto) as pesoNetoTotal
+            FROM Boleta AS b
+            INNER JOIN Tolva AS t ON b.id = t.idBoleta
+            WHERE b.idSocio = ${buqueId} and b.factura = ${factura} and b.estado not in ('Cancelada', 'Pendiente')
+            GROUP BY b.tolvaAsignada
+          `
+        : db.$queryRaw`
+            SELECT 
+              CAST(AVG(DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida)) / 60 AS VARCHAR) 
+                + 'h ' + 
+              CAST(AVG(DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida)) % 60 AS VARCHAR) 
+                + 'm' AS PromedioTiempo, 
+              b.tolvaAsignada,
+              SUM(b.pesoNeto) as pesoNetoTotal
+            FROM Boleta AS b
+            INNER JOIN Tolva AS t ON b.id = t.idBoleta
+            WHERE b.estado not in ('Cancelada', 'Pendiente')
+            GROUP BY b.tolvaAsignada
+          `,
+
+      // Consulta 4: Tiempo perdido total por tolva
+      buqueId && factura
+        ? db.$queryRaw`
+            SELECT 
+              b.tolvaAsignada, 
+              CAST(SUM(CASE 
+                           WHEN (DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida) - 
+                                 CASE 
+                                     WHEN b.tolvaAsignada = 1 THEN 50
+                                     WHEN b.tolvaAsignada = 2 THEN 40
+                                     ELSE 0
+                                 END) < 0 THEN 0
+                           ELSE (DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida) - 
+                                 CASE 
+                                     WHEN b.tolvaAsignada = 1 THEN 50
+                                     WHEN b.tolvaAsignada = 2 THEN 40
+                                     ELSE 0
+                                 END)
+                       END) / 60 AS VARCHAR)
+              + ' h ' + 
+              CAST(SUM(CASE 
+                           WHEN (DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida) - 
+                                 CASE 
+                                     WHEN b.tolvaAsignada = 1 THEN 50
+                                     WHEN b.tolvaAsignada = 2 THEN 40
+                                     ELSE 0
+                                 END) < 0 THEN 0
+                           ELSE (DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida) - 
+                                 CASE 
+                                     WHEN b.tolvaAsignada = 1 THEN 50
+                                     WHEN b.tolvaAsignada = 2 THEN 40
+                                     ELSE 0
+                                 END)
+                       END) % 60 AS VARCHAR)
+              + ' m' AS tiempo_perdido_total
+            FROM Boleta b 
+            INNER JOIN Tolva t ON b.id = t.idBoleta
+            WHERE b.idSocio = ${buqueId} and b.factura = ${factura} and b.estado not in ('Cancelada', 'Pendiente')
+            GROUP BY b.tolvaAsignada
+          `
+        : db.$queryRaw`
+            SELECT 
+              b.tolvaAsignada, 
+              CAST(SUM(CASE 
+                           WHEN (DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida) - 
+                                 CASE 
+                                     WHEN b.tolvaAsignada = 1 THEN 50
+                                     WHEN b.tolvaAsignada = 2 THEN 40
+                                     ELSE 0
+                                 END) < 0 THEN 0
+                           ELSE (DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida) - 
+                                 CASE 
+                                     WHEN b.tolvaAsignada = 1 THEN 50
+                                     WHEN b.tolvaAsignada = 2 THEN 40
+                                     ELSE 0
+                                 END)
+                       END) / 60 AS VARCHAR)
+              + ' h ' + 
+              CAST(SUM(CASE 
+                           WHEN (DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida) - 
+                                 CASE 
+                                     WHEN b.tolvaAsignada = 1 THEN 50
+                                     WHEN b.tolvaAsignada = 2 THEN 40
+                                     ELSE 0
+                                 END) < 0 THEN 0
+                           ELSE (DATEDIFF(MINUTE, t.fechaEntrada, t.fechaSalida) - 
+                                 CASE 
+                                     WHEN b.tolvaAsignada = 1 THEN 50
+                                     WHEN b.tolvaAsignada = 2 THEN 40
+                                     ELSE 0
+                                 END)
+                       END) % 60 AS VARCHAR)
+              + ' m' AS tiempo_perdido_total
+            FROM Boleta b 
+            INNER JOIN Tolva t ON b.id = t.idBoleta
+            WHERE b.estado not in ('Cancelada', 'Pendiente')
+            GROUP BY b.tolvaAsignada
+          `
+    ]);
+
+    // Crear estructura base para tolvas 1 y 2
+    const tolvasBase = [
+      { tolvaAsignada: 1, cantidad: 0, pesoNeto: 0 },
+      { tolvaAsignada: 2, cantidad: 0, pesoNeto: 0 }
+    ];
+
+    // Mapear los datos existentes y combinar con la estructura base
+    const refactorData = tolvasBase.map(tolvaBase => {
+      const dataExistente = cantidadBoletasPorTolva.find(
+        item => item.tolvaAsignada === tolvaBase.tolvaAsignada
+      );
+      
+      return {
+        tolvaAsignada: tolvaBase.tolvaAsignada,
+        cantidad: dataExistente ? dataExistente._count.tolvaAsignada : 0,
+        pesoNeto: dataExistente ? (dataExistente._sum.pesoNeto || 0) : 0
+      };
+    });
+
+    // Asegurar que siempre tengamos tolvas 1 y 2 en tiempos
+    const tiemposBase = [
+      { PromedioTiempo: "0h 0m", tolvaAsignada: 1, pesoNetoTotal: 0 },
+      { PromedioTiempo: "0h 0m", tolvaAsignada: 2, pesoNetoTotal: 0 }
+    ];
+    
+    const tiempos = tiemposBase.map(tiempoBase => {
+      const tiempoExistente = tiemposRaw.find(
+        item => item.tolvaAsignada === tiempoBase.tolvaAsignada
+      );
+      
+      return tiempoExistente || tiempoBase;
+    });
+
+    // Asegurar que siempre tengamos tolvas 1 y 2 en tiempo perdido total
+    const tiempoPerdidoBase = [
+      { tolvaAsignada: 1, tiempo_perdido_total: "0 h 0 m" },
+      { tolvaAsignada: 2, tiempo_perdido_total: "0 h 0 m" }
+    ];
+    
+    const tiempoPerdidoFormateado = tiempoPerdidoBase.map(tiempoBase => {
+      const tiempoPerdidoExistente = tiempoPerdidoTotal.find(
+        item => item.tolvaAsignada === tiempoBase.tolvaAsignada
+      );
+      
+      return tiempoPerdidoExistente || tiempoBase;
+    });
+
+    const totalDescargas = resultado.reduce((total, item) => total + Number(item.totalUnicos), 0);
+    const totalPesoNeto = resultado.reduce((total, item) => total + Number(item.pesoNetoTotal || 0), 0);
+
+    const dataLimpia = resultado.map((item) => {
+      const cantidad = Number(item.totalUnicos);
+      const pesoNeto = Number(item.pesoNetoTotal || 0);
+      const porcentaje = totalDescargas > 0 ? ((cantidad / totalDescargas) * 100).toFixed(2) : 0;
+      const porcentajePeso = totalPesoNeto > 0 ? ((pesoNeto / totalPesoNeto) * 100).toFixed(2) : 0;
+      
+      return {
+        Usuario: item.usuarioTolva,
+        'Tiempo Promedio': item.tiempoPromedio || 'N/A',
+        Cantidad: cantidad,
+        'Porcentaje según Cantidad': `${porcentaje} %`,
+        'Descargado (qq)': `${formatNumber(pesoNeto.toFixed(2)/100)}`,
+        'Porcentaje según Peso': `${porcentajePeso}%`,
+      };
+    });    
+
+    return res.status(200).json({
+      asignadas: refactorData,
+      descargadas: dataLimpia, 
+      tiempos: tiempos,
+      tiempoPerdidoTotal: tiempoPerdidoFormateado,
+      totales: {
+        totalDescargas,
+        totalPesoNeto
+      }
+    });
+
+  } catch (err) {
+    console.error('Error en getStatsBuquesAndAll:', err);
+    return res.status(500).json({ 
+      error: 'Error interno del servidor. Intente nuevamente.' 
+    });
+  }
+};
+
+const getViajesTotales = async(req, res) => {
+  try {
+    const buque = req.query.buque || null;
+    const factura = req.query.factura || null;
+    
+    const usuarioTolva = req.query.usuarioTolva || null;
+    const usuarioCierre = req.query.usuarioCierre || null;
+    const tiempoExcedido = req.query.tiempoExcedido || null; // 'true', 'false' o null (todos)
+    const searchPlaca = req.query.searchPlaca || null;
+
+    // Parámetros de paginación
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+
+    // Validaciones existentes
+    if (factura !== null && (isNaN(factura) || factura === '')) {
+      return res.status(400).json({ error: 'El parámetro factura debe ser un número válido.' });
+    }
+
+    if (buque !== null && (isNaN(buque) || buque === '')) {
+      return res.status(400).json({ error: 'El parámetro buque debe ser un número válido.' });
+    }
+
+    // Nuevas validaciones
+    if (page < 1) {
+      return res.status(400).json({ error: 'El parámetro page debe ser mayor a 0.' });
+    }
+
+    if (limit < 1 || limit > 100) {
+      return res.status(400).json({ error: 'El parámetro limit debe estar entre 1 y 100.' });
+    }
+
+    if (tiempoExcedido !== null && !['true', 'false'].includes(tiempoExcedido)) {
+      return res.status(400).json({ error: 'El parámetro tiempoExcedido debe ser "true" o "false".' });
+    }
+
+    // Construir filtros para la consulta WHERE
+    const whereConditions = {
+      tolva: {
+        some: {
+          // Filtros anidados para tolva
+          ...(usuarioTolva ? { usuarioTolva: usuarioTolva } : {}),
+          ...(usuarioCierre ? { usuarioDeCierre: usuarioCierre } : {}),
+          // Filtro por tiempo excedido
+          ...(tiempoExcedido === 'true' ? { observacionTiempo: { not: null } } : {}),
+          ...(tiempoExcedido === 'false' ? { observacionTiempo: null } : {})
+        }
+      },
+      ...(buque ? { idSocio: parseInt(buque) } : {}),
+      ...(factura ? { factura: factura } : {}),
+      ...(searchPlaca ? { placa: { contains: searchPlaca } } : {})
+    };
+
+    const [totalRecords, totalSinFiltros, resultados] = await Promise.all([
+      // Consulta 1: Obtener el total de registros para la paginación
+      db.boleta.count({
+        where: whereConditions
+      }),
+      // Consulta 2: Obtener el total de registros para la paginación
+      (factura && buque) ? db.boleta.count({
+        where:{
+          ...(buque ? { idSocio: parseInt(buque) } : {}),
+          ...(factura ? { factura: factura } : {}),
+        }
+      }) : 0,
+      // Consulta 3: Consulta principal con paginación
+      db.boleta.findMany({
+        select: {
+          id: true,
+          numBoleta: true,
+          placa: true,
+          motorista: true,
+          tolvaAsignada: true,
+          tolva: {
+            select: {
+              idBoleta: true,
+              usuarioTolva: true,
+              usuarioDeCierre: true,
+              observacionTiempo: true,
+              fechaEntrada: true,
+              fechaSalida: true,
+            },
+            take: 1,
+            orderBy: {
+              fechaEntrada: 'asc'
+            }
+          }
+        },
+        where: whereConditions,
+        skip: offset,
+        take: limit,
+        orderBy: {
+          numBoleta: 'desc'
+        }
+      })
+    ]);
+
+    const resultadosUnicos = resultados
+      .filter(boleta => boleta.tolva.length > 0)
+      .map(boleta => {
+        const tolvaData = boleta.tolva[0];
+        
+        const fechaEntrada = new Date(tolvaData.fechaEntrada);
+        const fechaSalida = new Date(tolvaData.fechaSalida);
+        const diferenciaMinutos = Math.floor((fechaSalida - fechaEntrada) / (1000 * 60));
+        
+        const horas = Math.floor(diferenciaMinutos / 60);
+        const minutos = diferenciaMinutos % 60;
+        
+        // Lógica para tiempo excedido con resta según tolva asignada
+        const tiempoExcedidoFlag = (tolvaData.observacionTiempo !== null) ? 1 : 0;
+        let tiempoAjustadoMinutos = diferenciaMinutos;
+        
+        // Si hay tiempo excedido, aplicar la resta según la tolva asignada
+        if (tiempoExcedidoFlag === 1) {
+          let minutosARestar = 0;
+          
+          // Determinar cuántos minutos restar según la tolva asignada
+          if (boleta.tolvaAsignada === '1' || boleta.tolvaAsignada === 1) {
+            minutosARestar = 50;
+          } else if (boleta.tolvaAsignada === '2' || boleta.tolvaAsignada === 2) {
+            minutosARestar = 40;
+          }
+          
+          // Restar los minutos correspondientes, pero nunca menos de 0
+          tiempoAjustadoMinutos = Math.max(0, diferenciaMinutos - minutosARestar);
+        }
+        
+        // Calcular horas y minutos para el tiempo ajustado
+        const horasAjustadas = Math.floor(tiempoAjustadoMinutos / 60);
+        const minutosAjustados = tiempoAjustadoMinutos % 60;
+        
+        return {
+          'Boleta': boleta.numBoleta,
+          placa: boleta.placa,
+          motorista: boleta.motorista,
+          usuarioInicial: tolvaData.usuarioTolva,
+          tolvaAsignada: `Tolva ${boleta.tolvaAsignada}`,
+          usuarioDeCierre: tolvaData.usuarioDeCierre || '',
+          observacionTiempo: tolvaData.observacionTiempo,
+          TiempoTotal: `${horas}h ${minutos}m`, 
+          TiempoPerdido: tiempoExcedidoFlag ? `${horasAjustadas}h ${minutosAjustados}m` : '0h 0m',
+          tiempoExcedido: tiempoExcedidoFlag,
+        };
+      });
+
+    // Calcular información de paginación
+    const totalPages = Math.ceil(totalRecords / limit);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
+
+    // Respuesta con paginación
+    return res.status(200).json({
+      data: resultadosUnicos,
+      pagination: {
+        currentPage: page,
+        totalPages: totalPages,
+        totalRecords: totalRecords,
+        totalAllData: totalSinFiltros,
+        recordsPerPage: limit,
+        hasNextPage: hasNextPage,
+        hasPrevPage: hasPrevPage,
+        nextPage: hasNextPage ? page + 1 : null,
+        prevPage: hasPrevPage ? page - 1 : null
+      }
+    });
+
+  } catch(err) {
+    console.log(err);
+    return res.status(500).json({ 
+      error: 'Error interno del servidor',
+      message: err.message 
+    });
+  }
+}
+
+const getUserTolva = async(req, res) => {
+  try{
+    const usuarios = await db.usuarios.findMany({
+      where: {
+        tipo: "TOLVA",
+      },
+      select: {
+        id: true,
+        name: true
+      }
+    });
+
+    return res.status(200).send(usuarios)
+  }catch(err){
+    console.log(err)
+    return res.status(500).send({err:'Intente denuevo'})
+  }
+}
+
+/* Este queda para desarrollo posterior */
+const getInfoForBuquesQQ = async(req, res) => {
+  try{
+    const buque = parseInt(req.query.buque) || null;
+    const factura = req.query.factura || null;
+    const LB_TO_QQ = 100;
+
+    if(!buque || !factura || isNaN(buque) || isNaN(factura)) return res.status(400).send({err: 'Intente denuevo'})
+
+    const data = await db.$queryRaw`
+      WITH BoletasUnicas AS (
+          SELECT 
+              b.id,
+              b.pesoNeto,
+              CASE 
+                  WHEN t.siloSecundario IS NULL THEN s1.nombre
+                  ELSE CONCAT(s1.nombre, ' - ', s2.nombre)
+              END AS nombre
+          FROM Boleta b
+          INNER JOIN Tolva t ON b.id = t.idBoleta
+          LEFT JOIN Silos s1 ON s1.id = t.siloPrincipal
+          LEFT JOIN Silos s2 ON s2.id = t.siloSecundario
+          WHERE b.idSocio = ${buque} and factura=${factura}
+          GROUP BY b.id, b.pesoNeto, s1.nombre, s2.nombre, t.siloSecundario
+      )
+      SELECT 
+          nombre,
+          COUNT(*) as camiones,
+          SUM(pesoNeto)/${LB_TO_QQ} as quintales
+      FROM BoletasUnicas
+      GROUP BY nombre
+      ORDER BY nombre asc
+    `
+
+    return res.status(200).send(data)
+  }catch(err){
+    console.log(err)
+    return res.s
+  }
+}
+
+const getNewInfoNivelSilos = async (req, res) => {
+  try {
+    const dataSilos = await db.silos.findMany();
+
+    const formattedResult = dataSilos.map(row => ({
+      siloID: row.id,
+      silo_nombre: row.nombre,
+      capacidad: Number(row.capacidad),
+      peso_total: Number(row.nivelTolva),
+      porcentaje_ocupacion: parseFloat(((row.nivelTolva / row.capacidad) * 100).toFixed(2)),
+    }));
+
+    // Corrección: usar 'capacidad' en lugar de 'cantidad' para consistencia
+    const formattedResultBar2 = dataSilos.map(row => {
+      const porcentajeReal = (row.nivelTolva / row.capacidad) * 100;
+      const porcentajeLimitado = Math.min(porcentajeReal, 100); // Limitar a máximo 100%
+      
+      return {
+        siloID: row.id,
+        silo_nombre: row.nombre,
+        capacidad: 100, // Capacidad normalizada para la barra
+        capacidadNeta: Number(row.capacidad),
+        peso_total: parseFloat(porcentajeLimitado.toFixed(2)),
+        peso_total_neto: Number(row.nivelTolva),
+        porcentaje_ocupacion: parseFloat(porcentajeReal.toFixed(2)),
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: formattedResult,
+      data2: formattedResultBar2,
+      total: formattedResult.length
+    });
+
+  } catch (err) {
+    console.error('Error en getNewInfoNivelSilos:', err);
+    return res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor. Inténtelo de nuevo.',
+      error: process.env.NODE_ENV === 'development' ? err.message : 'Error interno'
+    });
+  }
+};
+
+const getNewInfoNivelDetails = async (req, res) => {
+  try {
+    const siloId = parseInt(req.params.siloId);
+    
+    if (!siloId || isNaN(siloId)) {
+      return res.status(400).send({ err: 'siloId inválido' });
+    }
+
+    const ResetSilos = await db.ResetSilos.findFirst({
+      where: {
+        siloId: siloId
+      }, 
+      orderBy:{
+        id: 'desc'
+      },
+      select: {
+        numBoleta: true
+      }
+    })
+
+    const [siloData, boletas] = await Promise.all([
+      db.silos.findUnique({
+        where: {
+          id: siloId
+        },
+        select:{
+          nivelTolva: true,
+          capacidad: true, 
+        }
+      }), 
+      db.boleta.findMany({
+        where: {
+          ...(ResetSilos ? { numBoleta: { gt: ResetSilos.numBoleta } } : {}),
+          estado: {
+            notIn: ['Cancelada', 'Pendiente']
+          },
+          tolva: {
+            some: {
+              OR: [
+                { siloPrincipal: siloId },
+                { siloSecundario: siloId },
+                { SiloTerciario: siloId }
+              ]
+            }
+          }
+        },
+        select: {
+          numBoleta: true,         
+          placa: true,         
+          socio: true,          
+          empresa: true,          
+          pesoNeto: true,         
+          tolvaAsignada: true,         
+          producto: true,          
+          factura: true,
+          tolva: {
+            select: {
+              siloPrincipal: true,
+              siloSecundario: true,
+              SiloTerciario: true
+            }
+          }
+        }
+      })
+    ])
+
+    const boletasConPesoCalculado = boletas.map(boleta => {
+      let pesoCalculado = 0;
+      let pesoDividido = '';
+
+      // Iteramos sobre las tolvas para encontrar la que contiene nuestro siloId
+      boleta.tolva.forEach(tolva => {
+        // Verificamos si esta tolva contiene nuestro silo
+        const tieneSilo = tolva.siloPrincipal === siloId || 
+                        tolva.siloSecundario === siloId || 
+                        tolva.SiloTerciario === siloId;
+        
+        if (tieneSilo) {
+          // Contamos cuántos silos tiene esta tolva (que no sean null)
+          let cantidadSilos = 0;
+          
+          if (tolva.siloPrincipal !== null) cantidadSilos++;
+          if (tolva.siloSecundario !== null) cantidadSilos++;
+          if (tolva.SiloTerciario !== null) cantidadSilos++;
+          
+          // El peso se divide equitativamente entre todos los silos presentes
+          // Convertimos de libras a quintales (dividir por 100) y luego dividimos entre silos
+          pesoCalculado = (boleta.pesoNeto / 100) / cantidadSilos;
+          
+          // Indicamos entre cuántos silos se dividió
+          pesoDividido = ` ${(100/cantidadSilos).toFixed(2)} %`;
+        }
+      });
+
+      return {
+        boleta: boleta.numBoleta,
+        socio: `${boleta.socio} ${boleta.factura ? `- ${boleta.factura}` : '- Sin Factura'}`,
+        placa: boleta.placa,
+        producto: boleta.producto, 
+        transporte: boleta.empresa,
+        tolva: boleta.tolvaAsignada,
+        producto: boleta.producto,
+        pesoNeto: Math.round(pesoCalculado * 100) / 100, // En quintales con 2 decimales
+        pesoCalculado: pesoCalculado, // Ya está en quintales
+        pesoDividido
+      };
+    });
+
+    // Calculamos el total sumando todos los pesos calculados
+    const totalPesoCalculado = boletasConPesoCalculado.reduce((total, boleta) => {
+      return total + boleta.pesoCalculado;
+    }, 0);
+
+    const refactorView = boletasConPesoCalculado.map((item, index) => {
+      return {
+        '#': index+1,
+        boleta: item.boleta,
+        socio: item.socio,
+        placa: item.placa,
+        transporte: item.transporte,
+        Descargada: `Tolva ${item.tolva}`,
+        producto: item.producto,
+        pesoNeto: item.pesoCalculado.toFixed(2),
+        pesoDividido: item.pesoDividido
+      }
+    })
+
+    return res.status(200).json({
+      success: true,
+      data: refactorView,
+      count: boletasConPesoCalculado.length,
+      diff: (siloData?.nivelTolva || 0) - totalPesoCalculado, // Agregada validación para null
+      total: totalPesoCalculado.toFixed(2), // CORREGIDO: no dividir por 100
+      capacidad: siloData?.capacidad,
+    });
+
+  } catch (err) {
+    console.error('Error en getNewInfoNivelDetails:', err);
+    return res.status(500).send({ 
+      err: 'Error interno del servidor', 
+      msg: err.message 
+    });
+  }
+}; 
+
 module.exports = {
   analizadorQR, 
   getDataForSelectSilos, 
@@ -943,5 +1886,14 @@ module.exports = {
   buscarBoleSinQR, 
   getListUsersForTolva, 
   getTolvasDeDescargasOcupadas, 
-  updateFinalizarDescarga
+  updateFinalizarDescarga, 
+  getInfoAllSilos,
+  postResetSilo,
+  getStatsBuquesAndAll, 
+  getViajesTotales,
+  getUserTolva,
+  getInfoForBuquesQQ,
+  postGetallInfoDetailsSilos,
+  getNewInfoNivelSilos,
+  getNewInfoNivelDetails,  
 };

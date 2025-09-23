@@ -96,7 +96,9 @@ const exportToExcel = async (req, res) => {
         Tara: isEspecialTraslado ? el.pesoInicial : ((el.proceso == 0 ? el.pesoFinal : el.pesoInicial) || 0),
         PesoBruto: isEspecialTraslado ? el.pesoFinal : ((el.proceso == 0 ? el.pesoInicial : el.pesoFinal) || 0),
         PesoNeto: el.pesoNeto || 0,
+        PesoNetoQQ: el.pesoNeto ? (el.pesoNeto / 100) : 0,
         PesoTeorico: el.pesoTeorico || 0,
+        PesoTeoricoQQ: el.pesoTeorico ? (el.pesoTeorico / 100) : 0,
         Desviación: el.desviacion || 0,
         Tolerancia: (el.pesoTeorico * el.porTolerancia) || 0,
         Estado: el.estado,
@@ -131,7 +133,9 @@ const exportToExcel = async (req, res) => {
       'Tara': 'Tara',
       'PesoBruto': 'PesoBruto',
       'PesoNeto': 'PesoNeto',
+      'PesoNetoQQ': 'PesoNetoQQ',
       'PesoTeorico': 'PesoTeorico',
+      'PesoTeoricoQQ' : 'PesoTeoricoQQ',
       'Desviación': 'Desviación',
       'Tolerancia': 'Tolerancia',
       'Estado': 'Estado',
@@ -191,7 +195,9 @@ const exportToExcel = async (req, res) => {
         'Tara': 15,
         'PesoBruto': 15,
         'PesoNeto': 12,
+        'PesoNetoQQ': 15,
         'PesoTeorico': 14,
+        'PesoTeoricoQQ': 17,
         'Desviación': 12,
         'Tolerancia': 14,
         'Estado': 30,
@@ -367,7 +373,11 @@ const exportToExcel = async (req, res) => {
             cell.numFmt = '#,##0.00 "lb"';
             cell.alignment = { horizontal: 'right', vertical: 'middle' };
             break;
-            
+          case 'PesoNetoQQ':
+          case 'PesoTeoricoQQ':
+            cell.numFmt = '#,##0.00 "qq"';
+            cell.alignment = { horizontal: 'right', vertical: 'middle' };
+            break;  
           case 'Desviación':
           case 'Desviacion':
             cell.numFmt = '#,##0.00 "lb"';

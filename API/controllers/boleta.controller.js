@@ -3,7 +3,7 @@ const dotenv = require("dotenv");
 const jwt = require("jsonwebtoken");
 const { imprimirQRTolva, comprobanteDeCarga, imprimirWorkForce, getReimprimirWorkForce, generarPaseDeSalidaTemporal, ImprimirTicketEmpresaContratada } = require("./impresiones.controller");
 const enviarCorreo = require("../utils/enviarCorreo");
-const {alertaDesviacion, alertaCancelacion} = require("../utils/cuerposCorreo");
+const {alertaDesviacion, alertaCancelacion, alertaSiloLleno} = require("../utils/cuerposCorreo");
 const {setLogger} = require('../utils/logger');
 const { list_pase_inicial, list_parte_final, listaInicialAlertas } = require("../utils/listPaseSalida");
 const { list } = require("pdfkit");
@@ -605,6 +605,12 @@ const postClientePlacaMoto = async (req, res) => {
         });
       }
 
+      if (idProducto === 17 && idMovimiento===14) {
+        Object.assign(baseData, {
+          tolvaAsignada: 2,
+        })
+      }
+
       // Datos específicos para movimiento 2
       if (idMovimiento == 2 || idMovimiento ==15) {
         Object.assign(baseData, {
@@ -631,7 +637,7 @@ const postClientePlacaMoto = async (req, res) => {
       }
     });
 
-    const debeImprimirQR = (idMovimiento === 2) /* Se mantienen unicamente a importaciones a granel || (idProducto === 17 && idMovimiento === 14)   */
+    const debeImprimirQR = (idMovimiento === 2 || (idProducto === 17 && idMovimiento===14))
     const ocupaAlerta = idMovimiento ? listaInicialAlertas.includes(idMovimiento) : false
     const debeCrearPase = idMovimiento ? list_pase_inicial.includes(idMovimiento) : false
     if (debeCrearPase) {
@@ -765,7 +771,7 @@ const postClientePlacaMotoComodin = async (req, res) => {
       const response = await generarPaseDeSalidaTemporal(newBol, newPase?.numPaseSalida)
     }
 
-    const debeImprimirQR = (idProducto === 17 && idMovimiento === 1) || (idProducto === 18 && idMovimiento === 2);
+    const debeImprimirQR = (idProducto === 17 && idMovimiento === 14) || (idProducto === 18 && idMovimiento === 2);
     if(debeImprimirQR) {
       imprimirQRTolva(newBol);
     }
@@ -1235,6 +1241,10 @@ const updateBoletaOut = async (req, res) => {
       console.log(stmpMail);
     }
 
+    if((idProducto===18 && idMovimiento===2) || (idProducto===17 && idMovimiento===14)) {
+      enviarAlertaSiloLleno(nuevaBoleta);
+    }
+
     // Generar comprobante para producto específico
     if (idProducto === 18 && idMovimiento === 2) {
       comprobanteDeCarga(nuevaBoleta, despachador['name']);
@@ -1400,6 +1410,10 @@ const updateBoletaOutComdin = async (req, res) => {
       data: updateData,
     });
 
+    if((idProducto===18 && idMovimiento===2) || (idProducto===17 && idMovimiento===14)) {
+      enviarAlertaSiloLleno(nuevaBoleta);
+    }
+
     // Generar comprobante para producto específico
     if (idProducto === 18 && idMovimiento === 2) {
       comprobanteDeCarga(nuevaBoleta, despachador['name']);
@@ -1522,6 +1536,7 @@ const getBoletasHistorial = async (req, res) => {
           ...(fechasValidas ? { fechaFin: { gte: startOfDay, lte: endOfDay } } : {}),
           ...(movimiento ? { movimiento: movimiento } : {}),
           ...(producto ? { producto: producto } : {}),
+          ...searchConditions,
         },
       }),
       db.boleta.count({
@@ -1535,6 +1550,7 @@ const getBoletasHistorial = async (req, res) => {
           ...(fechasValidas ? { fechaFin: { gte: startOfDay, lte: endOfDay } } : {}),
           ...(movimiento ? { movimiento: movimiento } : {}),
           ...(producto ? { producto: producto } : {}),
+          ...searchConditions,
         },
       }),
       db.boleta.count({
@@ -1544,24 +1560,40 @@ const getBoletasHistorial = async (req, res) => {
           ...(fechasValidas ? { fechaFin: { gte: startOfDay, lte: endOfDay } } : {}),
           ...(movimiento ? { movimiento: movimiento } : {}),
           ...(producto ? { producto: producto } : {}),
+          ...searchConditions,
         },
       }),
       db.boleta.count({
         where: {
-          AND: [{ estado: { not: "Pendiente" } }, { estado: "Completado" }],
+          AND: [
+            { estado: { not: "Pendiente" } },
+            { estado: "Completado" },
+            { desviacion: { gte: -200, lte: 200 } }, // 👈 dentro del rango
+          ],
           ...(socios ? { socio: socios } : {}),
           ...(fechasValidas ? { fechaFin: { gte: startOfDay, lte: endOfDay } } : {}),
           ...(movimiento ? { movimiento: movimiento } : {}),
           ...(producto ? { producto: producto } : {}),
+          ...searchConditions,
         },
       }),
       db.boleta.count({
         where: {
-          AND: [{ estado: { not: "Pendiente" } }, { estado: "Completo(Fuera de tolerancia)" }],
+          AND: [
+            { estado: { not: "Pendiente" } },
+            {
+              OR: [
+                { estado: "Completo(Fuera de tolerancia)" },
+                { desviacion: { gt: 200 } },
+                { desviacion: { lt: -200 } },
+              ],
+            },
+          ],
           ...(socios ? { socio: socios } : {}),
           ...(fechasValidas ? { fechaFin: { gte: startOfDay, lte: endOfDay } } : {}),
           ...(movimiento ? { movimiento: movimiento } : {}),
           ...(producto ? { producto: producto } : {}),
+          ...searchConditions,
         },
       }),
       // Contar total de registros que coinciden con la búsqueda
@@ -1589,6 +1621,8 @@ const getBoletasHistorial = async (req, res) => {
         manifiesto:true,
         manifiestoDeAgregado: true,
         fechaInicio: true,
+        origen: true,
+        destino: true,
         fechaFin: true,
         sello1: true,
         sello2: true,
@@ -1628,9 +1662,13 @@ const getBoletasHistorial = async (req, res) => {
         Movimiento: el.movimiento,
         Producto: el.producto,
         PesoNeto: el.pesoNeto,
+        PesoNetoQQ: (el.pesoNeto/100) || 0,
         PesoTeorico: el.pesoTeorico,
+        PesoTeoricoQQ: (el.pesoTeorico/100) || 0,
         Desviacion: el.desviacion,
         Estado: el.estado,
+        Origen: el.origen, 
+        Destino: el.destino,
         Manifiesto: el.manifiesto || '-',
         'Manifiesto de agregados': el.manifiestoDeAgregado || '-',
         'Fecha Final': fin.toLocaleString(),
@@ -1746,7 +1784,7 @@ const getBoletasMes = async (req, res) => {
   `;
 
     const makeCalendar = result.map((item) => ({
-      title: `Boletas creadas: ${item.cantidad}`,
+      title: `Boletas: ${item.cantidad}`,
       start: item.fecha.toISOString().split("T")[0],
       allDay: true,
       display: "auto",
@@ -1885,6 +1923,84 @@ const getConfigTolerancia = async(req, res) => {
   }
 }
 
+const enviarAlertaSiloLleno = async (boleta) => {  
+  try {
+    const EXCLUDE_SILOS = new Set([31]);
+    const ALERT_THRESHOLD = 85;
+    const NIVEL_DIVISOR = 100;
+
+    const tolvaSilo = await db.tolva.findFirst({ 
+      where: { idBoleta: parseInt(boleta.id) },
+      select: {
+        siloPrincipal: true,
+        siloSecundario: true,
+        SiloTerciario: true
+      }
+    });
+
+    if (!tolvaSilo) {
+      console.warn(`No se encontró tolva para boleta ${boleta.id}`);
+      return false;
+    }
+
+    const silos = [
+      tolvaSilo.siloPrincipal, 
+      tolvaSilo.siloSecundario, 
+      tolvaSilo.SiloTerciario
+    ].filter(Boolean);
+    
+    if (silos.length === 0) {
+      console.warn(`No hay silos válidos para boleta ${boleta.id}`);
+      return false;
+    }
+
+    const incremento = boleta.pesoNeto / (silos.length * NIVEL_DIVISOR);
+
+    const [, silosActualizados] = await db.$transaction([
+      // Actualizar niveles
+      db.silos.updateMany({
+        where: { id: { in: silos } }, 
+        data: {
+          nivelTolva: { increment: incremento }
+        }
+      }),
+      db.silos.findMany({
+        where: { id: { in: silos } },
+        select: {
+          id: true,
+          nombre: true,
+          nivelTolva: true,
+          capacidad: true
+        }
+      })
+    ]);
+
+    // Filtrar silos que necesitan alerta
+    const silosConAlerta = silosActualizados.filter(silo => {
+      const porcentajeCapacidad = (silo.nivelTolva / silo.capacidad) * 100;
+      return porcentajeCapacidad > ALERT_THRESHOLD && 
+             !EXCLUDE_SILOS.has(silo.siloId);
+    });
+
+    if (silosConAlerta.length > 0) {
+      await alertaSiloLleno(silosConAlerta, enviarCorreo);
+      return true;
+    }
+
+    return false;
+
+  } catch (error) {
+    console.error('Error en enviarAlertaSiloLleno:', {
+      boletaId: boleta?.id,
+      error: error.message,
+      stack: error.stack
+    });
+    
+    // No retornar response en una función que no recibe res
+    throw error; // Re-lanzar para que el caller lo maneje
+  }
+};
+
 module.exports = {
   getAllData,
   postBoletasNormal,
@@ -1901,5 +2017,5 @@ module.exports = {
   updateCancelBoletas,
   getMovimientosYProductos,
   getConfigTolerancia, 
-  getReimprimirTicket
+  getReimprimirTicket,
 };

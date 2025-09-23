@@ -273,7 +273,9 @@ const getBuqueDetalles = async (req, res) => {
                 ordenDeCompra: true,
                 pesoNeto: true, 
                 pesoTeorico: true,
+                desviacion: true, 
                 factura: true,
+                impContenerizada:true,
                 tolva: {
                     select: {
                         principal: { select: { nombre: true } },
@@ -281,8 +283,7 @@ const getBuqueDetalles = async (req, res) => {
                         terciario: { select: { nombre: true } },
                     },
                 },
-                impContenerizada: true,
-                },
+            },
                 take: limit,
                 skip: skip,
             }),
@@ -299,13 +300,18 @@ const getBuqueDetalles = async (req, res) => {
         const parsedData = data.map(row => ({
             ...row,
             factura: Number(row.factura) || 0,
-            pesoTeorico: row.pesoTeorico ? (row.pesoTeorico / 2204.62).toFixed(2) : 0, // libras → TM
-            pesoNeto: row.pesoNeto ? (row.pesoNeto / 2204.62).toFixed(2) : 0,           // libras → TM
+            pesoTeorico: row.pesoTeorico ? (row.pesoTeorico / 100).toFixed(2) : 0, // libras → TM
+            pesoNeto: row.pesoNeto ? (row.pesoNeto / 100).toFixed(2) : 0,           // libras → TM
+            desviacion: row.desviacion ? (row.desviacion / 100).toFixed(2) : 0,   // libras → TM
             siloPrincipalNombre: row.tolva[0]?.principal?.nombre || ' - ',
             siloSecundarioNombre: row.tolva[0]?.secundario?.nombre || ' - ',
             siloTerciarioNombre: row.tolva[0]?.terciario?.nombre || ' - ',
-            desviacion: row.desviacion,
-            tolva: undefined, 
+            contenedor: row?.impContenerizada?.contenedor || ' - ',
+            sacosCargados: row?.impContenerizada?.sacosCargados || '-',
+            sacosTeoricos: row?.impContenerizada?.sacosTeoricos || '-',
+            PrecintosOrigen: row?.impContenerizada?.marchamoDeOrigen || '-', 
+            tolva: undefined,
+            impContenerizada: undefined,  
         }));
 
         const totalPages = Math.ceil(totalData / limit);

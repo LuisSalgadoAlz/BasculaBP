@@ -695,7 +695,7 @@ export const verificarDataCompleto = (funError, data, setMsg, pesoIn) => {
     if (idMovimiento!=13 && idMovimiento!=12) {
       return mostrarError('Peso final debe ser mayor al peso de inicio')
     }
-  }
+  } 
 
   if(proceso==0 && !ordenDeCompra && (idMovimiento!=11 && idMovimiento!=10)) return mostrarError('Por favor, ingresar todos los datos segundo nivel: orden de compra.')
 

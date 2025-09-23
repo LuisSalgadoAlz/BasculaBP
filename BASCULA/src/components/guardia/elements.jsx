@@ -69,7 +69,7 @@ const StatusBadge = ({ paseDeSalida, data, horas, minutos }) => {
           className: "bg-orange-500 text-white"
         }
       }else{
-        if(data?.paseDeSalida?.aplicaAlerta===false && !debeDeSalirHoy) {
+        if((data?.paseDeSalida?.aplicaAlerta===false && !debeDeSalirHoy) && data?.idMovimiento!==11) {
           return {
             text: "No ha completado su proceso",
             className: "bg-red-500 text-white"
@@ -523,7 +523,7 @@ const TransportTimeline = ({ data }) => {
             
             /* Aqui los que tienen lo de aplcicar alerta y los que no sean carga doble detalle */
             
-            (data?.paseDeSalida?.aplicaAlerta===true) ? (
+            (data?.paseDeSalida?.aplicaAlerta===true || data?.idMovimiento ===11) ? (
               <TimelineSuccessItem
                 title={`Llegada a la guardia: ${(horas>0 || minutos > 15 ) ? 'Tiempo excedido' : (horas==null && minutos==null) ? 'N/A': 'Sin Problema'}`}
                 fecha={fechaGuardia.date}

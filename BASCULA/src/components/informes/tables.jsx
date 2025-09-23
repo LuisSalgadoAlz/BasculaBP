@@ -1,13 +1,17 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { 
   AiOutlineClose, 
   AiOutlineDownload,
+  AiOutlineEyeInvisible,
+  AiOutlineFilter,
 } from 'react-icons/ai';
 import { formatNumber, URLHOST } from '../../constants/global';
 import Cookies from 'js-cookie';
 import { BsArrowsAngleExpand } from "react-icons/bs";
-import {  AiOutlineUser, AiOutlineMail, AiOutlinePhone, AiOutlineEnvironment, AiOutlineCalendar } from 'react-icons/ai';
 import Select from "react-select";
+import { IoTimerOutline } from "react-icons/io5";
+import { AiOutlineSetting, AiOutlineEye,   } from 'react-icons/ai';
+import { IoWarningOutline } from "react-icons/io5";
 
 export const TablaResumenBFH = ({datos=[]}) => {
   return (
@@ -26,10 +30,10 @@ export const TablaResumenBFH = ({datos=[]}) => {
                     CANTIDAD VIAJES
                   </th>
                   <th className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider">
-                    QQ T.E.H
+                    TM T.E.H
                   </th>
                   <th className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider">
-                    PESO NETO QQ
+                    PESO NETO TM
                   </th>
                   <th className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider">
                     DIF. EN PESOS
@@ -96,10 +100,10 @@ export const TablaResumenBFHLoader = () => {
                     # VIAJE TEH
                   </th>
                   <th className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider">
-                    QQ T.E.H
+                    TM T.E.H
                   </th>
                   <th className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider">
-                    PESO NETO QQ
+                    PESO NETO TM
                   </th>
                   <th className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider">
                     DIF. EN PESOS
@@ -238,7 +242,7 @@ export const BuqueDetalles = ({ datos = [], typeImp }) => {
     'empresa'
   ];
 
-  const columnasInicialesContenerizadas= [
+  const columnasInicialesContenerizadas = [
     'buque', 
     'numBoleta', 
     'producto', 
@@ -246,19 +250,9 @@ export const BuqueDetalles = ({ datos = [], typeImp }) => {
     'pesoNeto',
     'desviacion',
     'empresa'
-  ]
+  ];
 
   const columnasOcultas = [
-    // 'numBoleta',  
-    // 'Nviajes',
-    // 'factura', 
-    // 'bodegaPuerto',
-    // 'pesoTeorico',
-    // 'pesoNeto',
-    // 'desviacion',
-    // 'empresa',
-    
-    // También puedes ocultar campos que no sean útiles para el usuario:
     'id',
     'idDestino',
     'idEmpresa', 
@@ -277,19 +271,52 @@ export const BuqueDetalles = ({ datos = [], typeImp }) => {
     'furgon'
   ];
 
+  // Clave única para localStorage según el tipo de importación
+  const keyStorageColumnas = `buque-columnas-${typeImp}`;
+
   // Extraer todas las columnas disponibles de los datos
   useEffect(() => {
     if (datos.length > 0) {
       const todasLasColumnas = Object.keys(datos[0])
-        .filter(key => !columnasOcultas.includes(key)) // Filtrar columnas ocultas
-        .map(key => ({
+        .filter(key => !columnasOcultas.includes(key));
+
+      // Intentar cargar configuración guardada
+      let columnasGuardadas = null;
+      try {
+        const stored = localStorage.getItem(keyStorageColumnas);
+        if (stored) {
+          columnasGuardadas = JSON.parse(stored);
+        }
+      } catch (error) {
+        console.warn('Error al cargar columnas desde localStorage:', error);
+        // Si hay error, eliminar el item corrupto
+        localStorage.removeItem(keyStorageColumnas);
+      }
+
+      const columnasConfiguradas = todasLasColumnas.map(key => {
+        let seleccionada;
+        
+        if (columnasGuardadas) {
+          // Si hay configuración guardada, buscar esta columna
+          const columnaGuardada = columnasGuardadas.find(col => col.key === key);
+          seleccionada = columnaGuardada ? columnaGuardada.seleccionada : false;
+        } else {
+          // Si no hay configuración guardada, usar columnas iniciales
+          seleccionada = typeImp === 2 
+            ? columnasInicialesAGranel.includes(key) 
+            : columnasInicialesContenerizadas.includes(key);
+        }
+
+        return {
           key,
           titulo: key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()),
-          seleccionada: typeImp === 2 ? columnasInicialesAGranel.includes(key) : columnasInicialesContenerizadas.includes(key),
-        }));
-      setColumnasDisponibles(todasLasColumnas);
+          seleccionada,
+        };
+      });
+      
+      setColumnasDisponibles(columnasConfiguradas);
     }
-  }, [datos]);
+  }, [datos, typeImp, keyStorageColumnas]);
 
   // Cerrar menú al hacer clic fuera
   useEffect(() => {
@@ -304,11 +331,41 @@ export const BuqueDetalles = ({ datos = [], typeImp }) => {
 
   // Manejar selección de columnas
   const toggleColumna = (key) => {
-    setColumnasDisponibles(prev => 
-      prev.map(col => 
+    setColumnasDisponibles(prev => {
+      const nuevasColumnas = prev.map(col => 
         col.key === key ? { ...col, seleccionada: !col.seleccionada } : col
-      )
-    );
+      );
+      
+      // Guardar configuración en localStorage
+      try {
+        localStorage.setItem(keyStorageColumnas, JSON.stringify(nuevasColumnas));
+      } catch (error) {
+        console.warn('Error al guardar columnas en localStorage:', error);
+      }
+      
+      return nuevasColumnas;
+    });
+  };
+
+  // Función para resetear columnas a la configuración inicial
+  const resetearColumnas = () => {
+    setColumnasDisponibles(prev => {
+      const columnasReset = prev.map(col => ({
+        ...col,
+        seleccionada: typeImp === 2 
+          ? columnasInicialesAGranel.includes(col.key)
+          : columnasInicialesContenerizadas.includes(col.key)
+      }));
+      
+      // Guardar la configuración reseteada
+      try {
+        localStorage.setItem(keyStorageColumnas, JSON.stringify(columnasReset));
+      } catch (error) {
+        console.warn('Error al guardar columnas reseteadas:', error);
+      }
+      
+      return columnasReset;
+    });
   };
 
   // Actualizar columnas seleccionadas
@@ -318,7 +375,7 @@ export const BuqueDetalles = ({ datos = [], typeImp }) => {
   }, [columnasDisponibles]);
 
   return (
-    <div className="mt-10 mb-4">
+    <div className="">
       <div className="mx-auto">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-gray-500">Detalles</h2>
@@ -338,6 +395,14 @@ export const BuqueDetalles = ({ datos = [], typeImp }) => {
             {/* Menú flotante compacto */}
             {mostrarMenu && (
               <div className="absolute right-0 mt-2 w-60 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                <div className="p-2 border-b border-gray-200">
+                  <button
+                    onClick={resetearColumnas}
+                    className="w-full text-left text-xs text-gray-600 hover:text-gray-800 hover:bg-gray-50 px-2 py-1 rounded"
+                  >
+                    🔄 Resetear columnas
+                  </button>
+                </div>
                 <div className="max-h-64 overflow-y-auto p-2">
                   {columnasDisponibles.map((columna) => (
                     <label 
@@ -361,7 +426,7 @@ export const BuqueDetalles = ({ datos = [], typeImp }) => {
 
         {/* Tabla */}
         {columnasSeleccionadas.length > 0 ? (
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full table-auto">
                 <thead className="bg-[#725033] text-white">
@@ -791,7 +856,7 @@ export const ModalReportes=({reports, hdlClose, buque = 1058, factura='110016055
   )
 }
 
-export const TableComponentCasulla = ({ datos = [{}], fun, total = [{}] }) => {
+export const TableComponentCasulla = ({ datos = [{}], fun, total = [{}], type = true }) => {
   // Función para extraer el valor numérico del porcentaje
   const getPercentageValue = (value) => {
     if (typeof value === 'string' && value.includes('%')) {
@@ -805,154 +870,545 @@ export const TableComponentCasulla = ({ datos = [{}], fun, total = [{}] }) => {
   const lastColumnIndex = columnKeys.length - 1;
 
   return (
-    <>
-      <div className="relative overflow-x-auto rounded-sm">
-        <table className="w-full text-sm text-left rtl:text-right text-gray-700 dark:text-gray-400">
-          <thead className="text-xs uppercase bg-[#725033] rounded-2xl text-white">
+    <div className="w-full">
+      {/* Contenedor principal con altura fija y scroll */}
+      <div className="relative overflow-x-hidden overflow-y-auto rounded-lg h-[500px] border border-gray-200 bg-white">
+        <table className="w-full text-sm text-left text-gray-700 dark:text-gray-400 min-w-[600px]">
+          {/* Header fijo */}
+          <thead className="text-xs uppercase bg-[#725033] text-white sticky top-0 z-10 shadow-sm">
             <tr>
               {columnKeys.map((el, keys) => (
-                <th key={keys} scope="col" className={`px-6 py-4 ${(keys > 1 && lastColumnIndex!==keys) && 'text-right'} ${lastColumnIndex===keys && 'text-center'}`}>
-                  {el}
+                <th 
+                  key={keys} 
+                  scope="col" 
+                  className={`
+                    px-3 py-4 font-semibold whitespace-nowrap
+                    sm:px-4 md:px-6
+                    ${(keys > 1 && lastColumnIndex !== keys && type) ? 'text-right' : ''}
+                    ${(lastColumnIndex === keys && type) ? 'text-center' : ''}
+                  `}
+                >
+                  <div className="truncate" title={el}>
+                    {el}
+                  </div>
                 </th>
               ))}
-              <th scope="col" className="px-6 py-3 text-center">
-                Detalles
-              </th>
+              {type && (
+                <th scope="col" className="px-3 py-4 text-center font-semibold whitespace-nowrap sm:px-4 md:px-6">
+                  Detalles
+                </th>
+              )}
             </tr>
           </thead>
-          <tbody>
+          
+          {/* Cuerpo de la tabla con scroll */}
+          <tbody className="divide-y divide-gray-200">
             {datos.map((fila, index) => (
               <tr
                 key={index}
-                className={`${index % 2 === 0 && 'bg-gray-50'} border-b border-gray-200 hover:bg-[#FDF5D4] select-none`}
+                className={`
+                  transition-colors duration-200 hover:bg-[#FDF5D4] cursor-pointer select-none
+                  ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}
+                `}
                 onDoubleClick={() => fun(fila)}
               >
                 {Object.values(fila).map((el, key) => (
-                  <td key={key} className={`px-6 py-3 text-gray-700 text-sm font-mono ${key > 1 && 'text-right'}`}>
-                    {key === lastColumnIndex ? (
-                      // Renderizar progress bar para la última columna (porcentaje)
-                      <div className="flex items-center space-x-2">
-                        <div className="flex-1 bg-gray-200 rounded-full h-2.5 min-w-[20px] flex-col">
+                  <td 
+                    key={key} 
+                    className={`
+                      px-3 py-3 text-gray-700 text-sm font-mono
+                      sm:px-4 md:px-6
+                      ${(key > 1 && type) ? 'text-right' : ''}
+                    `}
+                  >
+                    {(key === lastColumnIndex && type) ? (
+                      // Progress bar responsive para la última columna
+                      <div className="flex items-center space-x-2 min-w-0">
+                        <div className="flex-1 bg-gray-200 rounded-full h-2 min-w-[40px] max-w-[120px]">
                           <div
-                            className="bg-[#725033] h-2.5 rounded-full transition-all duration-300"
+                            className="bg-[#725033] h-2 rounded-full transition-all duration-300 ease-in-out"
                             style={{ width: `${Math.min(getPercentageValue(el), 100)}%` }}
-                          ></div>
+                          />
                         </div>
-                        <span className="text-xs font-medium text-gray-600 min-w-[35px]">
+                        <span className="text-xs font-medium text-gray-600 whitespace-nowrap min-w-[40px] flex-shrink-0">
                           {el}
                         </span>
                       </div>
                     ) : (
-                      // Renderizar texto normal para las demás columnas
-                      el
+                      // Texto normal con truncate para contenido largo
+                      <div 
+                        className="truncate max-w-[150px] sm:max-w-[200px] md:max-w-none" 
+                        title={el?.toString()}
+                      >
+                        {el}
+                      </div>
                     )}
                   </td>
                 ))}
-                <td className="py-3 text-center">
-                  <button
-                    className="font-medium text-gray-800 hover:underline text-center"
-                    onClick={() => fun(fila)}
-                  >
-                    <span className="text-center">
-                      <BsArrowsAngleExpand className="text-xl" />
-                    </span>
-                  </button>
-                </td>
+                
+                {type && (
+                  <td className="px-3 py-3 text-center sm:px-4 md:px-6">
+                    <button
+                      className="inline-flex items-center justify-center p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#725033] focus:ring-opacity-50"
+                      onClick={() => fun(fila)}
+                      title="Ver detalles"
+                    >
+                      <BsArrowsAngleExpand className="w-4 h-4" />
+                    </button>
+                  </td>
+                )}
               </tr>
             ))}
+            
+            {/* Fila de relleno si hay pocos datos */}
+            {datos.length === 0 && (
+              <tr>
+                <td 
+                  colSpan={columnKeys.length + (type ? 1 : 0)} 
+                  className="px-6 py-8 text-center text-gray-500 text-sm"
+                >
+                  No hay datos disponibles
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
-    </>
-  );
-};
-
-const TableSheet = ({tableData = [{}], openSheet = true, setOpenSheet}) => {
-  return (
-    <div className="p-8 bg-gray-50 min-h-screen">
-      <div className="max-w-4xl mx-auto">
-        {/* Overlay */}
-        {openSheet && (
-          <div className="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300" />
-        )}
-
-        {/* Sheet */}
-        <div
-          className={`fixed top-0 right-0 h-full w-full max-w-4xl bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-50 ${
-            openSheet ? 'translate-x-0' : 'translate-x-full'
-          }`}
-        >
-          {/* Header del Sheet */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-white sticky top-0 z-10">
-            <div>
-              <h2 className="text-2xl font-semibold text-gray-900">Detalles casulla</h2>
-              <p className="text-sm text-gray-500 mt-1">Visualización de los datos de Casulla: <span className='text-black font-bold'>{tableData[0].socio}</span></p>
-            </div>
-            <button
-              onClick={() => setOpenSheet(false)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200"
-            >
-              <AiOutlineClose className="w-6 h-6 text-gray-500" />
-            </button>
-          </div>
-
-           {/* Contenido del Sheet con la tabla */}
-          {tableData.length == 0 || !tableData ? (
-            <>No data</>
-          ) : (
-            <div className="p-6 overflow-auto h-full pb-20">
-              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        {/* Generar encabezados dinámicamente */}
-                        {tableData.length > 0 && Object.keys(tableData[0]).map((key) => (
-                          <th key={key} className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            {key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {tableData.map((item, index) => (
-                        <tr key={item.id || index} className="hover:bg-gray-50 transition-colors duration-150">
-                          {/* Generar celdas dinámicamente */}
-                          {Object.entries(item).map(([key, value]) => (
-                            <td key={key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {typeof value === 'object' && value !== null ? 
-                                JSON.stringify(value) : 
-                                String(value)
-                              }
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* Estadísticas dinámicas */}
-              <div className="mt-6 grid grid-cols-1 gap-4">
-                <div className="bg-white p-4 rounded-lg border border-gray-200">
-                  <div className="flex items-center">
-                    <AiOutlineUser className="w-8 h-8 text-gray-600" />
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-600">Total Registros</p>
-                      <p className="text-2xl font-semibold text-gray-900">{tableData.length}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+      
+      {/* Indicador de scroll para móviles */}
+      <div className="mt-2 text-xs text-gray-500 text-center sm:hidden">
+        ← Desliza horizontalmente para ver más →
       </div>
     </div>
   );
 };
 
+const TableSheet = ({
+  tableData = [{}], 
+  openSheet = true, 
+  setOpenSheet, 
+  title, 
+  subtitle, 
+  type = false,
+  fixedColumns = [], // Columnas que no se pueden ocultar/mover
+  storageKey = 'tablesheet-columns', // Clave personalizable para localStorage
+  isLoading = true, 
+  labelActive= true,
+  detailsSilo= false,
+  diferencia=0,
+  // Nuevos props para el progress bar
+  inventarioInicial = 0,
+  boletas = 0,
+  parteVacia = 0,
+  capacidad=0
+}) => {
+  const [visibleColumns, setVisibleColumns] = useState({});
+  const [showColumnSelector, setShowColumnSelector] = useState(false);
+  
+  const getStorageKey = () => {
+    return `${storageKey}-${title ? title.toLowerCase().replace(/\s+/g, '-') : 'default'}`;
+  };
+  
+  const loadColumnsConfig = () => {
+    try {
+      const savedConfig = localStorage.getItem(getStorageKey());
+      return savedConfig ? JSON.parse(savedConfig) : null;
+    } catch (error) {
+      console.warn('Error loading columns config from localStorage:', error);
+      return null;
+    }
+  };
+  
+  const saveColumnsConfig = (config) => {
+    try {
+      localStorage.setItem(getStorageKey(), JSON.stringify(config));
+    } catch (error) {
+      console.warn('Error saving columns config to localStorage:', error);
+    }
+  };
+
+  // Memoizar las columnas disponibles para evitar recálculos innecesarios
+  const availableColumns = useMemo(() => {
+    return tableData.length > 0 ? Object.keys(tableData[0]) : [];
+  }, [tableData.length > 0 ? Object.keys(tableData[0]).join(',') : '']);
+
+  // Inicializar columnas visibles cuando cambian las columnas disponibles o el título
+  useEffect(() => {
+    if (availableColumns.length > 0) {
+      const savedConfig = loadColumnsConfig();
+      const initialVisible = {};
+      
+      availableColumns.forEach(column => {
+        // Si hay configuración guardada, usar esa; sino, mostrar todas por defecto
+        initialVisible[column] = savedConfig && savedConfig.hasOwnProperty(column) 
+          ? savedConfig[column] 
+          : true;
+      });
+      
+      // Solo actualizar si la configuración es diferente
+      setVisibleColumns(prev => {
+        const isEqual = Object.keys(initialVisible).length === Object.keys(prev).length &&
+          Object.keys(initialVisible).every(key => initialVisible[key] === prev[key]);
+        
+        return isEqual ? prev : initialVisible;
+      });
+    }
+  }, [availableColumns.join(','), title]); // Usar join para comparar arrays
+  
+  // Obtener columnas visibles filtradas
+  const getVisibleColumns = () => {
+    return availableColumns.filter(column => visibleColumns[column]);
+  };
+  
+  // Toggle visibilidad de columna
+  const toggleColumnVisibility = (columnKey) => {
+    // No permitir ocultar columnas fijas
+    if (fixedColumns.includes(columnKey)) return;
+    
+    setVisibleColumns(prev => {
+      const newConfig = {
+        ...prev,
+        [columnKey]: !prev[columnKey]
+      };
+      
+      // Guardar inmediatamente en localStorage
+      saveColumnsConfig(newConfig);
+      
+      return newConfig;
+    });
+  };
+  
+  // Restablecer configuración de columnas
+  const resetColumnsConfig = () => {
+    const allColumns = Object.keys(tableData[0] || {});
+    const resetConfig = {};
+    
+    allColumns.forEach(column => {
+      resetConfig[column] = true;
+    });
+    
+    setVisibleColumns(resetConfig);
+    saveColumnsConfig(resetConfig);
+    setShowColumnSelector(false);
+  };
+  
+  // Formatear nombre de columna
+  const formatColumnName = (key) => {
+    return key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1');
+  };
+
+  // Calcular porcentajes para el progress bar
+  const calculateProgressBarData = () => {
+    const total = capacidad;
+    if (total === 0) return { inventarioInicial: 0, boletas: 0, parteVacia: 0 };
+    
+    return {
+      inventarioInicial: (inventarioInicial / total) * 100,
+      boletas: (boletas / total) * 100,
+      parteVacia: (parteVacia / total) * 100
+    };
+  };
+
+  const progressData = calculateProgressBarData();
+
+  // Componente Progress Bar Vertical
+  const VerticalProgressBar = () => (
+    <div className="flex flex-col items-center space-y-4 p-4">
+      <h3 className="text-lg font-medium text-gray-900 mb-2">Estado del Silo</h3>
+      
+      <div className="relative w-16 h-80 bg-gray-200 rounded-lg overflow-hidden border-2 border-gray-300">
+        {/* Parte vacía (arriba) */}
+        <div 
+          className="absolute top-0 left-0 w-full bg-gray-100 border-b border-gray-300"
+          style={{ height: `${progressData.parteVacia}%` }}
+        >
+          {progressData.parteVacia > 15 && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-xs text-gray-600 transform rotate-90 whitespace-nowrap">Vacío</span>
+            </div>
+          )}
+        </div>
+        
+        {/* Boletas (medio) */}
+        <div 
+          className="absolute w-full bg-blue-400"
+          style={{ 
+            top: `${progressData.parteVacia}%`,
+            height: `${progressData.boletas}%` 
+          }}
+        >
+          {progressData.boletas > 15 && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-xs text-white transform rotate-90 whitespace-nowrap">Boletas</span>
+            </div>
+          )}
+        </div>
+        
+        {/* Inventario inicial (abajo) */}
+        <div 
+          className="absolute bottom-0 left-0 w-full bg-[#5a3f27]"
+          style={{ height: `${progressData.inventarioInicial}%` }}
+        >
+          {progressData.inventarioInicial > 15 && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-xs text-white transform rotate-90 whitespace-nowrap">Inventario</span>
+            </div>
+          )}
+        </div>
+      </div>
+      
+      {/* Leyenda */}
+      <div className="space-y-2 text-sm">
+        <div className="flex items-center space-x-2">
+          <div className="w-3 h-3 bg-gray-100 rounded border"></div>
+          <span className="text-gray-600">Parte Vacía: {parteVacia.toLocaleString()}</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <div className="w-3 h-3 bg-blue-400 rounded"></div>
+          <span className="text-gray-600">Boletas: {boletas.toLocaleString()}</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <div className="w-3 h-3 bg-[#5a3f27] rounded"></div>
+          <span className="text-gray-600">Inventario Inicial: {inventarioInicial.toLocaleString()}</span>
+        </div>
+        <div className="pt-2 border-t border-gray-200">
+          <span className="font-medium text-gray-900">
+            Total: {(
+              Number(inventarioInicial) +
+              Number(boletas)
+            ).toFixed(2)}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Componente de mensaje de error
+  const ErrorMessage = () => (
+    <div className="flex flex-col items-center justify-center p-8 space-y-4">
+      <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
+        <div className="flex items-center space-x-3 mb-4">
+          <div className="flex-shrink-0">
+            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium text-red-800">Diferencia Negativa Detectada</h3>
+        </div>
+        <p className="text-red-700 mb-4">
+          Se ha detectado una diferencia negativa en el inventario. Es necesario reiniciar el silo.
+        </p>
+        <p className="text-red-600 text-sm">
+          <strong>Acción requerida:</strong> Contactar con el equipo de IT para restablecer el inventario del silo.
+        </p>
+        <div className="mt-4 p-3 bg-red-100 rounded border border-red-200">
+          <span className="text-sm font-medium text-red-800">
+            Diferencia: {diferencia.toLocaleString()}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Componente Spinner
+  const LoadingSpinner = () => (
+    <div className="flex-1 flex items-center justify-center">
+      <div className="flex flex-col items-center space-y-4">
+        <div className="relative">
+          <div className="w-12 h-12 border-4 border-gray-200 rounded-full animate-spin"></div>
+          <div className="w-12 h-12 border-4 border-[#725033] border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
+        </div>
+        <p className="text-gray-500 text-sm">Cargando datos...</p>
+      </div>
+    </div>
+  );
+
+  // Componente para mostrar cuando no hay datos
+  const NoDataMessage = () => (
+    <div className="flex-1 p-6 text-center text-gray-500 flex items-center justify-center">
+      <div className="flex flex-col items-center space-y-4">
+        <svg className="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No hay datos disponibles</h3>
+          <p className="text-gray-500">Los datos se mostrarán aquí cuando estén disponibles.</p>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="p-8">
+      <div className="max-w-4xl mx-auto">
+        {openSheet && (
+          <div className="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300" />
+        )}
+        <div
+          className={`fixed top-0 right-0 h-full w-full bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-50 flex flex-col ${
+            openSheet ? 'translate-x-0' : 'translate-x-full'
+          }`}
+        >
+          {/* Header fijo */}
+          <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-white flex-shrink-0">
+            <div className="flex-1">
+              <h2 className="text-2xl font-semibold text-gray-900">{title}</h2>
+              <p className="text-sm text-gray-500 mt-1">{subtitle}</p>
+            </div>
+            
+            {type && !isLoading && (
+              <div className="relative mr-4">
+                <button
+                  onClick={() => setShowColumnSelector(!showColumnSelector)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200 flex items-center space-x-2"
+                  title="Configurar columnas"
+                >
+                  <AiOutlineSetting className="w-5 h-5 text-gray-600" />
+                  <span className="text-sm text-gray-600">Columnas</span>
+                </button>
+                {/* Dropdown del selector de columnas */}
+                {showColumnSelector && (
+                  <div className="absolute top-full right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-20">
+                    <div className="p-3 border-b border-gray-200 flex items-center justify-between">
+                      <h3 className="font-medium text-gray-900">Configuración</h3>
+                      <button
+                        onClick={resetColumnsConfig}
+                        className="text-xs text-[#725033] hover:text-[#725033] underline"
+                        title="Restablecer configuración"
+                      >
+                        Restablecer
+                      </button>
+                    </div>
+                    <div className="max-h-60 overflow-y-auto">
+                      {availableColumns.map((column) => {
+                        const isFixed = fixedColumns.includes(column);
+                        const isVisible = visibleColumns[column];
+                        
+                        return (
+                          <div
+                            key={column}
+                            className={`flex items-center justify-between p-3 hover:bg-gray-50 ${
+                              isFixed ? 'opacity-60' : 'cursor-pointer'
+                            }`}
+                            onClick={() => !isFixed && toggleColumnVisibility(column)}
+                          >
+                            <div className="flex items-center space-x-2">
+                              {isVisible ? (
+                                <AiOutlineEye className="w-4 h-4 text-[#725033]" />
+                              ) : (
+                                <AiOutlineEyeInvisible className="w-4 h-4 text-gray-400" />
+                              )}
+                              <span className={`text-sm ${isFixed ? 'text-gray-500' : 'text-gray-900'}`}>
+                                {formatColumnName(column)}
+                                {isFixed && <span className="ml-1 text-xs">(fija)</span>}
+                              </span>
+                            </div>
+                            <input
+                              type="checkbox"
+                              checked={isVisible}
+                              onChange={() => !isFixed && toggleColumnVisibility(column)}
+                              disabled={isFixed}
+                              className="h-4 w-4 text-[#725033] rounded border-gray-300 focus:ring-[#725033] disabled:opacity-50"
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="p-3 border-t border-gray-200 bg-gray-50 flex space-x-2">
+                      <button
+                        onClick={() => setShowColumnSelector(false)}
+                        className="flex-1 px-3 py-2 text-sm bg-[#725033] text-white rounded-md hover:bg-[#725033] transition-colors"
+                      >
+                        Aplicar
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            <button
+              onClick={() => setOpenSheet(false)}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200 flex-shrink-0"
+            >
+              <AiOutlineClose className="w-6 h-6 text-gray-500" />
+            </button>
+          </div>
+          
+          {/* Contenido scrollable */}
+          <div className="flex-1 overflow-hidden flex">
+            {isLoading ? (
+              <div className="flex-1">
+                <LoadingSpinner />
+              </div>
+            ) : (
+              <>
+                {/* Contenido principal de la tabla o mensaje sin datos */}
+                <div className="flex-1 overflow-auto flex flex-col">
+                  {/* Tabla scrollable o mensaje sin datos */}
+                  {tableData.length === 0 || !tableData ? (
+                    <NoDataMessage />
+                  ) : (
+                    <div className="flex-1 overflow-auto p-6">
+                      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                        <div className="overflow-x-auto">
+                          <table className="w-full">
+                            <thead className="bg-gray-50 sticky top-0 z-10">
+                              <tr>
+                                {getVisibleColumns().map((key) => (
+                                  <th key={key} className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
+                                    {formatColumnName(key)}
+                                  </th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                              {tableData.map((item, index) => (
+                                <tr key={item.id || index} className="hover:bg-gray-50 transition-colors duration-150">
+                                  {getVisibleColumns().map((key) => (
+                                    <td key={key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                      {typeof item[key] === 'object' && item[key] !== null ? 
+                                        JSON.stringify(item[key]) : 
+                                        String(item[key])
+                                      }
+                                    </td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Footer fijo - Solo mostrar si hay datos */}
+                  {tableData.length > 0 && (
+                    <div className="p-6 border-t border-gray-200 bg-gray-50 flex-shrink-0">
+                      <div className="text-sm text-gray-600">
+                        BAPROSA - Mostrando {tableData.length} {labelActive? 'registros' : 'camiones descargados'}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Panel lateral condicional - Ahora se muestra siempre que detailsSilo sea true */}
+                {detailsSilo && (
+                  <div className="w-80 border-l border-gray-200 bg-gray-50 flex-shrink-0">
+                    {diferencia < 0 ? (
+                      <ErrorMessage />
+                    ) : (
+                      <VerticalProgressBar />
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export const StatsCard = ({ title, value, icon, bgColor = "bg-blue-50", iconColor = "text-blue-600", textColor = "text-blue-800" }) => {
   return (
@@ -1131,4 +1587,722 @@ export const SelectFormImportaciones = ({ data = {}, name, fun, stt = false, val
 };
 
 
+export const StatsCardTolvaReports = ({ value, loading, tiempos, tiempoPerdidoTotal }) => {
+  if (value === undefined && !loading) return null
+
+  // Si está cargando, mostrar cards con spinners (ahora 6 cards en total)
+  if (loading) {
+    const loadingCards = Array.from({ length: 6 }, (_, index) => ({
+      title: `Tolva ${Math.floor(index / 3) + 1}`,
+      value: null, // null indica que debe mostrar spinner
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+      ),
+      bgColor: "bg-white",
+      iconColor: "text-[#725033]",
+      textColor: "text-[#725033]"
+    }))
+
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6 mt-6">
+        {loadingCards.map((card, index) => (
+          <StatsCard
+            key={index}
+            title={card.title}
+            value={card.value}
+            icon={card.icon}
+            bgColor={card.bgColor}
+            iconColor={card.iconColor}
+            textColor={card.textColor}
+          />
+        ))}
+      </div>
+    )
+  }
+
+  // Crear cards para las cantidades
+  const cantidadStats = value.map((el) => ({
+    title: `Camiones Tolva ${el?.tolvaAsignada}`,
+    value: `${el?.cantidad}`,
+    subtitle: "Cantidad",
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+      </svg>
+    ),
+    bgColor: "bg-white",
+    iconColor: "text-[#725033]",
+    textColor: "text-[#725033]"
+  }))
+
+  // Crear cards para los tiempos promedio
+  const tiempoStats = value.map((el) => {
+    const tiempoData = tiempos.find((item) => item.tolvaAsignada === el.tolvaAsignada)
+    const promedioTiempo = tiempoData?.PromedioTiempo || "N/A"
+    
+    return {
+      title: `Promedio Tolva ${el?.tolvaAsignada}`,
+      value: promedioTiempo,
+      subtitle: "Tiempo Promedio",
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+      bgColor: "bg-white",
+      iconColor: "text-[#725033]",
+      textColor: "text-[#725033]"
+    }
+  })
+
+  // Crear cards para el tiempo perdido total
+  const tiempoPerdidoStats = value.map((el) => {
+    const tiempoPerdidoData = tiempoPerdidoTotal?.find((item) => item.tolvaAsignada === el.tolvaAsignada)
+    const tiempoPerdido = tiempoPerdidoData?.tiempo_perdido_total || "0 h 0 m"
+    
+    return {
+      title: `Tiempo Perdido T${el?.tolvaAsignada}`,
+      value: tiempoPerdido,
+      subtitle: "Tiempo Perdido Total",
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+      bgColor: "bg-red-50",
+      iconColor: "text-red-600",
+      textColor: "text-red-600"
+    }
+  })
+
+  // Combinar todos los arrays: cantidad, tiempo promedio y tiempo perdido por cada tolva
+  const allStats = []
+  for (let i = 0; i < cantidadStats.length; i++) {
+    allStats.push(cantidadStats[i])      // Cantidad Tolva X
+    allStats.push(tiempoStats[i])        // Tiempo Promedio Tolva X
+    allStats.push(tiempoPerdidoStats[i]) // Tiempo Perdido Tolva X
+  }
+
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6 mt-6">
+      {allStats.map((stat, index) => (
+        <StatsCard
+          key={index}
+          title={stat.title}
+          value={stat.value}
+          subtitle={stat.subtitle}
+          icon={stat.icon}
+          bgColor={stat.bgColor}
+          iconColor={stat.iconColor}
+          textColor={stat.textColor}
+        />
+      ))}
+    </div>
+  )
+}
+
+export const StatsCardServicioBascula = ({ data, icons }) => {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Total de Servicios */}
+      <StatsCard
+        title="Total Servicios"
+        value={data?.totalServicios || '0'}
+        icon= {
+          (
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          )
+        }
+        bgColor="bg-white"
+        iconColor="text-[#725033]"
+        textColor="text-[#725033]"
+      />
+      
+      
+      {!data && (
+        <>
+          <StatsCard
+            title="SERVICIO BASCULA DOBLE: 0"
+            value="L 0"
+            icon={
+              (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              )
+            }
+            bgColor="bg-white"
+            iconColor="text-[#725033]"
+            textColor="text-[#725033]"
+          />
+          <StatsCard
+            title="SERVICIO BASCULA SENCILLO: 0"
+            value="L 0"
+            icon={
+              (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              )
+            }
+            bgColor="bg-white"
+            iconColor="text-[#725033]"
+            textColor="text-[#725033]"
+          />
+        </>
+      )}
+
+      {data?.productoDetalle.map((item) => (
+        <StatsCard
+          key={item.producto}
+          title={item.producto === 24 ? `SERVICIO BASCULA DOBLE: ${item.cantidad || '0'}` : `SERVICIO BASCULA SENCILLO: ${item.cantidad || '0'}`}
+          value={`L ${formatNumber(item.totalLempiras)}`}
+          icon= {
+            (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            )
+          }
+          bgColor="bg-white"
+          iconColor="text-[#725033]"
+          textColor="text-[#725033]"
+        /> 
+      ))}
+
+      <StatsCard
+        title="Total Servicios"
+        value={`L ${formatNumber(data?.totalGeneralLempiras) || '0'}`}
+        icon= {
+          (
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          )
+        }
+        bgColor="bg-white"
+        iconColor="text-[#725033]"
+        textColor="text-[#725033]"
+      />
+    </div>
+  );
+};
+
+export const TableComponentDescargados = ({ datos = [{}], fun, type=false, loading }) => {
+  // Función para extraer el valor numérico del porcentaje
+  const getPercentageValue = (value) => {
+    if (typeof value === 'string' && value.includes('%')) {
+      return parseFloat(value.replace('%', ''));
+    }
+    return parseFloat(value) || 0;
+  };
+
+  // Obtener las claves de las columnas
+  const columnKeys = Object.keys(datos[0]);
+  const lastColumnIndex = columnKeys.length - 1;
+
+  // Componente Skeleton
+  const TableSkeleton = () => {
+    const skeletonRows = datos.length || 5; // Número de filas skeleton
+    const skeletonCols = columnKeys.length || 4; // Usar columnas reales o 4 por defecto
+    
+    return (
+      <div className="relative overflow-x-auto rounded-sm">
+        <table className="w-full text-sm text-left rtl:text-right">
+          <thead className="text-xs uppercase bg-[#725033] rounded-2xl text-white">
+            <tr>
+              {Array.from({ length: skeletonCols }, (_, index) => (
+                <th key={index} scope="col" className="px-6 py-4">
+                  <div className="h-4 bg-white/20 rounded animate-pulse"></div>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {Array.from({ length: skeletonRows }, (_, rowIndex) => (
+              <tr
+                key={rowIndex}
+                className={`${rowIndex % 2 === 0 && 'bg-gray-50'} border-b border-gray-200`}
+              >
+                {Array.from({ length: skeletonCols }, (_, colIndex) => (
+                  <td key={colIndex} className="px-6 py-3">
+                    {colIndex === skeletonCols - 1 && type ? (
+                      // Skeleton para progress bar
+                      <div className="flex items-center space-x-2">
+                        <div className="flex-1 bg-gray-200 rounded-full h-2.5 min-w-[20px]">
+                          <div className="bg-gray-300 h-2.5 rounded-full animate-pulse w-3/4"></div>
+                        </div>
+                        <div className="h-3 bg-gray-300 rounded animate-pulse min-w-[35px]"></div>
+                      </div>
+                    ) : colIndex === skeletonCols - 1 && !type ? (
+                      // Skeleton para ícono
+                      <div className="flex items-center justify-center">
+                        <div className="w-5 h-5 bg-gray-300 rounded-full animate-pulse"></div>
+                      </div>
+                    ) : (
+                      // Skeleton para texto normal
+                      <div className={`h-4 bg-gray-300 rounded animate-pulse ${
+                        colIndex > 1 ? 'w-16 ml-auto' : colIndex === 0 ? 'w-24' : 'w-20'
+                      }`}></div>
+                    )}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
+  return (
+    <>
+      {loading ? (
+        <TableSkeleton />
+      ) : (
+        <div className="relative overflow-x-auto rounded-sm">
+          <table className="w-full text-sm text-left rtl:text-right text-gray-700 dark:text-gray-400">
+            <thead className="text-xs uppercase bg-[#725033] rounded-2xl text-white">
+              <tr>
+                {columnKeys.map((el, keys) => (
+                  <th key={keys} scope="col" className={`px-6 py-4 ${keys > 1 && 'text-center'}`}>
+                    {el}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {datos.map((fila, index) => (
+                <tr
+                  key={index}
+                  className={`${index % 2 === 0 && 'bg-gray-50'} border-b border-gray-200 hover:bg-[#FDF5D4]`}
+                  onDoubleClick={() => fun(fila)}
+                >
+                  {Object.values(fila).map((el, key) => (
+                    <td key={key} className={`px-6 py-3 text-gray-700 text-sm font-mono ${key > 1 && 'text-center'}`}>
+                      {key === lastColumnIndex && type ? (
+                        // Renderizar progress bar para la última columna (porcentaje)
+                        <div className="flex items-center space-x-2">
+                          <div className="flex-1 bg-gray-200 rounded-full h-2.5 min-w-[20px] flex-col">
+                            <div
+                              className="bg-[#725033] h-2.5 rounded-full transition-all duration-300"
+                              style={{ width: `${Math.min(getPercentageValue(el), 100)}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-xs font-medium text-gray-600 min-w-[35px]">
+                            {el}
+                          </span>
+                        </div>
+                      ) : (
+                        type || key !== lastColumnIndex ? (
+                          el || '- Sin comentarios -'
+                        ) : (
+                          <span className={`text-xl w-full flex items-center justify-center ${el===0 ? 'text-green-400' : 'text-red-400'}`}><IoTimerOutline /></span>
+                        )
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </>
+  );
+};
+
+export const ConfigurableTable = ({
+  tableData = [{}], 
+  title, 
+  subtitle, 
+  showColumnConfig = true,
+  fixedColumns = [], // Columnas que no se pueden ocultar/mover
+  filterableColumns = [], // Columnas que tendrán filtros - si está vacío, no muestra filtros
+  storageKey = 'table-columns' // Clave personalizable para localStorage
+}) => {
+  const [visibleColumns, setVisibleColumns] = useState({});
+  const [showColumnSelector, setShowColumnSelector] = useState(false);
+  const [filters, setFilters] = useState({});
+  const [showFilters, setShowFilters] = useState(false);
+  
+  const getStorageKey = () => {
+    return `${storageKey}-${title ? title.toLowerCase().replace(/\s+/g, '-') : 'default'}`;
+  };
+  
+  const loadColumnsConfig = () => {
+    try {
+      const savedConfig = localStorage.getItem(getStorageKey());
+      return savedConfig ? JSON.parse(savedConfig) : null;
+    } catch (error) {
+      console.warn('Error', error);
+      return null;
+    }
+  };
+  
+  const saveColumnsConfig = (config) => {
+    try {
+      localStorage.setItem(getStorageKey(), JSON.stringify(config));
+    } catch (error) {
+      console.warn('Error', error);
+    }
+  };
+
+  // Memoizar las columnas disponibles para evitar recálculos innecesarios
+  const availableColumns = useMemo(() => {
+    return tableData.length > 0 ? Object.keys(tableData[0]) : [];
+  }, [tableData.length > 0 ? Object.keys(tableData[0]).join(',') : '']);
+
+  // Inicializar columnas visibles cuando cambian las columnas disponibles o el título
+  useEffect(() => {
+    if (availableColumns.length > 0) {
+      const savedConfig = loadColumnsConfig();
+      const initialVisible = {};
+      
+      availableColumns.forEach(column => {
+        // Si hay configuración guardada, usar esa; sino, mostrar todas por defecto
+        initialVisible[column] = savedConfig && savedConfig.hasOwnProperty(column) 
+          ? savedConfig[column] 
+          : true;
+      });
+      
+      // Solo actualizar si la configuración es diferente
+      setVisibleColumns(prev => {
+        const isEqual = Object.keys(initialVisible).length === Object.keys(prev).length &&
+          Object.keys(initialVisible).every(key => initialVisible[key] === prev[key]);
+        
+        return isEqual ? prev : initialVisible;
+      });
+    }
+  }, [availableColumns.join(','), title]);
+  
+  // Obtener columnas visibles filtradas
+  const getVisibleColumns = () => {
+    return availableColumns.filter(column => visibleColumns[column]);
+  };
+  
+  // Toggle visibilidad de columna
+  const toggleColumnVisibility = (columnKey) => {
+    // No permitir ocultar columnas fijas
+    if (fixedColumns.includes(columnKey)) return;
+    
+    setVisibleColumns(prev => {
+      const newConfig = {
+        ...prev,
+        [columnKey]: !prev[columnKey]
+      };
+      
+      // Guardar inmediatamente en localStorage
+      saveColumnsConfig(newConfig);
+      
+      return newConfig;
+    });
+  };
+  
+  // Restablecer configuración de columnas
+  const resetColumnsConfig = () => {
+    const allColumns = Object.keys(tableData[0] || {});
+    const resetConfig = {};
+    
+    allColumns.forEach(column => {
+      resetConfig[column] = true;
+    });
+    
+    setVisibleColumns(resetConfig);
+    saveColumnsConfig(resetConfig);
+    setShowColumnSelector(false);
+  };
+
+  // Filtrar datos basado en los filtros aplicados
+  const filteredData = useMemo(() => {
+    if (Object.keys(filters).length === 0) {
+      return tableData;
+    }
+
+    return tableData.filter(item => {
+      return Object.entries(filters).every(([column, filterValue]) => {
+        if (!filterValue || filterValue.trim() === '') return true;
+        
+        const itemValue = item[column];
+        
+        // Manejo especial para booleanos
+        if (typeof itemValue === 'boolean') {
+          const filterLower = filterValue.toLowerCase();
+          if (filterLower === 'true' || filterLower === 'verdadero' || filterLower === 'sí' || filterLower === 'si') {
+            return itemValue === true;
+          }
+          if (filterLower === 'false' || filterLower === 'falso' || filterLower === 'no') {
+            return itemValue === false;
+          }
+          return true;
+        }
+        
+        // Para otros tipos, convertir a string y buscar coincidencia
+        const searchValue = String(itemValue || '').toLowerCase();
+        const filterLower = filterValue.toLowerCase();
+        
+        return searchValue.includes(filterLower);
+      });
+    });
+  }, [tableData, filters]);
+
+  // Manejar cambio en filtros
+  const handleFilterChange = (column, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [column]: value
+    }));
+  };
+
+  // Limpiar filtros
+  const clearFilters = () => {
+    setFilters({});
+  };
+
+  // Obtener valores únicos para una columna (para sugerencias)
+  const getUniqueValues = (column) => {
+    const values = tableData.map(item => item[column])
+      .filter(value => value !== null && value !== undefined)
+      .map(value => String(value));
+    return [...new Set(values)].sort().slice(0, 10); // Limitar a 10 sugerencias
+  };
+  
+  // Formatear nombre de columna
+  const formatColumnName = (key) => {
+    return key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1');
+  };
+
+  const visibleColumnsArray = getVisibleColumns();
+  const filterableVisibleColumns = visibleColumnsArray.filter(column => 
+    filterableColumns.includes(column)
+  );
+  const hasActiveFilters = Object.values(filters).some(filter => filter && filter.trim() !== '');
+  const showFilterButton = filterableColumns.length > 0;
+  return (
+    <div className="min-h-screen flex flex-col p-1">
+      {/* Header Sticky */}
+      <div className="sticky top-0 bg-white z-30 border-b border-gray-200">
+        <div className="flex items-center justify-between py-4 px-2">
+          <div className="flex-1">
+            {title && (
+              <h2 className="text-2xl font-semibold text-gray-900">{title}</h2>
+            )}
+            {subtitle && (
+              <p className="text-sm text-gray-500 mt-1">
+                {subtitle} - Mostrando {filteredData.length} de {tableData.length} registros
+                {hasActiveFilters && <span className="ml-2 text-[#725033]">(filtrado)</span>}
+              </p>
+            )}
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            {/* Botón de filtros - solo mostrar si hay columnas filtrables */}
+            {showFilterButton && (
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`p-2 hover:bg-gray-100 rounded-lg flex items-center testing space-x-2 ${
+                  hasActiveFilters ? 'bg-blue-50 text-[#5a3f27]' : 'text-gray-600'
+                }`}
+                title="Filtrar datos"
+              >
+                <AiOutlineFilter className="w-5 h-5" />
+                <span className="text-sm">Filtros</span>
+                {hasActiveFilters && (
+                  <span className="bg-[#5a3f27] text-white text-xs rounded-full px-2 py-0.5 ml-1">
+                    {Object.values(filters).filter(f => f && f.trim() !== '').length}
+                  </span>
+                )}
+              </button>
+            )}
+
+            {showColumnConfig && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowColumnSelector(!showColumnSelector)}
+                  className="p-2 hover:bg-gray-100 rounded-lg flex items-center space-x-2 testing"
+                  title="Configurar columnas"
+                >
+                  <AiOutlineSetting className="w-5 h-5 text-gray-600" />
+                  <span className="text-sm text-gray-600">Columnas</span>
+                </button>
+                
+                {/* Dropdown del selector de columnas */}
+                {showColumnSelector && (
+                  <div className="absolute top-full right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-40">
+                    <div className="p-3 border-b border-gray-200 flex items-center justify-between">
+                      <h3 className="font-medium text-gray-900">Configuración</h3>
+                      <button
+                        onClick={resetColumnsConfig}
+                        className="text-xs text-[#725033] hover:text-[#725033] underline testing"
+                        title="Restablecer configuración"
+                      >
+                        Restablecer
+                      </button>
+                    </div>
+                    <div className="max-h-60 overflow-y-auto">
+                      {availableColumns.map((column) => {
+                        const isFixed = fixedColumns.includes(column);
+                        const isVisible = visibleColumns[column];
+                        
+                        return (
+                          <div
+                            key={column}
+                            className={`flex items-center justify-between p-3 hover:bg-gray-50 ${
+                              isFixed ? 'opacity-60' : 'cursor-pointer'
+                            }`}
+                            onClick={() => !isFixed && toggleColumnVisibility(column)}
+                          >
+                            <div className="flex items-center space-x-2">
+                              {isVisible ? (
+                                <AiOutlineEye className="w-4 h-4 text-[#725033]" />
+                              ) : (
+                                <AiOutlineEyeInvisible className="w-4 h-4 text-gray-400" />
+                              )}
+                              <span className={`text-sm ${isFixed ? 'text-gray-500' : 'text-gray-900'}`}>
+                                {formatColumnName(column)}
+                                {isFixed && <span className="ml-1 text-xs">(fija)</span>}
+                              </span>
+                            </div>
+                            <input
+                              type="checkbox"
+                              checked={isVisible}
+                              onChange={() => !isFixed && toggleColumnVisibility(column)}
+                              disabled={isFixed}
+                              className="h-4 w-4 text-[#725033] rounded border-gray-300 focus:ring-[#725033] disabled:opacity-50"
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="p-3 border-t border-gray-200 bg-gray-50">
+                      <button
+                        onClick={() => setShowColumnSelector(false)}
+                        className="w-full px-3 py-2 text-sm bg-[#725033] text-white rounded-md hover:bg-[#6a4a2f] testing"
+                      >
+                        Aplicar
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Panel de filtros - solo mostrar si hay columnas filtrables */}
+        {showFilters && showFilterButton && (
+          <div className="border border-gray-200 bg-gray-50 p-2">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-medium text-gray-900">Filtros aplicables.</h3>
+              {hasActiveFilters && (
+                <button
+                  onClick={clearFilters}
+                  className="text-xs text-[#5a3f27] hover:text-[#5a3f27] underline testing"
+                >
+                  Limpiar filtros
+                </button>
+              )}
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {filterableVisibleColumns.map((column) => (
+                <div key={column} className="flex flex-col">
+                  <label className="text-xs font-medium text-gray-700 mb-1">
+                    {formatColumnName(column)}
+                  </label>
+                  <input
+                    type="text"
+                    placeholder={`Filtrar ${formatColumnName(column).toLowerCase()}...`}
+                    value={filters[column] || ''}
+                    onChange={(e) => handleFilterChange(column, e.target.value)}
+                    className="text-sm border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-[#725033] focus:border-[#725033] bg-white"
+                  />
+                  {/* Mostrar algunos valores únicos como sugerencias */}
+                  {filters[column] && filters[column].length > 0 && (
+                    <div className="mt-1">
+                      {getUniqueValues(column)
+                        .filter(value => value.toLowerCase().includes(filters[column].toLowerCase()))
+                        .slice(0, 3)
+                        .map((value, index) => (
+                          <button
+                            key={index}
+                            onClick={() => handleFilterChange(column, value)}
+                            className="text-xs text-[#5a3f27] bg-transparent testing mr-2 underline"
+                          >
+                            {value}
+                          </button>
+                        ))
+                      }
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Contenido de la tabla */}
+      <div className="flex-1 p-1">
+        <div className="mt-2">
+          {filteredData.length === 0 ? (
+            <div className="p-12 text-center text-gray-500 border border-gray-200 rounded-lg">
+              {tableData.length === 0 ? 
+                'No hay datos disponibles' : 
+                'Sin datos según filtros'
+              }
+            </div>
+          ) : (
+            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              {/* Contenedor con altura máxima y scroll para el cuerpo de la tabla */}
+              <div className="max-h-[75vh] overflow-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-100  [&::-webkit-scrollbar-thumb]:bg-gray-300">
+                <table className="w-full">
+                  {/* Header de tabla fijo */}
+                  <thead className="bg-gray-50 sticky top-0 z-10">
+                    <tr>
+                      {visibleColumnsArray.map((key) => (
+                        <th key={key} className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
+                          <div className="flex items-center space-x-2">
+                            <span>{formatColumnName(key)}</span>
+                            {filters[key] && filterableColumns.includes(key) && (
+                              <span className="bg-blue-100 text-[#5a3f27] text-xs px-2 py-0.5 rounded-full">
+                                filtrado
+                              </span>
+                            )}
+                          </div>
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredData.map((item, index) => (
+                      <tr key={item.id || index} className="hover:bg-gray-50">
+                        {visibleColumnsArray.map((key) => (
+                          <td key={key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {typeof item[key] === 'object' && item[key] !== null ? 
+                              JSON.stringify(item[key]) : 
+                              item[key] == false ? (
+                              <div className='flex items-center justify-left gap-2 text-red-600 font-bold'>
+                                <IoWarningOutline />
+                                No registrada.
+                              </div>) 
+                              : String(item[key])
+                            }
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
 export default TableSheet;

@@ -533,7 +533,7 @@ export const ModalOut = (props) => {
                           />
                         )
                       ) : (
-                        <SelectFormBoletas key={field} classCss={classFormSelct} name={field} val={boletas?.[field]} data={fillData[field]} fun={hdlChange} stt={true}/>
+                        <SelectFormBoletas key={field} classCss={classFormSelct} name={field} val={boletas?.[field]} data={fillData[field]} fun={hdlChange} stt={field!=='Motoristas' ? true : boletas.Socios===1 ? false : true}/>
                       )                  
                   ) : (
                     field !== 'Furgon' && (
@@ -700,7 +700,7 @@ export const VisualizarBoletas = (props) => {
 
   const tiempoDeEstadia = () => {
     const inicio = new Date(boletas?.fechaInicio);
-    const fin = new Date(boletas?.fechaFin);
+    const fin = new Date(boletas?.fechaFin ? boletas?.fechaFin : Date.now());
   
     if (isNaN(inicio) || isNaN(fin)) return '00:00:00';
   

@@ -159,7 +159,7 @@ export const SidebarHeader = ({ isExtendido, title, subtitle }) => {
           </div>
         )}
       </div>
-      <hr className="h-px my-1 bg-gray-200 border-0 dark:bg-gray-700" />
+      <hr className="h-px my-1 bg-gray-700 border-0 dark:bg-gray-700" />
       {/* Esto se compenta para cuando este en operativo y ya estne todos los reportes y el buscar sea mas facil. */}
       {/* {isExtendido && (
         <div className="px-2 py-2">
@@ -234,12 +234,12 @@ export const NavigationRoutes = ({ routes, isExtendido, sectionTitle, userRole, 
 
             {/* Tooltip del botón principal cuando no está abierto */}
             {!isDropdownOpen && (
-              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-6 hidden group-hover:block bg-gray-800 text-white text-xs px-2 py-1 rounded shadow-lg z-10 whitespace-nowrap">
+              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-6 hidden group-hover:block bg-gray-800 text-white text-xs px-2 py-1 rounded shadow-lg z-50 whitespace-nowrap">
                 {sectionTitle || 'Administración'}
               </div>
             )}
           </div>
-          <hr className="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700" />
+          <hr className="h-px my-4 bg-gray-700 border-0 dark:bg-gray-700" />
         </div>
       );
     }
@@ -281,7 +281,7 @@ export const NavigationRoutes = ({ routes, isExtendido, sectionTitle, userRole, 
             </div>
           )}
         </div>
-        <hr className="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700" />
+        <hr className="h-px my-4 bg-gray-700 border-0 dark:bg-gray-700" />
       </div>
     );
   }
@@ -313,7 +313,7 @@ export const NavigationRoutes = ({ routes, isExtendido, sectionTitle, userRole, 
           </div>
         ))}
       </ul>
-      <hr className="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700" />
+      <hr className="h-px my-4 bg-gray-700 border-0 dark:bg-gray-700" />
     </div>
   );
 };
@@ -352,7 +352,7 @@ export const SupportSection = ({ isExtendido, onShowModal }) => {
           </div>
         )}
       </ul>
-      <hr className="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700" />
+      <hr className="h-px my-4 bg-gray-700 border-0 dark:bg-gray-700" />
     </div>
   );
 };
@@ -391,7 +391,7 @@ export const LogsSection = ({ isExtendido }) => {
           </div>
         )}
       </ul>
-      <hr className="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700" />
+      <hr className="h-px my-4 bg-gray-700 border-0 dark:bg-gray-700" />
     </div>
   );
 };

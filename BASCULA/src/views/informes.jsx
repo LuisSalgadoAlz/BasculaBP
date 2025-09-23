@@ -69,6 +69,20 @@ const Informes = () => {
 
   const handleShowGraph = () => {
     setShowGraph(!showGraph)
+    setShowFilters(false)
+    setMostrarConfig(false)
+  }
+
+  const handleMostrarConfig = () => {
+    setMostrarConfig(!mostrarConfig)
+    setShowFilters(false)
+    setShowGraph(false)
+  }
+
+  const handleShowFilters = () => {
+    setShowFilters(!showFilters)
+    setMostrarConfig(false)
+    setShowGraph(false)
   }
 
   useEffect(() => {
@@ -178,7 +192,7 @@ const Informes = () => {
     data: data?.graphProcesos,
     title: "Distribución de Procesos",
     subtitle:
-      "Distribución por porcentaje de entradas y salidas de material.",
+      "Distribución por porcentaje de entradas y salidas de material. (No incluye las canceladas)",
   };
   const propsGraficosTipoDeBoleta = {
     data: data?.graphEstados,
@@ -226,7 +240,7 @@ const Informes = () => {
               Exportar Excel
             </button>
             <button
-              onClick={() => setShowFilters(!showFilters)}
+              onClick={handleShowFilters}
               className="flex items-center px-4 py-2 bg-blue-50 text-white-600 hover:bg-blue-100 rounded-lg transition-colors duration-200"
             >
               <span>{showFilters ? "Ocultar filtros" : "Mostrar filtros"}</span>
@@ -280,7 +294,7 @@ const Informes = () => {
                 </button>
 
                 {/* Mostrar configuracion de tablas */}
-                <button onClick={() => setMostrarConfig(!mostrarConfig)} className="flex items-center px-4 py-2 bg-gray-50 hover:bg-blue-100 rounded-lg transition-colors duration-200"
+                <button onClick={handleMostrarConfig} className="flex items-center px-4 py-2 bg-gray-50 hover:bg-blue-100 rounded-lg transition-colors duration-200"
                   >
                   <CiSettings className="text-lg" />
                     Configurar Columnas
