@@ -120,11 +120,15 @@ export const SideBar = ({ modo = "extendido", altura = 500 }) => {
   
   const isExtendido = modo === "extendido";
 
+  const FILTER_ROUTES = RUTAS_REPORTES.filter(
+    (item) => !item.name.includes('Pases de Salida') && !item.name.includes('Tolva')
+  );
+
   return (
     <SideBarBase extended={isExtendido}>
       <SidebarHeader isExtendido={isExtendido} title="Baprosa" subtitle="Sistema de Gestión Bascula" />
       <NavigationRoutes routes={RUTAS_PRINCIPALES} isExtendido={isExtendido} sectionTitle="Bascula" />
-      <NavigationRoutes routes={RUTAS_REPORTES} isExtendido={isExtendido} sectionTitle="Reportes" />
+      <NavigationRoutes routes={FILTER_ROUTES} isExtendido={isExtendido} sectionTitle="Reportes" />
       <SupportSection isExtendido={isExtendido} onShowModal={handleShowModal} />
       <UserDropdown isExtendido={isExtendido} altura={altura} />
       {ShowModalSupport && <SupportModal hdClose={handleCloseModal}/>}
