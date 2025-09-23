@@ -637,7 +637,7 @@ const postClientePlacaMoto = async (req, res) => {
       }
     });
 
-    const debeImprimirQR = false /* (idMovimiento === 2 || (idProducto === 17 && idMovimiento===14)) */
+    const debeImprimirQR = (idMovimiento === 2 || (idProducto === 17 && idMovimiento===14))
     const ocupaAlerta = idMovimiento ? listaInicialAlertas.includes(idMovimiento) : false
     const debeCrearPase = idMovimiento ? list_pase_inicial.includes(idMovimiento) : false
     if (debeCrearPase) {
@@ -771,7 +771,7 @@ const postClientePlacaMotoComodin = async (req, res) => {
       const response = await generarPaseDeSalidaTemporal(newBol, newPase?.numPaseSalida)
     }
 
-    const debeImprimirQR = (idProducto === 17 && idMovimiento === 1) || (idProducto === 18 && idMovimiento === 2);
+    const debeImprimirQR = (idProducto === 17 && idMovimiento === 14) || (idProducto === 18 && idMovimiento === 2);
     if(debeImprimirQR) {
       imprimirQRTolva(newBol);
     }
@@ -1241,9 +1241,12 @@ const updateBoletaOut = async (req, res) => {
       console.log(stmpMail);
     }
 
+    if((idProducto===18 && idMovimiento===2) || (idProducto===17 && idMovimiento===14)) {
+      enviarAlertaSiloLleno(nuevaBoleta);
+    }
+
     // Generar comprobante para producto específico
     if (idProducto === 18 && idMovimiento === 2) {
-      enviarAlertaSiloLleno(nuevaBoleta);
       comprobanteDeCarga(nuevaBoleta, despachador['name']);
     }
 
@@ -1406,6 +1409,10 @@ const updateBoletaOutComdin = async (req, res) => {
       where: { id: parseInt(req.params.id) },
       data: updateData,
     });
+
+    if((idProducto===18 && idMovimiento===2) || (idProducto===17 && idMovimiento===14)) {
+      enviarAlertaSiloLleno(nuevaBoleta);
+    }
 
     // Generar comprobante para producto específico
     if (idProducto === 18 && idMovimiento === 2) {
