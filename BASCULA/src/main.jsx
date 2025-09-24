@@ -57,7 +57,7 @@ const navRutas = createBrowserRouter([
     ]
   },
   {
-    element: <VerificarLog userType='ADMINISTRADOR,BASCULA,REPORTES' />,
+    element: <VerificarLog userType='ADMINISTRADOR,BASCULA,REPORTES,TOLVA' />,
     children: [
       { path: "/Dashboard", element: <Dashboard />, },
       { path: "/Boletas", element: <Boletas />, },
@@ -69,12 +69,18 @@ const navRutas = createBrowserRouter([
       { path: "/casulla", element: <Casulla />, },
       { path: "/socios/:id", element: <EditClientes />, errorElement: <NoFoundData /> },
       { path: "/empresas/:id", element: <EditTransporte />, errorElement: <NoFoundData /> },
-      { path: "/reporteTolva", element: <TolvaReportes/> },
-      { path: "/reporteSilos", element: <ReportesSilos/> },
       { path: "/reporteGuardia", element: <ReportesGuardia/> }, 
       { path: "/servicioBascula", element: <ServicioBascula /> }, 
     ],
   },
+  {
+    element: <VerificarLog userType='ADMINISTRADOR,BASCULA,REPORTES,TOLVA' />,
+    children: [
+      { path: "/reporteTolva", element: <TolvaReportes/> },
+      { path: "/reporteSilos", element: <ReportesSilos/> },
+    ],
+  },
+
 ]);
 
 createRoot(document.getElementById("root")).render(

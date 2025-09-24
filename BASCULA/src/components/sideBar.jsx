@@ -9,6 +9,7 @@ import { FaTruckLoading } from "react-icons/fa";
 import { BsClipboard2Data } from "react-icons/bs";
 import { AiFillCaretRight } from "react-icons/ai";
 import { BsCalendarWeek } from "react-icons/bs";
+import Cookie from 'js-cookie'
 
 const RUTAS_PRINCIPALES = [
   /* 
@@ -84,11 +85,11 @@ const RUTAS_REPORTES = [
     name: "Servicio Báscula",
     icon: <BsClipboard2Data />,
   },
-  /* {
+  {
     path: "/reporteSilos",
     name: "Estado Silos",
     icon: <BsClipboard2Data />,
-  }, */
+  },
   {
     path: "/reporteTolva",
     name: "Tolva",
@@ -121,7 +122,7 @@ export const SideBar = ({ modo = "extendido", altura = 500 }) => {
   const isExtendido = modo === "extendido";
 
   const FILTER_ROUTES = RUTAS_REPORTES.filter(
-    (item) => !item.name.includes('Pases de Salida') && !item.name.includes('Tolva')
+    (item) => !item.name.includes('Pases de Salida') && !item.name.includes('Tolva') && !item.name.includes('Estado Silos')
   );
 
   return (
@@ -160,12 +161,16 @@ export const SideBarTolva = ({ modo = "extendido", altura = 500 }) => {
   const handleShowModal = () => setShowModalSupport(true)
   const handleCloseModal = () => setShowModalSupport(false)
   
+  const RUTA_REPORTE = RUTAS_REPORTES.filter((item) => item.name.includes('Estado Silos') || item.name.includes('Tolva'))
   const isExtendido = modo === "extendido";
 
   return (
     <SideBarBase extended={isExtendido}>
       <SidebarHeader isExtendido={isExtendido} title="Baprosa" subtitle="Asignación Tolva"/>
       <NavigationRoutes routes={RUTAS_TOLVA} isExtendido={isExtendido} sectionTitle="Tolva"/>
+      {Cookie.get('name') === 'Rony Romero' && (
+        <NavigationRoutes routes={RUTA_REPORTE} isExtendido={isExtendido} sectionTitle="Tolva"/>
+      )}
       <SupportSection isExtendido={isExtendido} onShowModal={handleShowModal} />
       <UserDropdown isExtendido={isExtendido} altura={altura} />
       {ShowModalSupport && <SupportModal hdClose={handleCloseModal}/>}
@@ -196,12 +201,16 @@ export const SideBarReportes = ({ modo = "extendido", altura = 500 }) => {
   const handleShowModal = () => setShowModalSupport(true)
   const handleCloseModal = () => setShowModalSupport(false)
   
+  const RUTAS_SIN_SILOS = RUTAS_REPORTES.filter(
+    (item) => !item.name.includes('Estado Silos')
+  );
+
   const isExtendido = modo === "extendido";
 
   return (
     <SideBarBase extended={isExtendido}>
       <SidebarHeader isExtendido={isExtendido} title="Baprosa" subtitle="Sistema de Gestión Báscula" />
-      <NavigationRoutes routes={RUTAS_REPORTES} isExtendido={isExtendido} sectionTitle="Reportes" />
+      <NavigationRoutes routes={RUTAS_SIN_SILOS} isExtendido={isExtendido} sectionTitle="Reportes" />
       <SupportSection isExtendido={isExtendido} onShowModal={handleShowModal} />
       <UserDropdown isExtendido={isExtendido} altura={altura} />
       {ShowModalSupport && <SupportModal hdClose={handleCloseModal}/>}
