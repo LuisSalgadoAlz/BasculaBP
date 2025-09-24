@@ -1863,8 +1863,8 @@ const getNewInfoNivelDetails = async (req, res) => {
       success: true,
       data: refactorView,
       count: boletasConPesoCalculado.length,
-      diff: (siloData?.nivelTolva || 0) - totalPesoCalculado, // Agregada validación para null
-      total: totalPesoCalculado.toFixed(2), // CORREGIDO: no dividir por 100
+      diff: (siloData?.nivelTolva || 0) - totalPesoCalculado.toFixed(2),
+      total: totalPesoCalculado.toFixed(2),
       capacidad: siloData?.capacidad,
     });
 

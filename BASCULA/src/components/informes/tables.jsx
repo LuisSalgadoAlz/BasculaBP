@@ -1169,7 +1169,7 @@ const TableSheet = ({
         </div>
         <div className="flex items-center space-x-2">
           <div className="w-3 h-3 bg-[#5a3f27] rounded"></div>
-          <span className="text-gray-600">Inventario Inicial: {inventarioInicial.toLocaleString()}</span>
+          <span className="text-gray-600">Inventario Inicial: {Math.round(inventarioInicial).toLocaleString()}</span>
         </div>
         <div className="pt-2 border-t border-gray-200">
           <span className="font-medium text-gray-900">
@@ -1394,7 +1394,7 @@ const TableSheet = ({
                 {/* Panel lateral condicional - Ahora se muestra siempre que detailsSilo sea true */}
                 {detailsSilo && (
                   <div className="w-80 border-l border-gray-200 bg-gray-50 flex-shrink-0">
-                    {diferencia < 0 ? (
+                    {diferencia.toFixed(2) < 0 ? (
                       <ErrorMessage />
                     ) : (
                       <VerticalProgressBar />
