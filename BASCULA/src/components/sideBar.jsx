@@ -201,12 +201,16 @@ export const SideBarReportes = ({ modo = "extendido", altura = 500 }) => {
   const handleShowModal = () => setShowModalSupport(true)
   const handleCloseModal = () => setShowModalSupport(false)
   
+  const RUTAS_SIN_SILOS = RUTAS_REPORTES.filter(
+    (item) => !item.name.includes('Estado Silos')
+  );
+
   const isExtendido = modo === "extendido";
 
   return (
     <SideBarBase extended={isExtendido}>
       <SidebarHeader isExtendido={isExtendido} title="Baprosa" subtitle="Sistema de Gestión Báscula" />
-      <NavigationRoutes routes={RUTAS_REPORTES} isExtendido={isExtendido} sectionTitle="Reportes" />
+      <NavigationRoutes routes={RUTAS_SIN_SILOS} isExtendido={isExtendido} sectionTitle="Reportes" />
       <SupportSection isExtendido={isExtendido} onShowModal={handleShowModal} />
       <UserDropdown isExtendido={isExtendido} altura={altura} />
       {ShowModalSupport && <SupportModal hdClose={handleCloseModal}/>}
