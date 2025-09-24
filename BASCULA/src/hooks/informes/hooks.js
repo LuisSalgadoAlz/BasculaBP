@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { getInfoSilosDetailsV2, getInfoSilosV2, getStatsSilosForBuques, getUsers, postCreateNewReset } from '../../hooks/informes/tolva';
 import { getDataForSelect } from '../../hooks/informes/granza';
+import Cookie from 'js-cookie'
 
 export const useFilters = () => {
     const initFilterHistorico = {userInit_historico: '', userEnd_historico: '', state_historico: '', search_historico: ''}
@@ -193,6 +194,7 @@ export const useResetSilos = (fetchNivelSilos) => {
   const [loadingReset, setLoadingReset] = useState(false);
   
   const handleResetSilo = async (name) => {
+    if (Cookie.get('name') !== 'Rony Romero') return alert('Acceso Denegado')
     const cuerpoSilo = { silo: name };
     await postCreateNewReset(cuerpoSilo, setLoadingReset);
     await fetchNivelSilos();
