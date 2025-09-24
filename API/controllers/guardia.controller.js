@@ -338,7 +338,7 @@ const getPorcentajeMes = async(req, res) => {
                     CASE 
                         WHEN pds.aplicaAlerta = 0 THEN 
                             CASE 
-                                WHEN DATENAME(weekday, b.fechaFin AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') = 'Saturday' THEN
+                                WHEN DATENAME(weekday, b.fechaFin AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') = 'Sábado' THEN
                                     CAST(DATEADD(day, 2, b.fechaFin AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') AS DATE)
                                 ELSE
                                     CAST(DATEADD(day, 1, b.fechaFin AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') AS DATE)
@@ -396,7 +396,7 @@ const getPorcentajeMes = async(req, res) => {
                                 WHEN b.proceso = 1 THEN 
                                     -- Para proceso = 1, usar fechaFin
                                     CASE 
-                                        WHEN DATENAME(weekday, b.fechaFin AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') = 'Saturday' THEN
+                                        WHEN DATENAME(weekday, b.fechaFin AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') = 'Sábado' THEN
                                             CAST(DATEADD(day, 2, b.fechaFin AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') AS DATE)
                                         ELSE
                                             CAST(DATEADD(day, 1, b.fechaFin AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') AS DATE)
@@ -407,7 +407,7 @@ const getPorcentajeMes = async(req, res) => {
                                         WHEN b.fechaFin IS NOT NULL THEN
                                             -- Si tiene fechaFin, usar fechaFin (pase de cierre)
                                             CASE 
-                                                WHEN DATENAME(weekday, b.fechaFin AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') = 'Saturday' THEN
+                                                WHEN DATENAME(weekday, b.fechaFin AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') = 'Sábado' THEN
                                                     CAST(DATEADD(day, 2, b.fechaFin AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') AS DATE)
                                                 ELSE
                                                     CAST(DATEADD(day, 1, b.fechaFin AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') AS DATE)
@@ -415,7 +415,7 @@ const getPorcentajeMes = async(req, res) => {
                                         ELSE
                                             -- Si no tiene fechaFin, usar fechaInicio (pase de creación)
                                             CASE 
-                                                WHEN DATENAME(weekday, b.fechaInicio AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') = 'Saturday' THEN
+                                                WHEN DATENAME(weekday, b.fechaInicio AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') = 'Sábado' THEN
                                                     CAST(DATEADD(day, 2, b.fechaInicio AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') AS DATE)
                                                 ELSE
                                                     CAST(DATEADD(day, 1, b.fechaInicio AT TIME ZONE 'UTC' AT TIME ZONE 'Central America Standard Time') AS DATE)
