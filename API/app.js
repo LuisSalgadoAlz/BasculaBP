@@ -17,6 +17,7 @@ const boletas = require("./routes/boleta.routes");
 const informes = require("./routes/informes.routes")
 const tolva = require("./routes/tolva.routes");
 const guardia = require("./routes/guardia.routes");
+const sap = require("./routes/sap.routes");
 const path = require("path");
 const compression = require('compression');
 
@@ -41,6 +42,7 @@ app.use('/api/soporte', soporte)
 app.use('/api/tolva/', tolva)
 app.use('/api/guardia/', guardia)
 app.use('/api/informes/', informes)
+app.use('/api/sap/', sap)
 
 const distPath = path.join(__dirname, process.env.DIST_PATH || "../bascula/dist");
 
