@@ -30,6 +30,7 @@
     "jsqr": "^1.4.0",
     "multer": "^2.0.0",
     "node-cache": "^5.1.2",
+    "node-cron": "^4.2.1",
     "nodemailer": "^7.0.3",
     "nodemo": "^1.0.0",
     "nodemon": "^3.1.9",
@@ -40,6 +41,7 @@
     "qrcode": "^1.5.4",
     "qrcode-reader": "^1.0.4",
     "react-router": "^7.3.0",
+    "redis": "^5.8.2",
     "sharp": "^0.34.2",
     "ua-parser-js": "^2.0.3",
     "ws": "^8.18.1"
