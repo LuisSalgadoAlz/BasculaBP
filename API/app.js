@@ -20,8 +20,6 @@ const guardia = require("./routes/guardia.routes");
 const sap = require("./routes/sap.routes");
 const path = require("path");
 const compression = require('compression');
-const cron = require('node-cron');
-const { getCamionesRedis } = require("./controllers/sap.controller");
 
 const server = http.createServer(app);
 
@@ -56,14 +54,6 @@ app.get("*", (req, res) => {
 });
 
 setupWebSocket(server);
-
-/**
- * Parte donde se sincroniza con sap
- */
-cron.schedule('*/1 * * * *', async() => {
-  getCamionesRedis()
-  console.log('Sincronizando con SAP...');
-});
 
 server.listen(process.env.PORT, process.env.HOST, () => {
   console.log(`Ejecutando API en http://${process.env.HOST}:${process.env.PORT}/`);

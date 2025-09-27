@@ -89,12 +89,13 @@ const getCamionesRedis = async()=> {
 const getCamiones = async(req, res) => {
     try{
         const store = await getRedisClient()
+        const reponse = await getCamionesRedis()
         const validRediManifiestos = await store.get('sap:manifiestos')
 
         if(validRediManifiestos){
             return res.send(JSON.parse(validRediManifiestos))
         }
-        return res.send({msg:'Intente denuevo dentro de 3 minutos...'})
+        return res.send({msg: 'Intente denuevo dentro de 2 minutos.'})
     }catch(err){
         return res.send({err: err.message})
     }
