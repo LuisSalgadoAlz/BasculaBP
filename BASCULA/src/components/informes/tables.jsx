@@ -2491,19 +2491,6 @@ const TimerCamionesEnEspera = ({camion}) =>{
 }
 
 const CamionesEnEspera = ({ camiones = [] }) => {
-  
-  const formatTiempoEspera = (fechaLlegada) => {
-    if (!fechaLlegada) return '0 min';
-    const ahora = new Date();
-    const llegada = new Date(fechaLlegada);
-    const diferencia = Math.floor((ahora - llegada) / (1000 * 60)); // en minutos
-    
-    if (diferencia < 60) return `${diferencia} min`;
-    const horas = Math.floor(diferencia / 60);
-    const minutos = diferencia % 60;
-    return `${horas}h ${minutos}m`;
-  };
-
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
       <div className="px-6 py-4 border-b border-gray-100">
