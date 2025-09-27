@@ -5,6 +5,7 @@ import "./index.css";
 import VerificarLog from "./utils/verificarLog";
 import { Spinner } from "./components/alerts";
 import ViewDisabled from "./views/viewDisabled";
+const TolvasOcupadas = lazy(()=>import('./components/informes/tolvasOcupadas'));
 const ServicioBascula = lazy(()=>import('./components/informes/servicioBascula'));
 const ReportesSilos = lazy(()=>import('./components/informes/reportesSilos'));
 const ReportesGuardia = lazy(()=>import('./components/informes/reportesGuardia'));
@@ -78,6 +79,7 @@ const navRutas = createBrowserRouter([
     children: [
       { path: "/reporteTolva", element: <TolvaReportes/> },
       { path: "/reporteSilos", element: <ReportesSilos/> },
+      { path: "/reporteZonasDescarga", element: <TolvasOcupadas/> }
     ],
   },
 

@@ -174,14 +174,6 @@ const TolvaCards = ({ datos = [], onFinalizar }) => {
               </span>
             </div>
 
-            <button
-              onClick={() => handleFinalizar(item)}
-                className="self flex items-center space-x-1 px-3 py-3 bg-green-50 text-green-700 rounded-md hover:bg-green-100 transition-colors text-xs font-medium"
-              >
-              <MdOutlineCancel className="w-3 h-3" />
-              <span>Cancelar</span>
-            </button>
-
             {/* Botón Finalizar */}
             {item.estado === 0 && (
               <button

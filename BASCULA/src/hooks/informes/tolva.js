@@ -37,3 +37,7 @@ export const getInfoSilosV2 = async (fun, setIsLoading) => {
 export const getInfoSilosDetailsV2 = async (fun, setIsLoading, siloID) => {
   return apiRequest(fun, `tolva/info/nivelSilos/details/${siloID}`, setIsLoading)
 };
+
+export const getTolvasOcupadas = async (fun, setIsLoading) => {
+  return apiRequest(fun, `tolva/tolvasOcupadas/info`, setIsLoading)
+};
