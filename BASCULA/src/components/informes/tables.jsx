@@ -12,6 +12,9 @@ import Select from "react-select";
 import { IoTimerOutline } from "react-icons/io5";
 import { AiOutlineSetting, AiOutlineEye,   } from 'react-icons/ai';
 import { IoWarningOutline } from "react-icons/io5";
+import { FiCheck, FiCircle, FiClock, FiTool, FiTruck, FiUser, FiUsers } from 'react-icons/fi';
+import { FaIdBadge, FaMapMarkerAlt, FaTruck, FaUserTie, FaWeightHanging } from 'react-icons/fa';
+import { PiTruckTrailerLight } from 'react-icons/pi';
 
 export const TablaResumenBFH = ({datos=[]}) => {
   return (
@@ -2305,4 +2308,384 @@ export const ConfigurableTable = ({
     </div>
   );
 };
+
+const TimerCamionEnTolva = ({camion}) => {
+  const {days, hours, minutes, seconds} = useTimerForUniqueComponent(camion.fechaEntrada);
+  const defineTime = camion.tolvaDescarga.includes('T1') ? 50 : 40;
+  const defineColor = (days > 0 || hours > 0 || minutes > defineTime) ? 'text-red-600' : 'text-green-600';
+  return (
+    <>
+      <span className={`text-sm font-medium ${defineColor}`}>{days}d {hours}h {minutes}m {seconds}s</span>
+    </>
+  )
+}
+
+const TolvaCards = ({ datos = [], onFinalizar, tolvaNumero }) => {
+  const formatFecha = (fecha) => {
+    if (!fecha) return 'Pendiente';
+    const date = new Date(fecha);
+    return date.toLocaleString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getEstadoColor = (estado) => {
+    switch (estado) {
+      case 0: return 'text-green-600';
+      case 1: return 'text-gray-500';
+      default: return 'text-yellow-600';
+    }
+  };
+
+  const getEstadoTexto = (estado) => {
+    switch (estado) {
+      case 0: return 'EN CURSO';
+      case 1: return 'Finalizado';
+      default: return 'Pendiente';
+    }
+  };
+
+  if (!datos || datos.length === 0) {
+    return (
+      <div className="text-center py-8 text-gray-400 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+        <PiTruckTrailerLight className="w-8 h-8 mx-auto mb-3 opacity-50" />
+        <p className="text-sm font-medium">Tolva Disponible</p>
+        <p className="text-xs">Sin operaciones activas</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {datos.map((item) => (
+        <div key={item.id} className="bg-white border border-gray-200 rounded-lg p-4 hover:border-gray-300 hover:shadow-sm transition-all duration-200">
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center space-x-2">
+                <span className="font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded text-sm">
+                  #{item.idBoleta}
+                </span>
+                <TimerCamionEnTolva camion={item} />
+              </div>
+              <div className="flex items-center space-x-1">
+                <FiCircle className={`w-2 h-2 fill-current ${getEstadoColor(item.estado)}`} />
+                <span className={`text-xs font-medium ${getEstadoColor(item.estado)}`}>
+                  {getEstadoTexto(item.estado)}
+                </span>
+              </div>
+            </div>
+
+            {/* Información en grid móvil */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+              
+              <div className="flex items-center space-x-2">
+                <FiUser className="w-3 h-3 text-gray-400" />
+                <span className="text-xs text-gray-500">Usuario:</span>
+                <span className="text-gray-700 truncate">{item.usuarioTolva}</span>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <FaUserTie className="w-3 h-3 text-gray-400" />
+                <span className="text-xs text-gray-500">Socio:</span>
+                <span className="text-gray-700 truncate">{item.boleta?.socio}</span>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <FaMapMarkerAlt className="w-3 h-3 text-gray-400" />
+                <span className="text-xs text-gray-500">Origen:</span>
+                <span className="text-gray-700 truncate">{item.boleta?.origen}</span>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <FaTruck className="w-3 h-3 text-gray-400" />
+                <span className="text-xs text-gray-500">Placa:</span>
+                <span className="text-gray-700 truncate">{item.boleta?.placa}</span>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <FaIdBadge className="w-3 h-3 text-gray-400" />
+                <span className="text-xs text-gray-500">Motorista:</span>
+                <span className="text-gray-700 truncate">{item.boleta?.motorista}</span>
+              </div>
+            </div>
+
+            {/* Silos móvil */}
+            <div className="flex items-center space-x-2">
+              <FiTool className="w-3 h-3 text-gray-400" />
+              <span className="text-xs text-gray-500">Silos:</span>
+              <div className="flex items-center space-x-1 flex-wrap">
+                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                  {item?.principal?.nombre || 'S1'}
+                </span>
+                {item.secundario && (
+                  <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full">
+                    {item?.secundario?.nombre || 'S2'}
+                  </span>
+                )}
+                {item.terciario && (
+                  <span className="text-xs bg-pink-100 text-pink-800 px-2 py-1 rounded-full">
+                    {item?.terciario?.nombre || 'S3'}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const TolvaSection = ({ tolva, numero, onFinalizar }) => {
+  const conteoActivos = tolva?.filter(item => item.estado === 0).length || 0;
+  const defineTolva = numero === 3 || numero ===1 ? 'T1' : 'T2';
+  const defineNumero =  numero === 1 || numero === 2 ? 1 : 2;
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+      <div className="px-6 py-4 border-b border-gray-100">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-[#5a3f27] text-white rounded-full flex items-center justify-center text-sm font-bold">
+              {numero}
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800">
+                Zona de Descarga {defineTolva} - {defineNumero}
+              </h3>
+              <p className="text-sm text-gray-500">
+                {conteoActivos > 0 ? `${conteoActivos} operación${conteoActivos > 1 ? 'es' : ''} activa${conteoActivos > 1 ? 's' : ''}` : 'Disponible'}
+              </p>
+            </div>
+          </div>
+          <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+            conteoActivos > 0 
+              ? 'bg-green-100 text-green-800' 
+              : 'bg-gray-100 text-gray-600'
+          }`}>
+            {conteoActivos > 0 ? 'Ocupada' : 'Libre'}
+          </div>
+        </div>
+      </div>
+      <div className="p-6">
+        <TolvaCards datos={tolva} onFinalizar={onFinalizar} tolvaNumero={numero} />
+      </div>
+    </div>
+  );
+};
+
+const TimerCamionesEnEspera = ({camion}) =>{
+  const {days, hours, minutes, seconds} = useTimerForUniqueComponent(camion.fechaInicio);
+  return (
+    <>
+      <div className="flex items-center space-x-1">
+        <FiClock className="w-3 h-3 text-orange-600" />
+        <span className="text-sm text-orange-700 font-medium">
+          {days}d {hours}h {minutes}m {seconds}s
+        </span>
+      </div>
+    </>
+  )
+}
+
+const CamionesEnEspera = ({ camiones = [] }) => {
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+      <div className="px-6 py-4 border-b border-gray-100">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-orange-600 text-white rounded-full flex items-center justify-center">
+              <FiUsers className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800">
+                Cola de Espera
+              </h3>
+              <p className="text-sm text-gray-500">
+                {camiones.length} camión{camiones.length !== 1 ? 'es' : ''} esperando
+              </p>
+            </div>
+          </div>
+          <div className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">
+            {camiones.length} en cola
+          </div>
+        </div>
+      </div>
+      <div className="p-3">
+        {camiones.length === 0 ? (
+          <div className="text-center py-8 text-gray-400">
+            <FiTruck className="w-8 h-8 mx-auto mb-3 opacity-50" />
+            <p className="text-sm font-medium">Sin camiones en espera</p>
+            <p className="text-xs">La cola está vacía</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {camiones.map((camion, index) => (
+              <div key={camion.id || index} className="bg-gradient-to-r from-orange-50 to-yellow-50 border border-orange-200 rounded-lg p-4 hover:border-orange-300 transition-colors">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center space-x-2">
+                    <span className="font-semibold text-gray-800">#{camion.id}</span>
+                    <TimerCamionesEnEspera camion={camion} />
+                  </div>
+                  <div className="px-2 py-1 bg-orange-200 text-orange-800 rounded text-xs font-medium">
+                    En espera
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                  <div className="flex items-center space-x-2">
+                    <FaUserTie className="w-3 h-3 text-gray-400" />
+                    <span className="text-xs text-gray-500">Socio:</span>
+                    <span className="text-gray-700 truncate">{camion.socio}</span>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <FaTruck className="w-3 h-3 text-gray-400" />
+                    <span className="text-xs text-gray-500">Placa:</span>
+                    <span className="text-gray-700 truncate">{camion.placa}</span>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <FaIdBadge className="w-3 h-3 text-gray-400" />
+                    <span className="text-xs text-gray-500">Motorista:</span>
+                    <span className="text-gray-700 truncate">{camion.motorista}</span>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <FaIdBadge className="w-3 h-3 text-gray-400" />
+                    <span className="text-xs text-gray-500">Producto:</span>
+                    <span className="text-gray-700 truncate">{camion.producto}</span>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <FaMapMarkerAlt className="w-3 h-3 text-gray-400" />
+                    <span className="text-xs text-gray-500">Origen:</span>
+                    <span className="text-gray-700 truncate">{camion.origen}</span>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <FaIdBadge className="w-3 h-3 text-gray-400" />
+                    <span className="text-xs text-gray-500">Tolva destino:</span>
+                    <span className="text-gray-700 truncate">{camion.tolvaAsignada}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export const TolvasDashboard = ({ datos, camionesEspera = [], onFinalizar }) => {
+  const [selectedTolva, setSelectedTolva] = useState(null);
+
+  // Datos de ejemplo si no se proporcionan
+  const datosEjemplo = datos || {
+    tolva1: [],
+    tolva2: [],
+    tolva3: [],
+    tolva4: []
+  };
+
+  const camionesEjemplo = camionesEspera.length > 0 ? camionesEspera : [];
+
+  const tolvas = [
+    { numero: 1, datos: datosEjemplo.tolva1 },
+    { numero: 2, datos: datosEjemplo.tolva2 },
+    { numero: 3, datos: datosEjemplo.tolva3 },
+    { numero: 4, datos: datosEjemplo.tolva4 }
+  ];
+
+  return (
+    <div className="bg-white shadow-2xl px-6 py-8">
+      <div className="mx-auto">
+        <div className="grid grid-cols-1 2xl:grid-cols-4 gap-6">
+          
+          {/* Tolvas - 3 columnas en pantallas grandes */}
+          <div className="2xl:col-span-3">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              {tolvas.map(({ numero, datos }) => (
+                <TolvaSection
+                  key={numero}
+                  tolva={datos}
+                  numero={numero}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Camiones en espera - 1 columna a la derecha */}
+          <div className="2xl:col-span-1">
+            <div className="sticky top-6">
+              <CamionesEnEspera camiones={camionesEjemplo} />
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const useTimerForUniqueComponent = (fechaInicio) => {
+   const [timeElapsed, setTimeElapsed] = useState({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0
+  });
+
+  useEffect(() => {
+    // Convertir la fecha string al formato que JavaScript entiende
+    const parseDate = (dateString) => {
+      const [datePart, timePart] = dateString.split(', ');
+      const [day, month, year] = datePart.split('/');
+      const [hours, minutes, seconds] = timePart.split(':');
+      
+      // Crear fecha (mes - 1 porque JavaScript cuenta los meses desde 0)
+      return new Date(year, month - 1, day, hours, minutes, seconds);
+    };
+
+    const startDate = parseDate(fechaInicio);
+
+    const updateTimer = () => {
+      const now = new Date();
+      const difference = now.getTime() - startDate.getTime();
+
+      if (difference > 0) {
+        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+        setTimeElapsed({ days, hours, minutes, seconds });
+      }
+    };
+
+    // Actualizar inmediatamente
+    updateTimer();
+
+    // Actualizar cada segundo
+    const interval = setInterval(updateTimer, 1000);
+
+    // Limpiar interval al desmontar
+    return () => clearInterval(interval);
+  }, [fechaInicio]);
+
+  const formatNumber = (num) => {
+    return num.toString().padStart(2, '0');
+  };
+
+  return {
+    days: formatNumber(timeElapsed.days),
+    hours: formatNumber(timeElapsed.hours),
+    minutes: formatNumber(timeElapsed.minutes),
+    seconds: formatNumber(timeElapsed.seconds)
+  }
+}
+
 export default TableSheet;

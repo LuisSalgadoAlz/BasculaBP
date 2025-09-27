@@ -705,6 +705,117 @@ const updateFinalizarDescarga = async(req, res)=>{
   }
 }
 
+const getCamionesDeDescargasOcupadsTodos = async (req, res) => {
+  try {
+    const configTolva = {
+      'T1-1': 1,
+      'T1-2': 3,
+      'T2-1': 2,
+      'T2-2': 4,
+    }
+    const select =  {
+      id: true,
+      idBoleta: true,
+      fechaEntrada: true,
+      usuarioTolva: true,
+      tolvaDescarga: true,
+      estado: true,
+      boleta: {
+        select: {
+          socio: true,
+          placa: true,
+          motorista: true,
+          origen: true,
+        },
+      },
+      principal: {
+        select: { nombre: true },
+      },
+      secundario: {
+        select: { nombre: true },
+      },
+      terciario: {
+        select: { nombre: true },
+      },
+    }
+    
+    const [tolvas, pendientes] = await Promise.all([
+      db.tolva.findMany({
+        select: select,
+        where: {
+          estado: 0,
+        },
+        orderBy:{
+          tolvaDescarga: 'asc'
+        }
+      }), 
+      db.boleta.findMany({
+        select: {
+          id: true,
+          socio: true, 
+          placa: true, 
+          motorista: true, 
+          origen: true,
+          tolvaAsignada: true,
+          fechaInicio: true,
+          producto: true,
+        },
+        where:{
+          estado: 'Pendiente', 
+          tolva : {
+            none:{}
+          },
+          OR:[
+            {
+              idProducto: 18,
+              idMovimiento: 2, 
+            },
+            {
+              idProducto: 17, 
+              idMovimiento: 1, 
+            }
+          ]
+        }
+      })
+    ])
+
+    const reTolvas = tolvas.map((prev) => ({
+      ...prev,
+      fechaEntrada: prev.fechaEntrada.toLocaleString('es-ES'), 
+      tolvaAasignar: configTolva[prev.tolvaDescarga]
+    }))
+
+    const response = {
+      tolva1: [],
+      tolva2: [],
+      tolva3: [],
+      tolva4: [],
+    }
+
+    reTolvas.forEach((tolva) => {
+      const tolvaDestino = `tolva${tolva.tolvaAasignar}`;
+      if (response[tolvaDestino]) {
+        response[tolvaDestino].push(tolva);
+      }
+    })
+
+    const enEspera = pendientes.map((item)=> ({
+      ...item, fechaInicio: item.fechaInicio.toLocaleString('es-ES')
+    }))
+
+    res.status(200).send({tolvas: response, pendientes: enEspera});
+  } catch (err) {
+    setLogger(
+      "TOLVA",
+      "OBTENER EL ESTADO DE LAS TOLVAS DE DESCARGA",
+      req,
+      null,
+      3
+    );
+    console.log(err);
+  }
+};
+
 const getTolvasDeDescargasOcupadas = async(req, res) => {
   try{
     const token = req.header('Authorization');
@@ -1895,5 +2006,6 @@ module.exports = {
   getInfoForBuquesQQ,
   postGetallInfoDetailsSilos,
   getNewInfoNivelSilos,
-  getNewInfoNivelDetails,  
+  getNewInfoNivelDetails,
+  getCamionesDeDescargasOcupadsTodos  
 };

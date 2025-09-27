@@ -94,6 +94,11 @@ const RUTAS_REPORTES = [
     path: "/reporteTolva",
     name: "Tolva",
     icon: <BsClipboard2Data />,
+  },
+  {
+    path: "/reporteZonasDescarga",
+    name: "Ocupación Tolvas",
+    icon: <BsClipboard2Data />,
   }
 ];
 
