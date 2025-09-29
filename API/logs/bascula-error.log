@@ -37,3 +37,5 @@ The provided database string is invalid. Error parsing connection string: Conver
   clientVersion: '6.4.1',
   errorCode: undefined
 }
+Error: connect ETIMEDOUT \\.\pipe\hdbpipe.254405750
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16)

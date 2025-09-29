@@ -1,0 +1,4 @@
+Error: connect ETIMEDOUT \\.\pipe\hdbpipe.254420062
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16)
+Error: connect ETIMEDOUT \\.\pipe\hdbpipe.254420203
+    at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1636:16)

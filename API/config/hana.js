@@ -31,8 +31,7 @@ const connectHana = () => {
 };
 
 const getConnection = async () => {
-  if (!hanaConn || !hanaConn.connected) {   // 👈 aquí también
-    console.log('viendo cuantas procesos lo hacen')
+  if (!hanaConn || !hanaConn.isValid()) {
     await connectHana();
   }
   return hanaConn;
