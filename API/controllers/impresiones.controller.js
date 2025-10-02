@@ -708,6 +708,10 @@ const comprobanteDeCarga = (boleta, despachador)=> {
             { text: `${boleta.motorista}`, align: "RIGHT", width: 0.4 }
           ])
           .tableCustom([
+            { text: "TRANSPORTE:", align: "LEFT", width: 0.4, style: 'B' }, 
+            { text: `${boleta.empresa}`, align: "RIGHT", width: 0.4 }
+          ])
+          .tableCustom([
             { text: "TICKET:", align: "LEFT", width: 0.4, style: 'B' }, 
             { text: `#${boleta.Nviajes} (${boleta.NSalida})`, align: "RIGHT", width: 0.4 }
           ])
@@ -837,7 +841,7 @@ function generarContenidoTercioCarta(copia, esPrimera = false, colors, boleta, d
           [`Placa        : ${boleta.placa} ${boleta.furgon ? `- Furgón: ${boleta.furgon}` : ''}`, `Hora de Salida   : ${boleta.fechaFin ? boleta.fechaFin.toLocaleString() : 'Pendiente'}`],
           [`Motorista    : ${boleta.motorista}`, `${ultimoDocumento}`],
           [`Transporte   : ${boleta.empresa}`, `Marchamos        : ${[boleta?.sello1, boleta?.sello2, boleta?.sello3, boleta?.sello4, boleta?.sello5, boleta?.sello6].filter(Boolean).join(', ') || 'N/A'}`],
-          [`Origen       : ${boleta.origen || boleta.trasladoOrigen}`, ''],
+          [`Origen       : ${boleta.origen || boleta.trasladoOrigen}`, `Observaciones    : ${boleta.observaciones || 'Sin observaciones.'}`],
           [`Destino      : ${boleta.destino || boleta.trasladoDestino || 'Pendiente'}`, ''],
           [`Producto     : ${boleta.producto}`, ''],
         ]
@@ -979,7 +983,7 @@ function generarContenidoTercioCartaReimpresion(copia, esPrimera = false, colors
           [`Placa        : ${boleta.placa} ${boleta.furgon ? `- Furgón: ${boleta.furgon}` : ''}`, `Hora de Salida   : ${boleta.fechaFin ? boleta.fechaFin.toLocaleString() : 'Pendiente'}`],
           [`Motorista    : ${boleta.motorista}`, `${ultimoDocumento}`],
           [`Transporte   : ${boleta.empresa}`, `Marchamos        : ${[boleta?.sello1, boleta?.sello2, boleta?.sello3, boleta?.sello4, boleta?.sello5, boleta?.sello6].filter(Boolean).join(', ') || 'N/A'}`],
-          [`Origen       : ${boleta.origen || boleta.trasladoOrigen}`, ''],
+          [`Origen       : ${boleta.origen || boleta.trasladoOrigen}`, `Observaciones    : ${boleta.observaciones || 'Sin observaciones.'}`],
           [`Destino      : ${boleta.destino || boleta.trasladoDestino || 'Pendiente'}`, ''],
           [`Producto     : ${boleta.producto}`, ''],
         ]
