@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Search, Download, Truck, Package, Calendar, Weight } from 'lucide-react';
-import { FaBoxes } from "react-icons/fa";
 
 const LIST_STATUS = {
     C : 'CANCELADO',
@@ -75,9 +74,16 @@ export const ManifiestosTable = ({ tableData }) => {
             <option key={estado} value={estado}>{estado}</option>
           ))}
         </select>
-        <div className='flex items-center justify-center gap-2 border border-gray-300 rounded-lg px-2'>
-            <input name='onlyNow' type="checkbox" className='bg-red-400'/> <label htmlFor="onlyNow">Entregas Hoy</label>
-        </div>
+        <label className='flex items-center justify-center gap-2 border border-gray-300 rounded-lg px-2 cursor-pointer hover:bg-gray-50'>
+          <input 
+              id='onlyNow'
+              name='onlyNow' 
+              type="checkbox" 
+              className='cursor-pointer' 
+              onChange={(e) => {setOnlyNow(e.target.checked)}}
+          /> 
+          <span>Entregas Hoy</span>
+      </label>
       </div>
 
       {/* Tabla */}
