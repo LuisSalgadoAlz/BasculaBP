@@ -527,6 +527,7 @@ const postClientePlacaMoto = async (req, res) => {
     const esProcesoCero = proceso === 0;
     const esMovimientoFactura = idMovimiento === 2 || idMovimiento === 15;
     const esMovimientoTraslado = idMovimiento === 10 || idMovimiento === 11;
+    const esGranzaNacional = idProducto === 17 && idMovimiento===14;
     const requiereFactura = esProcesoCero && esMovimientoFactura;
     const requiereOrigen = esProcesoCero && !esMovimientoTraslado;
     const requiereTraslado = esProcesoCero && esMovimientoTraslado;
@@ -605,9 +606,10 @@ const postClientePlacaMoto = async (req, res) => {
         });
       }
 
-      if (idProducto === 17 && idMovimiento===14) {
+      // Granza nacional
+      if (esGranzaNacional) {
         Object.assign(baseData, {
-          tolvaAsignada: 2,
+          tolvaAsignada: parseInt(tolvaAsignada),
         })
       }
 
@@ -694,6 +696,8 @@ const postClientePlacaMotoComodin = async (req, res) => {
       factura,  
     } = req.body;
 
+    const esGranzaNacional = idProducto === 17 && idMovimiento===14;
+
     const [
       despachador,
       producto,
@@ -743,6 +747,12 @@ const postClientePlacaMotoComodin = async (req, res) => {
         Object.assign(baseData, {
           origen: idOrigen
         });
+      }
+
+      if (esGranzaNacional) {
+        Object.assign(baseData, {
+          tolvaAsignada: parseInt(tolvaAsignada),
+        })
       }
 
       if (idMovimiento===2) {
