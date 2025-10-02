@@ -772,7 +772,7 @@ const getCamionesDeDescargasOcupadsTodos = async (req, res) => {
             },
             {
               idProducto: 17, 
-              idMovimiento: 1, 
+              idMovimiento: 14, 
             }
           ]
         }

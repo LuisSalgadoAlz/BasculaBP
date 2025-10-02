@@ -566,7 +566,13 @@ export const verificarDataNewPlaca = (funError, data, setMsg, marchamos, dataSel
   // Validaciones importaciones a granel
   const esImportacionesAgranel = idMovimiento === 2;
   const esImportacionesContenerizada = idMovimiento === 15;
+  const esGranzaNacional = idMovimiento === 14 && idProducto === 17
 
+  if (esGranzaNacional) {
+    if (!tolvaAsignada) {
+      return mostrarError('Por favor, ingresar una tolva de destino');
+    }
+  }
   if (esImportacionesAgranel) {
     if (!NSalida || !NViajes) {
       return mostrarError('Por favor, ingresar numero de viaje y de salida');

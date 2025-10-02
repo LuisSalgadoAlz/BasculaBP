@@ -51,7 +51,7 @@ export const SideBarTolva = ({ modo = "extendido", altura = 500 }) => {
   const handleShowModal = () => setShowModalSupport(true)
   const handleCloseModal = () => setShowModalSupport(false)
   
-  const RUTA_REPORTE = RUTAS_REPORTES.filter((item) => item.name.includes('Estado Silos') || item.name.includes('Tolva'))
+  const RUTA_REPORTE = RUTAS_REPORTES.filter((item) => item.name.includes('Estado Silos') || item.name.includes('Tolva') || item.name.includes('Zonas de Descarga'))
   const isExtendido = modo === "extendido";
 
   return (

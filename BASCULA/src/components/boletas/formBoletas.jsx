@@ -368,6 +368,20 @@ export const ModalNormal = ({ hdlClose, hdlChange, fillData, formBol, boletas, h
                     </div>
                   </>
                 )}
+                {(boletas?.Movimiento===14 && boletas?.Producto ===17) &&(
+                  <>
+                    <div className="grid grid-cols-6 gap-3 mt-2 mb-4 bg-gray-50 p-4 rounded-2xl max-sm:grid-cols-2 max-sm:gap-1 shadow">
+                      <div className="col-span-6 max-sm:col-span-2">
+                        <label htmlFor="TolvaAsignada" className="block text-sm text-gray-600"> # Tolva </label>
+                        <select name="TolvaAsignada" className={`${claseFormInputs} p-3`} onChange={hdlChange} value={boletas?.TolvaAsignada}>
+                          <option value=''>Seleccione una tolva</option>
+                          <option value={1}>Tolva 1</option>
+                          <option value={2}>Tolva 2</option>
+                        </select>
+                      </div>
+                    </div>
+                  </>
+                )}
                 {(boletas?.Movimiento==15) &&(
                   <>
                     <div className="grid grid-cols-6 gap-3 mt-2 mb-4 bg-gray-50 p-4 rounded-2xl max-sm:grid-cols-2 max-sm:gap-1 shadow">
