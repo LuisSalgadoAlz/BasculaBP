@@ -5,6 +5,7 @@ import "./index.css";
 import VerificarLog from "./utils/verificarLog";
 import { Spinner } from "./components/alerts";
 import ViewDisabled from "./views/viewDisabled";
+const ControlZone = lazy(()=>import('./views/bpt/control'));
 const TolvasOcupadas = lazy(()=>import('./components/informes/tolvasOcupadas'));
 const ServicioBascula = lazy(()=>import('./components/informes/servicioBascula'));
 const ReportesSilos = lazy(()=>import('./components/informes/reportesSilos'));
@@ -82,7 +83,12 @@ const navRutas = createBrowserRouter([
       { path: "/reporteZonasDescarga", element: <TolvasOcupadas/> }
     ],
   },
-
+  {
+    element: <VerificarLog userType='ADMINISTRADOR,BODEGAPT' />,
+    children: [
+      { path: '/control', element: <ControlZone />}
+    ]
+  },
 ]);
 
 createRoot(document.getElementById("root")).render(

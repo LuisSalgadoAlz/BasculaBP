@@ -1,6 +1,6 @@
 import { BiDockLeft } from "react-icons/bi";  
 import { RxHamburgerMenu } from "react-icons/rx";
-import { SideBarCel, SideBarCelAdmin, SideBarCelGuardia, SideBarCelReportes, SideBarCelTolva } from "./sideBarCel";
+import { SideBarCel, SideBarCelAdmin, SideBarCelGuardia, SideBarCelReportes, SideBarCelTolva, SideBarCelBodegaPT } from "./sideBarCel";
 import { useState } from "react";
 import { VERSION } from "../constants/global";
 
@@ -19,7 +19,7 @@ const Header = ({ title, fun, type }) => {
           </button>
           <button
             onClick={()=>setShow(true)}
-            className="text-lg text-gray-700 ml-8 hidden items-center max-sm:block"
+            className="text-lg text-gray-700 ml-8 max-sm:ml-5 hidden items-center max-sm:block"
           >
             <RxHamburgerMenu />
           </button>
@@ -38,6 +38,7 @@ const Header = ({ title, fun, type }) => {
       {(show && type=='TOLVA') &&  <SideBarCelTolva hdlClose={handleClose} />}
       {(show && type=='GUARDIA') &&  <SideBarCelGuardia hdlClose={handleClose} />}
       {(show && type=='REPORTES') &&  <SideBarCelReportes hdlClose={handleClose} />}
+      {(show && type=='BODEGAPT') &&  <SideBarCelBodegaPT hdlClose={handleClose} />}
     </>
   );
 };

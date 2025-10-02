@@ -1,97 +1,12 @@
 import { NavLink, useNavigate } from "react-router";
-import { MdOutlineDashboard } from "react-icons/md";
-import { BsCalendarWeek, BsClipboard2Data, BsClipboard2Pulse, BsFileBarGraph } from "react-icons/bs";
-import { RiTruckLine } from "react-icons/ri";
-import { FiUsers } from "react-icons/fi";
 import { PiSignOutFill } from "react-icons/pi";
 import { IoMdClose } from "react-icons/io";
-
 import Cookies from "js-cookie";
-import { AiOutlineFileExclamation } from "react-icons/ai";
 import { SlSupport } from "react-icons/sl";
 import { useState } from "react";
 import { SupportModal } from "./alerts";
 
-const RUTAS_PRINCIPALES = [
-  {
-    path: "/dashboard",
-    name: "Dashboard",
-    icon: <MdOutlineDashboard />,
-  },
-  {
-    path: "/socios",
-    name: "Socios",
-    icon: <FiUsers />,
-  },
-  {
-    path: "/empresas",
-    name: "Empresas",
-    icon: <RiTruckLine />,
-  },
-  {
-    path: "/boletas",
-    name: "Boletas",
-    icon: <BsClipboard2Pulse />,
-  },
-];
-
-
-const RUTAS_ADMIN = [
-  {
-    path: "/admin/dashboard",
-    name: "Dashboard",
-    icon: <MdOutlineDashboard />,
-  },
-  {
-    path: "/admin/usuarios",
-    name: "Usuarios",
-    icon: <FiUsers />,
-  },
-  {
-    path: "/admin/logs",
-    name: "Registros",
-    icon: <AiOutlineFileExclamation />,
-  },
-];
-
-const RUTAS_TOLVA = [
-  {
-    path: "/tolva/dashboard",
-    name: "Dashboard",
-    icon: <MdOutlineDashboard />,
-  },
-];
-
-const RUTAS_GUARDIA = [
-  {
-    path: "/guardia",
-    name: "Control Salida",
-    icon: <MdOutlineDashboard />,
-  },
-]
-
-const RUTAS_REPORTES = [
-  {
-    path: "/calendario",
-    name: "Calendario",
-    icon: <BsCalendarWeek />,
-  },
-  {
-    path: "/informes",
-    name: "Informes",
-    icon: <BsClipboard2Data  />,
-  },
-  {
-    path: "/importaciones-granza",
-    name: "Importaciones",
-    icon: <BsClipboard2Data />,
-  },
-  {
-    path: "/casulla",
-    name: "Casulla",
-    icon: <BsClipboard2Data/>,
-  }
-];
+import { RUTAS_ADMIN, RUTAS_GUARDIA, RUTAS_PRINCIPALES, RUTAS_REPORTES, RUTAS_TOLVA, RUTAS_SUPERVISOR } from "./rutas";
 
 export const CerrarSession = ({ onClick }) => (
   <button
@@ -212,4 +127,8 @@ export const SideBarCelGuardia = ({ hdlClose }) => (
 
 export const SideBarCelReportes = ({ hdlClose }) => (
   <BaseSidebar routes={RUTAS_REPORTES} onClose={hdlClose} />
+);
+
+export const SideBarCelBodegaPT = ({ hdlClose }) => (
+  <BaseSidebar routes={RUTAS_SUPERVISOR} onClose={hdlClose} />
 );

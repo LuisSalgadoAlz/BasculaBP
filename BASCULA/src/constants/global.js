@@ -1,13 +1,14 @@
 export const URLHOST = 'http://localhost:3000/api/'
 export const URLWEBSOCKET = 'ws://localhost:3000'
-export const VERSION = '1.0.16'
+export const VERSION = '2.0.0'
 
 export const AUTH_CONFIG = {
   BASCULA: '/boletas',
   ADMINISTRADOR: '/admin/dashboard',
   TOLVA: '/tolva/dashboard', 
   GUARDIA: '/guardia', 
-  REPORTES: '/importaciones-granza'
+  REPORTES: '/importaciones-granza',
+  BODEGAPT: '/control'
 };
 
 export const TOKEN_EXPIRY_MINUTES = 30;

@@ -5,7 +5,7 @@ const executeView = async (viewName, filters = {}) => {
     const conn = await getConnection();
     
     // Vista simple
-    let query = `SELECT * FROM ${process.env.HANA_DATABASE}.${viewName}`;
+    let query = `SELECT * FROM ${process.env.HANA_DATABASE}."${viewName}"`;
     let params = [];
     
     // Agregar filtros si existen
@@ -18,7 +18,30 @@ const executeView = async (viewName, filters = {}) => {
     return new Promise((resolve, reject) => {
       conn.exec(query, params, (err, result) => {
         if (err) {
-          console.error('Error ejecutando vista:', err);
+          console.error('[LERROR]: Error ejecutando vista');
+          reject(err);
+        } else {
+          resolve(result);
+        }
+      });
+    });
+  } catch (error) {
+    throw error;
+  }
+};
+
+
+const executeInfoTables = async (viewName) => {
+  try {
+    const conn = await getConnection();
+    
+    let query = `SELECT RAW_RECORD_COUNT_IN_DELTA FROM M_CS_TABLES WHERE SCHEMA_NAME = '${process.env.HANA_DATABASE}' AND TABLE_NAME = '${viewName}'`;
+    let params = [];
+        
+    return new Promise((resolve, reject) => {
+      conn.exec(query, params, (err, result) => {
+        if (err) {
+          console.error('Error ejecutando informacion de tabla:', err);
           reject(err);
         } else {
           resolve(result);
@@ -31,5 +54,6 @@ const executeView = async (viewName, filters = {}) => {
 };
 
 module.exports = {
-    executeView
+    executeView, 
+    executeInfoTables
 }

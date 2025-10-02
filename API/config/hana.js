@@ -20,10 +20,11 @@ const connectHana = () => {
 
     hanaConn.connect(hanaParams, (err) => {
       if (err) {
-        console.error("❌ Error conectando a HANA:", err);
+        console.error("[HANADB]: Error conectando a HANA:", err);
         reject(err);
       } else {
-        console.log("✅ Conexión exitosa a SAP HANA");
+        /* Lectura HANA DB */
+        console.log("[HANADB]: Conexión exitosa a SAP HANA");
         resolve(hanaConn);
       }
     });

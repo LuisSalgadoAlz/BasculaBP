@@ -31,7 +31,8 @@ const getRedisClient = async () => {
       });
 
       client.on('connect', () => {
-        console.log('Redis: Conectado');
+        /* Lectura de Redis */
+        console.log('[LREDIS]: ON');
       });
 
       client.on('disconnect', () => {

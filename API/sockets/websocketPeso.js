@@ -14,6 +14,14 @@ const setupWebSocket = (server) => {
   let intervalPeso = null;
   let intervalManifiestos = null;
   
+  // Lock para prevenir ejecuciones concurrentes
+  let isExecutingManifiestos = false;
+  let pendingManifiestosExecution = false;
+
+
+  // Configuracion intervalo
+  let intervaloManifiestoV2 = true;
+
   /**
    * END ----------------------------------------------------------------------------
    * END: Clientes de redis
@@ -23,9 +31,7 @@ const setupWebSocket = (server) => {
   const subscriber = createClient({ url: "redis://localhost:6379" });
 
   Promise.all([publisher.connect(), subscriber.connect()]).then(async () => {
-    console.log(`[Worker]: ON`);
-    const store = await getRedisClient()
-    
+    console.log(`[Worker]: ON`);    
     // Suscribirse / conectarse a eventos de peso
     await subscriber.subscribe("peso:data", (message) => {
       // Enviar a todos los clientes de ESTE worker
@@ -57,6 +63,24 @@ const setupWebSocket = (server) => {
         }
       }, 100);
     }
+
+    /**
+     * END --------------------------------------------------------------------------
+     * END - Iniciar intervalo cuando se conecta unicamente el primir cliente.
+     * END --------------------------------------------------------------------------  
+     */
+    // Iniciar intervalo cuando se conecta el primer cliente
+    if (process.env.NODE_APP_INSTANCE === '0' || !process.env.NODE_APP_INSTANCE) {
+      console.log(`[Worker]: Iniciando intervalo de manifiestos`);
+      
+      intervalManifiestos = setInterval(() => {
+        if(intervaloManifiestoV2) {
+          executeManifiestosQuery();
+        }else{
+          console.log(`[Worker]: Esperando clientes`);
+        }
+      }, 5000);
+    }
   });
 
   /**
@@ -73,74 +97,89 @@ const setupWebSocket = (server) => {
   });
 
   /**
+   * END ----------------------------------------------------------------------------
+   * END - Función para ejecutar consultas de manifiestos anti concurrencia
+   * END ----------------------------------------------------------------------------
+   */
+  async function executeManifiestosQuery() {
+    // Si ya se está ejecutando, marcar que hay una ejecución pendiente y salir
+    if (isExecutingManifiestos) {
+      pendingManifiestosExecution = true;
+      return;
+    }
+
+    try {
+      isExecutingManifiestos = true;
+      pendingManifiestosExecution = false;
+
+      const store = await getRedisClient();
+      const result = await executeInfoTables('@MANIFIESTO');
+      const cachedData = await store.get('sap:manifiestosView');
+      
+      // Si no hay datos en caché, guardar y publicar
+      if (cachedData === null) {
+        const queryFirtsTime = await executeView('IT_MANIFIESTOS_ACTIVOS');
+        await store.set('sap:manifiestosData', JSON.stringify(queryFirtsTime));
+        await store.set('sap:manifiestosView', JSON.stringify(result));
+        await publisher.publish("manifiestos:msg", JSON.stringify(queryFirtsTime));
+        return;
+      }
+      
+      // Comparar datos actuales con caché
+      const resultString = JSON.stringify(result);
+      if (cachedData !== resultString) {
+        // Hay cambios: actualizar caché y publicar
+        const queryFirtsTime = await executeView('IT_MANIFIESTOS_ACTIVOS');
+        await store.set('sap:manifiestosView', resultString);
+        await store.set('sap:manifiestosData', JSON.stringify(queryFirtsTime));
+        await publisher.publish("manifiestos:msg", JSON.stringify(queryFirtsTime));
+        console.log('[Worker]: Cambios detectados SAP - publicando actualización');
+      }
+    } catch (err) {
+      console.error('[Worker]: Error en consulta de manifiestos:', err);
+    } finally {
+      isExecutingManifiestos = false;
+      
+      // Si hubo una ejecución pendiente mientras procesábamos, ejecutar ahora
+      if (pendingManifiestosExecution) {
+        setImmediate(() => executeManifiestosQuery());
+      }
+    }
+  }
+
+  /**
    * TODO: Falta construccion para evitar sobrecarga en ambos lados con la pool.
    * ! **** EN BETA ****
    */
 
   wssManifiestos.on("connection", async (ws) => {
-    console.log(`[Worker]: Cliente conectado a /manifiestos (Total: ${wssManifiestos.clients.size})`);
-    const queryManifiestos = await executeView('IT_MANIFIESTOS_ACTIVOS');
-
     /**
      * END --------------------------------------------------------------------------
      * END - Cada nuevo cliente que se conecte se le enviaran los datos frescos
      * END --------------------------------------------------------------------------  
      */
-    try{
+    try {
       const store = await getRedisClient();
-      const result = await executeInfoTables('@MANIFIESTO');
-      const resultString = JSON.stringify(result);
-        
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify(queryManifiestos));
-        console.log(`[Worker]: Datos obtenidos y enviados al nuevo cliente`);
-      }
-        
-      // Guardar en caché para futuros clientes
-      await store.set('sap:manifiestosView', resultString);
-    }catch(err){
-      console.error(`[Worker]: Error al enviar datos iniciales:`, err);
-    }
+      const cachedView = await store.get('sap:manifiestosView');
+      const cachedTable =  await store.get('sap:manifiestosData')
+      intervaloManifiestoV2 = true;
 
-    /**
-     * END --------------------------------------------------------------------------
-     * END - Iniciar intervalo cuando se conecta unicamente el primir cliente.
-     * END --------------------------------------------------------------------------  
-     */
-    // Iniciar intervalo cuando se conecta el primer cliente
-    if (wssManifiestos.clients.size === 1 && (process.env.NODE_APP_INSTANCE === '0' || !process.env.NODE_APP_INSTANCE)) {
-      console.log(`[Worker]: Iniciando intervalo de manifiestos`);
-      
-      intervalManifiestos = setInterval(async () => {
-        try {
-          const store = await getRedisClient();
-          const result = await executeInfoTables('@MANIFIESTO');
-          const cachedData = await store.get('sap:manifiestosView');
-          let queryFirtsTime = [{}]
-          // Si no hay datos en caché, guardar y publicar
-          if (cachedData === null) {
-            await store.set('sap:manifiestosView', JSON.stringify(result));
-            queryFirtsTime = await executeView('IT_MANIFIESTOS_ACTIVOS');
-            await publisher.publish("manifiestos:msg", JSON.stringify(queryFirtsTime));
-            console.log('[Worker]: Datos iniciales guardados y publicados');
-            return;
-          }
-          
-          // Comparar datos actuales con caché
-          const resultString = JSON.stringify(result);
-          if (cachedData !== resultString) {
-            // Hay cambios: actualizar caché y publicar
-            queryFirtsTime = await executeView('IT_MANIFIESTOS_ACTIVOS');
-            await store.set('sap:manifiestosView', resultString);
-            await publisher.publish("manifiestos:msg", JSON.stringify(queryFirtsTime));
-            console.log('[Worker]: Cambios detectados - publicando actualización');
-          } else {
-            console.log('[Worker]: No hay cambios - omitiendo publicación');
-          }
-        } catch (err) {
-          console.error('[Worker]: Error en intervalo de manifiestos:', err);
+      // Si hay datos en caché, usar esos para el nuevo cliente
+      if (cachedView) {
+        const queryManifiestos = cachedTable ? JSON.parse(cachedTable) : await executeView('IT_MANIFIESTOS_ACTIVOS');
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify(queryManifiestos));
         }
-      }, 5000);
+      } else {       
+        // Intentar obtener los datos que acabamos de guardar
+        const result = await store.get('sap:manifiestosView');
+        if (result && ws.readyState === WebSocket.OPEN) {
+          const queryManifiestos = cachedTable ? JSON.parse(cachedTable) : await executeView('IT_MANIFIESTOS_ACTIVOS');
+          ws.send(JSON.stringify(queryManifiestos));
+        }
+      }
+    } catch (err) {
+      console.error(`[Worker]: Error al enviar datos iniciales`);
     }
 
     /**
@@ -149,17 +188,14 @@ const setupWebSocket = (server) => {
      * END - ADEMAS DE LIMPIAR EL INTERVALO PARA NO CONSUMIR RECURSOS
      * END ----------------------------------------------------------------------------
      */
-    ws.on("close", async() => {
-      console.log(`[Worker]: Cliente desconectado de /manifiestos (Restantes: ${wssManifiestos.clients.size})`);
-      
+    ws.on("close", async() => { 
       // Si no quedan clientes conectados, detener el intervalo y limpiar Redis
       if (wssManifiestos.clients.size === 0) {
-        console.log(`[Worker]: No hay más clientes - deteniendo intervalo y limpiando Redis`);
-        
-        if (intervalManifiestos) {
-          clearInterval(intervalManifiestos);
-          intervalManifiestos = null;
-        }
+        // Reset de flags
+        isExecutingManifiestos = false;
+        pendingManifiestosExecution = false;
+
+        if (intervalManifiestos) intervaloManifiestoV2 = false;
         
         const store = await getRedisClient();
         await store.del("sap:manifiestosView");
@@ -204,6 +240,9 @@ const setupWebSocket = (server) => {
   process.on('SIGTERM', async () => {
     if (intervalPeso) clearInterval(intervalPeso);
     if (intervalManifiestos) clearInterval(intervalManifiestos);
+    
+    isExecutingManifiestos = false;
+    pendingManifiestosExecution = false;
     
     const store = await getRedisClient();
     await store.del("sap:manifiestosView");

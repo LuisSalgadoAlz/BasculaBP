@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Cookies from 'js-cookie';
 import Header from "../components/header";
-import { SideBar, SideBarAdmin, SideBarGuardia, SideBarReportes, SideBarTolva } from "../components/sideBar";
+import { SideBar, SideBarAdmin, SideBarBodegaPT, SideBarGuardia, SideBarReportes, SideBarTolva } from "../components/sideBar";
 
 // Componente genérico
 const CuerpoBase = ({ children, SideBarComponent, title, type }) => {
@@ -34,7 +34,8 @@ const CuerpoBase = ({ children, SideBarComponent, title, type }) => {
       <div className="w-full max-h-screen flex flex-col overflow-hidden">
         <Header title={title} fun={handleShow} type={type} />
         <div className="flex-1 overflow-x-hidden body-components">
-          <div className="mx-9 my-7">{children}</div>
+          {/* mx-9 my-7 */}
+          <div className="max-sm:m-3 mx-9 my-7">{children}</div>
         </div>
       </div>
     </main>
@@ -84,5 +85,14 @@ export const CuerpoReportes = ({ children }) => (
     SideBarComponent={SideBarReportes}
     title="Sistema de Gestión de Báscula"
     type="REPORTES"  
+  />
+);
+
+export const CuerpoBodegaPT = ({ children }) => (
+  <CuerpoBase
+    children={children}
+    SideBarComponent={SideBarBodegaPT}
+    title="Sistema de Gestión de Bodega PT"
+    type="BODEGAPT"  
   />
 );
