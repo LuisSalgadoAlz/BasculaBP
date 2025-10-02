@@ -26,7 +26,7 @@ const TolvasOcupadas = () => {
         <>
             <div className="flex justify-between w-full gap-5 max-sm:flex-col max-xl:flex-col mb-4">
                 <div className="parte-izq">
-                <h1 className="text-3xl font-bold titulo">Ocupación Tolvas</h1>
+                <h1 className="text-3xl font-bold titulo">Zonas de Descarga Tolva</h1>
                 <h1 className="text-gray-600 max-sm:text-sm">
                     {" "}
                     Análisis detallado de las tolvas de descarga actuales
