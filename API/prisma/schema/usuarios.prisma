@@ -10,5 +10,6 @@ model Usuarios {
     boleta solo puede tener un usuario */
     
     UsuariosPorTolva UsuariosPorTolva?
+    UsuariosBPT UsuariosBPT?
     boletas Boleta[]
 }

@@ -1,0 +1,114 @@
+model UsuariosBPT {
+  id         Int        @id @default(autoincrement())
+  idUsuario  Int?       @unique
+  canal      Int        // 0 Ambos - 1 Mayoreo - 2 Detalle
+  
+  usuarioRef Usuarios?  @relation(fields: [idUsuario], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  
+  // Relaciones con Picking
+  pickingsRealizados Picking[]        @relation("PickingUsuarioBPT")
+  pickingsAsignados  Picking[]        @relation("PickingAsignadoPor")
+  pickingsRevisados  Picking[]        @relation("PickingRevisadoPor")
+  
+  // Relaciones con Manifiestos
+  manifiestosCreados Manifiestos[]    @relation("ManifiestosUser")
+  manifiestosAsignados Manifiestos[]  @relation("ManifiestosUserAsignado")
+  
+  @@index([idUsuario])
+}
+
+model Manifiestos {
+  DocNum          Int       @id
+  U_Status        String
+  Tipo            String
+  U_IDRuta        String
+  U_FechaEntrega  DateTime
+  U_PesoTotal     Float
+  U_Tipo          String
+  U_CamionPlaca   String
+  U_IDChofer      String
+  U_Chofer        String
+  Bodega          String
+  usuarioBPTId    Int?      
+  userAsignadoId  Int?     
+  
+  // END - EstadoPicking
+  // END - PND: Manifiesto sin asignar
+  // END - AGN: Asignado a usuario de picking
+  // END - EPK: Usuario comenzó el picking
+  // END - FPK: Usuario finalizó el picking
+  // END - ICP: Devuelto por falta de productos/incompleto
+  // END - APK: Aprobado y listo para carga
+  // END - RCO: Rechazado definitivamente / Cancelado
+  // END - LPC: Aprobado y en espera de carga
+  // END - END: Ya fue cargado al camión
+
+  estadoPicking   String    @default("PC")
+  pickingActualId Int?      @unique  // DEBE SER UNIQUE para relación 1-1
+  
+  user            UsuariosBPT? @relation("ManifiestosUser", fields: [usuarioBPTId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userAsignado    UsuariosBPT? @relation("ManifiestosUserAsignado", fields: [userAsignadoId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  
+  pickings        Picking[]    @relation("ManifiestoPicking")
+  pickingActual   Picking?     @relation("PickingActual", fields: [pickingActualId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  
+  @@index([usuarioBPTId])
+  @@index([userAsignadoId])
+  @@index([estadoPicking])
+}
+
+model Picking {
+  id                    Int       @id @default(autoincrement())
+  manifiestosDocNum     Int
+  usuarioBPTPickingId   Int       // Usuario BPT que realiza el picking
+  asignadoPorBPTId      Int       // Usuario BPT que asigna el picking
+  fechaInicioPicking    DateTime?
+  fechaFinPicking       DateTime?
+  
+  
+  // END - Estado
+  // END - PND - Pendiente 
+  // END - IPK - INICIO_PICKING
+  // END - FIN - FIN_PICKING y enviando a revision
+  // END - APK - APROBADO
+  // END - ICP - DVDEVUELTO
+  // TODO- RAS - PENSAR EN UNA REASIGNACION
+
+  estado                String    @default("PND")
+  
+  motivoDevolucion      String?   @db.Text
+  numeroIntentos        Int       @default(1)
+  esReasignacion        Boolean   @default(false)
+  pickingOriginalId     Int?      // Si es reasignación, referencia al picking original
+  revisadoPorBPTId      Int?      // Usuario BPT que revisa el picking
+  fechaRevision         DateTime?
+  
+  // Relaciones
+  manifiesto            Manifiestos  @relation("ManifiestoPicking", fields: [manifiestosDocNum], references: [DocNum], onDelete: Cascade)
+  usuarioBPTPicking     UsuariosBPT  @relation("PickingUsuarioBPT", fields: [usuarioBPTPickingId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  asignadoPor           UsuariosBPT  @relation("PickingAsignadoPor", fields: [asignadoPorBPTId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  revisadoPor           UsuariosBPT? @relation("PickingRevisadoPor", fields: [revisadoPorBPTId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  
+  // Auto-relación para reasignaciones
+  pickingOriginal       Picking?    @relation("PickingReasignaciones", fields: [pickingOriginalId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  reasignaciones        Picking[]   @relation("PickingReasignaciones")
+  
+  // Relación inversa con manifiesto actual (1-1)
+  manifestoComoActual   Manifiestos? @relation("PickingActual")
+
+  
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+  
+  @@index([manifiestosDocNum])
+  @@index([usuarioBPTPickingId])
+  @@index([asignadoPorBPTId])
+  @@index([revisadoPorBPTId])
+  @@index([pickingOriginalId])
+  @@index([estado])
+}
+
+model pickingLog{
+    pickingID Int @id
+    Intento Int
+}
