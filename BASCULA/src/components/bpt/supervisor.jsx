@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Search, Download, Truck, Package, Calendar, Weight } from 'lucide-react';
+import { Search, X, User, View } from 'lucide-react';
+import { useEffect } from 'react';
 
 const LIST_STATUS = {
     C : 'CANCELADO',
@@ -7,7 +8,7 @@ const LIST_STATUS = {
     I : 'ORIGINAL'
 }
 
-export const ManifiestosTable = ({ tableData }) => {
+export const ManifiestosTable = ({ tableData, handleOpenModal }) => {
   const data = tableData ? tableData.map((item, index) => ({
     id: index + 1,
     manifiesto: item.DocNum,
@@ -74,7 +75,7 @@ export const ManifiestosTable = ({ tableData }) => {
             <option key={estado} value={estado}>{estado}</option>
           ))}
         </select>
-        <label className='flex items-center justify-center gap-2 border border-gray-300 rounded-lg px-2 cursor-pointer hover:bg-gray-50'>
+        <label className='flex items-center justify-center gap-2 border border-gray-300 rounded-lg px-2 cursor-pointer hover:bg-gray-50 max-sm:p-2'>
           <input 
               id='onlyNow'
               name='onlyNow' 
@@ -112,7 +113,7 @@ export const ManifiestosTable = ({ tableData }) => {
               <th className="px-6 py-3 max-sm:py-2 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
                 Peso (QQ)
               </th>
-              <th className="px-6 py-3 max-sm:py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+              <th className="px-6 py-3 max-sm:py-2 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
                 Acción
               </th>
             </tr>
@@ -169,7 +170,7 @@ export const ManifiestosTable = ({ tableData }) => {
                   </td>
                   <td className="px-6 py-4 max-sm:py-2 whitespace-nowrap text-sm text-gray-900">
                     <div className="flex items-center justify-end gap-2">
-                      <button className='bg-[#5a3f27] text-white p-2 rounded-lg'> Asignar </button>
+                      <button onClick={()=>handleOpenModal(tableData?.filter(item => item.DocNum === row.manifiesto))} className='bg-[#5a3f27] text-white p-2 rounded-lg'> Asignar </button>
                     </div>
                   </td>
                 </tr>
@@ -230,4 +231,130 @@ export const ManifiestosTable = ({ tableData }) => {
       )}
     </div>
   );
+}
+
+export const ModalAsignar = ({ usuarios=[{}], setIsOpen,isOpen, handleAsignar }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedUser, setSelectedUser] = useState(null);
+
+  const filteredUsuarios = usuarios.filter(usuario =>
+    usuario?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  useEffect(() => {
+    setSelectedUser(null);
+    setSearchTerm('')
+  }, [isOpen])
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+        <div className="flex items-center justify-between p-6 border-b">
+          <h2 className="text-xl font-bold text-gray-800">Asignar Manifiesto</h2>
+          <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-gray-600">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="p-6">
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Buscar usuario..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-[#955e37] rounded-lg focus:ring-1 focus:ring-[#955e37] focus:border-[#955e37] text-sm"
+            />
+          </div>
+
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            Seleccionar Usuario
+          </label>
+          <div className="space-y-2 h-64 overflow-y-auto">
+            {filteredUsuarios.map((usuario) => (
+              <div
+                key={usuario.id}
+                onClick={() => setSelectedUser(usuario.id)}
+                className={`flex items-center gap-2 p-2 rounded-lg border-2 cursor-pointer transition-all ${
+                  selectedUser === usuario.id
+                    ? 'border-[#955e37] bg-[#cf9c7881]'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <div className="bg-gray-100 p-1.5 rounded-full">
+                  <User className="w-4 h-4 text-gray-600" />
+                </div>
+                <span className="text-sm text-gray-800">{usuario.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-3 p-6 border-t">
+          <button
+            onClick={() => setIsOpen(false)}
+            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={() => handleAsignar(selectedUser)}
+            disabled={!selectedUser}
+            className={`px-4 py-2 rounded-lg text-white ${
+              selectedUser
+                ? 'bg-[#955e37] hover:bg-[#745a47]'
+                : 'bg-gray-400 cursor-not-allowed'
+            }`}
+          >
+            Asignar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export const ViewTabs = ({view, setView, manifiestos, connectionStatus}) => {
+  return(
+    <>
+      <div className="p-4 grid grid-cols-3 gap-1 max-md:grid-cols-2 max-md:gap-2 max-sm:grid-cols-1 max-sm:gap-2">
+        <button 
+          className={`${view === 1 ? 'bg-[#5a3f27] text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'} w-full max-md:col-span-2 max-sm:col-span-1 px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2`}
+          onClick={() => setView(1)}
+        >
+          <span>Manifiestos Libres</span>
+          {connectionStatus === 'connected' && (
+            <span className={`${view === 1 ? 'bg-white text-[#5a3f27]' : 'bg-[#5a3f27] text-white'} text-xs px-2 py-1 rounded-full font-bold`}>
+              {manifiestos.length}
+            </span>
+          )}
+        </button>
+        <button 
+          className={`${view === 2 ? 'bg-[#5a3f27] text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'} w-full px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2`}
+          onClick={() => setView(2)}
+        >
+          <span>Manifiestos Libres</span>
+          {connectionStatus === 'connected' && (
+            <span className={`${view === 1 ? 'bg-white text-[#5a3f27]' : 'bg-[#5a3f27] text-white'} text-xs px-2 py-1 rounded-full font-bold`}>
+              {0}
+            </span>
+          )}
+        </button>
+        <button 
+          className={`${view === 3 ? 'bg-[#5a3f27] text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'} w-full px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2`}
+          onClick={() => setView(3)}
+        >
+          <span>Manifiestos Libres</span>
+          {connectionStatus === 'connected' && (
+            <span className={`${view === 1 ? 'bg-white text-[#5a3f27]' : 'bg-[#5a3f27] text-white'} text-xs px-2 py-1 rounded-full font-bold`}>
+              {0}
+            </span>
+          )}
+        </button>
+      </div>
+    </>
+  )
 }

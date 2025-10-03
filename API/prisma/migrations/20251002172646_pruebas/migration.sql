@@ -1,0 +1,24 @@
+BEGIN TRY
+
+BEGIN TRAN;
+
+-- AlterTable
+ALTER TABLE [dbo].[Manifiestos] ALTER COLUMN [createdAt] DATETIME2 NULL;
+ALTER TABLE [dbo].[Manifiestos] ALTER COLUMN [updatedAt] DATETIME2 NULL;
+
+-- AlterTable
+ALTER TABLE [dbo].[Picking] ADD [asignadoPorNombre] NVARCHAR(1000),
+[nombrePickero] NVARCHAR(1000);
+
+COMMIT TRAN;
+
+END TRY
+BEGIN CATCH
+
+IF @@TRANCOUNT > 0
+BEGIN
+    ROLLBACK TRAN;
+END;
+THROW
+
+END CATCH

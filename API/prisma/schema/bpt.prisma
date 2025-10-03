@@ -1,7 +1,24 @@
+/**
+ * ============================================================================
+ * TABLA: UsuariosBPT
+ * ============================================================================
+ * Representa los usuarios del sistema BPT que pueden realizar operaciones
+ * de picking, asignación y revisión.
+ * 
+ * CAMPOS:
+ * - canal: Define el tipo de canal (0=Todos los priviligios, 1=SupervisorSoloMayoreo, 2=SupervisorSoloDetalle, 3=Mayoreo, 4=Detalle)
+ * 
+ * RELACIONES:
+ * - pickingsRealizados: Pickings que este usuario ha ejecutado físicamente
+ * - pickingsAsignados: Pickings que este usuario ha asignado a otros
+ * - pickingsRevisados: Pickings que este usuario ha revisado/aprobado
+ * - manifiestosCreados: Manifiestos creados por este usuario
+ * - manifiestosAsignados: Manifiestos asignados a este usuario para picking
+ */
 model UsuariosBPT {
   id         Int        @id @default(autoincrement())
   idUsuario  Int?       @unique
-  canal      Int        // 0 Ambos - 1 Mayoreo - 2 Detalle
+  canal      Int        //Define el tipo de canal (0=Todos los priviligios, 1=SupervisorSoloMayoreo, 2=SupervisorSoloDetalle, 3=Mayoreo, 4=Detalle)
   
   usuarioRef Usuarios?  @relation(fields: [idUsuario], references: [id], onDelete: NoAction, onUpdate: NoAction)
   
@@ -14,9 +31,41 @@ model UsuariosBPT {
   manifiestosCreados Manifiestos[]    @relation("ManifiestosUser")
   manifiestosAsignados Manifiestos[]  @relation("ManifiestosUserAsignado")
   
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime?   @updatedAt
+  
   @@index([idUsuario])
+  @@index([canal])
 }
 
+/**
+ * ============================================================================
+ * TABLA: Manifiestos
+ * ============================================================================
+ * Representa un manifiesto de entrega que debe ser preparado mediante picking.
+ * 
+ * FLUJO DE ESTADOS (estadoPicking):
+ * 1. PND - Pendiente: Manifiesto creado pero sin asignar
+ * 2. AGN - Asignado: Asignado a un usuario para picking
+ * 3. EPK - En Picking: Usuario comenzó el proceso de picking
+ * 4. FPK - Finalizado Picking: Picking completado, esperando revisión
+ * 5. ICP - Incompleto: Devuelto por falta de productos
+ * 6. APK - Aprobado: Revisado y aprobado, listo para carga
+ * 7. RCO - Rechazado/Cancelado: Definitivamente cancelado
+ * 8. LPC - Listo Para Carga: Aprobado y en espera de carga
+ * 9. END - Finalizado: Ya fue cargado al camión
+ * 
+ * CAMPOS CLAVE:
+ * - usuarioBPTId: Usuario que creó el manifiesto
+ * - userAsignadoId: Usuario asignado para realizar el picking
+ * - pickingActualId: Referencia al picking activo (el último o actual)
+ * 
+ * RELACIONES:
+ * - user: Usuario creador del manifiesto
+ * - userAsignado: Usuario que realizará el picking
+ * - pickings: Historial de todos los pickings (incluye reasignaciones)
+ * - pickingActual: El picking activo actual (relación 1-1)
+ */
 model Manifiestos {
   DocNum          Int       @id
   U_Status        String
@@ -26,25 +75,15 @@ model Manifiestos {
   U_PesoTotal     Float
   U_Tipo          String
   U_CamionPlaca   String
-  U_IDChofer      String
+  U_IDChofer      String?
   U_Chofer        String
   Bodega          String
   usuarioBPTId    Int?      
   userAsignadoId  Int?     
   
-  // END - EstadoPicking
-  // END - PND: Manifiesto sin asignar
-  // END - AGN: Asignado a usuario de picking
-  // END - EPK: Usuario comenzó el picking
-  // END - FPK: Usuario finalizó el picking
-  // END - ICP: Devuelto por falta de productos/incompleto
-  // END - APK: Aprobado y listo para carga
-  // END - RCO: Rechazado definitivamente / Cancelado
-  // END - LPC: Aprobado y en espera de carga
-  // END - END: Ya fue cargado al camión
-
-  estadoPicking   String    @default("PC")
-  pickingActualId Int?      @unique  // DEBE SER UNIQUE para relación 1-1
+  // Estados del picking
+  estadoPicking   String    @default("AGN")
+  pickingActualId Int?      @unique  // Relación 1-1 con el picking activo
   
   user            UsuariosBPT? @relation("ManifiestosUser", fields: [usuarioBPTId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   userAsignado    UsuariosBPT? @relation("ManifiestosUserAsignado", fields: [userAsignadoId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -52,28 +91,73 @@ model Manifiestos {
   pickings        Picking[]    @relation("ManifiestoPicking")
   pickingActual   Picking?     @relation("PickingActual", fields: [pickingActualId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   
+  createdAt       DateTime?     @default(now())
+  updatedAt       DateTime?     @updatedAt
+  
   @@index([usuarioBPTId])
   @@index([userAsignadoId])
   @@index([estadoPicking])
+  @@index([U_FechaEntrega])
+  @@index([Bodega])
 }
 
+/**
+ * ============================================================================
+ * TABLA: Picking
+ * ============================================================================
+ * Representa un intento de picking para un manifiesto. Puede haber múltiples
+ * registros de picking para un mismo manifiesto en caso de reasignaciones.
+ * 
+ * FLUJO DE ESTADOS:
+ * 1. PND - Pendiente: Picking asignado pero no iniciado
+ * 2. IPK - Inicio Picking: Usuario comenzó el picking
+ * 3. FIN - Finalizado: Picking completado, enviado a revisión
+ * 4. APK - Aprobado: Revisado y aprobado por supervisor
+ * 5. ICP - Incompleto/Devuelto: Rechazado por falta de productos
+ * 6. RAS - Reasignado: El picking fue reasignado a otro usuario
+ * 
+ * PROCESO NORMAL:
+ * 1. Se crea un Picking (estado=PND) vinculado a un Manifiesto
+ * 2. Usuario inicia picking (estado=IPK, se guarda fechaInicioPicking)
+ * 3. Usuario finaliza picking (estado=FIN, se guarda fechaFinPicking)
+ * 4. Supervisor revisa:
+ *    a) Si aprueba: estado=APK, Manifiesto.estadoPicking=APK
+ *    b) Si rechaza: estado=ICP, se crea nuevo Picking (reasignación)
+ * 
+ * PROCESO DE REASIGNACIÓN:
+ * - Si un picking es rechazado (ICP), se puede crear un nuevo Picking
+ * - El nuevo picking tendrá: esReasignacion=true, pickingOriginalId apuntando al anterior
+ * - numeroIntentos se incrementa
+ * - El Manifiesto.pickingActualId apunta al nuevo picking
+ * 
+ * CAMPOS CLAVE:
+ * - manifiestosDocNum: Manifiesto al que pertenece este picking
+ * - usuarioBPTPickingId: Usuario que realiza el picking físicamente
+ * - asignadoPorBPTId: Usuario supervisor que asigna el picking
+ * - revisadoPorBPTId: Usuario que revisa y aprueba/rechaza
+ * - pickingOriginalId: Si es reasignación, referencia al picking anterior
+ * - numeroIntentos: Contador de intentos de picking para este manifiesto
+ * 
+ * RELACIONES:
+ * - manifiesto: El manifiesto que se está preparando
+ * - usuarioBPTPicking: Usuario ejecutor del picking
+ * - asignadoPor: Usuario que asigna el picking
+ * - revisadoPor: Usuario que revisa el picking
+ * - pickingOriginal: Picking anterior (si es reasignación)
+ * - reasignaciones: Pickings posteriores (si este fue reasignado)
+ * - manifestoComoActual: Si es el picking actual del manifiesto
+ */
 model Picking {
   id                    Int       @id @default(autoincrement())
   manifiestosDocNum     Int
   usuarioBPTPickingId   Int       // Usuario BPT que realiza el picking
+  nombrePickero         String?   // Nombre del pickero (Auditoria)
   asignadoPorBPTId      Int       // Usuario BPT que asigna el picking
+  asignadoPorNombre     String?   // Nombre del asignado (Auditoria)
   fechaInicioPicking    DateTime?
   fechaFinPicking       DateTime?
   
-  
-  // END - Estado
-  // END - PND - Pendiente 
-  // END - IPK - INICIO_PICKING
-  // END - FIN - FIN_PICKING y enviando a revision
-  // END - APK - APROBADO
-  // END - ICP - DVDEVUELTO
-  // TODO- RAS - PENSAR EN UNA REASIGNACION
-
+  // Estados posibles
   estado                String    @default("PND")
   
   motivoDevolucion      String?   @db.Text
@@ -95,7 +179,6 @@ model Picking {
   
   // Relación inversa con manifiesto actual (1-1)
   manifestoComoActual   Manifiestos? @relation("PickingActual")
-
   
   createdAt             DateTime    @default(now())
   updatedAt             DateTime    @updatedAt
@@ -106,9 +189,119 @@ model Picking {
   @@index([revisadoPorBPTId])
   @@index([pickingOriginalId])
   @@index([estado])
+  @@index([esReasignacion])
+  @@index([fechaInicioPicking])
 }
 
-model pickingLog{
-    pickingID Int @id
-    Intento Int
-}
+/**
+ * ============================================================================
+ * FLUJO COMPLETO DEL PROCESO DE PICKING
+ * ============================================================================
+ * 
+ * ESCENARIO 1: PICKING EXITOSO (SIN REASIGNACIÓN)
+ * ------------------------------------------------
+ * 1. Se crea un Manifiesto (estadoPicking="PND")
+ * 
+ * 2. Supervisor asigna el manifiesto a un usuario:
+ *    - Manifiesto.userAsignadoId = usuario asignado
+ *    - Manifiesto.estadoPicking = "AGN"
+ *    - Se crea Picking1 (estado="PND")
+ *    - Manifiesto.pickingActualId = Picking1.id
+ * 
+ * 3. Usuario inicia el picking:
+ *    - Picking1.estado = "IPK"
+ *    - Picking1.fechaInicioPicking = now()
+ *    - Manifiesto.estadoPicking = "EPK"
+ * 
+ * 4. Usuario finaliza el picking:
+ *    - Picking1.estado = "FIN"
+ *    - Picking1.fechaFinPicking = now()
+ *    - Manifiesto.estadoPicking = "FPK"
+ * 
+ * 5. Supervisor revisa y APRUEBA:
+ *    - Picking1.estado = "APK"
+ *    - Picking1.revisadoPorBPTId = supervisor
+ *    - Picking1.fechaRevision = now()
+ *    - Manifiesto.estadoPicking = "APK"
+ * 
+ * 6. Listo para carga:
+ *    - Manifiesto.estadoPicking = "LPC"
+ * 
+ * 7. Carga completada:
+ *    - Manifiesto.estadoPicking = "END"
+ * 
+ * 
+ * ESCENARIO 2: PICKING CON REASIGNACIÓN (INCOMPLETO)
+ * ---------------------------------------------------
+ * 1-4. [Igual que el escenario 1]
+ * 
+ * 5. Supervisor revisa y RECHAZA por productos faltantes:
+ *    - Picking1.estado = "ICP"
+ *    - Picking1.revisadoPorBPTId = supervisor
+ *    - Picking1.fechaRevision = now()
+ *    - Picking1.motivoDevolucion = "Faltan 5 unidades del producto X"
+ *    - Manifiesto.estadoPicking = "ICP"
+ * 
+ * 6. Supervisor REASIGNA a otro usuario (o al mismo):
+ *    - Picking1.estado = "RAS" (opcional, para histórico)
+ *    - Se crea Picking2:
+ *      * estado = "PND"
+ *      * esReasignacion = true
+ *      * pickingOriginalId = Picking1.id
+ *      * numeroIntentos = 2
+ *      * usuarioBPTPickingId = nuevo usuario
+ *    - Manifiesto.pickingActualId = Picking2.id
+ *    - Manifiesto.estadoPicking = "AGN"
+ *    - Manifiesto.userAsignadoId = nuevo usuario
+ * 
+ * 7. Picking2 sigue el flujo normal (pasos 3-7 del escenario 1)
+ * 
+ * 
+ * ESCENARIO 3: CANCELACIÓN
+ * ------------------------
+ * En cualquier momento, un supervisor puede cancelar:
+ * - Picking.estado = "RCO"
+ * - Manifiesto.estadoPicking = "RCO"
+ * 
+ * 
+ * CONSULTAS ÚTILES:
+ * -----------------
+ * 
+ * // Obtener manifiesto con picking actual y usuarios
+ * const manifiesto = await prisma.manifiestos.findUnique({
+ *   where: { DocNum: 12345 },
+ *   include: {
+ *     pickingActual: {
+ *       include: {
+ *         usuarioBPTPicking: true,
+ *         asignadoPor: true,
+ *         revisadoPor: true
+ *       }
+ *     },
+ *     pickings: {
+ *       orderBy: { createdAt: 'asc' },
+ *       include: { usuarioBPTPicking: true }
+ *     }
+ *   }
+ * });
+ * 
+ * // Obtener historial completo de reasignaciones
+ * const pickingConHistorial = await prisma.picking.findUnique({
+ *   where: { id: pickingId },
+ *   include: {
+ *     pickingOriginal: true,
+ *     reasignaciones: {
+ *       orderBy: { numeroIntentos: 'asc' }
+ *     }
+ *   }
+ * });
+ * 
+ * // Pickings pendientes de un usuario
+ * const pendientes = await prisma.picking.findMany({
+ *   where: {
+ *     usuarioBPTPickingId: userId,
+ *     estado: { in: ['PND', 'IPK'] }
+ *   },
+ *   include: { manifiesto: true }
+ * });
+ */

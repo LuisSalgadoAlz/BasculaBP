@@ -10,7 +10,7 @@ const { getCamiones } = require('../controllers/sapApi.controller.js');
  * (unicamente vistas y procedimientos almacenados que devuelvan vistas)
  */
 
-const { getViewManifiestos } = require('../controllers/saphana.controller.js');
+const { getViewManifiestos } = require('../controllers/sapHana.controller.js');
 
 /**
  * Middleware para verificar que sea un usuario autorizado de BPSERVER

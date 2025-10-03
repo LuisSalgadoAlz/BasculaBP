@@ -5,6 +5,32 @@ const obtenerPeso = require("../controllers/basculaLive.controller");
 const { setLoggerSystema } = require("../utils/logger");
 const { executeView, executeInfoTables } = require("../lib/hanaActions");
 const { getRedisClient } = require("../lib/redisClient");
+const { getComprobarManifiestosHelper } = require("../controllers/bodegapt.controller");
+
+/**
+ * END ----------------------------------------------------------------------------
+ * END - PUBLISHER PARA EJECUTAR EN OTRAS PARTES DEL PROYECTO
+ * END ----------------------------------------------------------------------------
+ */
+
+let publisher;
+let subscriber;
+
+async function getPublisher() {
+  if (!publisher) {
+    publisher = createClient({ url: `redis://${process.env.REDIS_HOST}:6379` });
+    await publisher.connect();
+  }
+  return publisher;
+}
+
+async function getSubscriber() {
+  if (!subscriber) {
+    subscriber = createClient({ url: `redis://${process.env.REDIS_HOST}:6379` });
+    await subscriber.connect();
+  }
+  return subscriber;
+}
 
 const setupWebSocket = (server) => {
   const wssPeso = new WebSocket.Server({ noServer: true });
@@ -27,8 +53,9 @@ const setupWebSocket = (server) => {
    * END: Clientes de redis
    * END ----------------------------------------------------------------------------
    */
-  const publisher = createClient({ url: "redis://localhost:6379" });
-  const subscriber = createClient({ url: "redis://localhost:6379" });
+
+  publisher = createClient({ url: `redis://${process.env.REDIS_HOST}:6379` });
+  subscriber = createClient({ url: `redis://${process.env.REDIS_HOST}:6379` });
 
   Promise.all([publisher.connect(), subscriber.connect()]).then(async () => {
     console.log(`[Worker]: ON`);    
@@ -118,7 +145,7 @@ const setupWebSocket = (server) => {
       
       // Si no hay datos en caché, guardar y publicar
       if (cachedData === null) {
-        const queryFirtsTime = await executeView('IT_MANIFIESTOS_ACTIVOS');
+        const queryFirtsTime = await manifiestosSinAsignar();
         await store.set('sap:manifiestosData', JSON.stringify(queryFirtsTime));
         await store.set('sap:manifiestosView', JSON.stringify(result));
         await publisher.publish("manifiestos:msg", JSON.stringify(queryFirtsTime));
@@ -129,7 +156,7 @@ const setupWebSocket = (server) => {
       const resultString = JSON.stringify(result);
       if (cachedData !== resultString) {
         // Hay cambios: actualizar caché y publicar
-        const queryFirtsTime = await executeView('IT_MANIFIESTOS_ACTIVOS');
+        const queryFirtsTime = await manifiestosSinAsignar();
         await store.set('sap:manifiestosView', resultString);
         await store.set('sap:manifiestosData', JSON.stringify(queryFirtsTime));
         await publisher.publish("manifiestos:msg", JSON.stringify(queryFirtsTime));
@@ -166,7 +193,7 @@ const setupWebSocket = (server) => {
 
       // Si hay datos en caché, usar esos para el nuevo cliente
       if (cachedView) {
-        const queryManifiestos = cachedTable ? JSON.parse(cachedTable) : await executeView('IT_MANIFIESTOS_ACTIVOS');
+        const queryManifiestos = cachedTable ? JSON.parse(cachedTable) : await manifiestosSinAsignar();
         if (ws.readyState === WebSocket.OPEN) {
           ws.send(JSON.stringify(queryManifiestos));
         }
@@ -174,7 +201,7 @@ const setupWebSocket = (server) => {
         // Intentar obtener los datos que acabamos de guardar
         const result = await store.get('sap:manifiestosView');
         if (result && ws.readyState === WebSocket.OPEN) {
-          const queryManifiestos = cachedTable ? JSON.parse(cachedTable) : await executeView('IT_MANIFIESTOS_ACTIVOS');
+          const queryManifiestos = cachedTable ? JSON.parse(cachedTable) : await manifiestosSinAsignar();
           ws.send(JSON.stringify(queryManifiestos));
         }
       }
@@ -254,4 +281,21 @@ const setupWebSocket = (server) => {
   });
 };
 
-module.exports = setupWebSocket;
+/**
+ * END ----------------------------------------------------------------------------
+ * END - HELPER PARA FILTRAR MANIFIESTOS YA ASIGNADOS
+ * END ----------------------------------------------------------------------------
+ */
+
+const manifiestosSinAsignar = async() => {
+  const manifiesto = await executeView('IT_MANIFIESTOS_ACTIVOS');
+  const arrManifiestos = manifiesto.map(el => el.DocNum)
+  const filtered = await getComprobarManifiestosHelper(arrManifiestos)
+  return manifiesto.filter(el => !filtered.includes(el.DocNum))
+}
+
+module.exports = {
+  setupWebSocket,
+  publisher, 
+  subscriber 
+};

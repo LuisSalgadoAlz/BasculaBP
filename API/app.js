@@ -12,7 +12,7 @@ const tipodepeso = require("./routes/tipoDePeso.routes")
 const empresas = require("./routes/empresas.routes");
 const admin = require('./routes/admin.routes')
 const soporte = require("./routes/soporte.route")
-const setupWebSocket = require("./sockets/websocketPeso");
+const {setupWebSocket} = require("./sockets/websocketPeso");
 const boletas = require("./routes/boleta.routes");
 const informes = require("./routes/informes.routes")
 const tolva = require("./routes/tolva.routes");
@@ -20,6 +20,7 @@ const guardia = require("./routes/guardia.routes");
 const sap = require("./routes/sap.routes");
 const path = require("path");
 const compression = require('compression');
+const bodegapt = require("./routes/bodegapt.routes");
 
 const server = http.createServer(app);
 
@@ -43,6 +44,7 @@ app.use('/api/tolva/', tolva)
 app.use('/api/guardia/', guardia)
 app.use('/api/informes/', informes)
 app.use('/api/sap/', sap)
+app.use('/api/bodegapt/', bodegapt)
 
 const distPath = path.join(__dirname, process.env.DIST_PATH || "../bascula/dist");
 
