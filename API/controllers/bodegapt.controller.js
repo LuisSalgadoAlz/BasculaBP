@@ -1,6 +1,8 @@
 const db = require("../lib/prisma");
 const dotenv = require("dotenv");
 const jwt = require("jsonwebtoken");
+const { getPublisher, getManifiestosAsignados } = require("../sockets/websocketPeso");
+const { manifiestosSinAsignar } = require("../sockets/websocketPeso");
 
 const getUserForAsignar = async (req, res) => {
   try {
@@ -76,8 +78,6 @@ const crearManifiesto = async (req, res) => {
       usuarioAsignado
     } = req.body;
     
-    console.log(req.body);
-
     const { idBpt, nombre } = await getUserNombre(req);
 
     // Usar transacción para crear manifiesto y picking atómicamente
@@ -125,6 +125,12 @@ const crearManifiesto = async (req, res) => {
       return { manifiesto: nuevoManifiesto, picking: nuevoPicking };
     });
 
+    const pb = await getPublisher()
+    const manifiestosNoAsignados = await manifiestosSinAsignar()
+    const newDataFirtsConection = await getManifiestosAsignados()
+    await pb.publish("asignados:msg", JSON.stringify(newDataFirtsConection));
+    await pb.publish("manifiestos:msg", JSON.stringify(manifiestosNoAsignados));
+
     return res.status(201).json({
       msg: 'Manifiesto creado exitosamente',
       data: resultado
@@ -136,32 +142,7 @@ const crearManifiesto = async (req, res) => {
   }
 };
 
-/**
- * END - Funcion que indicara que manifiestos ya han sido asignados
- * @param {*} req 
- * @param {*} res 
- */
-const getComprobarManifiestosHelper = async(arrManifiestos) => {
-  try{
-    const manifiestos = await db.manifiestos.findMany({
-      select: { DocNum: true }, 
-      where: { 
-        DocNum: {
-          in: arrManifiestos
-        } 
-      }
-    })
-
-    return manifiestos.map(el => el.DocNum)
-
-  }catch(err){
-    console.log(err)
-    return res.status(400).send({err: 'Error interno del sistema.'})
-  }
-}
-
 module.exports = {
     getUserForAsignar, 
     crearManifiesto, 
-    getComprobarManifiestosHelper
 }

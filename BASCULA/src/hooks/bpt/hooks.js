@@ -4,50 +4,50 @@ import { useCallback } from "react";
 import { getUsersForManifiestos, postAsignarManifiesto } from "./requests";
 
 export const useManifiestosSocket = () => {
-    const DEFINE_URLWEBSOCKET = `${URLWEBSOCKET}/manifiestos`;
-      const [manifiestos, setManifiestos] = useState([]);
-      const [connectionStatus, setConnectionStatus] = useState('connecting');
-      
-      useEffect(() => {
-        const socket = new WebSocket(DEFINE_URLWEBSOCKET); 
-        
-        socket.onopen = () => {
-          console.log('WebSocket conectado');
-          setConnectionStatus('connected');
-        };
-        
-        socket.onmessage = (event) => {
-          try {
-            const newManifiestos = JSON.parse(event.data);
-            if (Array.isArray(newManifiestos)) {
-              setManifiestos(newManifiestos);
-              setConnectionStatus('connected'); 
-            }
-          } catch (error) {
-            console.error('Error parseando datos:', error);
-            setConnectionStatus('error');
-          }
-        };
+  const DEFINE_URLWEBSOCKET = `${URLWEBSOCKET}/manifiestos`;
+  const [manifiestos, setManifiestos] = useState([]);
+  const [connectionStatus, setConnectionStatus] = useState('connecting');
+  
+  useEffect(() => {
+    const socket = new WebSocket(DEFINE_URLWEBSOCKET); 
     
-        socket.onerror = (error) => {
-          console.error('WebSocket error:', error);
-          setConnectionStatus('error');
-        };
+    socket.onopen = () => {
+      console.log('WebSocket conectado');
+      setConnectionStatus('connected');
+    };
     
-        socket.onclose = () => {
-          console.log('WebSocket cerrado');
-          setConnectionStatus('closed');
-        };
-    
-        return () => {
-          socket.close();
-        };
-      }, [DEFINE_URLWEBSOCKET]);
-    
-      return {
-        manifiestos,
-        connectionStatus,
-      };
+    socket.onmessage = (event) => {
+      try {
+        const newManifiestos = JSON.parse(event.data);
+        if (Array.isArray(newManifiestos)) {
+          setManifiestos(newManifiestos);
+          setConnectionStatus('connected'); 
+        }
+      } catch (error) {
+        console.error('Error parseando datos:', error);
+        setConnectionStatus('error');
+      }
+    };
+
+    socket.onerror = (error) => {
+      console.error('WebSocket error:', error);
+      setConnectionStatus('error');
+    };
+
+    socket.onclose = () => {
+      console.log('WebSocket cerrado');
+      setConnectionStatus('closed');
+    };
+
+    return () => {
+      socket.close();
+    };
+  }, [DEFINE_URLWEBSOCKET]);
+
+  return {
+    manifiestos,
+    connectionStatus,
+  };
 }
 
 export const useGetUsersForManifiestos = () => {
@@ -82,4 +82,51 @@ export const useGetUsersForManifiestos = () => {
   }, [fetchData])
   
   return { users, laodingUsers, open, setOpen, handleModal, handleAsignar, loadingAsignar }
+}
+
+export const useManifiestosSocketCanal2 = () => {
+  const DEFINE_URLWEBSOCKET = `${URLWEBSOCKET}/asignados`;
+  const [manifiestosAsignados, setManifiestosAsignados] = useState([]);
+  const [connectionStatusAsignados, setConnectionStatusAsignados] = useState('connecting');
+  
+  useEffect(() => {
+    const socket = new WebSocket(DEFINE_URLWEBSOCKET); 
+    
+    socket.onopen = () => {
+      console.log('WebSocket conectado');
+      setConnectionStatusAsignados('connected');
+    };
+    
+    socket.onmessage = (event) => {
+      try {
+        const newManifiestos = JSON.parse(event.data);
+        if (Array.isArray(newManifiestos)) {
+          setManifiestosAsignados(newManifiestos);
+          setConnectionStatusAsignados('connected'); 
+        }
+      } catch (error) {
+        console.error('Error parseando datos:', error);
+        setConnectionStatusAsignados('error');
+      }
+    };
+
+    socket.onerror = (error) => {
+      console.error('WebSocket error:', error);
+      setConnectionStatusAsignados('error');
+    };
+
+    socket.onclose = () => {
+      console.log('WebSocket cerrado');
+      setConnectionStatusAsignados('closed');
+    };
+
+    return () => {
+      socket.close();
+    };
+  }, [DEFINE_URLWEBSOCKET]);
+
+  return {
+    manifiestosAsignados,
+    connectionStatusAsignados,
+  };  
 }

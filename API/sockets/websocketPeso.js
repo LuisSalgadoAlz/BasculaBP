@@ -3,9 +3,21 @@ const WebSocket = require("ws");
 const { createClient } = require("redis");
 const obtenerPeso = require("../controllers/basculaLive.controller");
 const { setLoggerSystema } = require("../utils/logger");
-const { executeView, executeInfoTables } = require("../lib/hanaActions");
+const { executeInfoTables, executeView } = require("../lib/hanaActions");
 const { getRedisClient } = require("../lib/redisClient");
-const { getComprobarManifiestosHelper } = require("../controllers/bodegapt.controller");
+
+
+const DEFINELOGS = {
+  'U_Status': 'ESTADO',
+  'Tipo': 'CANAL',
+  'U_FechaEntrega': 'Fecha de entrega',
+  'U_PesoTotal': 'Peso manifiesto',
+  'U_Tipo': 'Tipo de documento',
+  'U_CamionPlaca': 'Placa',
+  'U_IDChofer': 'Id interno',
+  'U_Chofer': 'Chofer',
+  'Bodega': 'Bodega',
+}
 
 /**
  * END ----------------------------------------------------------------------------
@@ -13,29 +25,22 @@ const { getComprobarManifiestosHelper } = require("../controllers/bodegapt.contr
  * END ----------------------------------------------------------------------------
  */
 
-let publisher;
-let subscriber;
+let publisher = createClient({ url: `redis://${process.env.HOST}:6379` });
+let subscriber = createClient({ url: `redis://${process.env.HOST}:6379` });
 
 async function getPublisher() {
-  if (!publisher) {
-    publisher = createClient({ url: `redis://${process.env.REDIS_HOST}:6379` });
-    await publisher.connect();
-  }
   return publisher;
 }
 
 async function getSubscriber() {
-  if (!subscriber) {
-    subscriber = createClient({ url: `redis://${process.env.REDIS_HOST}:6379` });
-    await subscriber.connect();
-  }
   return subscriber;
 }
 
 const setupWebSocket = (server) => {
   const wssPeso = new WebSocket.Server({ noServer: true });
   const wssManifiestos = new WebSocket.Server({ noServer: true });
-  
+  const wssAsignados = new WebSocket.Server({ noServer: true });
+
   // Variables para controlar los intervalos  
   let intervalPeso = null;
   let intervalManifiestos = null;
@@ -53,9 +58,6 @@ const setupWebSocket = (server) => {
    * END: Clientes de redis
    * END ----------------------------------------------------------------------------
    */
-
-  publisher = createClient({ url: `redis://${process.env.REDIS_HOST}:6379` });
-  subscriber = createClient({ url: `redis://${process.env.REDIS_HOST}:6379` });
 
   Promise.all([publisher.connect(), subscriber.connect()]).then(async () => {
     console.log(`[Worker]: ON`);    
@@ -157,9 +159,13 @@ const setupWebSocket = (server) => {
       if (cachedData !== resultString) {
         // Hay cambios: actualizar caché y publicar
         const queryFirtsTime = await manifiestosSinAsignar();
+        const updateChanges = await manifiestosAsinados();
+        const newDataFirtsConection = await getManifiestosAsignados();
+        console.log(`[Worker]: ${updateChanges}`)
         await store.set('sap:manifiestosView', resultString);
         await store.set('sap:manifiestosData', JSON.stringify(queryFirtsTime));
         await publisher.publish("manifiestos:msg", JSON.stringify(queryFirtsTime));
+        await publisher.publish("asignados:msg", JSON.stringify(newDataFirtsConection));
         console.log('[Worker]: Cambios detectados SAP - publicando actualización');
       }
     } catch (err) {
@@ -175,8 +181,9 @@ const setupWebSocket = (server) => {
   }
 
   /**
-   * TODO: Falta construccion para evitar sobrecarga en ambos lados con la pool.
-   * ! **** EN BETA ****
+   * END ----------------------------------------------------------------------------
+   * END - Ruta de manifiestos sin asignar
+   * END ----------------------------------------------------------------------------
    */
 
   wssManifiestos.on("connection", async (ws) => {
@@ -193,7 +200,7 @@ const setupWebSocket = (server) => {
 
       // Si hay datos en caché, usar esos para el nuevo cliente
       if (cachedView) {
-        const queryManifiestos = cachedTable ? JSON.parse(cachedTable) : await manifiestosSinAsignar();
+        const queryManifiestos = await manifiestosSinAsignar();
         if (ws.readyState === WebSocket.OPEN) {
           ws.send(JSON.stringify(queryManifiestos));
         }
@@ -201,7 +208,7 @@ const setupWebSocket = (server) => {
         // Intentar obtener los datos que acabamos de guardar
         const result = await store.get('sap:manifiestosView');
         if (result && ws.readyState === WebSocket.OPEN) {
-          const queryManifiestos = cachedTable ? JSON.parse(cachedTable) : await manifiestosSinAsignar();
+          const queryManifiestos = await manifiestosSinAsignar();
           ws.send(JSON.stringify(queryManifiestos));
         }
       }
@@ -242,6 +249,51 @@ const setupWebSocket = (server) => {
 
   /**
    * END ----------------------------------------------------------------------------
+   * END - Ruta de manifiestos sin asignar
+   * END ----------------------------------------------------------------------------
+   */
+  
+  wssAsignados.on("connection", async (ws) => {
+    /**
+     * END --------------------------------------------------------------------------
+     * END - Cada nuevo cliente que se conecte se le enviaran los datos frescos
+     * END --------------------------------------------------------------------------  
+     */
+    try {
+      const store = await getRedisClient();
+      const newDataFirtsConection = await getManifiestosAsignados();
+      ws.send(JSON.stringify(newDataFirtsConection));
+      
+    } catch (err) {
+      console.error(`[Worker]: Error al enviar datos iniciales`);
+    }
+
+    /**
+     * END ----------------------------------------------------------------------------
+     * END - FUNCION CUANDO SE DESCONECTEN / CIERREN SE LIMPIA EL CACHE DE VERIFICACION
+     * END - ADEMAS DE LIMPIAR EL INTERVALO PARA NO CONSUMIR RECURSOS
+     * END ----------------------------------------------------------------------------
+     */
+    ws.on("close", async() => { 
+      // TODO Falta
+      if (wssManifiestos.clients.size === 0) {
+        // Reset de flags
+        console.log(`[Worker]: Redis limpiado`);
+      }
+    });
+  });
+
+  subscriber.subscribe("asignados:msg", (message) => {
+    wssAsignados.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(message);
+      }
+    });
+  });
+
+  
+  /**
+   * END ----------------------------------------------------------------------------
    * END - Manejo de rutas del websocket
    * END ----------------------------------------------------------------------------
    */
@@ -253,6 +305,10 @@ const setupWebSocket = (server) => {
     } else if (req.url === "/manifiestos") {
       wssManifiestos.handleUpgrade(req, socket, head, (ws) => {
         wssManifiestos.emit("connection", ws, req);
+      });
+    }else if (req.url === "/asignados") {
+      wssAsignados.handleUpgrade(req, socket, head, (ws) => {
+        wssAsignados.emit("connection", ws, req);
       });
     } else {
       socket.destroy();
@@ -281,6 +337,64 @@ const setupWebSocket = (server) => {
   });
 };
 
+
+/**
+ * END - Helpers
+ * @param {*} req 
+ * @param {*} res 
+ */
+const getComprobarManifiestosHelper = async(arrManifiestos) => {
+  try{
+    const manifiestos = await db.manifiestos.findMany({
+      select: { DocNum: true }, 
+      where: { 
+        DocNum: {
+          in: arrManifiestos
+        } 
+      }
+    })
+
+    return manifiestos.map(el => el.DocNum)
+
+  }catch(err){
+    console.log(err)
+    return res.status(400).send({err: 'Error interno del sistema.'})
+  }
+}
+
+const getManifiestosTodosLosDatosHelper = async(arrManifiestos) => {
+  try{
+    const manifiestos = await db.manifiestos.findMany({
+      select: {
+        U_Status: true,
+        DocNum: true,
+        Tipo: true,
+        U_FechaEntrega: true, 
+        U_PesoTotal: true, 
+        U_Tipo: true, 
+        U_CamionPlaca: true, 
+        U_IDChofer: true, 
+        U_Chofer: true, 
+        Bodega: true, 
+        estadoPicking: true, 
+      }, 
+      where:{
+        estadoPicking: {
+          in: ['AGN', 'EPK', 'FPK']
+        }, 
+        DocNum: {
+          in: arrManifiestos
+        }
+      }
+    })
+
+    return manifiestos
+  }catch(err){
+    console.log(err)
+    return res.status(400).send({err: 'Error interno del sistema.'})
+  }
+}
+
 /**
  * END ----------------------------------------------------------------------------
  * END - HELPER PARA FILTRAR MANIFIESTOS YA ASIGNADOS
@@ -294,8 +408,152 @@ const manifiestosSinAsignar = async() => {
   return manifiesto.filter(el => !filtered.includes(el.DocNum))
 }
 
+const manifiestosAsinados = async() => {
+  const manifiesto = await executeView('IT_MANIFIESTOS_ACTIVOS');
+  const arrManifiestos = manifiesto.map(el => el.DocNum)
+  const filtered = await getManifiestosTodosLosDatosHelper(arrManifiestos)
+  
+  const refactorFiltered = filtered.map(el => ({
+    U_Status: el.U_Status,
+    DocNum: el.DocNum,
+    Tipo: el.Tipo,
+    U_FechaEntrega: new Date(el.U_FechaEntrega).toISOString().slice(0, 10),
+    U_PesoTotal: parseFloat(el.U_PesoTotal),
+    U_Tipo: el.U_Tipo,
+    U_CamionPlaca: el.U_CamionPlaca,
+    U_IDChofer: el.U_IDChofer,
+    U_Chofer: el.U_Chofer,
+  }));
+
+  const arrFiltered = filtered.map(el => el.DocNum)
+
+  const forComparacion = manifiesto.filter(item => arrFiltered.includes(item.DocNum));
+  const refactorForComparacion = forComparacion.map(el => ({
+    U_Status: el.U_Status,
+    DocNum: el.DocNum,
+    Tipo: el.Tipo,
+    U_FechaEntrega: new Date(el.U_FechaEntrega).toISOString().slice(0, 10),
+    U_PesoTotal: parseFloat(el.U_PesoTotal),
+    U_Tipo: el.U_Tipo,
+    U_CamionPlaca: el.U_CamionPlaca,
+    U_IDChofer: el.U_IDChofer,
+    U_Chofer: el.U_Chofer,
+  }));
+
+  const diferentes = [];
+
+  refactorFiltered.forEach(obj1 => {
+    const obj2 = refactorForComparacion.find(o => o.DocNum === obj1.DocNum);
+    
+    if (obj2 && JSON.stringify(obj1) !== JSON.stringify(obj2)) {
+      diferentes.push({
+        filtered: obj1,
+        comparacion: obj2
+      });
+    }
+  });
+
+  let msg = 'No se detectaron cambios en los manifiestos asignados'
+
+  if (diferentes.length !== 0) {
+    // Preparar operaciones en paralelo
+    msg = 'Se detectaron cambios en los manifiestos asignados, procediendo a actualizarlos...'
+    const updatePromises = diferentes.map(item => 
+      db.manifiestos.update({
+        where: { DocNum: item.comparacion.DocNum },
+        data: {
+          U_Status: item.comparacion.U_Status,
+          Tipo: item.comparacion.Tipo,
+          U_FechaEntrega: new Date(item.comparacion.U_FechaEntrega),
+          U_PesoTotal: item.comparacion.U_PesoTotal,
+          U_Tipo: item.comparacion.U_Tipo,
+          U_CamionPlaca: item.comparacion.U_CamionPlaca,
+          U_IDChofer: item.comparacion.U_IDChofer,
+          U_Chofer: item.comparacion.U_Chofer,
+        }
+      })
+    );
+
+    // Preparar logs
+    const logsData = diferentes.map(item => {
+      const cambios = [];
+      Object.keys(item.filtered).forEach(key => {
+        if (item.filtered[key] !== item.comparacion[key]) {
+          cambios.push(`${DEFINELOGS[key]}: "${item.filtered[key]}" → "${item.comparacion[key]}"`);
+        }
+      });
+
+      return {
+        DocNum: item.filtered.DocNum,
+        Observacion: `Actualización : ${cambios.join(', ')}`
+      };
+    });
+
+    try {
+      // Ejecutar todas las actualizaciones en paralelo
+      await Promise.all(updatePromises);
+      
+      // Insertar logs en batch
+      await db.manifiestosLogs.createMany({
+        data: logsData,
+      });
+
+    } catch (error) {
+      console.error('Error en actualizaciones masivas:', error);
+      throw error;
+    }
+  }
+
+  return msg;
+}
+
+const getManifiestosAsignados = async () => {
+  try {
+    const manifiestos = await db.manifiestos.findMany({
+      include: {
+        userAsignado: {
+          include: {
+            usuarioRef: {
+              select: {
+                id: true,
+                name: true,
+              }
+            }
+          }
+        },
+        _count: {
+          select: {
+            logs: true
+          }
+        }
+      },
+      orderBy: {
+        U_FechaEntrega: 'desc'
+      }
+    });
+
+    const refactorManifiestos = manifiestos.map(el => ({
+      ...el,
+      userAsignado: el.userAsignado.usuarioRef.name,
+      logs: el._count.logs,
+      usuarioRef: undefined, 
+      _count: undefined, 
+      createdAt: undefined,
+      updatedAt: undefined,
+      pickingActualId: undefined, 
+    }));
+
+    return refactorManifiestos
+  }catch(err){
+    console.log(err)
+  }
+}
+
+
 module.exports = {
   setupWebSocket,
-  publisher, 
-  subscriber 
+  getPublisher,
+  getSubscriber,
+  manifiestosSinAsignar,
+  getManifiestosAsignados    
 };

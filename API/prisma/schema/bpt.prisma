@@ -45,15 +45,13 @@ model UsuariosBPT {
  * Representa un manifiesto de entrega que debe ser preparado mediante picking.
  * 
  * FLUJO DE ESTADOS (estadoPicking):
- * 1. PND - Pendiente: Manifiesto creado pero sin asignar
- * 2. AGN - Asignado: Asignado a un usuario para picking
- * 3. EPK - En Picking: Usuario comenzó el proceso de picking
- * 4. FPK - Finalizado Picking: Picking completado, esperando revisión
- * 5. ICP - Incompleto: Devuelto por falta de productos
- * 6. APK - Aprobado: Revisado y aprobado, listo para carga
- * 7. RCO - Rechazado/Cancelado: Definitivamente cancelado
- * 8. LPC - Listo Para Carga: Aprobado y en espera de carga
- * 9. END - Finalizado: Ya fue cargado al camión
+ * 1. AGN - Asignado: Asignado a un usuario para picking 
+ * 2. EPK - En Picking: Usuario comenzó el proceso de picking
+ * 3. FPK - Finalizado Picking: Picking completado, esperando revisión
+ * 4. ICP - Incompleto: Devuelto por falta de productos
+ * 5. APK - Aprobado: Revisado y aprobado, listo para carga
+ * 6. RCO - Rechazado/Cancelado: Definitivamente cancelado
+ * 7. END - Finalizado: Ya fue cargado al camión
  * 
  * CAMPOS CLAVE:
  * - usuarioBPTId: Usuario que creó el manifiesto
@@ -90,6 +88,8 @@ model Manifiestos {
   
   pickings        Picking[]    @relation("ManifiestoPicking")
   pickingActual   Picking?     @relation("PickingActual", fields: [pickingActualId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  
+  logs            manifiestosLogs[] @relation("ManifiestosLogs")
   
   createdAt       DateTime?     @default(now())
   updatedAt       DateTime?     @updatedAt
@@ -191,6 +191,17 @@ model Picking {
   @@index([estado])
   @@index([esReasignacion])
   @@index([fechaInicioPicking])
+}
+
+model manifiestosLogs {
+  id              Int       @id @default(autoincrement())
+  DocNum          Int 
+  Observacion     String?
+  createAt        DateTime  @default(now())
+
+  manifiesto      Manifiestos? @relation("ManifiestosLogs", fields: [DocNum], references: [DocNum], onDelete: NoAction, onUpdate: NoAction)
+  
+  @@index([DocNum])
 }
 
 /**
