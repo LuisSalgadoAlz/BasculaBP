@@ -10,11 +10,11 @@ const { getRedisClient } = require("../lib/redisClient");
 const DEFINELOGS = {
   'U_Status': 'ESTADO',
   'Tipo': 'CANAL',
-  'U_FechaEntrega': 'Fecha de entrega',
-  'U_PesoTotal': 'Peso manifiesto',
-  'U_Tipo': 'Tipo de documento',
+  'U_FechaEntrega': 'FechaEntrega',
+  'U_PesoTotal': 'Peso',
+  'U_Tipo': 'TipoDocumento',
   'U_CamionPlaca': 'Placa',
-  'U_IDChofer': 'Id interno',
+  'U_IDChofer': 'IdInterno',
   'U_Chofer': 'Chofer',
   'Bodega': 'Bodega',
 }

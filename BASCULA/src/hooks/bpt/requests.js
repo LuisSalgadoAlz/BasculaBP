@@ -10,3 +10,7 @@ export const postAsignarManifiesto = async (manifiesto, setIsLoading) => {
     body: manifiesto,
   })
 };
+
+export const getManifiestosLogs = async (fun, setIsLoading, DocNum) => {
+  return apiRequest(fun, `bodegapt/manifiestos/logs/${DocNum}`, setIsLoading)
+};

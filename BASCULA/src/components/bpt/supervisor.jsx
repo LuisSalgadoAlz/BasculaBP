@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, X, User, Package, Calendar, CheckCircle, Clock, XCircle, AlertCircle } from 'lucide-react';
+import { Search, X, User, Package, Calendar, CheckCircle, Clock, XCircle, AlertCircle, ArrowUpDown } from 'lucide-react';
 import { useEffect } from 'react';
 
 const LIST_STATUS = {
@@ -385,7 +385,7 @@ const ESTADO_PICKING = {
   'END': 'Finalizado'
 };
 
-export const ManifiestosAsignadosTable = ({ tableData }) => {
+export const ManifiestosAsignadosTable = ({ tableData, handleOpenLogs }) => {
   const data = tableData ? tableData.map((item) => ({
     id: item.id,
     docNum: item.DocNum,
@@ -457,28 +457,6 @@ export const ManifiestosAsignadosTable = ({ tableData }) => {
 
   return (
     <div className="w-full mx-auto p-6 max-sm:p-2 bg-white rounded-lg">
-      {/* Estadísticas por estado de picking */}
-      <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-3 gap-3 mb-6">
-        <div className="bg-white p-3 rounded-lg border border-gray-200">
-          <div className="text-black text-xs font-semibold">Asignados</div>
-          <div className="text-xl font-bold text-black">
-            {data.filter(d => d.estadoPickingCode === 'AGN').length}
-          </div>
-        </div>
-        <div className="bg-white p-3 rounded-lg border border-gray-200">
-          <div className="text-black text-xs font-semibold">En Picking</div>
-          <div className="text-xl font-bold text-black">
-            {data.filter(d => d.estadoPickingCode === 'EPK').length}
-          </div>
-        </div>
-        <div className="bg-white p-3 rounded-lg border border-gray-200">
-          <div className="text-black text-xs font-semibold">Finalizados</div>
-          <div className="text-xl font-bold text-black">
-            {data.filter(d => d.estadoPickingCode === 'FPK').length}
-          </div>
-        </div>
-      </div>
-
       {/* Barra de búsqueda y filtros */}
       <div className="mb-6 flex flex-col sm:flex-row gap-3">
         <div className="flex-1 relative">
@@ -540,9 +518,6 @@ export const ManifiestosAsignadosTable = ({ tableData }) => {
                 Peso (QQ)
               </th>
               <th className="px-6 py-3 max-sm:py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider max-sm:hidden">
-                Logs
-              </th>
-              <th className="px-6 py-3 max-sm:py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider max-sm:hidden">
                 Acciones
               </th>
             </tr>
@@ -556,15 +531,15 @@ export const ManifiestosAsignadosTable = ({ tableData }) => {
                       <div className="flex items-center gap-2">
                         <Package className="w-4 h-4 text-gray-400" />
                         <span className="font-bold">{row.docNum}</span>
+                        <div className={`{sm:hidden py-1 inline-flex items-center gap-1.5 text-xs font-medium text-gray-400`}>
+                          {row.estadoPicking}
+                        </div>
                       </div>
                       <div className='sm:hidden text-xs text-gray-500 mt-1'>
                         {row.tipo} • {row.fechaEntrega}
                       </div>
                       <div className='sm:hidden text-xs text-gray-600 mt-1'>
                         Ruta: {row.ruta} • {row.peso.toFixed(2)} QQ
-                      </div>
-                      <div className='sm:hidden text-xs text-gray-500 mt-1'>
-                        📋 {row.logs} logs
                       </div>
                     </div>
                   </td>
@@ -601,15 +576,15 @@ export const ManifiestosAsignadosTable = ({ tableData }) => {
                   <td className="px-6 py-4 max-sm:py-2 whitespace-nowrap text-sm text-gray-900 text-right max-sm:hidden">
                     {row.peso.toFixed(2)}
                   </td>
-                  <td className="px-6 py-4 max-sm:py-2 whitespace-nowrap text-sm text-gray-900 text-center max-sm:hidden">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {row.logs}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 max-sm:py-2 whitespace-nowrap text-sm text-gray-900 text-center max-sm:hidden">
-                    <button onClick={()=>console.log(row.docNum)} className='inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800'>
-                      Logs
-                    </button>
+                  <td className="px-6 py-4 max-sm:py-2 whitespace-nowrap text-sm text-gray-900">
+                    <div className="flex gap-2 justify-center items-center max-sm:flex-col">
+                      <button onClick={()=>handleOpenLogs(row.docNum)} className='inline-flex items-center justify-center px-2.5 py-1 rounded text-xs font-medium bg-[#5a3f27] text-white w-24'>
+                        Logs ({row.logs})
+                      </button>
+                      <button onClick={()=>console.log(row.docNum)} className='inline-flex items-center justify-center px-2.5 py-1 rounded text-xs font-medium bg-[#5a3f27] text-white w-24'>
+                        Reasignar
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -671,6 +646,125 @@ export const ManifiestosAsignadosTable = ({ tableData }) => {
           </div>
         </div>
       )}
+    </div>
+  );
+};
+
+export const ManifiestosLogs = ({data=[], isOpen, setIsOpen}) => {
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleString('es-HN', {
+      day: '2-digit',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const parseChanges = (observacion) => {
+    const matches = observacion.match(/(\w+):\s*"([^"]+)"\s*→\s*"([^"]+)"/g);
+    if (!matches) return null;
+    
+    return matches.map(match => {
+      const parts = match.match(/(\w+):\s*"([^"]+)"\s*→\s*"([^"]+)"/);
+      return {
+        field: parts[1],
+        from: parts[2],
+        to: parts[3]
+      };
+    });
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/40 bg-opacity-60 flex items-end sm:items-center justify-center p-2 z-50">
+      <div className="bg-white rounded-xl shadow-2xl w-full sm:max-w-sm overflow-hidden">
+        {/* Header - colores café/marrón */}
+        <div className="px-3 py-2 flex items-center justify-between bg-[#5a3f27]">
+          <div>
+            <h2 className="text-sm font-bold text-white">Historial</h2>
+            <p className="text-xs text-white">Doc #{data[0]?.DocNum}</p>
+          </div>
+          <button 
+            onClick={() => setIsOpen(false)}
+            className="text-white hover:bg-white hover:bg-opacity-20 p-1 rounded"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Content mini */}
+        <div className="p-2 overflow-y-auto max-h-[calc(80vh-100px)]" style={{ backgroundColor: '#FAF8F5' }}>
+          <div className="space-y-1.5">
+            {data.map((item, index) => {
+              const changes = parseChanges(item.Observacion);
+              
+              return (
+                <div 
+                  key={item.id}
+                  className="bg-white rounded-md p-2 border"
+                  style={{ borderColor: '#E5DDD5' }}
+                >
+                  {/* Timestamp mini */}
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-3 h-3" style={{ color: '#8B7355' }} />
+                      <span className="text-xs" style={{ color: '#6B5B4A' }}>
+                        {formatDate(item.createAt)}
+                      </span>
+                    </div>
+                    <span className="text-xs px-1.5 py-0.5 rounded-full font-medium" style={{ backgroundColor: '#FFF3E0', color: '#8B7355' }}>
+                      #{index + 1}
+                    </span>
+                  </div>
+
+                  {/* Changes mini */}
+                  {changes && changes.map((change, idx) => (
+                    <div 
+                      key={idx}
+                      className="rounded p-1.5 mb-1 last:mb-0"
+                      style={{ backgroundColor: '#FAFAFA' }}
+                    >
+                      <div className="text-xs font-semibold mb-1">
+                        {change.field}
+                      </div>
+                      <div className="space-y-0.5">
+                        <div className="border rounded px-1.5 py-0.5 bg-[#5a3f27]">
+                          <span className="text-xs font-medium text-white">
+                            {change.to}
+                          </span>
+                        </div>
+                        <div className="flex justify-center">
+                          <ArrowUpDown className="w-3 h-3" />
+                        </div>
+                        <div className="border rounded px-1.5 py-0.5">
+                          <span className="text-xs line-through">
+                            {change.from}
+                          </span>
+                        </div>  
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Footer mini */}
+        <div className="px-2 py-2 border-t" style={{ backgroundColor: '#FAF8F5', borderColor: '#E5DDD5' }}>
+          <button 
+            onClick={() => setIsOpen(false)}
+            className="w-full text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+            style={{ backgroundColor: '#6B5B4A' }}
+            onMouseOver={(e) => e.target.style.backgroundColor = '#5A4A3A'}
+            onMouseOut={(e) => e.target.style.backgroundColor = '#6B5B4A'}
+          >
+            Cerrar
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

@@ -142,7 +142,28 @@ const crearManifiesto = async (req, res) => {
   }
 };
 
+const getLogsManifiestos = async(req, res) => {
+  try{
+    const DocNum = parseInt(req.params.DocNum)
+    const verLogs = await db.manifiestosLogs.findMany({
+      where: {
+        DocNum: DocNum
+      },
+      orderBy: {
+        createAt: 'desc'
+      }
+    })
+
+    return res.status(200).send({
+      data: verLogs
+    })
+  }catch(err){
+    return res.status(400).send({err: 'Error interno del sistema.'})
+  }
+}
+
 module.exports = {
     getUserForAsignar, 
-    crearManifiesto, 
+    crearManifiesto,
+    getLogsManifiestos 
 }

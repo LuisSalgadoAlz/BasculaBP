@@ -1,13 +1,39 @@
-import { useState } from "react";
-import { ManifiestosAsignadosTable, ManifiestosTable, ModalAsignar, ViewTabs } from "../../components/bpt/supervisor";
+import { useCallback, useState } from "react";
+import { ManifiestosAsignadosTable, ManifiestosLogs, ManifiestosTable, ModalAsignar, ViewTabs } from "../../components/bpt/supervisor";
 import { useGetUsersForManifiestos, useManifiestosSocket, useManifiestosSocketCanal2 } from "../../hooks/bpt/hooks";
+import { getManifiestosLogs } from "../../hooks/bpt/requests";
 
 const ControlZone = () => {
   const { connectionStatus, manifiestos } = useManifiestosSocket();
   const { connectionStatusAsignados, manifiestosAsignados } = useManifiestosSocketCanal2();
   const { users, laodingUsers, open, setOpen, handleModal, handleAsignar } = useGetUsersForManifiestos()
   const [view, setView] = useState(1)
+
+  const [openLogs, setOpenLogs] = useState(false)
+  const [logs, setLogs] = useState([])
+  const [loadingLogs, setLoadingLogs] = useState(false)
+
+  const handleOpenLogs = ( DocNum ) => {
+    setOpenLogs(true)
+    getManifiestosLogs(setLogs, setLoadingLogs, DocNum)
+  }
   
+  const propsModal = {
+    isOpen: open,  
+    setIsOpen: setOpen, 
+    usuarios: users, 
+    loadingUsers: laodingUsers, 
+    handleAsignar: handleAsignar,
+  }
+
+  const propsViewTabs = {
+    view:view, 
+    setView:setView, 
+    manifiestos:manifiestos, 
+    manifiestosAsignados:manifiestosAsignados, 
+    connectionStatus:connectionStatus,
+  }
+
   return (
     <>
       <div className="flex justify-between w-full gap-5 max-sm:flex-col max-md:flex-col mb-4 max-sm:mb-5">
@@ -20,7 +46,7 @@ const ControlZone = () => {
         </div>
       </div>
       <div className="bg-white rounded-2xl p-4 shadow-2xl">
-        <ViewTabs view={view} setView={setView} manifiestos={manifiestos} manifiestosAsignados={manifiestosAsignados} connectionStatus={connectionStatus}/>
+        <ViewTabs {...propsViewTabs}/>
         {view===1 && (
           <>
             {connectionStatus === 'error' && (
@@ -45,7 +71,7 @@ const ControlZone = () => {
               </div>
             )}
 
-            <ModalAsignar isOpen={open} setIsOpen={setOpen} usuarios={users} loadingUsers={laodingUsers} handleAsignar={handleAsignar} />
+            <ModalAsignar {...propsModal} />
           </>
         )}
         {view===2 && (
@@ -63,7 +89,7 @@ const ControlZone = () => {
             )}
             
             {connectionStatusAsignados === 'connected' && manifiestosAsignados.length > 0 && (
-              <ManifiestosAsignadosTable tableData={manifiestosAsignados} handleOpenModal={handleModal} />
+              <ManifiestosAsignadosTable tableData={manifiestosAsignados} handleOpenLogs={handleOpenLogs} />
             )}
             
             {connectionStatusAsignados === 'connected' && manifiestosAsignados.length === 0 && (
@@ -72,7 +98,7 @@ const ControlZone = () => {
               </div>
             )}
 
-            <ModalAsignar isOpen={open} setIsOpen={setOpen} usuarios={users} loadingUsers={laodingUsers} handleAsignar={handleAsignar} />
+            <ManifiestosLogs data={logs.data} isOpen={openLogs} setIsOpen={setOpenLogs} />
           </>
         )}
       </div>
