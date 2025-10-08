@@ -28,6 +28,7 @@ model Facturas {
     Proveedor String
     Cantidad Float
     Proceso Int
+    facturaProveedor String?
 
     /* Campos de re relaciones */
     idSocio Int

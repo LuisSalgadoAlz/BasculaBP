@@ -19,6 +19,8 @@ const Importaciones = () => {
   const [isLoadingBuquesDetails, setIsLoadingBuquesDetails] = useState(false)
   const [selected, setBuqueSelected] = useState({ typeImp: '', buque: '' })
   const [selectedName, setSelectedName] = useState('')
+  const [selectedSap, setSelectedSap] = useState('Sin seleccionar.')
+  const [selectedProveedor, setSelectedProveedor] = useState('Sin seleccionar.')
   const [stats, setStats] = useState()
   const [isLoadStats, setIsLoadStats] = useState(false)
   const [pagination, setPagination] = useState(1)
@@ -85,13 +87,19 @@ const Importaciones = () => {
     setPagination(1)
     if(typeImp===''){
       setSelectedName('')
+      setSelectedSap('Sin seleccionar.')
+      setSelectedProveedor('Sin seleccionar.')
       return toast.success('Reset completo.', {style:{background:'#4CAF50'}, id:'completado'});
     }
     
     const selectSocio = buques?.sociosImp.find((item)=>item.idSocio==buque)?.socio
     const selectFactura = buques?.facturasImp.find((item)=>item.factura==facturasImp)?.factura
+    const selectProvFactura = buques?.facturasImp.find((item)=>item.factura==facturasImp)?.facturaProveedor
+
     /* Colocar nombre en el progress bar */
-    setSelectedName(`${selectSocio} - SAP ${selectFactura}`)
+    setSelectedName(`${selectSocio}`)
+    setSelectedSap(selectFactura)
+    setSelectedProveedor(selectProvFactura)
 
     return toast.success('Busqueda completa.', {style:{background:'#4CAF50'}, id:'completado'});
   }
@@ -283,7 +291,16 @@ const Importaciones = () => {
         </div>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2">
-          <ProgressBar current={stats?.pesoNeto || 0} limit={stats?.cantidad || 0} status={stats?.status} unit="Toneladas" label={`${selectedName ? selectedName : 'Seleccione un buque'}`}/>        
+          <ProgressBar 
+            current={stats?.pesoNeto || 0} 
+            limit={stats?.cantidad || 0} 
+            status={stats?.status}
+            cantidadViajes={stats?.cantidadViajes} 
+            unit="Toneladas" 
+            label={`${selectedName ? selectedName : 'Seleccione un buque'}`}
+            labelSap={selectedSap}
+            labelProveedor={selectedProveedor}
+          />        
           {statsdata?.map((stat, index) => (
             <StatCard
               key={index}
@@ -299,7 +316,7 @@ const Importaciones = () => {
         {resumenBFHLoad ? (
           <TablaResumenBFHLoader />
         ):(
-          <TablaResumenBFH datos={resumenBFH} />
+          <TablaResumenBFH datos={resumenBFH} type={selected.typeImp} />
         )}
       </div>
       <div>
@@ -334,7 +351,7 @@ const Importaciones = () => {
   );
 };
 
-function ProgressBar({ current, limit, label = "Progreso", unit = "productos", status }) {
+function ProgressBar({ current, limit, label = "Progreso", unit = "productos", status, labelSap="Sin seleccionar.", labelProveedor="Sin seleccionar.", cantidadViajes='' }) {
   const percentage = limit > 0 ? Math.min((current / limit) * 100, 100) : 0;
   
   return (
@@ -342,7 +359,11 @@ function ProgressBar({ current, limit, label = "Progreso", unit = "productos", s
       <div className="bg-white rounded-xl shadow-lg border border-gray-100 px-7 py-7">
         {/* Header */}
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-gray-800">{label}</h3>
+          <h3 className="text-lg font-semibold text-gray-800 flex flex-col">
+            <span>{label}</span>
+            <span className="text-gray-600 text-xs">Factura de SAP: {labelSap || 'N/A'}</span>
+            <span className="text-gray-600 text-xs">Factura proveedor: {labelProveedor || 'N/A'}</span>
+          </h3>
           <div className="flex items-center space-x-2 ML-">
             <span className="text-2xl font-bold text-[#5a3f27]">
               {percentage.toFixed(2)}%
@@ -397,11 +418,7 @@ function ProgressBar({ current, limit, label = "Progreso", unit = "productos", s
               ) : status === 2 ? 'Completado' : '-'}
             </span>
             <span className="text-sm font-bold text-gray-600">
-              {
-                status === 1 ? (percentage >= 100 ? ' - ' : `${(100 - percentage).toFixed(2)}% por completar`) : 
-                status === 2 ? (percentage >= 100 ? ` - ` : ` - `) : 
-                status === 3 ? 'Cancelado' : '-'
-              }
+              {cantidadViajes ? `${cantidadViajes} Viajes` : ''}
             </span>
           </div>
         </div>

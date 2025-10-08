@@ -16,7 +16,7 @@ import { FiCheck, FiCircle, FiClock, FiTool, FiTruck, FiUser, FiUsers } from 're
 import { FaIdBadge, FaMapMarkerAlt, FaTruck, FaUserTie, FaWeightHanging } from 'react-icons/fa';
 import { PiTruckTrailerLight } from 'react-icons/pi';
 
-export const TablaResumenBFH = ({datos=[]}) => {
+export const TablaResumenBFH = ({datos=[], type}) => {
   return (
     <div className=" mt-10">
       <div className=" mx-auto">
@@ -33,7 +33,7 @@ export const TablaResumenBFH = ({datos=[]}) => {
                     CANTIDAD VIAJES
                   </th>
                   <th className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider">
-                    TM T.E.H
+                    TM {type==2 ? 'TEH' : 'OCM'} {/* Preguntar a AXEL CORREGIR NO ES POR COMO LO TENGO */}
                   </th>
                   <th className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider">
                     PESO NETO TM

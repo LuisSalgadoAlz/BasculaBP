@@ -90,7 +90,7 @@ const EditClientes = () => {
   }
 
   const verificarFactura = (facturas) => {
-    if(!facturas.factura || !facturas.codigoProveedor || !facturas.proveedor || !facturas.cantidad){
+    if(!facturas.factura || !facturas.codigoProveedor || !facturas.proveedor || !facturas.cantidad || !facturas.facturaProveedor){
       setErrorModal(true)
       setMsg('No deben de haber campos vacios en el formulario de facturas. Intente denuevo.')
       return false

@@ -358,7 +358,7 @@ export const getFacturaInfo = async (fun, setIsLoading, id) => {
 
     const item = await response.json();
 
-    fun({ factura: item.factura, codigoProveedor: item.codigoProveedor, proveedor: item.Proveedor, cantidad: item.Cantidad, Proceso: item.Proceso, Id: item.id, ProcesoTemp: item.Proceso});
+    fun({ factura: item.factura, codigoProveedor: item.codigoProveedor, proveedor: item.Proveedor, cantidad: item.Cantidad, Proceso: item.Proceso, Id: item.id, ProcesoTemp: item.Proceso, facturaProveedor: item.facturaProveedor});
   } catch (error) {
     console.error("Error al obtener los facturas:", error);
   } finally {

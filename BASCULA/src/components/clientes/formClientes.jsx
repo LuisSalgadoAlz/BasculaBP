@@ -111,9 +111,15 @@ export const FormFacturas = ({ fun }) => {
     <>
       <div className="mt-5">
         <label className="block mb-2 text-sm font-medium text-gray-900 ">
-          Factura
+          Factura SAP
         </label>
         <input type="text" name={"factura"} className={claseFormInputs} placeholder={`Ingrese factura`} required onChange={fun}   />
+      </div>
+      <div className="mt-5">
+        <label className="block mb-2 text-sm font-medium text-gray-900 ">
+          Factura Proveedor
+        </label>
+        <input type="text" name={"facturaProveedor"} className={claseFormInputs} placeholder={`Ingrese factura`} required onChange={fun} />
       </div>
       <div className="mt-5">
         <label className="block mb-2 text-sm font-medium text-gray-900 ">
@@ -142,9 +148,15 @@ export const FormFacturasEdit = ({ fun, data, isLoadingData }) => {
     <>
       <div className="mt-5">
         <label className="block mb-2 text-sm font-medium text-gray-900 ">
-          Factura
+          Factura SAP
         </label>
         <input type="text" name={"factura"} className={claseFormInputs} placeholder={`Ingrese factura`} required onChange={fun} value={isLoadingData ? 'Cargando...' : data?.factura} disabled  />
+      </div>
+      <div className="mt-5">
+        <label className="block mb-2 text-sm font-medium text-gray-900 ">
+          Factura Proveedor
+        </label>
+        <input type="text" name={"facturaProveedor"} className={claseFormInputs} placeholder={`Ingrese factura`} required onChange={fun} value={isLoadingData ? 'Cargando...' : data?.facturaProveedor || 'No registrada.'} disabled/>
       </div>
       <div className="mt-5">
         <label className="block mb-2 text-sm font-medium text-gray-900 ">
