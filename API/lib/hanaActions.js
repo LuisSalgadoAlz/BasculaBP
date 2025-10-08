@@ -30,7 +30,6 @@ const executeView = async (viewName, filters = {}) => {
   }
 };
 
-
 const executeInfoTables = async (viewName) => {
   try {
     const conn = await getConnection();
@@ -53,7 +52,33 @@ const executeInfoTables = async (viewName) => {
   }
 };
 
+// Ejecutar procedimiento almacenado
+const executeProcedure = async (procedureName, inputParams = {}) => {
+  try {
+    const conn = await getConnection();
+    
+    // Construir CALL statement con parámetros
+    const paramPlaceholders = Object.keys(inputParams).map(() => '?').join(', ');
+    const query = `CALL ${process.env.HANA_DATABASE}.${procedureName}(${paramPlaceholders})`;
+    const params = Object.values(inputParams);
+    
+    return new Promise((resolve, reject) => {
+      conn.exec(query, params, (err, result) => {
+        if (err) {
+          console.error('[LERROR]: Error ejecutando procedimiento:', err);
+          reject(err);
+        } else {
+          resolve(result);
+        }
+      });
+    });
+  } catch (error) {
+    throw error;
+  }
+};
+
 module.exports = {
     executeView, 
-    executeInfoTables
+    executeInfoTables,
+    executeProcedure,
 }

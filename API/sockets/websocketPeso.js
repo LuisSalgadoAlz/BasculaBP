@@ -40,6 +40,9 @@ const setupWebSocket = (server) => {
   const wssPeso = new WebSocket.Server({ noServer: true });
   const wssManifiestos = new WebSocket.Server({ noServer: true });
   const wssAsignados = new WebSocket.Server({ noServer: true });
+  const wssPicking = new WebSocket.Server({ noServer: true });
+
+  const usuarios = new Map();
 
   // Variables para controlar los intervalos  
   let intervalPeso = null;
@@ -291,6 +294,123 @@ const setupWebSocket = (server) => {
     });
   });
 
+  /**
+   * END ----------------------------------------------------------------------------
+   * END - Ruta de manifiestos picking
+   * END ----------------------------------------------------------------------------
+   */
+
+  wssPicking.on("connection", async(ws, req) => {
+    try {
+      // Obtener userId
+      const url = new URL(req.url, `http://${process.env.HOST}:${process.env.PORT}`);
+      const userId = url.searchParams.get('userId');
+      
+      // Validar userId
+      if (!userId || isNaN(userId)) {
+        console.error('Conexión rechazada: userId no proporcionado');
+        ws.close(1008, 'userId requerido'); // 1008 = Policy Violation
+        return;
+      }
+      
+      // Verificar si el usuario ya está conectado
+      if (usuarios.has(userId)) {
+        console.warn(`Usuario ${userId} ya existe, cerrando conexión anterior`);
+        const oldWs = usuarios.get(userId);
+        if (oldWs.readyState === ws.OPEN) {
+          oldWs.close(1000, 'Nueva sesión iniciada');
+        }
+      }
+      
+      // Guardar usuario
+      ws.userId = userId;
+      usuarios.set(userId, ws);
+      console.log(`Usuario ${userId} conectado`);
+      
+      const data = await getManfiestosPickingPorUsuario(userId);
+      
+      // Enviar confirmación de conexión
+      ws.send(JSON.stringify({data}));
+
+      // Recibir mensajes
+      ws.on("message", (data) => {
+        try {
+          const msg = JSON.parse(data);
+          console.log(`Mensaje de ${userId}:`, msg);
+          
+          // Responder al usuario
+          ws.send(JSON.stringify({ 
+            respuesta: "ok", 
+            data: msg 
+          }));
+        } catch (error) {
+          console.error(`Error parseando mensaje de ${userId}:`, error);
+          ws.send(JSON.stringify({ 
+            error: "Formato de mensaje inválido",
+            detalles: "Se esperaba JSON válido"
+          }));
+        }
+      });
+
+      // Manejar errores
+      ws.on("error", (error) => {
+        console.error(`Error en conexión de ${userId}:`, error);
+      });
+
+      // Desconexión
+      ws.on("close", (code, reason) => {
+        usuarios.delete(userId);
+        console.log(`Usuario ${userId} desconectado (código: ${code}, razón: ${reason})`);
+      });
+      
+    } catch (error) {
+      console.error('Error en conexión WebSocket:', error);
+      ws.close(1011, 'Error interno del servidor');
+    }
+  });
+  
+  subscriber.subscribe("picking:msg", (message) => {
+    try {
+      const data = JSON.parse(message);
+      
+      // Si el mensaje es para un usuario específico
+      if (data.userId) {
+        const ws = usuarios.get(data.userId);
+        
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(message);
+          console.log(`Mensaje enviado a usuario ${data.userId}`);
+        } else {
+          console.warn(`Usuario ${data.userId} no está conectado o la conexión está cerrada`);
+        }
+      } 
+      // Si el mensaje es para múltiples usuarios
+      else if (data.userIds && Array.isArray(data.userIds)) {
+        data.userIds.forEach(userId => {
+          const ws = usuarios.get(userId);
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(message);
+          }
+        });
+        console.log(`Mensaje enviado a ${data.userIds.length} usuarios`);
+      }
+      // Broadcast a todos los usuarios conectados (usar con precaución)
+      else if (data.broadcast === true) {
+        let count = 0;
+        usuarios.forEach((ws, userId) => {
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(message);
+            count++;
+          }
+        });
+        console.log(`Broadcast enviado a ${count} usuarios`);
+      }
+      
+    } catch (error) {
+      console.error('Error procesando mensaje del subscriber:', error);
+    }
+  });
+
   
   /**
    * END ----------------------------------------------------------------------------
@@ -298,19 +418,31 @@ const setupWebSocket = (server) => {
    * END ----------------------------------------------------------------------------
    */
   server.on("upgrade", (req, socket, head) => {
-    if (req.url === "/" || req.url === "/peso") {
-      wssPeso.handleUpgrade(req, socket, head, (ws) => {
-        wssPeso.emit("connection", ws, req);
-      });
-    } else if (req.url === "/manifiestos") {
-      wssManifiestos.handleUpgrade(req, socket, head, (ws) => {
-        wssManifiestos.emit("connection", ws, req);
-      });
-    }else if (req.url === "/asignados") {
-      wssAsignados.handleUpgrade(req, socket, head, (ws) => {
-        wssAsignados.emit("connection", ws, req);
-      });
-    } else {
+    try {
+      const url = new URL(req.url, `http://${req.headers.host}`);
+      const pathname = url.pathname;
+      
+      if (pathname === "/" || pathname === "/peso") {
+        wssPeso.handleUpgrade(req, socket, head, (ws) => {
+          wssPeso.emit("connection", ws, req);
+        });
+      } else if (pathname === "/manifiestos") {
+        wssManifiestos.handleUpgrade(req, socket, head, (ws) => {
+          wssManifiestos.emit("connection", ws, req);
+        });
+      } else if (pathname === "/asignados") {
+        wssAsignados.handleUpgrade(req, socket, head, (ws) => {
+          wssAsignados.emit("connection", ws, req);
+        });
+      } else if (pathname === "/picking") {
+        wssPicking.handleUpgrade(req, socket, head, (ws) => {
+          wssPicking.emit("connection", ws, req);
+        });
+      } else {
+        socket.destroy();
+      }
+    } catch (error) {
+      console.error('Error en upgrade:', error);
       socket.destroy();
     }
   });
@@ -392,6 +524,19 @@ const getManifiestosTodosLosDatosHelper = async(arrManifiestos) => {
   }catch(err){
     console.log(err)
     return res.status(400).send({err: 'Error interno del sistema.'})
+  }
+}
+
+const getManfiestosPickingPorUsuario = async(userId) => {
+  try{
+    const picking = await db.picking.findMany({
+      where: {
+        usuarioBPTPickingId: parseInt(userId)
+      }
+    })
+    return picking
+  }catch(err){
+    console.log(err)
   }
 }
 

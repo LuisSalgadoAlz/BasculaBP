@@ -8,7 +8,8 @@ export const AUTH_CONFIG = {
   TOLVA: '/tolva/dashboard', 
   GUARDIA: '/guardia', 
   REPORTES: '/importaciones-granza',
-  BODEGAPT: '/control'
+  BPTSUPERVISOR: '/control',
+  BPTPICKING: '/picking',
 };
 
 export const TOKEN_EXPIRY_MINUTES = 30;
@@ -87,3 +88,10 @@ export const formatNumber = (num) => {
       maximumFractionDigits: 2
     });
   };
+
+
+export const ALERTSCOLORS = {
+  ERROR: {style:{background:'#ff4d4f'}}, 
+  SUCCESS: {style:{background:'#4CAF50'}},
+  WARNING: {style:{background:'#ff9800'}}, 
+}

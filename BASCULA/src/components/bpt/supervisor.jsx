@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, X, User, Package, Calendar, CheckCircle, Clock, XCircle, AlertCircle, ArrowUpDown } from 'lucide-react';
+import { Search, X, User, Package, Calendar, CheckCircle, Clock, XCircle, AlertCircle, ArrowRight, FileText, Trash2 } from 'lucide-react';
 import { useEffect } from 'react';
 
 const LIST_STATUS = {
@@ -8,23 +8,24 @@ const LIST_STATUS = {
     I : 'ORIGINAL'
 }
 
-export const ManifiestosTable = ({ tableData, handleOpenModal }) => {
+export const ManifiestosTable = (props) => {
+  const {tableData, handleChecked, openModalAsignar, handleLimpiarSeleccion, selectedItems, setSelectedItems} = props
   const data = tableData ? tableData.map((item, index) => ({
     id: index + 1,
-    manifiesto: item.DocNum,
+    docNum: item.DocNum,
     tipo: item.Tipo,
     fechaEntrega: new Date(item.U_FechaEntrega).toISOString().slice(0, 10),
     ruta: item.U_IDRuta,
-    estado: LIST_STATUS[item.U_Status],
+    estado: LIST_STATUS[item.U_Status] || item.U_Status,
     peso: parseFloat(item.U_PesoTotal),
   })) : [];
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filterEstado, setFilterEstado] = useState('Todos');
   const [currentPage, setCurrentPage] = useState(1);
-  const [onlyNow, setOnlyNow] = useState(false)
-  const itemsPerPage = 20;
+  const [onlyNow, setOnlyNow] = useState(false);
 
+  const itemsPerPage = 20;
   const estadosUnicos = ['Todos', ...new Set(data.map(item => item.estado))];
 
   const filteredData = data.filter(item => {
@@ -32,7 +33,7 @@ export const ManifiestosTable = ({ tableData, handleOpenModal }) => {
       String(val).toLowerCase().includes(searchTerm.toLowerCase())
     );
     const matchesEstado = filterEstado === 'Todos' || item.estado === filterEstado;
-    const matchesHoy = onlyNow ? new Date(item.fechaEntrega).toISOString().slice(0, 10) === new Date().toISOString().slice(0, 10) : true
+    const matchesHoy = onlyNow ? new Date(item.fechaEntrega).toISOString().slice(0, 10) === new Date().toISOString().slice(0, 10) : true;
     return matchesSearch && matchesEstado && matchesHoy;
   });
 
@@ -42,17 +43,30 @@ export const ManifiestosTable = ({ tableData, handleOpenModal }) => {
     currentPage * itemsPerPage
   );
 
-  const getEstadoColor = (estado) => {
-    switch(estado) {
-      case 'Entregado': return 'bg-green-50 text-green-700 border-green-200';
-      case 'En Tránsito': return 'bg-blue-50 text-blue-700 border-blue-200';
-      case 'Pendiente': return 'bg-yellow-50 text-yellow-700 border-yellow-200';
-      default: return 'bg-gray-50 text-gray-700 border-gray-200';
+  const handleRowClick = (e, row) => {
+    // Evitar que se ejecute si el click fue en el checkbox
+    if (e.target.type === 'checkbox') return;
+    
+    const checkbox = e.currentTarget.querySelector('input[type="checkbox"]');
+    if (checkbox) {
+      checkbox.click();
     }
   };
 
+  const handleCheckboxChange = (e, row) => {
+    const newSelected = new Set(selectedItems);
+    if (e.target.checked) {
+      newSelected.add(row.docNum);
+    } else {
+      newSelected.delete(row.docNum);
+    }
+    setSelectedItems(newSelected);
+    
+    handleChecked(e, (tableData?.filter(item => item.DocNum === row.docNum)));
+  };
+
   return (
-    <div className="w-full mx-auto p-6 max-sm:p-2 bg-white rounded-lg">
+    <div className="w-full mx-auto max-sm:p-2 bg-white rounded-lg relative">
       {/* Barra de búsqueda y filtros */}
       <div className="mb-6 flex flex-col sm:flex-row gap-3">
         <div className="flex-1 relative">
@@ -65,7 +79,6 @@ export const ManifiestosTable = ({ tableData, handleOpenModal }) => {
             className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
-
         <select
           value={filterEstado}
           onChange={(e) => setFilterEstado(e.target.value)}
@@ -75,16 +88,33 @@ export const ManifiestosTable = ({ tableData, handleOpenModal }) => {
             <option key={estado} value={estado}>{estado}</option>
           ))}
         </select>
-        <label className='flex items-center justify-center gap-2 border border-gray-300 rounded-lg px-2 cursor-pointer hover:bg-gray-50 max-sm:p-2'>
+        
+        <label className='flex items-center justify-center gap-2 border border-gray-300 rounded-lg px-3 cursor-pointer hover:bg-gray-50 max-sm:p-2 whitespace-nowrap'>
           <input 
-              id='onlyNow'
-              name='onlyNow' 
-              type="checkbox" 
-              className='cursor-pointer' 
-              onChange={(e) => {setOnlyNow(e.target.checked)}}
+            id='onlyNow'
+            name='onlyNow' 
+            type="checkbox" 
+            className='cursor-pointer' 
+            onChange={(e) => setOnlyNow(e.target.checked)}
           /> 
-          <span>Entregas Hoy</span>
-      </label>
+          <span className="text-sm">Entregas Hoy</span>
+        </label>
+      </div>
+
+      {/* Botones flotantes - Mobile */}
+      <div className="md:hidden fixed bottom-6 right-4 z-50 flex flex-col gap-3">
+        <button
+          onClick={openModalAsignar}
+          className="w-14 h-14 bg-[#5a3f27] text-white rounded-full shadow-lg hover:bg-[#754c28] transition-all flex items-center justify-center active:scale-95"
+        >
+          <FileText className="w-6 h-6" />
+        </button>
+        <button
+          onClick={()=>handleLimpiarSeleccion(setSelectedItems)}
+          className="w-14 h-14 bg-gray-600 text-white rounded-full shadow-lg hover:bg-gray-700 transition-all flex items-center justify-center active:scale-95"
+        >
+          <Trash2 className="w-6 h-6" />
+        </button>
       </div>
 
       {/* Tabla */}
@@ -92,85 +122,89 @@ export const ManifiestosTable = ({ tableData, handleOpenModal }) => {
         <table className="w-full">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="px-6 py-3 max-sm:py-2 text-left text-xs max-sm:hidden font-semibold text-gray-700 uppercase tracking-wider">
-                ID 
-              </th>
               <th className="px-6 py-3 max-sm:py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                 Manifiesto
               </th>
-              <th className="px-6 py-3 max-sm:py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+              <th className="px-6 py-3 max-sm:py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider max-sm:hidden">
                 Tipo
               </th>
-              <th className="px-6 py-3 max-sm:py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+              <th className="px-6 py-3 max-sm:py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider max-sm:hidden">
                 Fecha
               </th>
-              <th className="px-6 py-3 max-sm:py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+              <th className="px-6 py-3 max-sm:py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider max-sm:hidden">
                 Ruta
               </th>
               <th className="px-6 py-3 max-sm:py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                 Estado
               </th>
-              <th className="px-6 py-3 max-sm:py-2 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+              <th className="px-6 py-3 max-sm:py-2 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider max-sm:hidden">
                 Peso (QQ)
               </th>
-              <th className="px-6 py-3 max-sm:py-2 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                Acción
+              <th className="px-6 py-3 max-sm:py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                Seleccionar
               </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {paginatedData.length > 0 ? (
               paginatedData.map((row) => (
-                <tr key={row.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 max-sm:py-2 whitespace-nowrap text-sm text-gray-900 max-sm:hidden">
-                    #{row.id}
-                  </td>
+                <tr 
+                  key={row.id} 
+                  onClick={(e) => handleRowClick(e, row)}
+                  className="hover:bg-gray-50 transition-colors cursor-pointer"
+                >
                   <td className="px-6 py-4 max-sm:py-2 whitespace-nowrap text-sm font-medium text-gray-900">
                     <div className='flex flex-col'>
-                        <div>
-                            {row.manifiesto} <span className='sm:hidden'>- {row.tipo}</span>
-                        </div>
-                        <div className='sm:hidden'>
-                            {row.fechaEntrega}
-                        </div>
-                        <div className='sm:hidden'>
-                            {row.estado} 
-                        </div>
-                        <div className='sm:hidden'>
-                            {row.ruta} - {row.peso.toFixed(2)} 
-                        </div>
+                      <div className="flex items-center gap-2">
+                        <Package className="w-4 h-4 text-gray-400" />
+                        <span className="font-bold">Manifiesto {row.docNum}</span>
+                      </div>
+                      <div className='sm:hidden text-xs text-gray-500 mt-1'>
+                        {row.tipo} • {row.fechaEntrega}
+                      </div>
+                      <div className='sm:hidden text-xs text-gray-600 mt-1'>
+                        Ruta: {row.ruta} • {row.peso.toFixed(2)} QQ
+                      </div>
+                      <div className='sm:hidden text-xs text-gray-600 mt-1'>
+                         Estado: {row.estado}
+                      </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 max-sm:py-2 whitespace-nowrap text-sm text-gray-700">
+                  <td className="px-6 py-4 max-sm:py-2 whitespace-nowrap text-sm text-gray-700 max-sm:hidden">
                     <div className="flex items-center gap-2">
                       {row.tipo === 'Mayoreo' ? 
-                        <div className='w-5 h-5 bg-gray-600 rounded-full'></div>: 
+                        <div className='w-5 h-5 bg-gray-600 rounded-full'></div> : 
                         <div className='w-5 h-5 bg-amber-600 rounded-full'></div> 
                       }
-                      <span className='max-sm:hidden'>{row.tipo}</span>
+                      <span>{row.tipo}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 max-sm:py-2 whitespace-nowrap text-sm text-gray-700 table-cell">
+                  <td className="px-6 py-4 max-sm:py-2 whitespace-nowrap text-sm text-gray-700 max-sm:hidden">
                     <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-gray-400" />
                       {row.fechaEntrega}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-6 py-4 max-sm:py-2 whitespace-nowrap text-sm text-gray-900 max-sm:hidden">
                     {row.ruta}
                   </td>
-                  <td className="px-6 py-4 max-sm:py-2 whitespace-nowrap">
-                    <span className={`px-3 py-1 inline-flex text-xs font-medium rounded-full border ${getEstadoColor(row.estado)}`}>
+                  <td className="px-6 py-4 max-sm:py-2 whitespace-nowrap max-sm:hidden">
+                    <span className='px-3 py-1 inline-flex text-xs font-medium rounded-full border bg-gray-50 text-gray-700 border-gray-200'>
                       {row.estado}
                     </span>
                   </td>
-                  <td className="px-6 py-4 max-sm:py-2 whitespace-nowrap text-sm text-gray-900">
-                    <div className="flex items-center justify-end gap-2">
-                      {row.peso.toFixed(2)}
-                    </div>
+                  <td className="px-6 py-4 max-sm:py-2 whitespace-nowrap text-sm text-gray-900 text-right max-sm:hidden">
+                    {row.peso.toFixed(2)}
                   </td>
                   <td className="px-6 py-4 max-sm:py-2 whitespace-nowrap text-sm text-gray-900">
-                    <div className="flex items-center justify-end gap-2">
-                      <button onClick={()=>handleOpenModal(tableData?.filter(item => item.DocNum === row.manifiesto))} className='bg-[#5a3f27] text-white p-2 rounded-lg'> Asignar </button>
+                    <div className="flex gap-2 justify-center items-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedItems.has(row.docNum)}
+                        onChange={(e) => handleCheckboxChange(e, row)}
+                        className="w-5 h-5 accent-[#5a3f27] cursor-pointer"
+                        onClick={(e) => e.stopPropagation()}
+                      />
                     </div>
                   </td>
                 </tr>
@@ -184,56 +218,78 @@ export const ManifiestosTable = ({ tableData, handleOpenModal }) => {
             )}
           </tbody>
         </table>
-        <div className='flex items-center justify-center gap-2 px-6 py-3 border-t border-gray-100 sm:hidden'>
-            <div className='w-5 h-5 bg-gray-600 rounded-sm'></div> Mayoreo
-            <div className='w-5 h-5 bg-amber-600 rounded-sm'></div> Detalle
-        </div>
       </div>
 
-      {/* Paginación */}
-      {totalPages > 1 && (
-        <div className="mt-4 flex items-center justify-between">
-          <div className="text-sm text-gray-600">
-            Mostrando {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, filteredData.length)} de {filteredData.length} registros
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              Anterior
-            </button>
-            
-            {[...Array(totalPages)].map((_, i) => (
+      
+      {/* Paginación y Botones de acción - Desktop */}
+      <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+        {/* Paginación a la izquierda */}
+        {totalPages > 1 ? (
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-2 flex-wrap">
               <button
-                key={i + 1}
-                onClick={() => setCurrentPage(i + 1)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  currentPage === i + 1
-                    ? 'bg-blue-600 text-white'
-                    : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
-                }`}
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {i + 1}
+                Anterior
               </button>
-            ))}
-            
-            <button
-              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-              disabled={currentPage === totalPages}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              Siguiente
-            </button>
+              
+              {[...Array(totalPages)].map((_, i) => (
+                <button
+                  key={i + 1}
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    currentPage === i + 1
+                      ? 'bg-[#5a3f27] text-white'
+                      : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+              
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Siguiente
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        ) : (
+          <div></div>
+        )}
+      </div>
     </div>
   );
+};
+
+export const ButonDeAsingar = ({ handleLimpiarSeleccion, openModalAsignar }) => {
+  return (
+    <>
+      {/* Botones de acción a la derecha - Desktop */}
+      <div className="hidden md:flex gap-3 items-center">
+        <button
+          onClick={handleLimpiarSeleccion}
+          className="px-4 py-3.5 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2 font-medium"
+        >
+          <Trash2 className="w-5 h-5" />
+        </button>
+        <button
+          onClick={openModalAsignar}
+          className="px-4 py-3 bg-[#5a3f27] text-white rounded-lg hover:bg-[#704926] transition-colors flex items-center gap-2 font-medium"
+        >
+          <FileText className="w-5 h-5" />
+          <span className='max-md:hidden'>Asignar</span>
+        </button>
+      </div>
+    </>
+  )
 }
 
-export const ModalAsignar = ({ usuarios=[{}], setIsOpen,isOpen, handleAsignar }) => {
+export const ModalAsignar = ({ usuarios=[{}], setIsOpen,isOpen, handleAsignarMasivamente, loadingAsignar }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState(null);
 
@@ -301,15 +357,15 @@ export const ModalAsignar = ({ usuarios=[{}], setIsOpen,isOpen, handleAsignar })
             Cancelar
           </button>
           <button
-            onClick={() => handleAsignar(selectedUser)}
-            disabled={!selectedUser}
+            onClick={() => handleAsignarMasivamente(selectedUser)}
+            disabled={!selectedUser || loadingAsignar}
             className={`px-4 py-2 rounded-lg text-white ${
               selectedUser
                 ? 'bg-[#955e37] hover:bg-[#745a47]'
                 : 'bg-gray-400 cursor-not-allowed'
             }`}
           >
-            Asignar
+            {loadingAsignar ? 'Asignando...' : 'Asignar'}
           </button>
         </div>
       </div>
@@ -320,7 +376,7 @@ export const ModalAsignar = ({ usuarios=[{}], setIsOpen,isOpen, handleAsignar })
 export const ViewTabs = ({view, setView, manifiestos, connectionStatus, manifiestosAsignados}) => {
   return(
     <>
-      <div className="p-2 sm:p-4">
+      <div className="py-3 mb-2">
         <div className="inline-flex bg-gray-200 rounded-xl p-1 gap-1 w-full sm:w-auto overflow-x-auto">
           <button 
             className={`${
@@ -362,7 +418,7 @@ export const ViewTabs = ({view, setView, manifiestos, connectionStatus, manifies
             } px-3 sm:px-6 py-2 sm:py-2.5 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 whitespace-nowrap flex-1 sm:flex-initial min-w-0`}
             onClick={() => setView(3)}
           >
-            <span className="text-sm sm:text-base">Aprobados</span>
+            <span className="text-sm sm:text-base">Por Aprobar</span>
             {connectionStatus === 'connected' && view === 3 && (
               <span className="bg-white text-[#5a3f27] text-xs px-2 py-0.5 rounded-full font-bold">
                 {0}
@@ -385,7 +441,7 @@ const ESTADO_PICKING = {
   'END': 'Finalizado'
 };
 
-export const ManifiestosAsignadosTable = ({ tableData, handleOpenLogs }) => {
+export const ManifiestosAsignadosTable = ({ tableData, handleOpenLogs, loadingLogs, selectedLog }) => {
   const data = tableData ? tableData.map((item) => ({
     id: item.id,
     docNum: item.DocNum,
@@ -456,7 +512,7 @@ export const ManifiestosAsignadosTable = ({ tableData, handleOpenLogs }) => {
   };
 
   return (
-    <div className="w-full mx-auto p-6 max-sm:p-2 bg-white rounded-lg">
+    <div className="w-full mx-auto bg-white rounded-lg">
       {/* Barra de búsqueda y filtros */}
       <div className="mb-6 flex flex-col sm:flex-row gap-3">
         <div className="flex-1 relative">
@@ -579,7 +635,7 @@ export const ManifiestosAsignadosTable = ({ tableData, handleOpenLogs }) => {
                   <td className="px-6 py-4 max-sm:py-2 whitespace-nowrap text-sm text-gray-900">
                     <div className="flex gap-2 justify-center items-center max-sm:flex-col">
                       <button onClick={()=>handleOpenLogs(row.docNum)} className='inline-flex items-center justify-center px-2.5 py-1 rounded text-xs font-medium bg-[#5a3f27] text-white w-24'>
-                        Logs ({row.logs})
+                        {( loadingLogs && row.docNum === selectedLog ) ? 'Cargando...' : `Logs (${row.logs})`}
                       </button>
                       <button onClick={()=>console.log(row.docNum)} className='inline-flex items-center justify-center px-2.5 py-1 rounded text-xs font-medium bg-[#5a3f27] text-white w-24'>
                         Reasignar
@@ -729,18 +785,18 @@ export const ManifiestosLogs = ({data=[], isOpen, setIsOpen}) => {
                       <div className="text-xs font-semibold mb-1">
                         {change.field}
                       </div>
-                      <div className="space-y-0.5">
-                        <div className="border rounded px-1.5 py-0.5 bg-[#5a3f27]">
-                          <span className="text-xs font-medium text-white">
-                            {change.to}
-                          </span>
-                        </div>
-                        <div className="flex justify-center">
-                          <ArrowUpDown className="w-3 h-3" />
-                        </div>
+                      <div className="space-y-0.5 grid grid-cols-3 gap-1 items-center">
                         <div className="border rounded px-1.5 py-0.5">
                           <span className="text-xs line-through">
                             {change.from}
+                          </span>
+                        </div>
+                        <div className="flex justify-center">
+                          <ArrowRight className="w-3 h-3" />
+                        </div>
+                        <div className="border rounded px-1.5 py-0.5 bg-[#5a3f27]">
+                          <span className="text-xs font-medium text-white">
+                            {change.to}
                           </span>
                         </div>  
                       </div>

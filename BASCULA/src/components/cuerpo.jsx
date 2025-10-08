@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Cookies from 'js-cookie';
 import Header from "../components/header";
-import { SideBar, SideBarAdmin, SideBarBodegaPT, SideBarGuardia, SideBarReportes, SideBarTolva } from "../components/sideBar";
+import { SideBar, SideBarAdmin, SideBarBodegaPT, SideBarGuardia, SideBarPicking, SideBarReportes, SideBarTolva } from "../components/sideBar";
 
 // Componente genérico
 const CuerpoBase = ({ children, SideBarComponent, title, type }) => {
@@ -93,6 +93,15 @@ export const CuerpoBodegaPT = ({ children }) => (
     children={children}
     SideBarComponent={SideBarBodegaPT}
     title="Sistema de Gestión de Bodega PT"
-    type="BODEGAPT"  
+    type="BPTSUPERVISOR"  
+  />
+);
+
+export const CuerpoPicking = ({ children }) => (
+  <CuerpoBase
+    children={children}
+    SideBarComponent={SideBarPicking}
+    title="Sistema de Gestión de Bodega PT"
+    type="BPTPICKING"  
   />
 );

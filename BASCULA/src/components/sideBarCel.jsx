@@ -6,7 +6,7 @@ import { SlSupport } from "react-icons/sl";
 import { useState } from "react";
 import { SupportModal } from "./alerts";
 
-import { RUTAS_ADMIN, RUTAS_GUARDIA, RUTAS_PRINCIPALES, RUTAS_REPORTES, RUTAS_TOLVA, RUTAS_SUPERVISOR } from "./rutas";
+import { RUTAS_ADMIN, RUTAS_GUARDIA, RUTAS_PRINCIPALES, RUTAS_REPORTES, RUTAS_TOLVA, RUTAS_SUPERVISOR, RUTAS_PICKING } from "./rutas";
 
 export const CerrarSession = ({ onClick }) => (
   <button
@@ -131,4 +131,8 @@ export const SideBarCelReportes = ({ hdlClose }) => (
 
 export const SideBarCelBodegaPT = ({ hdlClose }) => (
   <BaseSidebar routes={RUTAS_SUPERVISOR} onClose={hdlClose} />
+);
+
+export const SideBarCelPicking = ({ hdlClose }) => (
+  <BaseSidebar routes={RUTAS_PICKING} onClose={hdlClose} />
 );

@@ -106,6 +106,14 @@ const RUTAS_SUPERVISOR = [
   }
 ]
 
+const RUTAS_PICKING = [
+  {
+    path: '/picking', 
+    name: 'Zona Picking',
+    icon: <AiFillCaretRight />,
+  }
+]
+
 const RUTAS_TOLVA = [
   {
     path: "/tolva/dashboard",
@@ -122,4 +130,4 @@ const RUTAS_GUARDIA = [
   },
 ]
 
-export { RUTAS_PRINCIPALES, RUTAS_ADMIN, RUTAS_REPORTES, RUTAS_SUPERVISOR, RUTAS_TOLVA, RUTAS_GUARDIA };
+export { RUTAS_PRINCIPALES, RUTAS_ADMIN, RUTAS_REPORTES, RUTAS_SUPERVISOR, RUTAS_TOLVA, RUTAS_GUARDIA, RUTAS_PICKING };

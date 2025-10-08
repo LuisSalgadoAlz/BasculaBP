@@ -4,7 +4,8 @@ import { createBrowserRouter, Route, RouterProvider } from "react-router";
 import "./index.css";
 import VerificarLog from "./utils/verificarLog";
 import { Spinner } from "./components/alerts";
-import ViewDisabled from "./views/viewDisabled";
+const PickeroDetalleManifiesto = lazy(()=> import('./views/bpt/pickeroDetalle'))
+const HomePickero = lazy(()=> import('./views/bpt/pickero'))
 const ControlZone = lazy(()=>import('./views/bpt/control'));
 const TolvasOcupadas = lazy(()=>import('./components/informes/tolvasOcupadas'));
 const ServicioBascula = lazy(()=>import('./components/informes/servicioBascula'));
@@ -84,9 +85,16 @@ const navRutas = createBrowserRouter([
     ],
   },
   {
-    element: <VerificarLog userType='ADMINISTRADOR,BODEGAPT' />,
+    element: <VerificarLog userType='ADMINISTRADOR,BPTSUPERVISOR' />,
     children: [
       { path: '/control', element: <ControlZone />}
+    ]
+  },
+  {
+    element: <VerificarLog userType='ADMINISTRADOR,BPTPICKING' />,
+    children: [
+      { path: '/picking', element: <HomePickero />}, 
+      { path: '/picking/:DocNum', element: <PickeroDetalleManifiesto />}, 
     ]
   },
 ]);

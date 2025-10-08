@@ -2,7 +2,7 @@ import { useState } from "react";
 import { SupportModal } from "./alerts";
 import { NavigationRoutes, SideBarBase, SidebarHeader, SupportSection, UserDropdown } from "./sideBar/elements";
 import Cookie from 'js-cookie'
-import { RUTAS_ADMIN, RUTAS_GUARDIA, RUTAS_PRINCIPALES, RUTAS_REPORTES, RUTAS_SUPERVISOR, RUTAS_TOLVA } from "./rutas";
+import { RUTAS_ADMIN, RUTAS_GUARDIA, RUTAS_PICKING, RUTAS_PRINCIPALES, RUTAS_REPORTES, RUTAS_SUPERVISOR, RUTAS_TOLVA } from "./rutas";
 
 export const SideBar = ({ modo = "extendido", altura = 500 }) => {
   const [ShowModalSupport, setShowModalSupport] = useState()
@@ -120,6 +120,24 @@ export const SideBarBodegaPT = ({ modo = "extendido", altura = 500 }) => {
     <SideBarBase extended={isExtendido}>
       <SidebarHeader isExtendido={isExtendido} title="Baprosa" subtitle="Sistema de Gestión Bodega PT" />
       <NavigationRoutes routes={RUTAS_SUPERVISOR} isExtendido={isExtendido} sectionTitle="Supervisor" />
+      <SupportSection isExtendido={isExtendido} onShowModal={handleShowModal} />
+      <UserDropdown isExtendido={isExtendido} altura={altura} />
+      {ShowModalSupport && <SupportModal hdClose={handleCloseModal}/>}
+    </SideBarBase>
+  );
+};
+
+export const SideBarPicking = ({ modo = "extendido", altura = 500 }) => {
+  const [ShowModalSupport, setShowModalSupport] = useState()
+  const handleShowModal = () => setShowModalSupport(true)
+  const handleCloseModal = () => setShowModalSupport(false)
+
+  const isExtendido = modo === "extendido";
+
+  return (
+    <SideBarBase extended={isExtendido}>
+      <SidebarHeader isExtendido={isExtendido} title="Baprosa" subtitle="Sistema de Gestión Bodega PT" />
+      <NavigationRoutes routes={RUTAS_PICKING} isExtendido={isExtendido} sectionTitle="Supervisor" />
       <SupportSection isExtendido={isExtendido} onShowModal={handleShowModal} />
       <UserDropdown isExtendido={isExtendido} altura={altura} />
       {ShowModalSupport && <SupportModal hdClose={handleCloseModal}/>}
