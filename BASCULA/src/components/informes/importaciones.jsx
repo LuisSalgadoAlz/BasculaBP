@@ -234,7 +234,8 @@ const Importaciones = () => {
         value2: `${formatNumber(stats?.pesoTeorico)} TM`, 
         deviation: `${formatNumber(stats?.desviacion)}`, 
         percentage: `${formatNumber(stats?.porcentaje)}%`,
-        status: (Number(stats?.desviacion) || 0) >= 0 ? 'positive' : 'negative'
+        status: (Number(stats?.desviacion) || 0) >= 0 ? 'positive' : 'negative',
+        unidad: 'TM'
       },
     ] : [
       { 
@@ -243,7 +244,8 @@ const Importaciones = () => {
         value2: `${formatNumber(stats?.sacosTeroicos)}`, 
         deviation: `${formatNumber(stats?.diferenciaSacos)}`, 
         percentage: `${formatNumber(stats?.porcentajeSacosDiff)}%`,
-        status: (Number(stats?.diferenciaSacos) || 0) >= 0 ? 'positive' : 'negative'
+        status: (Number(stats?.diferenciaSacos) || 0) >= 0 ? 'positive' : 'negative',
+        unidad: 'Unidad de sacos'
       },
     ]),
     { 
@@ -268,7 +270,8 @@ const Importaciones = () => {
         const cantidad = Number(stats?.cantidad) || 0;
         const diferencia = pesoNeto - cantidad;
         return diferencia >= 0 ? 'positive' : 'negative';
-      })()
+      })(), 
+      unidad: 'TM'
     },
     { 
       title: "Puerto - Factura", 
@@ -292,7 +295,8 @@ const Importaciones = () => {
         const pesoTeorico = Number(stats?.pesoTeorico) || 0;
         const diferencia = pesoTeorico - cantidad;
         return diferencia >= 0 ? 'positive' : 'negative';
-      })()
+      })(), 
+      unidad: 'TM'
     }
   ];
 

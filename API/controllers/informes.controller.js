@@ -2254,7 +2254,7 @@ const getRerportContenerizada = async (req, res) => {
         const facturaInfoRow = sheet1.addRow([]);
         sheet1.mergeCells(`A${sheet1.rowCount}:G${sheet1.rowCount}`);
         const facturaInfoCell = sheet1.getCell(`A${sheet1.rowCount}`);
-        facturaInfoCell.value = `ORDEN DE COMPRA: ${datosReporte[0].ordenDeCompra || 'N/A'} | CONTENEDORES: ${numContenedores}`;
+        facturaInfoCell.value = `FACTURA PROVEEDOR: ${dataFactura?.facturaProveedor || 'N/A'} | CONTENEDORES: ${numContenedores}`;
         facturaInfoCell.style = {
             font: { name: 'Arial', bold: true, size: 10, color: { argb: '000000' } },
             alignment: { horizontal: 'center', vertical: 'middle' },

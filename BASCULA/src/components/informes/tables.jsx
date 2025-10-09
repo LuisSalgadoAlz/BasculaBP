@@ -2719,7 +2719,7 @@ export const BasculaModal = ({isOpen, setIsOpen, desviaciones, type, siloData}) 
                         <p className="text-sm font-semibold text-gray-900">{item.value1} - {item.value2}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs text-gray-500">Desviación TM</p>
+                        <p className="text-xs text-gray-500">Desviación ({item.unidad})</p>
                         <p className={`text-sm font-bold ${item.status === 'positive' ? 'text-green-600' : 'text-red-600'}`}>{item.deviation} ({item.percentage})</p>
                       </div>
                     </div>
