@@ -200,7 +200,7 @@ const Importaciones = () => {
     ]),
     {
       icon: <IoIosStats size={24} className="text-white" />,
-      title: "Bascula - Factura",
+      title: "Bascula - Factura SAP",
       value: `${formatNumber(stats?.pesoNeto)} TM - ${formatNumber(stats?.cantidad)} TM`,
       color: "bg-blue-500",
     },
@@ -249,7 +249,7 @@ const Importaciones = () => {
       },
     ]),
     { 
-      title: "Bascula - Factura", 
+      title: "Bascula - Factura SAP", 
       value1: `${formatNumber(stats?.pesoNeto)} TM`, 
       value2: `${formatNumber(stats?.cantidad)} TM`, 
       deviation: (() => {
@@ -274,9 +274,9 @@ const Importaciones = () => {
       unidad: 'TM'
     },
     { 
-      title: "Puerto - Factura", 
-      value1: `${formatNumber(stats?.cantidad)} TM`, 
-      value2: `${formatNumber(stats?.pesoTeorico)} TM`, 
+      title: "Puerto - Factura SAP", 
+      value1: `${formatNumber(stats?.pesoTeorico)} TM`, 
+      value2: `${formatNumber(stats?.cantidad)} TM`, 
       deviation: (() => {
         const cantidad = Number(stats?.cantidad) || 0;
         const pesoTeorico = Number(stats?.pesoTeorico) || 0;
