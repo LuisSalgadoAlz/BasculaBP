@@ -1,6 +1,6 @@
 export const URLHOST = 'http://localhost:3000/api/'
 export const URLWEBSOCKET = 'ws://localhost:3000'
-export const VERSION = '1.0.16'
+export const VERSION = '1.0.17'
 
 export const AUTH_CONFIG = {
   BASCULA: '/boletas',
