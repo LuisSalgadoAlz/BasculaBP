@@ -417,7 +417,7 @@ const putFacturasPorId = async (req, res) => {
 };
 
 const postCrearFacturasPorSocios  = async(req, res) =>{
-  const { factura, codigoProveedor, proveedor, cantidad, idSocio } = req.body;
+  const { factura, codigoProveedor, proveedor, cantidad, idSocio, facturaProveedor } = req.body;
   const verificado = jwt.verify(req.header('Authorization'), process.env.SECRET_KEY);
   
   const exits = await db.facturas.count({
@@ -448,6 +448,7 @@ const postCrearFacturasPorSocios  = async(req, res) =>{
     const crearNuevaFactura = await db.facturas.create({
       data:{
         factura: factura,
+        facturaProveedor: facturaProveedor,
         codigoProveedor,
         Proveedor: proveedor,
         Cantidad: parseFloat(cantidad),

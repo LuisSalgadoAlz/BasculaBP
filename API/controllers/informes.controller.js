@@ -46,9 +46,12 @@ const buquesBoletas = async(req, res) => {
             id: item.idSocio, nombre: item.socio,
         })) : [];
 
+        /**
+         * El \u200B es para simular el salto de liena en el react select
+         */
         const facturasImp = (buque && typeImp) ? dataFacturas.map((item) => ({
             ...item,
-            id: item.factura, nombre: item.factura
+            id: item.factura, nombre: `SAP: ${item.factura} \u200B \u200B \u200B \u200B \u200B \u200B \u200B \u200B \u200B \u200B PROV: ${item.facturaProveedor || 'N/A'} ` 
         })) : [];
         
         res.status(200).send( { sociosImp, facturasImp } )
@@ -145,7 +148,7 @@ const getBuqueStats = async(req, res) => {
 
         if (!buque || isNaN(Number(buque))) return res.status(200).json({ error: 'Parámetro buque inválido o no seleccionado' });
 
-        const [facturas, total, sacosContenerizados] = await Promise.all([
+        const [facturas, total, sacosContenerizados, cantidadViajes, getSilos] = await Promise.all([
             db.facturas.findMany({
                 where: {
                     idSocio: parseInt(buque),
@@ -185,6 +188,41 @@ const getBuqueStats = async(req, res) => {
                     impContenerizada: true,
                 } 
             }) : null,
+            db.boleta.count({
+                where: {
+                    estado: {
+                        not: {
+                            in: ['Pendiente', 'Cancelada'],
+                        }
+                    }, 
+                    idMovimiento: parseInt(typeImp), 
+                    factura: factura,
+                }
+            }), 
+            typeImp == 2 ? db.$queryRaw`
+                WITH BoletasUnicas AS (
+                    SELECT 
+                        b.id,
+                        b.pesoNeto,
+                        CASE 
+                            WHEN t.siloSecundario IS NULL THEN s1.nombre
+                            ELSE CONCAT(s1.nombre, ' - ', s2.nombre)
+                        END AS nombre
+                    FROM Boleta b
+                    INNER JOIN Tolva t ON b.id = t.idBoleta
+                    LEFT JOIN Silos s1 ON s1.id = t.siloPrincipal
+                    LEFT JOIN Silos s2 ON s2.id = t.siloSecundario
+                    WHERE b.idSocio = ${buque} and factura=${factura}
+                    GROUP BY b.id, b.pesoNeto, s1.nombre, s2.nombre, t.siloSecundario
+                )
+                SELECT 
+                    nombre,
+                    COUNT(*) as camiones,
+                    SUM(pesoNeto)/100 as quintales
+                FROM BoletasUnicas
+                GROUP BY nombre
+                ORDER BY nombre asc
+            ` : null,
         ])
 
 
@@ -213,6 +251,8 @@ const getBuqueStats = async(req, res) => {
             sacosDescargados: acumuladasUnidadesRecibidas, 
             diferenciaSacos: acumuladasUnidadesRecibidas - acumuladasunidadesTeoricas, 
             porcentajeSacosDiff: acumuladasunidadesTeoricas !== 0 ? ((acumuladasUnidadesRecibidas - acumuladasunidadesTeoricas) / acumuladasunidadesTeoricas) * 100 : 0,
+            cantidadViajes: cantidadViajes,
+            getSilos,
         }
         return res.status(200).send({...refactorData})
     }catch(err) {
@@ -560,43 +600,51 @@ const getInformePagoAtrasnporte = async (req, res) => {
         Object.assign(proveedorCell.style, styles.dateInfo);
 
         // Fila 5 - Factura
-        sheet1.getCell("A5").value = "FACTURA:";
+        sheet1.getCell("A5").value = "FACTURA SAP:";
         Object.assign(sheet1.getCell("A5").style, styles.dateInfo);
         sheet1.mergeCells("B5:E5");
         const infoCell = sheet1.getCell("B5");
         infoCell.value = factura || 'N/A';
         Object.assign(infoCell.style, styles.dateInfo);
 
-        // Fila 6 - Buque
-        sheet1.getCell("A6").value = "BUQUE:";
+        // Fila 5 - FacturaProveedor
+        sheet1.getCell("A6").value = "FACTURA PROVEEDOR:";
         Object.assign(sheet1.getCell("A6").style, styles.dateInfo);
         sheet1.mergeCells("B6:E6");
-        const buqueCell = sheet1.getCell("B6");
+        const facturaProveedor = sheet1.getCell("B6");
+        facturaProveedor.value = dataFactura?.facturaProveedor || 'N/A';
+        Object.assign(facturaProveedor.style, styles.dateInfo);
+
+        // Fila 6 - Buque
+        sheet1.getCell("A7").value = "BUQUE:";
+        Object.assign(sheet1.getCell("A7").style, styles.dateInfo);
+        sheet1.mergeCells("B7:E7");
+        const buqueCell = sheet1.getCell("B7");
         buqueCell.value = ingresoBaprosa[0].socio.toUpperCase();
         Object.assign(buqueCell.style, styles.dateInfo);
 
         // Fila 7 - Transportes (corregido el label)
-        sheet1.getCell("A7").value = "TRANSPORTES:";
-        Object.assign(sheet1.getCell("A7").style, styles.dateInfo);
-        sheet1.mergeCells("B7:E7");
-        const transportesUsados = sheet1.getCell("B7");
+        sheet1.getCell("A8").value = "TRANSPORTES:";
+        Object.assign(sheet1.getCell("A8").style, styles.dateInfo);
+        sheet1.mergeCells("B8:E8");
+        const transportesUsados = sheet1.getCell("B8");
         transportesUsados.value = pagos.map(item => item.empresa).join(', ').toUpperCase();
         Object.assign(transportesUsados.style, styles.dateInfo);
 
         // Fila 8 - Fechas de inicio y fin
-        sheet1.getCell("A8").value = "PERÍODO:";
-        Object.assign(sheet1.getCell("A8").style, styles.dateInfo);
-        sheet1.mergeCells("B8:E8");
-        const fechasDeInicioYfin = sheet1.getCell("B8");
+        sheet1.getCell("A9").value = "PERÍODO:";
+        Object.assign(sheet1.getCell("A9").style, styles.dateInfo);
+        sheet1.mergeCells("B9:E9");
+        const fechasDeInicioYfin = sheet1.getCell("B9");
         fechasDeInicioYfin.value = `Inicio: ${new Date(primeraUnidad[0].fechaInicio).toLocaleString()} - Hasta: ${new Date(ultimaUnidad[0].fechaInicio).toLocaleString()}`;
         Object.assign(fechasDeInicioYfin.style, styles.dateInfo);
 
         // Fila 9 - Fecha de generación
         const now = new Date();
-        sheet1.getCell("A9").value = "GENERADO:";
-        Object.assign(sheet1.getCell("A9").style, styles.dateInfo);
-        sheet1.mergeCells("B9:E9");
-        const dateCell = sheet1.getCell("B9");
+        sheet1.getCell("A10").value = "GENERADO:";
+        Object.assign(sheet1.getCell("A10").style, styles.dateInfo);
+        sheet1.mergeCells("B10:E10");
+        const dateCell = sheet1.getCell("B10");
         dateCell.value = now.toLocaleDateString('es-ES', { 
             weekday: 'long', 
             year: 'numeric', 
@@ -992,42 +1040,51 @@ const getInformePagoAtrasnporte = async (req, res) => {
         Object.assign(proveedorCell2.style, styles.dateInfo);
 
         // Fila 5 - Factura
-        sheet2.getCell("A5").value = "FACTURA:";
+        sheet2.getCell("A5").value = "FACTURA SAP:";
         Object.assign(sheet2.getCell("A5").style, styles.dateInfo);
         sheet2.mergeCells("B5:E5");
         const infoCell2 = sheet2.getCell("B5");
         infoCell2.value = factura || 'N/A';
         Object.assign(infoCell2.style, styles.dateInfo);
 
-        // Fila 6 - Buque
-        sheet2.getCell("A6").value = "BUQUE:";
+
+        // Fila 5 - Factura Proveedor
+        sheet2.getCell("A6").value = "FACTURA PROVEEDOR:";
         Object.assign(sheet2.getCell("A6").style, styles.dateInfo);
         sheet2.mergeCells("B6:E6");
-        const buqueCell2 = sheet2.getCell("B6");
+        const facturaProveedor2 = sheet2.getCell("B6");
+        facturaProveedor2.value = dataFactura?.facturaProveedor || 'N/A';
+        Object.assign(facturaProveedor2.style, styles.dateInfo);
+
+        // Fila 6 - Buque
+        sheet2.getCell("A7").value = "BUQUE:";
+        Object.assign(sheet2.getCell("A7").style, styles.dateInfo);
+        sheet2.mergeCells("B7:E7");
+        const buqueCell2 = sheet2.getCell("B7");
         buqueCell2.value = ingresoBaprosa[0].socio.toUpperCase();
         Object.assign(buqueCell2.style, styles.dateInfo);
 
         // Fila 7 - Transportes
-        sheet2.getCell("A7").value = "TRANSPORTES:";
-        Object.assign(sheet2.getCell("A7").style, styles.dateInfo);
-        sheet2.mergeCells("B7:E7");
-        const transportesUsados2 = sheet2.getCell("B7");
+        sheet2.getCell("A8").value = "TRANSPORTES:";
+        Object.assign(sheet2.getCell("A8").style, styles.dateInfo);
+        sheet2.mergeCells("B8:E8");
+        const transportesUsados2 = sheet2.getCell("B8");
         transportesUsados2.value = pagos.map(item => item.empresa).join(', ').toUpperCase();
         Object.assign(transportesUsados2.style, styles.dateInfo);
 
         // Fila 8 - Fechas de inicio y fin
-        sheet2.getCell("A8").value = "PERÍODO:";
-        Object.assign(sheet2.getCell("A8").style, styles.dateInfo);
-        sheet2.mergeCells("B8:E8");
-        const fechasDeInicioYfin2 = sheet2.getCell("B8");
+        sheet2.getCell("A9").value = "PERÍODO:";
+        Object.assign(sheet2.getCell("A9").style, styles.dateInfo);
+        sheet2.mergeCells("B9:E9");
+        const fechasDeInicioYfin2 = sheet2.getCell("B9");
         fechasDeInicioYfin2.value = `Inicio: ${new Date(primeraUnidad[0].fechaInicio).toLocaleString()} - Hasta: ${new Date(ultimaUnidad[0].fechaInicio).toLocaleString()}`;
         Object.assign(fechasDeInicioYfin2.style, styles.dateInfo);
 
         // Fila 9 - Fecha de generación
-        sheet2.getCell("A9").value = "GENERADO:";
-        Object.assign(sheet2.getCell("A9").style, styles.dateInfo);
-        sheet2.mergeCells("B9:E9");
-        const dateCell2 = sheet2.getCell("B9");
+        sheet2.getCell("A10").value = "GENERADO:";
+        Object.assign(sheet2.getCell("A10").style, styles.dateInfo);
+        sheet2.mergeCells("B10:E10");
+        const dateCell2 = sheet2.getCell("B10");
         dateCell2.value = now.toLocaleDateString('es-ES', { 
             weekday: 'long', 
             year: 'numeric', 
@@ -1532,8 +1589,8 @@ const exportR1Importaciones = async (req, res) => {
                 extension: "png",
             });
             sheet1.addImage(logoId, {
-                tl: { col: 4, row: 0 },
-                br: { col: 6, row: 3 },
+                tl: { col: 6, row: 0 },
+                br: { col: 8, row: 3 },
                 editAs: 'oneCell'
             });
         } catch (error) {
@@ -1548,7 +1605,7 @@ const exportR1Importaciones = async (req, res) => {
         }
 
         // Encabezado del reporte
-        sheet1.mergeCells("A1:H1");
+        sheet1.mergeCells("A1:E1");
         const titleCell = sheet1.getCell("A1");
         titleCell.value = "BENEFICIO DE ARROZ PROGRESO, S.A. DE C.V.";
         Object.assign(titleCell.style, styles.title);
@@ -1571,24 +1628,29 @@ const exportR1Importaciones = async (req, res) => {
 
         sheet1.mergeCells("A5:H5");
         const infoCell = sheet1.getCell("A5");
-        infoCell.value = `Factura: ${factura || 'N/A'}`;
+        infoCell.value = `Factura SAP: ${factura || 'N/A'}`;
         Object.assign(infoCell.style, styles.dateInfo);
 
         sheet1.mergeCells("A6:H6");
-        const buqueCell = sheet1.getCell("A6");
+        const infoPro = sheet1.getCell("A6");
+        infoPro.value = `Factura proveedor: ${dataFactura?.facturaProveedor || 'N/A'}`;
+        Object.assign(infoPro.style, styles.dateInfo);
+
+        sheet1.mergeCells("A7:H7");
+        const buqueCell = sheet1.getCell("A7");
         buqueCell.value = `Buque: ${statsGeneral.length > 0 ? statsGeneral[0].socio.toUpperCase() : 'N/A'}`;
         Object.assign(buqueCell.style, styles.dateInfo);
 
         if (primeraUnidad.length > 0 && ultimaUnidad.length > 0) {
-            sheet1.mergeCells("A7:H7");
-            const fechasCell = sheet1.getCell("A7");
+            sheet1.mergeCells("A8:H8");
+            const fechasCell = sheet1.getCell("A8");
             fechasCell.value = `Inicio: ${new Date(primeraUnidad[0].fechaInicio).toLocaleString()} - Hasta: ${new Date(ultimaUnidad[0].fechaInicio).toLocaleString()}`;
             Object.assign(fechasCell.style, styles.dateInfo);
         }
         
         const now = new Date();
-        sheet1.mergeCells("A8:H8");
-        const dateCell = sheet1.getCell("A8");
+        sheet1.mergeCells("A9:H9");
+        const dateCell = sheet1.getCell("A9");
         dateCell.value = `Generado el: ${now.toLocaleDateString('es-ES', { 
             weekday: 'long', 
             year: 'numeric', 
@@ -2008,49 +2070,58 @@ const getRerportContenerizada = async (req, res) => {
         proveedorValueCell.value = `${dataFactura?.Proveedor || 'N/A'}`;
         Object.assign(proveedorValueCell.style, styles.dateInfo);
 
-        // Factura
+        // Factura Sap
         const facturaLabelCell = sheet1.getCell("A7");
-        facturaLabelCell.value = "Factura:";
+        facturaLabelCell.value = "Factura SAP:";
         Object.assign(facturaLabelCell.style, styles.dateInfo);
 
         const facturaValueCell = sheet1.getCell("B7");
         facturaValueCell.value = `${factura || 'N/A'}`;
         Object.assign(facturaValueCell.style, styles.dateInfo);
 
+        // Factura proveedor
+        const facturaProLabelCell = sheet1.getCell("A8");
+        facturaProLabelCell.value = "Factura proveedor:";
+        Object.assign(facturaProLabelCell.style, styles.dateInfo);
+
+        const facturaProValueCell = sheet1.getCell("B8");
+        facturaProValueCell.value = `${dataFactura?.facturaProveedor || 'N/A'}`;
+        Object.assign(facturaProValueCell.style, styles.dateInfo);
+
         // Socio
-        const socioLabelCell = sheet1.getCell("A8");
+        const socioLabelCell = sheet1.getCell("A9");
         socioLabelCell.value = "Socio:";
         Object.assign(socioLabelCell.style, styles.dateInfo);
 
-        const socioValueCell = sheet1.getCell("B8");
+        const socioValueCell = sheet1.getCell("B9");
         socioValueCell.value = `${statsGeneral.length > 0 ? statsGeneral[0].socio.toUpperCase() : 'N/A'}`;
         Object.assign(socioValueCell.style, styles.dateInfo);
 
         // Fechas (si existen datos)
         if (primeraUnidad.length > 0 && ultimaUnidad.length > 0) {
-            const inicioLabelCell = sheet1.getCell("A9");
+            const inicioLabelCell = sheet1.getCell("A10");
             inicioLabelCell.value = "Inicio:";
             Object.assign(inicioLabelCell.style, styles.dateInfo);
 
-            const inicioValueCell = sheet1.getCell("B9");
+            const inicioValueCell = sheet1.getCell("B10");
             inicioValueCell.value = `${new Date(primeraUnidad[0].fechaInicio).toLocaleString()}`;
             Object.assign(inicioValueCell.style, styles.dateInfo);
 
-            const hastaLabelCell = sheet1.getCell("A10");
+            const hastaLabelCell = sheet1.getCell("A11");
             hastaLabelCell.value = "Hasta:";
             Object.assign(hastaLabelCell.style, styles.dateInfo);
 
-            const hastaValueCell = sheet1.getCell("B10");
+            const hastaValueCell = sheet1.getCell("B11");
             hastaValueCell.value = `${new Date(ultimaUnidad[0].fechaInicio).toLocaleString()}`;
             Object.assign(hastaValueCell.style, styles.dateInfo);
         }
 
         // Fecha de generación
-        const dateLabelCell = sheet1.getCell("A11");
+        const dateLabelCell = sheet1.getCell("A12");
         dateLabelCell.value = "Generado el:";
         Object.assign(dateLabelCell.style, styles.dateInfo);
 
-        const dateValueCell = sheet1.getCell("B11");
+        const dateValueCell = sheet1.getCell("B12");
         dateValueCell.value = `${now.toLocaleDateString('es-ES', { 
             weekday: 'long', 
             year: 'numeric', 
@@ -2183,7 +2254,7 @@ const getRerportContenerizada = async (req, res) => {
         const facturaInfoRow = sheet1.addRow([]);
         sheet1.mergeCells(`A${sheet1.rowCount}:G${sheet1.rowCount}`);
         const facturaInfoCell = sheet1.getCell(`A${sheet1.rowCount}`);
-        facturaInfoCell.value = `ORDEN DE COMPRA: ${datosReporte[0].ordenDeCompra || 'N/A'} | CONTENEDORES: ${numContenedores}`;
+        facturaInfoCell.value = `FACTURA PROVEEDOR: ${dataFactura?.facturaProveedor || 'N/A'} | CONTENEDORES: ${numContenedores}`;
         facturaInfoCell.style = {
             font: { name: 'Arial', bold: true, size: 10, color: { argb: '000000' } },
             alignment: { horizontal: 'center', vertical: 'middle' },

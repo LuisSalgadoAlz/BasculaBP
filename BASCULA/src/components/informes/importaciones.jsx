@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from "react";
 import { useState } from "react";
 import { getBuquesDetalles, getDataForSelect, getResumenBFH, getStatsBuque } from "../../hooks/informes/granza";
-import { BuqueDetalles, BuqueDetallesLoader, ModalReportes, SelectFormImportaciones, TablaResumenBFH, TablaResumenBFHLoader } from "./tables";
+import { BasculaModal, BuqueDetalles, BuqueDetallesLoader, ModalReportes, SelectFormImportaciones, TablaResumenBFH, TablaResumenBFHLoader } from "./tables";
 import { Pagination, StatCard } from "../../components/buttons";
 import { AiOutlineDollarCircle } from 'react-icons/ai';
 import { LuPackage2 } from "react-icons/lu";
@@ -19,10 +19,14 @@ const Importaciones = () => {
   const [isLoadingBuquesDetails, setIsLoadingBuquesDetails] = useState(false)
   const [selected, setBuqueSelected] = useState({ typeImp: '', buque: '' })
   const [selectedName, setSelectedName] = useState('')
+  const [selectedSap, setSelectedSap] = useState('Sin seleccionar.')
+  const [selectedProveedor, setSelectedProveedor] = useState('Sin seleccionar.')
   const [stats, setStats] = useState()
   const [isLoadStats, setIsLoadStats] = useState(false)
   const [pagination, setPagination] = useState(1)
   const [isOpen, setIsOpen] = useState(false)
+  const [selectedImp, setSelectedImp] =  useState(2)
+  const [openDetails, setOpenDetails] = useState(false)
 
   const handleClose = () => {
     setIsOpen(false);
@@ -85,13 +89,20 @@ const Importaciones = () => {
     setPagination(1)
     if(typeImp===''){
       setSelectedName('')
+      setSelectedSap('Sin seleccionar.')
+      setSelectedProveedor('Sin seleccionar.')
       return toast.success('Reset completo.', {style:{background:'#4CAF50'}, id:'completado'});
     }
     
     const selectSocio = buques?.sociosImp.find((item)=>item.idSocio==buque)?.socio
     const selectFactura = buques?.facturasImp.find((item)=>item.factura==facturasImp)?.factura
+    const selectProvFactura = buques?.facturasImp.find((item)=>item.factura==facturasImp)?.facturaProveedor
+
     /* Colocar nombre en el progress bar */
-    setSelectedName(`${selectSocio} - SAP ${selectFactura}`)
+    setSelectedName(`${selectSocio}`)
+    setSelectedSap(selectFactura)
+    setSelectedProveedor(selectProvFactura)
+    setSelectedImp(typeImp)
 
     return toast.success('Busqueda completa.', {style:{background:'#4CAF50'}, id:'completado'});
   }
@@ -103,6 +114,14 @@ const Importaciones = () => {
       if(newRender>buquesDetails.pagination.totalPages) return
       setPagination(newRender) 
     }
+  }
+
+  const handleOpenDetails = () => {
+    const { typeImp, buque, facturasImp } = selected
+    if ((!buque || buque == -99) && typeImp !== '') return toast.error('Filtros vacios (socio)', {style:{background:'#ff4d4f'}, id:'error'});
+    if ((!facturasImp || facturasImp == -99) && typeImp !== '') return toast.error('Filtros vacios (facturas)', {style:{background:'#ff4d4f'}, id:'error'}); 
+    if (stats.error) return toast.error('Debe presionar aplicar los filtros.', {style:{background:'#ff4d4f'}, id:'error'})
+    setOpenDetails(true)
   }
   
   useEffect(()=>{
@@ -150,62 +169,136 @@ const Importaciones = () => {
   ];
   
   const statsdata = [
-  ...(selected.typeImp == 2 ? [
+    ...(selectedImp == 2 ? [
+      {
+        icon: <IoIosStats size={24} className="text-white" />,
+        title: "Bascula - Puerto",
+        value: `${formatNumber(stats?.pesoNeto)} TM - ${formatNumber(stats?.pesoTeorico)} TM`,
+        color: "bg-blue-500",
+      },
+      {
+        icon: <IoIosStats size={24} className="text-white" />,
+        title: "Desviacion Total (TM) (%)",
+        value: `${formatNumber(stats?.desviacion)} (${formatNumber(stats?.porcentaje)}%)`,
+        color: "bg-amber-500",
+        status: (Number(stats?.desviacion) || 0) >= 0 ? 'text-green-700' : 'text-red-700'
+      },
+    ] : [
+      {
+        icon: <IoIosStats size={24} className="text-white" />,
+        title: "Sacos Recibidos - Sacos Teóricos",
+        value: `${formatNumber(stats?.sacosDescargados)} - ${formatNumber(stats?.sacosTeroicos)}`,
+        color: "bg-blue-500",
+      },
+      {
+        icon: <IoIosStats size={24} className="text-white" />,
+        title: "Desviacion Total (Unidad Sacos) (%)",
+        value: `${formatNumber(stats?.diferenciaSacos)} (${formatNumber(stats?.porcentajeSacosDiff)}%)`,
+        color: "bg-amber-500",
+        status: (Number(stats?.diferenciaSacos) || 0) >= 0 ? 'text-green-700' : 'text-red-700'
+      },
+    ]),
     {
       icon: <IoIosStats size={24} className="text-white" />,
-      title: "Bascula - Puerto",
-      value: `${formatNumber(stats?.pesoNeto)} TM - ${formatNumber(stats?.pesoTeorico)} TM`,
+      title: "Bascula - Factura SAP",
+      value: `${formatNumber(stats?.pesoNeto)} TM - ${formatNumber(stats?.cantidad)} TM`,
       color: "bg-blue-500",
     },
     {
       icon: <IoIosStats size={24} className="text-white" />,
       title: "Desviacion Total (TM) (%)",
-      value: `${formatNumber(stats?.desviacion)} (${formatNumber(stats?.porcentaje)}%)`,
-      color: "bg-amber-500",
-      status: (Number(stats?.desviacion) || 0) >= 0 ? 'text-green-700' : 'text-red-700'
-    },
-  ] : [
-    {
-      icon: <IoIosStats size={24} className="text-white" />,
-      title: "Sacos Recibidos - Sacos Teóricos",
-      value: `${formatNumber(stats?.sacosDescargados)} - ${formatNumber(stats?.sacosTeroicos)}`,
-      color: "bg-blue-500",
-    },
-    {
-      icon: <IoIosStats size={24} className="text-white" />,
-      title: "Desviacion Total (Unidad Sacos) (%)",
-      value: `${formatNumber(stats?.diferenciaSacos)} (${formatNumber(stats?.porcentajeSacosDiff)}%)`,
-      color: "bg-amber-500",
-      status: (Number(stats?.diferenciaSacos) || 0) >= 0 ? 'text-green-700' : 'text-red-700'
-    },
-  ]),
-  {
-    icon: <IoIosStats size={24} className="text-white" />,
-    title: "Bascula - Factura",
-    value: `${formatNumber(stats?.pesoNeto)} TM - ${formatNumber(stats?.cantidad)} TM`,
-    color: "bg-blue-500",
-  },
-  {
-    icon: <IoIosStats size={24} className="text-white" />,
-    title: "Desviacion Total (TM) (%)",
-    value: (() => {
-      const pesoNeto = Number(stats?.pesoNeto) || 0;
-      const cantidad = Number(stats?.cantidad) || 0;
-      const diferencia = pesoNeto - cantidad;
-      const porcentaje = cantidad !== 0 ? (diferencia / cantidad) * 100 : 0;
+      value: (() => {
+        const pesoNeto = Number(stats?.pesoNeto) || 0;
+        const cantidad = Number(stats?.cantidad) || 0;
+        const diferencia = pesoNeto - cantidad;
+        const porcentaje = cantidad !== 0 ? (diferencia / cantidad) * 100 : 0;
 
-      return `${formatNumber(diferencia)} (${formatNumber(porcentaje)}%)`;
-    })(),
-    color: "bg-amber-500",
-    status: (() => {
-      const pesoNeto = Number(stats?.pesoNeto) || 0;
-      const cantidad = Number(stats?.cantidad) || 0;
-      const diferencia = pesoNeto - cantidad;
+        return `${formatNumber(diferencia)} (${formatNumber(porcentaje)}%)`;
+      })(),
+      color: "bg-amber-500",
+      status: (() => {
+        const pesoNeto = Number(stats?.pesoNeto) || 0;
+        const cantidad = Number(stats?.cantidad) || 0;
+        const diferencia = pesoNeto - cantidad;
 
-      return diferencia >= 0 ? 'text-green-700' : 'text-red-700';
-    })()
-  },
-];
+        return diferencia >= 0 ? 'text-green-700' : 'text-red-700';
+      })()
+    },
+  ];
+
+  const desviaciones = [
+    ...(selectedImp == 2 ? [
+      { 
+        title: "Bascula - Puerto", 
+        value1: `${formatNumber(stats?.pesoNeto)} TM`, 
+        value2: `${formatNumber(stats?.pesoTeorico)} TM`, 
+        deviation: `${formatNumber(stats?.desviacion)}`, 
+        percentage: `${formatNumber(stats?.porcentaje)}%`,
+        status: (Number(stats?.desviacion) || 0) >= 0 ? 'positive' : 'negative',
+        unidad: 'TM'
+      },
+    ] : [
+      { 
+        title: "Sacos Recibidos - Sacos Teóricos", 
+        value1: `${formatNumber(stats?.sacosDescargados)}`, 
+        value2: `${formatNumber(stats?.sacosTeroicos)}`, 
+        deviation: `${formatNumber(stats?.diferenciaSacos)}`, 
+        percentage: `${formatNumber(stats?.porcentajeSacosDiff)}%`,
+        status: (Number(stats?.diferenciaSacos) || 0) >= 0 ? 'positive' : 'negative',
+        unidad: 'Unidad de sacos'
+      },
+    ]),
+    { 
+      title: "Bascula - Factura SAP", 
+      value1: `${formatNumber(stats?.pesoNeto)} TM`, 
+      value2: `${formatNumber(stats?.cantidad)} TM`, 
+      deviation: (() => {
+        const pesoNeto = Number(stats?.pesoNeto) || 0;
+        const cantidad = Number(stats?.cantidad) || 0;
+        const diferencia = pesoNeto - cantidad;
+        return formatNumber(diferencia);
+      })(),
+      percentage: (() => {
+        const pesoNeto = Number(stats?.pesoNeto) || 0;
+        const cantidad = Number(stats?.cantidad) || 0;
+        const diferencia = pesoNeto - cantidad;
+        const porcentaje = cantidad !== 0 ? (diferencia / cantidad) * 100 : 0;
+        return `${formatNumber(porcentaje)}%`;
+      })(),
+      status: (() => {
+        const pesoNeto = Number(stats?.pesoNeto) || 0;
+        const cantidad = Number(stats?.cantidad) || 0;
+        const diferencia = pesoNeto - cantidad;
+        return diferencia >= 0 ? 'positive' : 'negative';
+      })(), 
+      unidad: 'TM'
+    },
+    { 
+      title: "Puerto - Factura SAP", 
+      value1: `${formatNumber(stats?.pesoTeorico)} TM`, 
+      value2: `${formatNumber(stats?.cantidad)} TM`, 
+      deviation: (() => {
+        const cantidad = Number(stats?.cantidad) || 0;
+        const pesoTeorico = Number(stats?.pesoTeorico) || 0;
+        const diferencia = pesoTeorico - cantidad;
+        return formatNumber(diferencia);
+      })(),
+      percentage: (() => {
+        const cantidad = Number(stats?.cantidad) || 0;
+        const pesoTeorico = Number(stats?.pesoTeorico) || 0;
+        const diferencia = pesoTeorico - cantidad;
+        const porcentaje = pesoTeorico !== 0 ? (diferencia / cantidad) * 100 : 0;
+        return `${formatNumber(porcentaje)}%`;
+      })(),
+      status: (() => {
+        const cantidad = Number(stats?.cantidad) || 0;
+        const pesoTeorico = Number(stats?.pesoTeorico) || 0;
+        const diferencia = pesoTeorico - cantidad;
+        return diferencia >= 0 ? 'positive' : 'negative';
+      })(), 
+      unidad: 'TM'
+    }
+  ];
 
   return (
     <>
@@ -283,23 +376,33 @@ const Importaciones = () => {
         </div>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2">
-          <ProgressBar current={stats?.pesoNeto || 0} limit={stats?.cantidad || 0} status={stats?.status} unit="Toneladas" label={`${selectedName ? selectedName : 'Seleccione un buque'}`}/>        
-          {statsdata?.map((stat, index) => (
-            <StatCard
-              key={index}
-              icon={stat.icon}
-              title={stat.title}
-              value={stat.value}
-              color={stat.color}
-              status={stat.status}
-            />
-          ))}
+        <ProgressBar 
+          current={stats?.pesoNeto || 0} 
+          limit={stats?.cantidad || 0} 
+          status={stats?.status}
+          cantidadViajes={stats?.cantidadViajes} 
+          unit="Toneladas" 
+          label={`${selectedName ? selectedName : 'Seleccione un buque'}`}
+          labelSap={selectedSap}
+          labelProveedor={selectedProveedor}
+          handleOpenDetails={handleOpenDetails}
+        />        
+        {statsdata?.map((stat, index) => (
+          <StatCard
+            key={index}
+            icon={stat.icon}
+            title={stat.title}
+            value={stat.value}
+            color={stat.color}
+            status={stat.status}
+          />
+        ))}
       </div>  
       <div>
         {resumenBFHLoad ? (
           <TablaResumenBFHLoader />
         ):(
-          <TablaResumenBFH datos={resumenBFH} />
+          <TablaResumenBFH datos={resumenBFH} type={selectedImp} />
         )}
       </div>
       <div>
@@ -314,18 +417,13 @@ const Importaciones = () => {
           </div>
         )}
       </div>
+      <BasculaModal isOpen={openDetails} setIsOpen={setOpenDetails} desviaciones={desviaciones} type={selectedImp} siloData={stats?.getSilos} />
       <Toaster
         position="top-right"
         toastOptions={{
           style: {
             background: '#333', // estilo general
             color: 'white',
-          },
-          error: {
-            style: {
-              background: '#ff4d4f', // rojo fuerte
-              color: '#fff',
-            },
           },
         }}
       />
@@ -334,7 +432,7 @@ const Importaciones = () => {
   );
 };
 
-function ProgressBar({ current, limit, label = "Progreso", unit = "productos", status }) {
+function ProgressBar({ current, limit, label = "Progreso", unit = "productos", status, labelSap="Sin seleccionar.", labelProveedor="Sin seleccionar.", cantidadViajes='', handleOpenDetails }) {
   const percentage = limit > 0 ? Math.min((current / limit) * 100, 100) : 0;
   
   return (
@@ -342,7 +440,11 @@ function ProgressBar({ current, limit, label = "Progreso", unit = "productos", s
       <div className="bg-white rounded-xl shadow-lg border border-gray-100 px-7 py-7">
         {/* Header */}
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-gray-800">{label}</h3>
+          <h3 className="text-lg font-semibold text-gray-800 flex flex-col">
+            <span>{label}</span>
+            <span className="text-gray-600 text-xs">Factura de SAP: {labelSap || 'N/A'}</span>
+            <span className="text-gray-600 text-xs">Factura proveedor: {labelProveedor || 'N/A'}</span>
+          </h3>
           <div className="flex items-center space-x-2 ML-">
             <span className="text-2xl font-bold text-[#5a3f27]">
               {percentage.toFixed(2)}%
@@ -397,11 +499,7 @@ function ProgressBar({ current, limit, label = "Progreso", unit = "productos", s
               ) : status === 2 ? 'Completado' : '-'}
             </span>
             <span className="text-sm font-bold text-gray-600">
-              {
-                status === 1 ? (percentage >= 100 ? ' - ' : `${(100 - percentage).toFixed(2)}% por completar`) : 
-                status === 2 ? (percentage >= 100 ? ` - ` : ` - `) : 
-                status === 3 ? 'Cancelado' : '-'
-              }
+              <button className="text-gray-500 text-sm" onClick={handleOpenDetails}>Ver Detalles {cantidadViajes ? `(${cantidadViajes} Viajes)` : ''}</button>
             </span>
           </div>
         </div>
