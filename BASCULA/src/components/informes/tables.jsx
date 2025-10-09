@@ -15,6 +15,8 @@ import { IoWarningOutline } from "react-icons/io5";
 import { FiCheck, FiCircle, FiClock, FiTool, FiTruck, FiUser, FiUsers } from 'react-icons/fi';
 import { FaIdBadge, FaMapMarkerAlt, FaTruck, FaUserTie, FaWeightHanging } from 'react-icons/fa';
 import { PiTruckTrailerLight } from 'react-icons/pi';
+import { ChevronDown } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 export const TablaResumenBFH = ({datos=[], type}) => {
   return (
@@ -33,7 +35,7 @@ export const TablaResumenBFH = ({datos=[], type}) => {
                     CANTIDAD VIAJES
                   </th>
                   <th className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider">
-                    TM {type==2 ? 'TEH' : 'OCM'} {/* Preguntar a AXEL CORREGIR NO ES POR COMO LO TENGO */}
+                    TM {type==2 ? 'TEH' : type==15 ? 'OPC': ''} {/* Preguntar a AXEL CORREGIR NO ES POR COMO LO TENGO */}
                   </th>
                   <th className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider">
                     PESO NETO TM
@@ -84,7 +86,7 @@ export const TablaResumenBFH = ({datos=[], type}) => {
   );
 };
 
-export const TablaResumenBFHLoader = () => {
+export const TablaResumenBFHLoader = ({type}) => {
   const skeletonRows = Array(1).fill(null);
 
   return (
@@ -103,7 +105,7 @@ export const TablaResumenBFHLoader = () => {
                     # VIAJE TEH
                   </th>
                   <th className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider">
-                    TM T.E.H
+                    TM {type==2 ? 'TEH' : type==15 ? 'OPC': ''} {/* Preguntar a AXEL CORREGIR NO ES POR COMO LO TENGO */}
                   </th>
                   <th className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider">
                     PESO NETO TM
@@ -2686,6 +2688,108 @@ const useTimerForUniqueComponent = (fechaInicio) => {
     minutes: formatNumber(timeElapsed.minutes),
     seconds: formatNumber(timeElapsed.seconds)
   }
+}
+
+export const BasculaModal = ({isOpen, setIsOpen, desviaciones, type, siloData}) => {
+  return (
+    <>
+      {isOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="p-4 flex justify-between items-center border-b" style={{ backgroundColor: '#5a3f27' }}>
+              <h2 className="text-lg font-semibold text-white">Información de Importación</h2>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="text-white hover:bg-white hover:bg-opacity-20 rounded p-1 transition-colors text-xl leading-none"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-4 space-y-3">
+              {/* Desviaciones Compactas */}
+              <div className="space-y-2">
+                {desviaciones.map((item, index) => (
+                  <div key={index} className="rounded-md p-3 bg-gray-50 hover:bg-gray-100 transition-colors">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-gray-600 mb-1">{item.title}</p>
+                        <p className="text-sm font-semibold text-gray-900">{item.value1} - {item.value2}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-gray-500">Desviación TM</p>
+                        <p className={`text-sm font-bold ${item.status === 'positive' ? 'text-green-600' : 'text-red-600'}`}>{item.deviation} ({item.percentage})</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {type==2 && (
+                <div className="rounded-md overflow-hidden border border-gray-200">
+                  <div className="bg-white">
+                    {/* Header Fijo */}
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="border-b" style={{ backgroundColor: '#5a3f27' }}>
+                          <th className="w-[30%] text-left p-2 text-white font-medium">Silo</th>
+                          <th className="w-[30%] text-center p-2 text-white font-medium">Camiones</th>
+                          <th className="w-[30%] text-right p-2 text-white font-medium">Quintales</th>
+                        </tr>
+                      </thead>
+                    </table>
+
+                    {/* Contenido con Scroll */}
+                    <div className="max-h-[40vh] overflow-y-auto [&::-webkit-scrollbar]:w-2
+                                  [&::-webkit-scrollbar-track]:bg-gray-100
+                                  [&::-webkit-scrollbar-thumb]:bg-gray-300">
+                      <table className="w-full text-xs">
+                        <tbody>
+                          {siloData.map((row, index) => (
+                            <tr key={index} className="border-b hover:bg-gray-50">
+                              <td className="w-[30%] p-2 font-medium text-gray-700">{row.nombre}</td>
+                              <td className="w-[30%] p-2 text-center text-gray-600">{row.camiones}</td>
+                              <td className="w-[30%] p-2 text-right text-gray-900 font-semibold">
+                                {row.quintales.toLocaleString('en-US', { minimumFractionDigits: 2 })} qq
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Footer Fijo */}
+                    <table className="w-full text-xs">
+                      <tfoot>
+                        <tr className="font-bold border-t-2" style={{ backgroundColor: '#5a3f27' }}>
+                          <td className="w-[30%] p-2 text-white">TOTALES</td>
+                          <td className="w-[30%] p-2 text-center text-white">{siloData.reduce((total, row) => total + row.camiones, 0)}</td>
+                          <td className="w-[30%] p-2 text-right text-white">{siloData.reduce((total, row) => total + row.quintales, 0).toLocaleString('en-US', { minimumFractionDigits: 2 })} qq</td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="bg-gray-50 p-3 border-t border-gray-200 flex justify-end">
+              <button
+                onClick={() => setIsOpen(false)}
+                className="px-4 py-2 text-white rounded-md hover:opacity-90 transition-opacity text-sm"
+                style={{ backgroundColor: '#5a3f27' }}
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
 }
 
 export default TableSheet;

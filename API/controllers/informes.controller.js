@@ -148,7 +148,7 @@ const getBuqueStats = async(req, res) => {
 
         if (!buque || isNaN(Number(buque))) return res.status(200).json({ error: 'Parámetro buque inválido o no seleccionado' });
 
-        const [facturas, total, sacosContenerizados, cantidadViajes] = await Promise.all([
+        const [facturas, total, sacosContenerizados, cantidadViajes, getSilos] = await Promise.all([
             db.facturas.findMany({
                 where: {
                     idSocio: parseInt(buque),
@@ -198,7 +198,31 @@ const getBuqueStats = async(req, res) => {
                     idMovimiento: parseInt(typeImp), 
                     factura: factura,
                 }
-            })
+            }), 
+            typeImp == 2 ? db.$queryRaw`
+                WITH BoletasUnicas AS (
+                    SELECT 
+                        b.id,
+                        b.pesoNeto,
+                        CASE 
+                            WHEN t.siloSecundario IS NULL THEN s1.nombre
+                            ELSE CONCAT(s1.nombre, ' - ', s2.nombre)
+                        END AS nombre
+                    FROM Boleta b
+                    INNER JOIN Tolva t ON b.id = t.idBoleta
+                    LEFT JOIN Silos s1 ON s1.id = t.siloPrincipal
+                    LEFT JOIN Silos s2 ON s2.id = t.siloSecundario
+                    WHERE b.idSocio = ${buque} and factura=${factura}
+                    GROUP BY b.id, b.pesoNeto, s1.nombre, s2.nombre, t.siloSecundario
+                )
+                SELECT 
+                    nombre,
+                    COUNT(*) as camiones,
+                    SUM(pesoNeto)/100 as quintales
+                FROM BoletasUnicas
+                GROUP BY nombre
+                ORDER BY nombre asc
+            ` : null,
         ])
 
 
@@ -228,6 +252,7 @@ const getBuqueStats = async(req, res) => {
             diferenciaSacos: acumuladasUnidadesRecibidas - acumuladasunidadesTeoricas, 
             porcentajeSacosDiff: acumuladasunidadesTeoricas !== 0 ? ((acumuladasUnidadesRecibidas - acumuladasunidadesTeoricas) / acumuladasunidadesTeoricas) * 100 : 0,
             cantidadViajes: cantidadViajes,
+            getSilos,
         }
         return res.status(200).send({...refactorData})
     }catch(err) {
