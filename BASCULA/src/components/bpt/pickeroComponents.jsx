@@ -53,22 +53,20 @@ export const PickingAsignadosTable = ({ tableData, loadingAction, selectedRow })
 
   const getEstadoColor = (estadoCode) => {
     switch(estadoCode) {
-      case 'pendiente': return 'bg-yellow-50 text-yellow-700 border-yellow-200';
-      case 'en_progreso': return 'bg-blue-50 text-blue-700 border-blue-200';
-      case 'completado': return 'bg-green-50 text-green-700 border-green-200';
-      case 'pausado': return 'bg-orange-50 text-orange-700 border-orange-200';
-      case 'devuelto': return 'bg-red-50 text-red-700 border-red-200';
+      case 'PND': return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+      case 'EPK': return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'FPK': return 'bg-green-50 text-green-700 border-green-200';
+      case 'ICP': return 'bg-red-50 text-red-700 border-red-200';
       default: return 'bg-gray-50 text-gray-700 border-gray-200';
     }
   };
 
   const getEstadoIcon = (estadoCode) => {
     switch(estadoCode) {
-      case 'pendiente': return <Clock className="w-4 h-4" />;
-      case 'en_progreso': return <Play className="w-4 h-4" />;
-      case 'completado': return <CheckCircle className="w-4 h-4" />;
-      case 'pausado': return <AlertCircle className="w-4 h-4" />;
-      case 'devuelto': return <XCircle className="w-4 h-4" />;
+      case 'PND': return <Clock className="w-4 h-4" />;
+      case 'EPK': return <Play className="w-4 h-4" />;
+      case 'FPK': return <CheckCircle className="w-4 h-4" />;
+      case 'ICP': return <XCircle className="w-4 h-4" />;
       default: return <AlertCircle className="w-4 h-4" />;
     }
   };
@@ -259,7 +257,7 @@ export const PickingAsignadosTable = ({ tableData, loadingAction, selectedRow })
   );
 };
 
-export const ProductosAgrupadosTable = ({ tableData }) => {
+export const ProductosAgrupadosTable = ({ tableData, type }) => {
   const [fechasCaducidad, setFechasCaducidad] = useState({});
 
   const handleFechaCaducidad = (groupIndex, itemIndex, fecha) => {
@@ -283,7 +281,9 @@ export const ProductosAgrupadosTable = ({ tableData }) => {
               <th className="px-2 py-1.5 text-center text-[0.65rem] font-semibold text-gray-700 uppercase">Med.</th>
               <th className="px-2 py-1.5 text-center text-[0.65rem] font-semibold text-gray-700 uppercase">Peso</th>
               <th className="px-2 py-1.5 text-center text-[0.65rem] font-semibold text-gray-700 uppercase">Total</th>
-              <th className="px-2 py-1.5 text-center text-[0.65rem] font-semibold text-gray-700 uppercase">Caducidad</th>
+              {type===2 && (
+                <th className="px-2 py-1.5 text-center text-[0.65rem] font-semibold text-gray-700 uppercase">Caducidad</th>
+              )}
             </tr>
           </thead>
           <tbody className="bg-white">
@@ -312,15 +312,16 @@ export const ProductosAgrupadosTable = ({ tableData }) => {
                       <td className="px-2 py-1.5 text-xs text-gray-900 text-center">{item.PesoLb}</td>
                       <td className="px-2 py-1.5 text-xs text-gray-900 text-center">{item.PesoTotal}</td>
                       <td className="px-2 py-1.5 text-xs text-gray-900 text-center">
-                        <div className="relative inline-block">
-                          <Calendar className="absolute left-1.5 top-1/2 transform -translate-y-1/2 text-gray-400 w-3 h-3 pointer-events-none" />
-                          <input
-                            type="date"
-                            value={fechasCaducidad[key] || ''}
-                            onChange={(e) => handleFechaCaducidad(groupIndex, itemIndex, e.target.value)}
-                            className="pl-6 pr-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
-                          />
-                        </div>
+                        {type===2 && (
+                          <div className="relative inline-block">
+                            <input
+                              type="date"
+                              value={fechasCaducidad[key] || ''}
+                              onChange={(e) => handleFechaCaducidad(groupIndex, itemIndex, e.target.value)}
+                              className="pl-6 pr-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            />
+                          </div>
+                        )}
                       </td>
                     </tr>
                   );
@@ -370,31 +371,32 @@ export const ProductosAgrupadosTable = ({ tableData }) => {
                     </div>
 
                     {/* Selector de fecha táctil mejorado */}
-                    <label 
-                      htmlFor={`date-${key}`}
-                      className="relative block cursor-pointer"
-                    >
-                      <div className="w-full flex items-center justify-between px-2 py-1.5 bg-blue-50 border border-blue-200 rounded text-[0.6rem] hover:bg-blue-100 active:bg-blue-200 transition-colors">
-                        <div className="flex items-center gap-1.5">
-                          <Calendar className="w-3 h-3 text-blue-600 flex-shrink-0" />
-                          <span className="text-gray-700 font-medium">
-                            {fechaActual ? new Date(fechaActual + 'T00:00:00').toLocaleDateString('es-HN', { 
-                              day: '2-digit', 
-                              month: 'short', 
-                              year: 'numeric' 
-                            }) : 'Seleccionar fecha'}
-                          </span>
+                    {type===2 && (
+                      <label 
+                        htmlFor={`date-${key}`}
+                        className="relative block cursor-pointer"
+                      >
+                        <div className="w-full flex items-center justify-between px-2 py-1.5 bg-blue-50 border border-blue-200 rounded text-[0.6rem] hover:bg-blue-100 active:bg-blue-200 transition-colors">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-gray-700 font-medium">
+                              {fechaActual ? new Date(fechaActual + 'T00:00:00').toLocaleDateString('es-HN', { 
+                                day: '2-digit', 
+                                month: 'short', 
+                                year: 'numeric' 
+                              }) : 'Seleccionar fecha'}
+                            </span>
+                          </div>
+                          <span className="text-blue-600 text-xs">📅</span>
                         </div>
-                        <span className="text-blue-600 text-xs">📅</span>
-                      </div>
-                      <input
-                        id={`date-${key}`}
-                        type="date"
-                        value={fechasCaducidad[key] || ''}
-                        onChange={(e) => handleFechaCaducidad(groupIndex, itemIndex, e.target.value)}
-                        className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
-                      />
-                    </label>
+                        <input
+                          id={`date-${key}`}
+                          type="date"
+                          value={fechasCaducidad[key] || ''}
+                          onChange={(e) => handleFechaCaducidad(groupIndex, itemIndex, e.target.value)}
+                          className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                        />
+                      </label>
+                    )}
                   </div>
                 );
               })}
@@ -406,19 +408,26 @@ export const ProductosAgrupadosTable = ({ tableData }) => {
   );
 };
 
-export const ActionsButtones = ({handleBack, setMenuOpen, menuOpen}) => {
+export const ActionsButtones = (props) => {
+  const {handleBack, setMenuOpen, menuOpen, state = 'PND', handleStartPicking, handleFinishPicking, logs} = props
   return (
     <>
       <div className="flex items-end flex-col sm:flex-row gap-2">
-        <button className={`${buttonNormal} max-sm:hidden`} onClick={()=>handleBack}>
+        <button className={`${buttonNormal} max-sm:hidden`} onClick={handleBack}>
             Volver
         </button>
         <button className={`${buttonNormal} max-sm:hidden`}>
-            Validar
+            Registros de Cambios ({logs})
         </button>
-        <button className={`${buttonNormal} max-sm:hidden`}>
-            Finalizar
-        </button>
+        {state == 'PND' ? (
+          <button className={`${buttonNormal} max-sm:hidden`} onClick={handleStartPicking}>
+            Comenzar picking
+          </button>
+        ): (
+          <button className={`${buttonNormal} max-sm:hidden`} onClick={handleFinishPicking}>
+            Finalizar picking
+          </button>
+        )}
       </div>
       {/* Version de telefono */}
       <div className="sm:hidden">

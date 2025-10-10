@@ -3,6 +3,7 @@ import { ButonDeAsingar, ManifiestosAsignadosTable, ManifiestosLogs, Manifiestos
 import { useGetUsersForManifiestos, useManifiestosSocket, useManifiestosSocketCanal2, useVerLogs } from "../../hooks/bpt/hooks";
 import { Toaster } from "sonner";
 import { WebSocketsMolde } from "../../components/bpt/moldes";
+import { BaseHeader, Cuerpo } from "../../components/molde";
 
 const ControlZone = () => {
   const [ selectedItems, setSelectedItems ] = useState(new Set());
@@ -80,46 +81,32 @@ const ControlZone = () => {
 
   return (
     <>
-      <div className="flex justify-between w-full gap-5 max-sm:flex-col max-md:flex-col mb-4 max-sm:mb-5">
-        <div className="parte-izq">
-          <h1 className="text-3xl font-bold titulo">Supervisor Bodega PT</h1>
-          <h1 className="text-gray-600 max-sm:text-sm">
-            {" "}
-            Control detallado de manifiestos creados
-          </h1>
-        </div>
-      </div>
-      <div className="bg-white rounded-2xl p-4 shadow-2xl">
-        <div className="flex justify-between w-full gap-5">
-          <ViewTabs {...propsViewTabs}/>
-          <ButonDeAsingar {...propsBotonAsingar}/>
-        </div>
-        {view===1 && (
-          <>
-            <WebSocketsMolde connectionStatus={connectionStatus} itsValid={manifiestos.length>0}>
-              <ManifiestosTable {...propsTablesLibres}/>
-              <ModalAsignar {...propsModal} />
-            </WebSocketsMolde>
-          </>
-        )}
-        {view===2 && (
-          <>
-            <WebSocketsMolde connectionStatus={connectionStatusAsignados} itsValid={manifiestosAsignados.length>0}>
-              <ManifiestosAsignadosTable {...propsTableAsignadas} />
-              <ManifiestosLogs data={logs.data} isOpen={openLogs} setIsOpen={setOpenLogs} />
-            </WebSocketsMolde>
-          </>
-        )}
-      </div>
-      <Toaster
-        position="top-center"
-        toastOptions={{
-          style: {
-            background: '#333', // estilo general
-            color: 'white',
-          },
-        }}
-      />
+      <BaseHeader title={`Supervisor Bodega PT`} subtitle={`Control detallado de manifiestos creados`}>
+        <Cuerpo>
+          <div className="bg-white rounded-2xl p-4 shadow-2xl">
+            <div className="flex justify-between w-full gap-5">
+              <ViewTabs {...propsViewTabs}/>
+              <ButonDeAsingar {...propsBotonAsingar}/>
+            </div>
+            {view===1 && (
+              <>
+                <WebSocketsMolde connectionStatus={connectionStatus} itsValid={manifiestos.length>0}>
+                  <ManifiestosTable {...propsTablesLibres}/>
+                  <ModalAsignar {...propsModal} />
+                </WebSocketsMolde>
+              </>
+            )}
+            {view===2 && (
+              <>
+                <WebSocketsMolde connectionStatus={connectionStatusAsignados} itsValid={manifiestosAsignados.length>0}>
+                  <ManifiestosAsignadosTable {...propsTableAsignadas} />
+                  <ManifiestosLogs data={logs.data} isOpen={openLogs} setIsOpen={setOpenLogs} />
+                </WebSocketsMolde>
+              </>
+            )}
+          </div>
+        </Cuerpo>
+      </BaseHeader>
     </>
   );
 };

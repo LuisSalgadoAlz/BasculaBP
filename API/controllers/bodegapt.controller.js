@@ -5,7 +5,6 @@ const { getPublisher, getManifiestosAsignados } = require("../sockets/websocketP
 const { manifiestosSinAsignar } = require("../sockets/websocketPeso");
 const { executeProcedure } = require("../lib/hanaActions");
 
-
 /**
  * END - CONTROLLERS GENERALES PARA AMBOS
  */
@@ -13,6 +12,7 @@ const { executeProcedure } = require("../lib/hanaActions");
 const getUserFront = async(req,res) => {
   try{
     const usuario = await getUserNombre(req);
+    console.log(usuario)
     return res.status(200).send(usuario)
   }catch(err){
     console.log(err)
@@ -72,13 +72,14 @@ const getUserNombre = async(req) => {
         },
     });
 
-    
-    return {
+    const obj = {
         id: usuario.id, 
         nombre: usuario.name,
         idBpt: usuario.UsuariosBPT.id, 
         canal: usuario.UsuariosBPT.canal
     }
+
+    return obj
 }
 
 const getUserNombreByID = async (byId) => {
@@ -293,10 +294,166 @@ const getManifiestoDetalles = async (req, res) => {
   }
 }
 
+const putComenzarPicking = async(req, res) => {
+  try{
+    const DocNum = req.params.DocNum
+    const { estado, type } = req.body
+
+    const [user, getID, getProducts, exist] = await Promise.all([
+      getUserNombre(req),
+      db.picking.findFirst({
+        where: {
+          manifiestosDocNum: parseInt(DocNum)
+        },
+        select: {
+          id: true
+        }, 
+        orderBy: {
+          id: 'desc'
+        }
+      }), 
+      executeProcedure('Imprimir_manifiesto', {ID: DocNum}), 
+      db.manifiestoDetalles.count({
+        where: {
+          DocNum: parseInt(DocNum)
+        }
+      })
+    ])
+    
+    if(exist !== 0) return res.status(200).send({err: 'Manifiesto ya procesado.'})
+    if(getProducts.length === 0) return res.status(200).send({err: 'No hay productos en el manifiesto.'})
+
+    const refactor = getProducts.map(item => ({
+      DocNum: parseInt(DocNum),
+      itemCode: item.ItemCode,
+      propiedad: item.PROPIEDAD,
+      Descripcion: item.Dscription,
+      Cantidad: parseInt(item.Quantity), 
+      PesoLb: parseFloat(item.Peso),
+      FechaEntrega: new Date(item.FechaDeEntrega.replace(" ", "T").split(".")[0]),
+      Ruta: item.Ruta, 
+      Medida: item.unitMsr,
+      PesoTotal: item.Peso * item.Quantity,
+      fechaCaducidad: null, 
+      pickingUserID: user.id,
+      pickingUser: user.nombre
+    }))
+
+    const [crearTodo, comienzoPicking, actualizarEstadoManifiesto] = await Promise.all([
+      db.manifiestoDetalles.createMany({
+        data: refactor,
+      }), 
+      db.picking.update({
+        where: {
+          id: getID?.id
+        }, 
+        data: {
+          estado: estado,
+          ...(type ? { fechaInicioPicking: new Date() } : {} ), 
+          ...(!type ?  { fechaFinPicking: new Date() } : {} ),
+        }
+      }), 
+      db.manifiestos.update({
+        where: {
+          DocNum: parseInt(DocNum)
+        }, 
+        data: {
+          estadoPicking: estado
+        }
+      })
+    ])
+
+    /**
+     * END - Ahora se publica en REDIS
+     */
+    const pb = await getPublisher();
+    const newDataFirtsConection = await getManifiestosAsignados();
+    await pb.publish("asignados:msg", JSON.stringify(newDataFirtsConection));
+
+    return res.status(200).send({msg: 'Picking iniciado, tiempo iniciado y productos guardados.'})
+  }catch(err){
+    console.log(err)
+    return res.send({err: 'Error interno de sistema.'})
+  }
+}
+
+const getLastPickingForDocNum = async(req, res) => {
+  try{
+    const DocNum = parseInt(req.params.DocNum)
+    const getPicking = await db.picking.findFirst({
+      where: {
+        manifiestosDocNum: DocNum, 
+      },
+      orderBy: {
+        id: 'desc'
+      }
+    })
+
+    return res.status(200).send(getPicking)
+  } catch(err) {
+    console.log(err)
+    return res.send({err: 'Error interno de sistema.'})
+  }
+}
+
+const getManifiestoDetallesLocal = async(req, res) => {
+  try {
+    const DocNum = parseInt(req.params.DocNum)
+    const newDetails = await db.manifiestoDetalles.findMany({
+      where: {
+        DocNum: DocNum
+      }
+    })
+
+    const refactor = newDetails.map(item => ({
+        DocNum,  
+        itemCode: item.itemCode,        
+        propiedad: item.propiedad,       
+        Descripcion: item.Descripcion,     
+        Cantidad: item.Cantidad,        
+        PesoLb: item.PesoLb,          
+        FechaEntrega: item.FechaEntrega,    
+        Ruta: item.Ruta,            
+        Medida: item.Medida,          
+        PesoTotal: item.PesoTotal,       
+    }))
+
+    const agrupado = refactor.reduce((acc, item) => {
+      const propiedad = item.propiedad;
+      
+      if (!acc[propiedad]) {
+        acc[propiedad] = {
+          items: [],
+          pesoTotalAcumulado: 0
+        };
+      }
+      
+      acc[propiedad].items.push(item);
+      acc[propiedad].pesoTotalAcumulado += item.PesoTotal;
+      
+      return acc;
+    }, {});
+
+    const resultado = Object.entries(agrupado).map(([propiedad, data]) => ({
+      propiedad: propiedad,
+      pesoTotalAcumulado: data.pesoTotalAcumulado,
+      items: data.items,
+    }));
+
+    return res.send(resultado)
+  }catch(err) {
+    console.log(err)
+    return res.send({err: 'Error interno de sistema.'})
+  }
+}
+
 module.exports = {
     getUserForAsignar, 
     crearManifiestos,
     getLogsManifiestos, 
     getUserFront,
-    getManifiestoDetalles
+    getManifiestoDetalles, 
+    putComenzarPicking,
+    getLastPickingForDocNum,
+    getManifiestoDetallesLocal
 }

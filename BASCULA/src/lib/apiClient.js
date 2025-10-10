@@ -2,7 +2,7 @@ import { URLHOST } from "../constants/global";
 import Cookies from 'js-cookie';
 
 /**
- * ? Primero obtemos el token para el backend
+ * ? Primero obtenemos el token para el backend
  */
 
 const getAuthToken = () => Cookies.get('token') || '';
@@ -11,8 +11,8 @@ const getAuthToken = () => Cookies.get('token') || '';
  * 
  * @param {*} saveData Variable utilizada para los metodos set de useState()
  * @param {*} getUrl URL sin el host - http:host/api eso lo añade el metodo
- * @param {*} setLoading Loader del la solcitud del api
- * @param {*} options {method: post, body}
+ * @param {*} setLoading Loader de la solicitud del api
+ * @param {*} options {method: post, put, patch, delete, body}
  * @returns 
  */
 
@@ -31,8 +31,9 @@ export const apiRequest = async (saveData, getUrl, setLoading, options = {}) => 
       },
     };
 
-    // Solo agregar Content-Type y body si es POST
-    if (method === "POST" && body) {
+    // Agregar Content-Type y body para métodos que lo requieren
+    const methodsWithBody = ["POST", "PUT", "PATCH"];
+    if (methodsWithBody.includes(method) && body) {
       config.headers["Content-Type"] = "application/json";
       config.body = JSON.stringify(body);
     }

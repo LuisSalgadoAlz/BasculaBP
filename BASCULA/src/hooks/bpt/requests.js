@@ -35,3 +35,18 @@ export const getManifiestosLogs = async (fun, setIsLoading, DocNum) => {
 export const getManifiestosDetalles = async (fun, setIsLoading, DocNum) => {
   return apiRequest(fun, `bodegapt/manifiestos/detalles/${DocNum}`, setIsLoading)
 };
+
+export const putPickingStatus = async(DocNum, details, setIsLoading) => {
+  return apiRequest(null, `bodegapt/picking/manifiestos/v1/${DocNum}`, setIsLoading, {
+    method: "PUT",
+    body: details
+  })
+}
+
+export const getLastPickingForDocNum = async(fun, setIsLoading, DocNum) => {
+  return apiRequest(fun, `bodegapt/manifiestos/detalles/picking/${DocNum}`, setIsLoading)
+}
+
+export const getManifiestosDetallesLocal = async (fun, setIsLoading, DocNum) => {
+  return apiRequest(fun, `bodegapt/manifiestos/detalles/local/${DocNum}`, setIsLoading)
+};

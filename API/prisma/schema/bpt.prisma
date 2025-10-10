@@ -88,6 +88,8 @@ model Manifiestos {
   
   pickings        Picking[]    @relation("ManifiestoPicking")
   pickingActual   Picking?     @relation("PickingActual", fields: [pickingActualId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  detalles        manifiestoDetalles[] @relation("ManifiestoDetalles")
   
   logs            manifiestosLogs[] @relation("ManifiestosLogs")
   
@@ -316,3 +318,29 @@ model manifiestosLogs {
  *   include: { manifiesto: true }
  * });
  */
+
+model manifiestoDetalles {
+  id              Int       @id @default(autoincrement())
+  DocNum          Int
+  itemCode        String
+  propiedad       String
+  Descripcion     String
+  Cantidad        Int
+  PesoLb          Float
+  FechaEntrega    DateTime
+  Ruta            String
+  Medida          String
+  PesoTotal       Float
+  fechaCaducidad  DateTime?
+  pickingUserID   Int?
+  pickingUser     String?
+
+  createAt        DateTime  @default(now())
+  updatedAt       DateTime? @updatedAt
+
+  /* Relacion 1 a muchos */ 
+  manifiesto      Manifiestos @relation("ManifiestoDetalles", fields: [DocNum], references: [DocNum], onDelete: Cascade)
+
+  @@index([DocNum])
+}
+

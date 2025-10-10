@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { ALERTSCOLORS, URLWEBSOCKET } from "../../constants/global";
 import { useCallback } from "react";
-import { getManifiestosLogs, getUserForFront, getUsersForManifiestos, postAsignarManifiesto } from "./requests";
+import { getLastPickingForDocNum, getManifiestosDetalles, getManifiestosDetallesLocal, getManifiestosLogs, getUserForFront, getUsersForManifiestos, postAsignarManifiesto, putPickingStatus } from "./requests";
 import { toast } from "sonner";
+import { useNavigate } from "react-router";
 
 /**
  *  END - HOOKS DE LOS PICKEROS 
@@ -142,7 +143,7 @@ export const useGetUsersForManifiestos = (setSelectedItems) => {
   }
 }
 
-export const useManifiestosSocketCanal2 = () => {
+export const useManifiestosSocketCanal2 = (DocNum) => {
   const DEFINE_URLWEBSOCKET = `${URLWEBSOCKET}/asignados`;
   const [manifiestosAsignados, setManifiestosAsignados] = useState([]);
   const [connectionStatusAsignados, setConnectionStatusAsignados] = useState('connecting');
@@ -183,9 +184,12 @@ export const useManifiestosSocketCanal2 = () => {
     };
   }, [DEFINE_URLWEBSOCKET]);
 
+  const logsDetector = manifiestosAsignados.find(el => el.DocNum == DocNum)?.logs;
+
   return {
     manifiestosAsignados,
     connectionStatusAsignados,
+    logsDetector, 
   };  
 }
 
@@ -257,4 +261,106 @@ export const useManifiestosAsignados = (user) => {
     manifiestos,
     connectionStatus,
   };
+}
+
+export const useNavigateBack = () => {
+  const navigate = useNavigate();
+  const handleBack = () => {
+    navigate(-1)
+  }
+
+  return { handleBack, navigate }
+} 
+
+export const useGetManifiestosDetalles = (DocNum) => {
+  const [manifiesto, setManifiesto] = useState([]);
+  const [loadingManifiesto, setLoadingManifiesto] = useState(false);
+  const [manifiestoLocal, setManifiestoLocal] = useState()
+  const [loadingManifiestoLocal, setLoadingManifiestoLocal] = useState(false)  
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const fetchDetalles = useCallback(() => {
+      getManifiestosDetalles(setManifiesto, setLoadingManifiesto, DocNum);
+  }, [DocNum]);
+
+  const fetchDetallesLocal = useCallback(() => {
+    getManifiestosDetallesLocal(setManifiestoLocal, setLoadingManifiestoLocal, DocNum)
+  }, [DocNum]);
+
+  useEffect(() => {
+      fetchDetalles();
+  }, [fetchDetalles,]);
+
+  useEffect(()=>{
+    fetchDetallesLocal();
+  }, [fetchDetallesLocal])
+
+
+  return {
+    manifiesto,
+    loadingManifiesto,
+    manifiestoLocal,
+    loadingManifiestoLocal,
+    fetchDetallesLocal,
+    menuOpen,
+    setMenuOpen,
+  }
+}
+
+export const useStatePicking = (DocNum, fetchDetallesLocal) => {
+  const [userPicking, setUserPicking] = useState()
+  const [loadingPicking, setLoadingPicking] = useState(false)
+
+  const fetchPicking = useCallback(() => {
+      getLastPickingForDocNum(setUserPicking, setLoadingPicking, DocNum)
+  }, [])
+
+  useEffect(() => {
+      fetchPicking()
+  }, [fetchPicking])
+
+  const STATE_PICKING = {
+    START: 'EPK', 
+    END: 'FPK'
+  }
+
+  const handlePickingStatus = async (estado, type) => {
+    const loadingToast = toast.loading('Procesando...');
+      
+    try {            
+        const obj = { estado, type };
+        const response = await putPickingStatus(DocNum, obj);
+        
+        toast.dismiss(loadingToast);
+        
+        if (response?.err) {
+            toast.error(response.err, ALERTSCOLORS.ERROR);
+            return false;
+        }
+        
+        if (response?.msg) {
+            await fetchPicking();
+            await fetchDetallesLocal();
+            toast.success(response.msg, ALERTSCOLORS.SUCCESS);
+            return true;
+        }
+        toast.warning('Error inesperado al actualizar el estado, intente denuevo.', ALERTSCOLORS.ERROR);
+        return false;
+    } catch (error) {
+        console.error('Error en picking:', error);
+        toast.dismiss(loadingToast);
+        toast.error('Error inesperado al actualizar el estado', ALERTSCOLORS.ERROR);
+        return false;
+    }
+  };
+
+  const handleStartPicking = () => handlePickingStatus(STATE_PICKING.START, false);
+  const handleFinishPicking = () => handlePickingStatus(STATE_PICKING.END, true);
+
+  return {
+    handleStartPicking,
+    handleFinishPicking, 
+    userPicking,
+    loadingPicking
+  }
 }
